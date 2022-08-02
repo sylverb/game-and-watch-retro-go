@@ -33,6 +33,10 @@
 #if !defined (INCLUDED_IT_IT)
 #define INCLUDED_IT_IT 1
 #endif
+#if !defined (INCLUDED_RU_RU)
+#define INCLUDED_RU_RU 1
+#endif
+
 
 #if !defined (BIG_BANK)
 #define BIG_BANK 1
@@ -94,6 +98,9 @@
 #endif
 #if INCLUDED_JA_JP == 1
 #include "rg_i18n_ja_jp.c"
+#endif
+#if INCLUDED_RU_RU == 1
+#include "rg_i18n_ru_ru.c"
 #endif
 
 static uint16_t overlay_buffer[ODROID_SCREEN_WIDTH * 12 * 2] __attribute__((aligned(4)));
