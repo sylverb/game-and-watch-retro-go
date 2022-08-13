@@ -37,10 +37,11 @@ Expert `UICODEPAGE=lang` set the ui display language, default `UICODEPAGE=CODEPA
 - 12522 : Portuguese (translation by [DefKorns](https://github.com/DefKorns))
 - 12523 : Français (translation by [Narkoa](https://github.com/Narkoa))
 - 12524 : Italiano (translation by [SantX27](https://github.com/SantX27))
+- 12521 : Russian (translation by [teuchezh](https://github.com/teuchezh))
 - 932 : 日本語(Wait for translate support)
 
 You can set `[OPT]=[0|1]` to include or exclude some language, List of `OPT` parameter:
-`EN_US`  English; `ES_ES`  Español; `PT_PT` Portuguese; `FR_FR` Français;`IT_IT` Italiano; `ZH_CN` 简体中文;`ZH_TW` 繁體中文;`KO_KR` 한국어;`JA_JP` 日本語;
+`EN_US`  English; `ES_ES`  Español; `PT_PT` Portuguese; `FR_FR` Français;`IT_IT` Italiano; `ZH_CN` 简体中文;`ZH_TW` 繁體中文;`KO_KR` 한국어;`JA_JP` 日本語;`RU_RU` Russian;
 
 other : Wait your support to translate
 
@@ -86,6 +87,12 @@ Supported emulators:
 - Watara Supervision (wsv)
 
 ## Table of Contents
+- [NewUI howto](#newui-howto)
+  - [**Undocumented 256k BANK used by default**](#undocumented-256k-bank-used-by-default)
+    - [i18n support](#i18n-support)
+    - [Coverflow support](#coverflow-support)
+    - [Other features](#other-features)
+    - [FONT](#font)
 - [Emulator collection for Nintendo® Game & Watch™](#emulator-collection-for-nintendo-game--watch)
   - [Table of Contents](#table-of-contents)
   - [Controls](#controls)

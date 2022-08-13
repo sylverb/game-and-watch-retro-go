@@ -207,7 +207,7 @@ char *curr_font = font_un_01;
 
 const int gui_font_count = FONT_COUNT;
 
-const lang_t *gui_lang[9] = {
+const lang_t *gui_lang[10] = {
     &lang_en_us,
 #if INCLUDED_ES_ES == 1
     &lang_es_es,
@@ -246,6 +246,11 @@ const lang_t *gui_lang[9] = {
 #endif
 #if INCLUDED_JA_JP == 1
     &lang_ja_jp,
+#else
+    NULL,
+#endif
+#if INCLUDED_RU_RU == 1
+    &lang_ru_ru,
 #else
     NULL,
 #endif
