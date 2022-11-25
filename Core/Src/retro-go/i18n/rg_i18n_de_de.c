@@ -29,7 +29,7 @@ int de_de_fmt_Time(char *outstr, const char *timefmt, uint16_t hour, uint16_t mi
     return sprintf(outstr, timefmt, hour, minutes, seconds);
 };
 
-const lang_t lang_en_us LANG_DATA = {
+const lang_t lang_de_de LANG_DATA = {
     .codepage = 1252,
     .extra_font = NULL,
     .s_LangUI = "UI Sprache",
