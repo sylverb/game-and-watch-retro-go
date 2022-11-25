@@ -33,6 +33,12 @@
 #if !defined (INCLUDED_IT_IT)
 #define INCLUDED_IT_IT 1
 #endif
+#if !defined (INCLUDED_DE_DE)
+#define INCLUDED_DE_DE 1
+#endif
+#if !defined (INCLUDED_DE_DE)
+#define INCLUDED_DE_DE 1
+#endif
 #if !defined (INCLUDED_RU_RU)
 #define INCLUDED_RU_RU 1
 #endif
@@ -50,7 +56,7 @@
 #include "odroid_overlay.h"
 
 #if BIG_BANK == 1
-#define FONT_DATA 
+#define FONT_DATA
 #else
 #define FONT_DATA __attribute__((section(".extflash_font")))
 #endif
@@ -69,7 +75,7 @@
 #endif
 
 #if BIG_BANK == 1
-#define LANG_DATA 
+#define LANG_DATA
 #else
 #define LANG_DATA __attribute__((section(".extflash_emu_data")))
 #endif
@@ -86,6 +92,9 @@
 #endif
 #if INCLUDED_IT_IT == 1
 #include "rg_i18n_it_it.c"
+#endif
+#if INCLUDED_DE_DE == 1
+#include "rg_i18n_de_de.c"
 #endif
 #if INCLUDED_ZH_CN == 1
 #include "rg_i18n_zh_cn.c"
@@ -197,17 +206,17 @@ char *curr_font = font_un_18;
 #include "fonts/font_un_17.h"
 #include "fonts/font_un_18.h"
 const char *gui_fonts[18] = {
-    font_un_01,    font_un_02,    font_un_03,    font_un_04,    font_un_05,    
-    font_un_06,    font_un_07,    font_un_08,    font_un_09,    font_un_10,    
-    font_un_11,    font_un_12,    font_un_13,    font_un_14,    font_un_15,    
-    font_un_16,    font_un_17,    font_un_18,    
+    font_un_01,    font_un_02,    font_un_03,    font_un_04,    font_un_05,
+    font_un_06,    font_un_07,    font_un_08,    font_un_09,    font_un_10,
+    font_un_11,    font_un_12,    font_un_13,    font_un_14,    font_un_15,
+    font_un_16,    font_un_17,    font_un_18,
     };
 char *curr_font = font_un_01;
 #endif
 
 const int gui_font_count = FONT_COUNT;
 
-const lang_t *gui_lang[10] = {
+const lang_t *gui_lang[11] = {
     &lang_en_us,
 #if INCLUDED_ES_ES == 1
     &lang_es_es,
@@ -228,7 +237,7 @@ const lang_t *gui_lang[10] = {
     &lang_it_it,
 #else
     NULL,
-#endif    
+#endif
 #if INCLUDED_ZH_CN == 1
     &lang_zh_cn,
 #else
@@ -251,6 +260,11 @@ const lang_t *gui_lang[10] = {
 #endif
 #if INCLUDED_RU_RU == 1
     &lang_ru_ru,
+#else
+    NULL,
+#endif
+#if INCLUDED_DE_DE == 1
+    &lang_de_de,
 #else
     NULL,
 #endif

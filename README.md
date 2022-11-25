@@ -38,10 +38,11 @@ Expert `UICODEPAGE=lang` set the ui display language, default `UICODEPAGE=CODEPA
 - 12523 : Français (translation by [Narkoa](https://github.com/Narkoa))
 - 12524 : Italiano (translation by [SantX27](https://github.com/SantX27))
 - 12521 : Russian (translation by [teuchezh](https://github.com/teuchezh))
+- 12525 : German (translation by [LeZerb](https://github.com/LeZerb))
 - 932 : 日本語(Wait for translate support)
 
 You can set `[OPT]=[0|1]` to include or exclude some language, List of `OPT` parameter:
-`EN_US`  English; `ES_ES`  Español; `PT_PT` Portuguese; `FR_FR` Français;`IT_IT` Italiano; `ZH_CN` 简体中文;`ZH_TW` 繁體中文;`KO_KR` 한국어;`JA_JP` 日本語;`RU_RU` Russian;
+`EN_US`  English; `ES_ES`  Español; `PT_PT` Portuguese; `FR_FR` Français;`IT_IT` Italiano; `ZH_CN` 简体中文;`ZH_TW` 繁體中文;`KO_KR` 한국어;`JA_JP` 日本語;`RU_RU` Russian; `DE_DE` Deutsch;
 
 other : Wait your support to translate
 
@@ -62,7 +63,7 @@ Use `make ROMINFOCODE=[ascii|?]` to set charset of rominfo sourcecode to enabled
 `make romdef` is run patched mode for `*emu*.json` if the file already exist, each time only append new rom's information when command execute.
 
 ### FONT
-`FONT=[num]` Allow you only persist one font and set the font number. 
+`FONT=[num]` Allow you only persist one font and set the font number.
 All the font effect you can see in: `Core\Inc\retro-go\fonts\font_un_xx.h`
 
 ***********
@@ -293,7 +294,7 @@ On MSX system, you can enable/disable cheats during game.
 
 ### Cheat codes on NES System
 
-To add Game Genie codes, create a file ending in .ggcodes in the same directory as your rom with the same name as your rom. For instance, for 
+To add Game Genie codes, create a file ending in .ggcodes in the same directory as your rom with the same name as your rom. For instance, for
 "roms/nes/Super Mario Bros.nes" make a file called "roms/nes/Super Mario Bros.ggcodes". In that file, each line can have up to 3 Game Genie codes and a maximum
 of 16 lines of active codes (for a max of 3 x 16 = 48 codes). Each line can also have a description (up to 25 characters long).
 You can comment out a line by prefixing with # or //. For example:
@@ -312,20 +313,20 @@ A collection of codes can be found here: [https://github.com/martaaay/game-and-w
 ### Cheat codes on PCE System
 
 Now you can define rom patch for PCE Roms. You can found patch info from [Here](https://krikzz.com/forum/index.php?topic=1004.0).
-To add PCE rom patcher, create a file ending in .pceplus in the same directory as your rom with the same name as your rom. For instance, for 
+To add PCE rom patcher, create a file ending in .pceplus in the same directory as your rom with the same name as your rom. For instance, for
 "roms/pce/1943 Kai (J).pce" make a file called "roms/pce/1943 Kai (J).pceplus".
 A collection of codes file can be found [here](https://github.com/olderzeus/game-genie-codes-nes/tree/master/pceplus).
 
-Each line of pceplus is defined as: 
+Each line of pceplus is defined as:
 ```
 01822fbd,018330bd,0188fcbd,	Hacked Version
-[patchcommand],[...], patch desc 
+[patchcommand],[...], patch desc
 
 ```
 
-Each patch command is a hex string defined as: 
+Each patch command is a hex string defined as:
 ```
-01822fbd 
+01822fbd
 _
 |how much byte to patched
  _____

@@ -98,6 +98,8 @@ static const persistent_config_t persistent_config_default = {
     .lang = 3,
 #elif CODEPAGE==12524
     .lang = 4,
+#elif CODEPAGE==12525
+    .lang = 9,
 #elif CODEPAGE==932
     .lang = 8,
 #elif CODEPAGE==936
@@ -118,6 +120,8 @@ static const persistent_config_t persistent_config_default = {
     .romlang = 3,
 #elif UICODEPAGE==12524
     .romlang = 4,
+#elif UICODEPAGE==12525
+    .romlang = 9,
 #elif UICODEPAGE==932
     .romlang = 8,
 #elif UICODEPAGE==936
@@ -294,7 +298,7 @@ int8_t odroid_settings_get_next_lang(uint8_t cur)
         ret ++;
         if (ret >= gui_lang_count)
             ret = 0;
-        next_lang = (lang_t *)gui_lang[ret];  
+        next_lang = (lang_t *)gui_lang[ret];
     }
     return ret;
 }
@@ -308,7 +312,7 @@ int8_t odroid_settings_get_prior_lang(uint8_t cur)
         ret --;
         if (ret < 0)
             ret = gui_lang_count - 1;
-        prior_lang = (lang_t *)gui_lang[ret];  
+        prior_lang = (lang_t *)gui_lang[ret];
     }
     return ret;
 }
