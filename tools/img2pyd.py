@@ -360,12 +360,12 @@ def writestring(file, ss):
 
 def Txt_Fromimg(font_name, priname, out_size:int, ckvale:int):
     print("Process:" + font_name)
-    if (priname == "__") :
-        priname = ""
+    #if (priname == "__") :
+    #    priname = ""
     py_file = "fcdata.py"
     txt_file = "txts" + "/" + priname + str((Path(font_name)).stem + ".txt")
     out_file = "src" + "/" + priname + str((Path(font_name)).stem + ".h")
-    bmp_file = "imgs" + "/" + priname + str((Path(font_name)).stem + ".bmp")
+    bmp_file = "fontimgs" + "/" + priname + str((Path(font_name)).stem + ".bmp")
     ckv = 0xff * 3 * ckvale // 100
     h_s = out_size // 2
     s_w = out_size * 4
@@ -420,7 +420,7 @@ def Txt_Fromimg(font_name, priname, out_size:int, ckvale:int):
         f.close()
         import os
         py_file = "fcdata.py"
-        os.system("copy /Y fcdata.py \"" + txt_file + "\"")  
+        os.system("cp fcdata.py \"" + txt_file + "\"")
         os.system("python3 fontcreate.py \"" + out_file + "\"")
         #print(d)
         #run it

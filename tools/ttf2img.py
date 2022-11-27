@@ -16,10 +16,12 @@ def Paint_Fontogn(font_name, priname, font_size:int, out_size:int, xoffset:int, 
     #new image
     img = Image.new('RGB', (s_w * 16, s_h * 16) , 0)
     img1 = Image.new('RGB', (s_w * 16, s_h * 16) , 0)
-    tipfnt = ImageFont.truetype("cour.ttf", out_size)
+    tipfnt = ImageFont.truetype("fonts/cour.ttf", out_size)
     outfnt = ImageFont.truetype("fonts/" + font_name, font_size)
     draw = ImageDraw.Draw(img)
+    draw.fontmode = '1'
     draw1 = ImageDraw.Draw(img1)
+    draw1.fontmode = '1'
     for x in range(16):
         for y in range(16):
             #paint grid ---
@@ -38,14 +40,15 @@ def Paint_Fontogn(font_name, priname, font_size:int, out_size:int, xoffset:int, 
             #skip 0-31,128-159
             chrno = y*16+x
             if ((chrno > 31) and (chrno < 128)) or ((chrno > 159) and (chrno < 256)):
-                draw.text((x * s_w + h_s, y * s_h + out_size * 2 + h_s), chr(y*16+x), font=tipfnt, fill=(120,120,120))
-                draw.text((x * s_w + h_s + out_size * 2 + xoffset, y * s_h + out_size * 2 + h_s + yoffset), chr(y*16+x), font=outfnt, fill=(255,255,255))
-                draw1.text((x * s_w + h_s, y * s_h + out_size * 2 + h_s), chr(y*16+x), font=tipfnt, fill=(120,120,120))
-                draw1.text((x * s_w + h_s + out_size * 2 + xoffset, y * s_h + out_size * 2 + h_s + yoffset), chr(y*16+x), font=outfnt, fill=(255,255,255))
+                character = bytes([y*16+x]).decode('cp1252')
+                draw.text((x * s_w + h_s, y * s_h + out_size * 2 + h_s), character, font=tipfnt, fill=(120,120,120))
+                draw.text((x * s_w + h_s + out_size * 2 + xoffset, y * s_h + out_size * 2 + h_s + yoffset), character, font=outfnt, fill=(255,255,255))
+                draw1.text((x * s_w + h_s, y * s_h + out_size * 2 + h_s), character, font=tipfnt, fill=(120,120,120))
+                draw1.text((x * s_w + h_s + out_size * 2 + xoffset, y * s_h + out_size * 2 + h_s + yoffset), character, font=outfnt, fill=(255,255,255))
     bmp_file = "fontview" + "/" + priname + str((Path(font_name)).stem + ".bmp")
     img.save(bmp_file, "BMP")
-    #bmp_file = "fontimgs" + "/" + priname + str((Path(font_name)).stem + ".bmp")
-    #img1.save(bmp_file, "BMP")
+    bmp_file = "fontimgs" + "/" + priname + str((Path(font_name)).stem + ".bmp")
+    img1.save(bmp_file, "BMP")
 
 def process_onefile(filename, fontdef):
     fontdef.setdefault(filename, {})
