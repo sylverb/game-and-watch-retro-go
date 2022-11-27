@@ -189,7 +189,7 @@ char *curr_font = font_un_18;
 #elif ONEFONT == 19
 #include "fonts/font_1251_01.h"
 const char *gui_fonts[1] = { font_1251_01 };
-char *curr_font = font_un_18;
+char *curr_font = font_1251_01;
 #else
 #include "fonts/font_un_01.h"
 #include "fonts/font_un_02.h"
