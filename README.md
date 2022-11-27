@@ -42,7 +42,7 @@ Expert `UICODEPAGE=lang` set the ui display language, default `UICODEPAGE=CODEPA
 - 932 : 日本語(Wait for translate support)
 
 You can set `[OPT]=[0|1]` to include or exclude some language, List of `OPT` parameter:
-`EN_US`  English; `ES_ES`  Español; `PT_PT` Portuguese; `FR_FR` Français;`IT_IT` Italiano; `ZH_CN` 简体中文;`ZH_TW` 繁體中文;`KO_KR` 한국어;`JA_JP` 日本語;`RU_RU` Russian; `DE_DE` Deutsch;
+`EN_US`  English; `ES_ES`  Español; `PT_PT` Portuguese; `FR_FR` Français; `IT_IT` Italiano; `ZH_CN` 简体中文; `ZH_TW` 繁體中文;`KO_KR` 한국어; `JA_JP` 日本語; `DE_DE` Deutsch; `RU_RU` Russian;
 
 other : Wait your support to translate
 
@@ -63,7 +63,7 @@ Use `make ROMINFOCODE=[ascii|?]` to set charset of rominfo sourcecode to enabled
 `make romdef` is run patched mode for `*emu*.json` if the file already exist, each time only append new rom's information when command execute.
 
 ### FONT
-`FONT=[num]` Allow you only persist one font and set the font number.
+`FONT=[num]` Only include one specific font. Refer to Core\Src\retro-go\i18n\rg_i18n.c.
 All the font effect you can see in: `Core\Inc\retro-go\fonts\font_un_xx.h`
 
 ***********

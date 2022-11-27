@@ -186,6 +186,10 @@ char *curr_font = font_un_17;
 #include "fonts/font_un_18.h"
 const char *gui_fonts[1] = { font_un_18 };
 char *curr_font = font_un_18;
+#elif ONEFONT == 19
+#include "fonts/font_1251_01.h"
+const char *gui_fonts[1] = { font_1251_01 };
+char *curr_font = font_un_18;
 #else
 #include "fonts/font_un_01.h"
 #include "fonts/font_un_02.h"
@@ -205,11 +209,12 @@ char *curr_font = font_un_18;
 #include "fonts/font_un_16.h"
 #include "fonts/font_un_17.h"
 #include "fonts/font_un_18.h"
-const char *gui_fonts[18] = {
+#include "fonts/font_1251_01.h"
+const char *gui_fonts[19] = {
     font_un_01,    font_un_02,    font_un_03,    font_un_04,    font_un_05,
     font_un_06,    font_un_07,    font_un_08,    font_un_09,    font_un_10,
     font_un_11,    font_un_12,    font_un_13,    font_un_14,    font_un_15,
-    font_un_16,    font_un_17,    font_un_18,
+    font_un_16,    font_un_17,    font_un_18,    font_1251_01
     };
 char *curr_font = font_un_01;
 #endif
@@ -243,6 +248,11 @@ const lang_t *gui_lang[11] = {
 #else
     NULL,
 #endif
+#if INCLUDED_RU_RU == 1
+    &lang_ru_ru,
+#else
+    NULL,
+#endif
 #if INCLUDED_ZH_CN == 1
     &lang_zh_cn,
 #else
@@ -260,11 +270,6 @@ const lang_t *gui_lang[11] = {
 #endif
 #if INCLUDED_JA_JP == 1
     &lang_ja_jp,
-#else
-    NULL,
-#endif
-#if INCLUDED_RU_RU == 1
-    &lang_ru_ru,
 #else
     NULL,
 #endif

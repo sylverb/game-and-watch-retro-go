@@ -29,8 +29,8 @@ int ru_ru_fmt_Time(char *outstr, const char *timefmt, uint16_t hour, uint16_t mi
 const lang_t lang_ru_ru LANG_DATA = {
   .codepage = 1251,
   .extra_font = NULL,
-  .s_LangUI = "язык интерфейса",
-  .s_LangTitle = "язык",
+  .s_LangUI = "язык интерфейса (UI Lang)",
+  .s_LangTitle = "язык (Title Lang)",
   .s_LangName = "Russian",
   // Core\Src\porting\gb\main_gb.c =======================================
   .s_Palette = "ѕалитра",
@@ -53,7 +53,7 @@ const lang_t lang_ru_ru LANG_DATA = {
   .s_filter_1_medium = "1-medium", //?
   .s_filter_2_high = "2-high", //?
   //=====================================================================
-  
+
   // Core\Src\porting\odroid_overlay.c ==================================
   .s_Full = "\x7",
   .s_Fill = "\x8",
@@ -90,7 +90,7 @@ const lang_t lang_ru_ru LANG_DATA = {
   .s_Quit_to_menu = "¬ыйти в меню",
   .s_Retro_Go_options = "Retro-Go",
 
-  .s_Font = "Ўрифт",
+  .s_Font = "Ўрифт (Font)",
   .s_Colors = "÷вета",
   .s_Theme_Title = "“ема интерфейса",
   .s_Theme_sList = "ѕростой список",
@@ -122,7 +122,7 @@ const lang_t lang_ru_ru LANG_DATA = {
 #endif
 
   //=====================================================================
-  
+
   // Core\Src\retro-go\rg_main.c =========================================
   .s_Second_Unit = "c",
   .s_Version = "¬ер.",
@@ -173,11 +173,11 @@ const lang_t lang_ru_ru LANG_DATA = {
   .s_Weekday_Fri = "ѕт",
   .s_Weekday_Sat = "—б",
   .s_Weekday_Sun = "¬с",
-  
+
   .s_Title_Date_Format = "%02d-%02d %s %02d:%02d:%02d",
   .s_Date_Format = "%02d.%02d.20%02d %s",
   .s_Time_Format = "%02d:%02d:%02d",
-  
+
   .fmt_Title_Date_Format = ru_ru_fmt_Title_Date_Format,
   .fmtDate = ru_ru_fmt_Date,
   .fmtTime = ru_ru_fmt_Time,

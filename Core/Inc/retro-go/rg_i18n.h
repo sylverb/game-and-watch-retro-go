@@ -10,10 +10,10 @@
 #define ONEFONT 0
 #endif
 
-#if ((ONEFONT > 0) && (ONEFONT < 19))
+#if ((ONEFONT > 0) && (ONEFONT < 20))
 #define FONT_COUNT 1
 #else
-#define FONT_COUNT 18
+#define FONT_COUNT 19
 #endif
 
 extern char *curr_font;

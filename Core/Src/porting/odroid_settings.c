@@ -100,14 +100,16 @@ static const persistent_config_t persistent_config_default = {
     .lang = 4,
 #elif CODEPAGE==12525
     .lang = 5,
-#elif CODEPAGE==932
-    .lang = 9,
-#elif CODEPAGE==936
+#elif CODEPAGE==12511
     .lang = 6,
-#elif CODEPAGE==949
-    .lang = 8,
-#elif CODEPAGE==950
+#elif CODEPAGE==932
+    .lang = 10,
+#elif CODEPAGE==936
     .lang = 7,
+#elif CODEPAGE==949
+    .lang = 9,
+#elif CODEPAGE==950
+    .lang = 8,
 #else
     .lang = 0,
 #endif
@@ -121,15 +123,17 @@ static const persistent_config_t persistent_config_default = {
 #elif UICODEPAGE==12524
     .romlang = 4,
 #elif UICODEPAGE==12525
-    .romlang = 9,
-#elif UICODEPAGE==932
-    .romlang = 8,
-#elif UICODEPAGE==936
     .romlang = 5,
-#elif UICODEPAGE==949
-    .romlang = 7,
-#elif UICODEPAGE==950
+#elif UICODEPAGE==12511
     .romlang = 6,
+#elif UICODEPAGE==932
+    .romlang = 10,
+#elif UICODEPAGE==936
+    .romlang = 7,
+#elif UICODEPAGE==949
+    .romlang = 9,
+#elif UICODEPAGE==950
+    .romlang = 8,
 #else
     .romlang = 0,
 #endif

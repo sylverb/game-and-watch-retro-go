@@ -140,6 +140,9 @@ else ifeq ($(CODEPAGE), 932)
 else ifeq ($(CODEPAGE), 949)
 	KO_KR = 1
 	SCODEPAGE = "euckr"
+else ifeq ($(CODEPAGE), 12511)
+	RU_RU = 1
+	SCODEPAGE = "windows-1251"
 else ifeq ($(CODEPAGE), 12521)
 	ES_ES = 1
 	SCODEPAGE = "iso-8859-1"
@@ -845,8 +848,8 @@ help:
 	@echo "  ROMINFOCODE         - Sets encoding of parse rom name, default = ascii"
 	@echo "  ES_ES,PT_PT,FR_FR,  "
 	@echo "  IT_IT,ZH_CN,ZH_TW,  "
-	@echo "  KO_KR,JA_JP,RU_RU,  "
-	@echo "  DE_DE               - Set to 1 to include or exclude some other language"
+	@echo "  KO_KR,JA_JP,DE_DE,  "
+	@echo "  RU_RU               - Set to 1 to include or exclude some other language"
 	@echo "  FONT                - Only persist one font and set the font number. "
 	@echo "                        Font effect see: Core\\Inc\\retro-go\\fonts\\font_un_xx.h"
 	@echo "  COVERFLOW           - Set to 1 include cover art with rom (default=0)"
