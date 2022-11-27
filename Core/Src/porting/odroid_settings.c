@@ -124,16 +124,14 @@ static const persistent_config_t persistent_config_default = {
     .romlang = 4,
 #elif UICODEPAGE==12525
     .romlang = 5,
-#elif UICODEPAGE==12511
-    .romlang = 6,
 #elif UICODEPAGE==932
-    .romlang = 10,
-#elif UICODEPAGE==936
-    .romlang = 7,
-#elif UICODEPAGE==949
     .romlang = 9,
-#elif UICODEPAGE==950
+#elif UICODEPAGE==936
+    .romlang = 6,
+#elif UICODEPAGE==949
     .romlang = 8,
+#elif UICODEPAGE==950
+    .romlang = 7,
 #else
     .romlang = 0,
 #endif
