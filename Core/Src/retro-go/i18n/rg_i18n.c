@@ -238,6 +238,11 @@ const lang_t *gui_lang[11] = {
 #else
     NULL,
 #endif
+#if INCLUDED_DE_DE == 1
+    &lang_de_de,
+#else
+    NULL,
+#endif
 #if INCLUDED_ZH_CN == 1
     &lang_zh_cn,
 #else
@@ -263,16 +268,11 @@ const lang_t *gui_lang[11] = {
 #else
     NULL,
 #endif
-#if INCLUDED_DE_DE == 1
-    &lang_de_de,
-#else
-    NULL,
-#endif
 };
 
 lang_t *curr_lang = &lang_en_us;
 lang_t *curr_romlang = &lang_en_us;
-const int gui_lang_count = 9;
+const int gui_lang_count = 10;
 
 int i18n_get_text_height()
 {

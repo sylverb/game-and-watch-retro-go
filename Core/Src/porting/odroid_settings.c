@@ -99,15 +99,15 @@ static const persistent_config_t persistent_config_default = {
 #elif CODEPAGE==12524
     .lang = 4,
 #elif CODEPAGE==12525
-    .lang = 9,
-#elif CODEPAGE==932
-    .lang = 8,
-#elif CODEPAGE==936
     .lang = 5,
-#elif CODEPAGE==949
-    .lang = 7,
-#elif CODEPAGE==950
+#elif CODEPAGE==932
+    .lang = 9,
+#elif CODEPAGE==936
     .lang = 6,
+#elif CODEPAGE==949
+    .lang = 8,
+#elif CODEPAGE==950
+    .lang = 7,
 #else
     .lang = 0,
 #endif
