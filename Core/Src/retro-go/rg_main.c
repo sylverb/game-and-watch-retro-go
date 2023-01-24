@@ -750,8 +750,14 @@ void app_start_logo()
     }
 
     odroid_overlay_draw_fill_rect(0, 0, ODROID_SCREEN_WIDTH, ODROID_SCREEN_HEIGHT, curr_colors->bg_c);
+    odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - logo_gnw.width) / 2, 72, (retro_logo_image *)(&logo_gnw), 0xFFFF);
+    odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - logo_rgo.width) / 2, 200, (retro_logo_image *)(&logo_rgo), curr_colors->dis_c);
+
+    //odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - l_top->width) / 2, 90, l_top, curr_colors->sel_c);
+    /*
     odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - l_top->width) / 2, 90, l_top, curr_colors->sel_c);
     odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - l_bot->width) / 2, 160 + (40 - l_bot->height) / 2, l_bot, curr_colors->dis_c);
+    */
     lcd_sync();
     lcd_swap();
 
@@ -767,7 +773,7 @@ void app_sleep_logo()
     lcd_set_buffers(framebuffer1, framebuffer2);
     odroid_overlay_draw_fill_rect(0, 0, ODROID_SCREEN_WIDTH, ODROID_SCREEN_HEIGHT, curr_colors->bg_c);
     
-    odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - logo_gnw.width) / 2, 72, (retro_logo_image *)(&logo_gnw), curr_colors->sel_c);
+    odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - logo_gnw.width) / 2, 72, (retro_logo_image *)(&logo_gnw), 0xFFFF);
     odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - logo_rgo.width) / 2, 200, (retro_logo_image *)(&logo_rgo), curr_colors->dis_c);
     for (int i = 0; i < 40; i++)
     {
@@ -777,7 +783,7 @@ void app_sleep_logo()
     for (int i = 10; i <= 100; i++)
     {
         odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - logo_gnw.width) / 2, 72,(retro_logo_image *)(&logo_gnw), 
-            get_darken_pixel_d(curr_colors->sel_c, curr_colors->bg_c, 110 - i));
+            get_darken_pixel_d(0xFFFF, curr_colors->bg_c, 110 - i));
 
         odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - logo_rgo.width) / 2, 200, (retro_logo_image *)(&logo_rgo), 
            get_darken_pixel_d(curr_colors->dis_c,curr_colors->bg_c, 110 - i));

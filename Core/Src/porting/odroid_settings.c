@@ -59,6 +59,7 @@ typedef struct persistent_config {
     uint8_t font_size;
     uint8_t theme;
     uint8_t colors;
+    uint8_t turbo_buttons;
     uint8_t font;
     uint8_t lang;
     uint8_t romlang;

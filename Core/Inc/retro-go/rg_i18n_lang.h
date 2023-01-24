@@ -27,6 +27,7 @@ typedef struct
     // const char *s_Palette "Palette" dul
     const char *s_Default;
     //=====================================================================
+
     // Core\Src\porting\md\main_gwenesis.c ================================
     const char *s_md_keydefine;
     const char *s_md_Synchro;
@@ -39,6 +40,42 @@ typedef struct
     const char *s_md_AudioFilter;
     const char *s_md_VideoUpscaler;
     //=====================================================================
+
+    // Core\Src\porting\md\main_wsv.c ================================
+    const char *s_wsv_palette_Default;
+    const char *s_wsv_palette_Amber;
+    const char *s_wsv_palette_Green;
+    const char *s_wsv_palette_Blue;
+    const char *s_wsv_palette_BGB;
+    const char *s_wsv_palette_Wataroo;
+    //=====================================================================
+
+    // Core\Src\porting\md\main_msx.c ================================
+    const char *s_msx_Change_Dsk;
+    const char *s_msx_Select_MSX;
+    const char *s_msx_MSX1_EUR;
+    const char *s_msx_MSX2_EUR;
+    const char *s_msx_MSX2_JP;
+    const char *s_msx_Frequency;
+    const char *s_msx_Freq_Auto;
+    const char *s_msx_Freq_50;
+    const char *s_msx_Freq_60;
+    const char *s_msx_A_Button;
+    const char *s_msx_B_Button;
+    const char *s_msx_Press_Key;
+    //=====================================================================
+
+    // Core\Src\porting\md\main_amstrad.c ================================
+    const char *s_amd_Change_Dsk;
+    const char *s_amd_Controls;
+    const char *s_amd_Controls_Joystick;
+    const char *s_amd_Controls_Keyboard;
+    const char *s_amd_palette_Color;
+    const char *s_amd_palette_Green;
+    const char *s_amd_palette_Grey;
+    const char *s_amd_Press_Key;
+    //=====================================================================
+
     // Core\Src\porting\gw\main_gw.c =======================================
     const char *s_copy_RTC_to_GW_time;
     const char *s_copy_GW_time_to_RTC;

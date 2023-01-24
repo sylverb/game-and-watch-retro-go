@@ -67,6 +67,41 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_md_VideoUpscaler = "Video Upscaler",
     //=====================================================================
 
+    // Core\Src\porting\md\main_wsv.c ================================
+    .s_wsv_palette_Default = "Default",
+    .s_wsv_palette_Amber = "Amber",
+    .s_wsv_palette_Green = "Green",
+    .s_wsv_palette_Blue = "Blue",
+    .s_wsv_palette_BGB = "BGB",
+    .s_wsv_palette_Wataroo = "Wataroo",
+    //=====================================================================
+
+    // Core\Src\porting\md\main_msx.c ================================
+    .s_msx_Change_Dsk = "Change Dsk",
+    .s_msx_Select_MSX = "Select MSX",
+    .s_msx_MSX1_EUR = "MSX1 (EUR)",
+    .s_msx_MSX2_EUR = "MSX2 (EUR)",
+    .s_msx_MSX2_JP = "MSX2+ (JP)",
+    .s_msx_Frequency = "Frequency",
+    .s_msx_Freq_Auto = "Auto",
+    .s_msx_Freq_50 = "50Hz",
+    .s_msx_Freq_60 = "60Hz",
+    .s_msx_A_Button = "A Button",
+    .s_msx_B_Button = "B Button",
+    .s_msx_Press_Key = "Press Key",
+    //=====================================================================
+
+    // Core\Src\porting\md\main_amstrad.c ================================
+    .s_amd_Change_Dsk = "Change Dsk",
+    .s_amd_Controls = "Controls",
+    .s_amd_Controls_Joystick = "Joystick",
+    .s_amd_Controls_Keyboard = "Keyboard",
+    .s_amd_palette_Color = "Color",
+    .s_amd_palette_Green = "Green",
+    .s_amd_palette_Grey = "Grey",
+    .s_amd_Press_Key = "Press Key",
+    //=====================================================================
+
     // Core\Src\porting\gw\main_gw.c =======================================
     .s_copy_RTC_to_GW_time = "Copie RTC vers horloge G&W",
     .s_copy_GW_time_to_RTC = "Copie temps G&W vers horloge RTC",

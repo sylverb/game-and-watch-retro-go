@@ -66,6 +66,42 @@ const lang_t lang_zh_tw LANG_DATA = {
     .s_Default = "預設",
     //=====================================================================
 
+    // Core\Src\porting\md\main_wsv.c ================================
+    .s_wsv_palette_Default = "預設",
+    .s_wsv_palette_Amber = "琥珀",
+    .s_wsv_palette_Green = "綠色",
+    .s_wsv_palette_Blue = "藍色",
+    .s_wsv_palette_BGB = "藍綠",
+    .s_wsv_palette_Wataroo = "瓦塔羅",
+    //=====================================================================
+
+    // Core\Src\porting\md\main_msx.c ================================
+    .s_msx_Change_Dsk = "更換碟片",
+    .s_msx_Select_MSX = "選擇版本",
+    .s_msx_MSX1_EUR = "MSX1 (歐)",
+    .s_msx_MSX2_EUR = "MSX2 (歐)",
+    .s_msx_MSX2_JP = "MSX2+ (日)",
+    .s_msx_Frequency = "場頻",
+    .s_msx_Freq_Auto = "自動",
+    .s_msx_Freq_50 = "50Hz",
+    .s_msx_Freq_60 = "60Hz",
+    .s_msx_A_Button = "Ａ鍵",
+    .s_msx_B_Button = "Ｂ鍵",
+    .s_msx_Press_Key = "模擬按鍵",
+    //=====================================================================
+
+    // Core\Src\porting\md\main_amstrad.c ================================
+    .s_amd_Change_Dsk = "更換碟片",
+    .s_amd_Controls = "控制??",
+    .s_amd_Controls_Joystick = "?杆",
+    .s_amd_Controls_Keyboard = "??",
+    .s_amd_palette_Color = "彩色",
+    .s_amd_palette_Green = "綠色",
+    .s_amd_palette_Grey = "灰色",
+    .s_amd_Press_Key = "模擬按鍵",
+    //=====================================================================
+
+
     // Core\Src\porting\gw\main_gw.c =======================================
     .s_copy_RTC_to_GW_time = "從系統時間同步",
     .s_copy_GW_time_to_RTC = "同步時間到系統",

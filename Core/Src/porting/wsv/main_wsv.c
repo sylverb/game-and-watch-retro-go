@@ -410,12 +410,18 @@ void wsv_render_image() {
     }
 }
 
-static char *palette_names[] = {
-    "Default", "Amber  ", "Green  ", "Blue   ", "BGB    ", "Wataroo"
-};
 
 static bool palette_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
+
+    const char *palette_names[] = {
+        curr_lang->s_wsv_palette_Default, 
+        curr_lang->s_wsv_palette_Amber, 
+        curr_lang->s_wsv_palette_Green, 
+        curr_lang->s_wsv_palette_Blue, 
+        curr_lang->s_wsv_palette_BGB, 
+        curr_lang->s_wsv_palette_Wataroo};
+    
     int8 wsv_pal = supervision_get_color_scheme();
     int max = SV_COLOR_SCHEME_COUNT - 1;
 

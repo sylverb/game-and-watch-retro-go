@@ -192,15 +192,9 @@ typedef enum
 
 static char palette_name[7];
 static int selected_palette_index = 0;
-static char *palette_names[] = {
-    "Color", "Green", "Grey"
-};
 
 static char controls_name[10];
 static int selected_controls_index = 0;
-static char *controls_names[] = {
-    "Joystick", "Keyboard"
-};
 
 static char disk_name[128];
 static int selected_disk_index = 0;
@@ -446,6 +440,9 @@ static bool update_disk_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t
 
 static bool update_palette_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
+    const char *palette_names[] = {
+        curr_lang->s_amd_palette_Color,curr_lang->s_amd_palette_Green, curr_lang->s_amd_palette_Grey};
+
     int max = 2;
 
     if (event == ODROID_DIALOG_PREV) selected_palette_index = selected_palette_index > 0 ? selected_palette_index - 1 : max;
@@ -462,6 +459,8 @@ static bool update_palette_cb(odroid_dialog_choice_t *option, odroid_dialog_even
 
 static bool update_controls_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
+    const char *controls_names[] = {
+        curr_lang->s_amd_Controls_Joystick, curr_lang->s_amd_Controls_Keyboard};
     int max = 1;
 
     if (event == ODROID_DIALOG_PREV) selected_controls_index = selected_controls_index > 0 ? selected_controls_index - 1 : max;
@@ -512,19 +511,19 @@ static void createOptionMenu(odroid_dialog_choice_t *options)
     options[index].update_cb = &update_palette_cb;
     index++;
     options[index].id = 100;
-    options[index].label = "Change Dsk";
+    options[index].label = curr_lang->s_amd_Change_Dsk;
     options[index].value = disk_name;
     options[index].enabled = 1;
     options[index].update_cb = &update_disk_cb;
     index++;
     options[index].id = 100;
-    options[index].label = "Controls";
+    options[index].label = curr_lang->s_amd_Controls;
     options[index].value = controls_name;
     options[index].enabled = 1;
     options[index].update_cb = &update_controls_cb;
     index++;
     options[index].id = 100;
-    options[index].label = "Press Key";
+    options[index].label = curr_lang->s_amd_Press_Key;
     options[index].value = key_name;
     options[index].enabled = 1;
     options[index].update_cb = &update_keyboard_cb;

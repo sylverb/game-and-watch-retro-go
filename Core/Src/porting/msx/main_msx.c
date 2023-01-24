@@ -18,6 +18,7 @@
 #include "common.h"
 #include "rom_manager.h"
 #include "gw_lcd.h"
+#include "rg_i18n.h"
 
 #include <assert.h>
 #include "lzma.h"
@@ -92,10 +93,10 @@ static int selected_disk_index = 0;
 static int selected_key_index = 0;
 
 /* strings for options */
-static char disk_name[PROP_MAXPATH];
+static char disk_name[128];
 static char msx_name[11];
 static char key_name[10];
-static char frequency_name[5];
+static char frequency_name[10];
 static char a_button_name[10];
 static char b_button_name[10];
 
@@ -440,13 +441,13 @@ static bool update_frequency_cb(odroid_dialog_choice_t *option, odroid_dialog_ev
 
     switch (selected_frequency_index) {
         case FREQUENCY_VDP_AUTO:
-            strcpy(option->value, "Auto");
+            strcpy(option->value, curr_lang->s_msx_Freq_Auto);
             break;
         case FREQUENCY_VDP_50HZ: // Force 50Hz
-            strcpy(option->value, "50Hz");
+            strcpy(option->value, curr_lang->s_msx_Freq_50);
             break;
         case FREQUENCY_VDP_60HZ: // Force 60Hz
-            strcpy(option->value, "60Hz");
+            strcpy(option->value, curr_lang->s_msx_Freq_60);
             break;
     }
 
@@ -493,15 +494,15 @@ static bool update_msx_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t 
     switch (selected_msx_index) {
         case 0: // MSX1;
             msx2_dif = 0;
-            strcpy(option->value, "MSX1 (EUR)");
+            strcpy(option->value, curr_lang->s_msx_MSX1_EUR);
             break;
         case 1: // MSX2;
             msx2_dif = 10;
-            strcpy(option->value, "MSX2 (EUR)");
+            strcpy(option->value, curr_lang->s_msx_MSX2_EUR);
             break;
         case 2: // MSX2+;
             msx2_dif = 10;
-            strcpy(option->value, "MSX2+ (JP)");
+            strcpy(option->value, curr_lang->s_msx_MSX2_JP);
             break;
     }
 
@@ -774,38 +775,38 @@ static void createOptionMenu(odroid_dialog_choice_t *options) {
     int index=0;
     if (msx_game_type == MSX_GAME_DISK) {
         options[index].id = 100;
-        options[index].label = "Change Dsk";
+        options[index].label = curr_lang->s_msx_Change_Dsk;
         options[index].value = disk_name;
         options[index].enabled = 1;
         options[index].update_cb = &update_disk_cb;
         index++;
     }
     options[index].id = 100;
-    options[index].label = "Select MSX";
+    options[index].label = curr_lang->s_msx_Select_MSX;
     options[index].value = msx_name;
     options[index].enabled = 1;
     options[index].update_cb = &update_msx_cb;
     index++;
     options[index].id = 100;
-    options[index].label = "Frequency";
+    options[index].label = curr_lang->s_msx_Frequency;
     options[index].value = frequency_name;
     options[index].enabled = 1;
     options[index].update_cb = &update_frequency_cb;
     index++;
     options[index].id = 100;
-    options[index].label = "A Button";
+    options[index].label = curr_lang->s_msx_A_Button;
     options[index].value = a_button_name;
     options[index].enabled = 1;
     options[index].update_cb = &update_a_button_cb;
     index++;
     options[index].id = 100;
-    options[index].label = "B Button";
+    options[index].label = curr_lang->s_msx_B_Button;
     options[index].value = b_button_name;
     options[index].enabled = 1;
     options[index].update_cb = &update_b_button_cb;
     index++;
     options[index].id = 100;
-    options[index].label = "Press Key";
+    options[index].label = curr_lang->s_msx_Press_Key;
     options[index].value = key_name;
     options[index].enabled = 1;
     options[index].update_cb = &update_keyboard_cb;

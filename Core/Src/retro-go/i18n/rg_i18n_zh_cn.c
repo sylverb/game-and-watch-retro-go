@@ -7,8 +7,8 @@
 #if !defined (INCLUDED_ZH_CN)
 #define INCLUDED_ZH_CN 0
 #endif
-#if !defined (GAME_GENIE)
-#define GAME_GENIE 0
+#if !defined (CHEAT_CODES)
+#define CHEAT_CODES 0
 #endif
 #if INCLUDED_ZH_CN==1
 
@@ -68,6 +68,41 @@ const lang_t lang_zh_cn LANG_DATA = {
     // Core\Src\porting\nes\main_nes.c =====================================
     //.s_Palette= "调色板" dul
     .s_Default = "默认",
+    //=====================================================================
+
+    // Core\Src\porting\md\main_wsv.c ================================
+    .s_wsv_palette_Default = "默认",
+    .s_wsv_palette_Amber = "琥珀",
+    .s_wsv_palette_Green = "绿色",
+    .s_wsv_palette_Blue = "蓝色",
+    .s_wsv_palette_BGB = "蓝绿",
+    .s_wsv_palette_Wataroo = "瓦塔罗",
+    //=====================================================================
+
+    // Core\Src\porting\md\main_msx.c ================================
+    .s_msx_Change_Dsk = "更换盘片",
+    .s_msx_Select_MSX = "选择版本",
+    .s_msx_MSX1_EUR = "MSX1 (欧)",
+    .s_msx_MSX2_EUR = "MSX2 (欧)",
+    .s_msx_MSX2_JP = "MSX2+ (日)",
+    .s_msx_Frequency = "场频",
+    .s_msx_Freq_Auto = "自动",
+    .s_msx_Freq_50 = "50Hz",
+    .s_msx_Freq_60 = "60Hz",
+    .s_msx_A_Button = "Ａ键",
+    .s_msx_B_Button = "Ｂ键",
+    .s_msx_Press_Key = "模拟按键",
+    //=====================================================================
+
+    // Core\Src\porting\md\main_amstrad.c ================================
+    .s_amd_Change_Dsk = "更换盘片",
+    .s_amd_Controls = "控制设备",
+    .s_amd_Controls_Joystick = "摇杆",
+    .s_amd_Controls_Keyboard = "键盘",
+    .s_amd_palette_Color = "彩色",
+    .s_amd_palette_Green = "绿色",
+    .s_amd_palette_Grey = "灰色",
+    .s_amd_Press_Key = "模拟按键",
     //=====================================================================
 
     // Core\Src\porting\gw\main_gw.c =======================================

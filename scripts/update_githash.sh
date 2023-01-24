@@ -13,9 +13,9 @@ if [[ ! -e $TMPFILE ]]; then
     exit 1
 fi
 
-GITHASH=$(git describe --always --dirty 2> /dev/null || echo "NOGIT")
+GITHASH=$(git describe --always --dirty=+ 2> /dev/null || echo "NOGIT")
 
-echo -e "#ifndef GIT_HASH\n#define GIT_HASH \""${GITHASH}\""\n#endif" > "${TMPFILE}"
+echo -e "#ifndef GIT_HASH\n#define GIT_HASH \"Rabbit ("${GITHASH}")\"\n#endif" > "${TMPFILE}"
 
 if ! diff -q ${TMPFILE} ${githashfile} > /dev/null 2> /dev/null; then
     echo "Updating git hash file ${githashfile}"
