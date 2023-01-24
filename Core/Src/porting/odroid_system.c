@@ -11,6 +11,15 @@ static runtime_stats_t statistics;
 static runtime_counters_t counters;
 static uint skip;
 
+
+#define TURBOS_SPEED 10
+
+bool odroid_button_turbos(void) 
+{
+  int turbos = 1000 / TURBOS_SPEED;
+  return (get_elapsed_time() % turbos) < (turbos / 2);
+}
+
 void odroid_system_panic(const char *reason, const char *function, const char *file)
 {
     printf("*** PANIC: %s\n  *** FUNCTION: %s\n  *** FILE: %s\n", reason, function, file);

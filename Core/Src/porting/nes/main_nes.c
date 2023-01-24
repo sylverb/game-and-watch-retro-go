@@ -446,6 +446,14 @@ void osd_getinput(void)
     };
     common_emu_input_loop(&joystick, options);
 
+    uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
+    bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
+    bool turbo_b = (joystick.values[ODROID_INPUT_B] && (turbo_buttons & 2));
+    bool turbo_button = odroid_button_turbos();
+    if (turbo_a)
+        joystick.values[ODROID_INPUT_A] = turbo_button;
+    if (turbo_b)
+        joystick.values[ODROID_INPUT_B] = ! turbo_button;
 
     if ((joystick.values[ODROID_INPUT_START]) || (joystick.values[ODROID_INPUT_X])) pad0 |= INP_PAD_START;
     if ((joystick.values[ODROID_INPUT_SELECT]) || (joystick.values[ODROID_INPUT_Y])) pad0 |= INP_PAD_SELECT;

@@ -89,6 +89,7 @@ static const persistent_config_t persistent_config_default = {
     .font_size = 8,
     .theme = 2, //use as theme index
     .colors = 0,
+    .turbo_buttons = 0,
     .font = 8,
 #if CODEPAGE==12521
     .lang = 1,
@@ -288,6 +289,25 @@ void odroid_settings_font_set(int8_t font)
     else if (font >= gui_font_count)
         font = gui_font_count - 1;
     persistent_config_ram.font = font;
+}
+
+int8_t odroid_settings_turbo_buttons_get()
+{
+    int turbo_buttons = persistent_config_ram.turbo_buttons;
+    if (turbo_buttons < 0)
+        persistent_config_ram.turbo_buttons = 0;
+    else if (turbo_buttons >= 3)
+        persistent_config_ram.turbo_buttons = 3;
+    return persistent_config_ram.turbo_buttons;
+}
+
+void odroid_settings_turbo_buttons_set(int8_t turbo_buttons)
+{
+    if (turbo_buttons < 0)
+        turbo_buttons = 0;
+    else if (turbo_buttons >= 3)
+        turbo_buttons = 3;
+    persistent_config_ram.turbo_buttons = turbo_buttons;
 }
 
 

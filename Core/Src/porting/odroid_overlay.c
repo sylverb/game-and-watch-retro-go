@@ -934,14 +934,47 @@ bool speedup_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t eve
     return event == ODROID_DIALOG_ENTER;
 }
 
+
+
+static bool turbo_buttons_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    const char *GW_Turbo_Buttons[] = {curr_lang->s_Turbo_None, curr_lang->s_Turbo_A, curr_lang->s_Turbo_B, curr_lang->s_Turbo_AB};
+    int8_t turbo_buttons = odroid_settings_turbo_buttons_get();
+
+    if (event == ODROID_DIALOG_PREV)
+    {
+        if (turbo_buttons > 0)
+            odroid_settings_turbo_buttons_set(--turbo_buttons);
+        else
+        {
+            turbo_buttons = 4 - 1;
+            odroid_settings_turbo_buttons_set(4 - 1);
+        }
+    }
+    else if (event == ODROID_DIALOG_NEXT)
+    {
+        if (turbo_buttons < 4 - 1)
+            odroid_settings_turbo_buttons_set(++turbo_buttons);
+        else
+        {
+            turbo_buttons = 0;
+            odroid_settings_turbo_buttons_set(0);
+        }
+    }
+    sprintf(option->value, "%s", (char *)GW_Turbo_Buttons[turbo_buttons]);
+    return event == ODROID_DIALOG_ENTER;
+}
+
 int odroid_overlay_settings_menu(odroid_dialog_choice_t *extra_options)
 {
     static char bright_value[25];
     static char volume_value[25];
+    static char turbo_value[25];
 
     odroid_dialog_choice_t options[16] = {                         //
         {0, curr_lang->s_Brightness, bright_value, 1, &brightness_update_cb}, //
         {1, curr_lang->s_Volume, volume_value, 1, &volume_update_cb},
+        {2, curr_lang->s_Turbo_Button, turbo_value, 1, &turbo_buttons_update_cb},
 
         ODROID_DIALOG_CHOICE_LAST, //
     };

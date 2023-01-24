@@ -36,12 +36,15 @@ int  i18n_draw_text(uint16_t x_pos, uint16_t y_pos, uint16_t width, uint16_t max
 void odroid_overlay_clock(int x_pos, int y_pos);
 
 
+bool odroid_button_turbos(void);
+
 int8_t odroid_settings_theme_get();
 void odroid_settings_theme_set(int8_t theme);
 
 int8_t odroid_settings_colors_get();
 void odroid_settings_colors_set(int8_t colors);
-
+int8_t odroid_settings_turbo_buttons_get();
+void odroid_settings_turbo_buttons_set(int8_t turbo_buttons);
 int8_t odroid_settings_splashani_get();
 void odroid_settings_splashani_set(int8_t splashani);
 

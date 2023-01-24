@@ -52,6 +52,19 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_Palette = "调色板",
     //=====================================================================
 
+    // Core\Src\porting\md\main_gwenesis.c ================================
+    .s_md_keydefine = "按键映射 A-B-C",
+    .s_md_Synchro = "同步方式",
+    .s_md_Synchro_Audio = "音频",
+    .s_md_Synchro_Vsync = "视频",
+    .s_md_Dithering = "抖动显示",
+    .s_md_Debug_bar = "测试信息",
+    .s_md_Option_ON = "\x6",
+    .s_md_Option_OFF = "\x5",
+    .s_md_AudioFilter = "音频提升",
+    .s_md_VideoUpscaler = "视频提升",
+    //=====================================================================
+
     // Core\Src\porting\nes\main_nes.c =====================================
     //.s_Palette= "调色板" dul
     .s_Default = "默认",
@@ -132,8 +145,8 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_Delete_save = "□ 删除进度",
     .s_Confiem_del_save = "您确认要删除已保存的游戏进度？",
 #if CHEAT_CODES == 1
-    .s_Cheat_Codes = "Cheat Codes",
-    .s_Cheat_Codes_Title = "Cheat Options",
+    .s_Cheat_Codes = "＆ 金手指码",
+    .s_Cheat_Codes_Title = "金手指",
     .s_Cheat_Codes_ON = "\x6",
     .s_Cheat_Codes_OFF = "\x5",
 #endif
@@ -190,6 +203,12 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_Weekday_Fri = "五",
     .s_Weekday_Sat = "六",
     .s_Weekday_Sun = "日",
+
+    .s_Turbo_Button = "连发",
+    .s_Turbo_None = "关闭",
+    .s_Turbo_A = "Ａ",
+    .s_Turbo_B = "Ｂ",
+    .s_Turbo_AB = "Ａ和Ｂ",    
 
     .s_Date_Format = "20%02d年%02d月%02d日 周%s",
     .s_Title_Date_Format = "%02d-%02d 周%s %02d:%02d:%02d",

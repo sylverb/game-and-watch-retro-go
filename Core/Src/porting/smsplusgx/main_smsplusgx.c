@@ -15,6 +15,7 @@
 #include "common.h"
 #include "main_smsplusgx.h"
 #include "appid.h"
+#include "rg_i18n.h"
 #include "lzma.h"
 #include "gw_malloc.h"
 
@@ -526,6 +527,14 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, 
         common_emu_input_loop(&joystick, options);
 
         bool drawFrame = common_emu_frame_loop();
+        uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
+        bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
+        bool turbo_b = (joystick.values[ODROID_INPUT_B] && (turbo_buttons & 2));
+        bool turbo_button = odroid_button_turbos();
+        if (turbo_a)
+            joystick.values[ODROID_INPUT_A] = turbo_button;
+        if (turbo_b)
+            joystick.values[ODROID_INPUT_B] = !turbo_button;
 
         sms_update_keys( &joystick );
 

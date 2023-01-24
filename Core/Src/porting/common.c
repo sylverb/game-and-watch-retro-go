@@ -13,6 +13,7 @@
 #include "gw_buttons.h"
 #include "gw_lcd.h"
 #include "gw_linker.h"
+#include "rg_i18n.h"
 
 #if ENABLE_SCREENSHOT
 uint16_t framebuffer_capture[GW_LCD_WIDTH * GW_LCD_HEIGHT]  __attribute__((section (".fbflash"))) __attribute__((aligned(4096)));
@@ -234,25 +235,26 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
                 set_ingame_overlay(INGAME_OVERLAY_LOAD);
             }
             else if(joystick->values[ODROID_INPUT_X]){
-                // Save State
                 last_key = ODROID_INPUT_X;
                 odroid_audio_mute(true);
-
-                // Call ingame overlay so that the save icon gets displayed first.
-                set_ingame_overlay(INGAME_OVERLAY_SAVE);
-                common_ingame_overlay();
-                lcd_sync();
-
-                odroid_system_emu_save_state(0);
+                //change turbo 
+                uint8_t turbo_key = odroid_settings_turbo_buttons_get();
+                turbo_key ^= 1;
+                odroid_settings_turbo_buttons_set(turbo_key);
+                set_ingame_overlay(INGAME_OVERLAY_BUTTON_A);
                 odroid_audio_mute(false);
                 common_emu_state.startup_frames = 0;
             }
             else if(joystick->values[ODROID_INPUT_Y]){
-                // Load State
                 last_key = ODROID_INPUT_Y;
-                odroid_system_emu_load_state(0);
+                odroid_audio_mute(true);
+                //change turbo 
+                uint8_t turbo_key = odroid_settings_turbo_buttons_get();
+                turbo_key ^= 2;
+                odroid_settings_turbo_buttons_set(turbo_key);
+                set_ingame_overlay(INGAME_OVERLAY_BUTTON_B);
+                odroid_audio_mute(false);
                 common_emu_state.startup_frames = 0;
-                set_ingame_overlay(INGAME_OVERLAY_LOAD);
             }
         }
 
@@ -525,6 +527,7 @@ void common_ingame_overlay(void) {
     pixel_t *fb = lcd_get_active_buffer();
     int8_t level;
     uint8_t bh;
+    uint8_t turbo_key;
     uint16_t by = INGAME_OVERLAY_BOX_Y;
 
     uint16_t percentage = odroid_input_read_battery().percentage;
@@ -607,11 +610,19 @@ void common_ingame_overlay(void) {
             break;
         case INGAME_OVERLAY_BUTTON_A:
             DARKEN_IMG_ONLY();
-            draw_img(fb, IMG_DISKETTE, INGAME_OVERLAY_IMG_X, INGAME_OVERLAY_IMG_Y);
+            turbo_key = odroid_settings_turbo_buttons_get();
+            if (turbo_key & 1)
+                draw_img(fb, IMG_BUTTON_A_P, INGAME_OVERLAY_IMG_X, INGAME_OVERLAY_IMG_Y);
+            else
+                draw_img(fb, IMG_BUTTON_A, INGAME_OVERLAY_IMG_X, INGAME_OVERLAY_IMG_Y);
             break;
         case INGAME_OVERLAY_BUTTON_B:
             DARKEN_IMG_ONLY();
-            draw_img(fb, IMG_FOLDER, INGAME_OVERLAY_IMG_X, INGAME_OVERLAY_IMG_Y);
+            turbo_key = odroid_settings_turbo_buttons_get();
+            if (turbo_key & 2)
+                draw_img(fb, IMG_BUTTON_B_P, INGAME_OVERLAY_IMG_X, INGAME_OVERLAY_IMG_Y);
+            else
+                draw_img(fb, IMG_BUTTON_B, INGAME_OVERLAY_IMG_X, INGAME_OVERLAY_IMG_Y);
             break;
         case INGAME_OVERLAY_SPEEDUP:
             DARKEN_IMG_ONLY();

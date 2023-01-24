@@ -37,6 +37,7 @@ __license__ = "GPLv3"
 #include "common.h"
 #include "rom_manager.h"
 #include "appid.h"
+#include "rg_i18n.h"
 
 /* Gwenesis Emulator */
 #include "m68k.h"
@@ -521,56 +522,57 @@ static bool gwenesis_submenu_setABC(odroid_dialog_choice_t *option, odroid_dialo
 }
 
 // Some options using submenu
-static char debug_bar_str[4]="ON ";
 static bool gwenesis_submenu_debug_bar(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
   if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
       gwenesis_show_debug_bar = gwenesis_show_debug_bar == 0 ? 1 : 0;
     }
-    if (gwenesis_show_debug_bar == 0) strcpy(option->value, "OFF");
-    if (gwenesis_show_debug_bar == 1) strcpy(option->value, "ON ");
+    if (gwenesis_show_debug_bar == 0) strcpy(option->value, curr_lang->s_md_Option_OFF);
+    if (gwenesis_show_debug_bar == 1) strcpy(option->value, curr_lang->s_md_Option_ON);
 
     return event == ODROID_DIALOG_ENTER;
 }
 
-static char AudioFilter_str[4] ="OFF";
 static bool gwenesis_submenu_setAudioFilter(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
   if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
     gwenesis_lpfilter = gwenesis_lpfilter == 0 ? 1 : 0;
   }
 
-    if (gwenesis_lpfilter == 0) strcpy(option->value, "OFF");
-    if (gwenesis_lpfilter == 1) strcpy(option->value, "ON ");
+    if (gwenesis_lpfilter == 0) strcpy(option->value, curr_lang->s_md_Option_OFF);
+    if (gwenesis_lpfilter == 1) strcpy(option->value, curr_lang->s_md_Option_ON);
 
     return event == ODROID_DIALOG_ENTER;
 }
 
-static char VideoUpscaler_str[4] ="ON ";
 static bool gwenesis_submenu_setVideoUpscaler(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
   if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
     gwenesis_H32upscaler = gwenesis_H32upscaler == 0 ? 1 : 0;
   }
 
-    if (gwenesis_H32upscaler == 0) strcpy(option->value, "OFF");
-    if (gwenesis_H32upscaler == 1) strcpy(option->value, "ON ");
+    if (gwenesis_H32upscaler == 0) strcpy(option->value, curr_lang->s_md_Option_OFF);
+    if (gwenesis_H32upscaler == 1) strcpy(option->value, curr_lang->s_md_Option_ON);
 
     return event == ODROID_DIALOG_ENTER;
 }
 
-static char gwenesis_sync_mode_str[5]="VSYNC";
 static bool gwenesis_submenu_sync_mode(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
   if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
     gwenesis_vsync_mode = gwenesis_vsync_mode == 0 ? 1 : 0;
   }
 
-    if (gwenesis_vsync_mode == 0) strcpy(option->value, "AUDIO");
-    if (gwenesis_vsync_mode == 1) strcpy(option->value, "VSYNC");
+    if (gwenesis_vsync_mode == 0) strcpy(option->value, curr_lang->s_md_Synchro_Audio);
+    if (gwenesis_vsync_mode == 1) strcpy(option->value, curr_lang->s_md_Synchro_Vsync);
 
     return event == ODROID_DIALOG_ENTER;
 }
+
+static char debug_bar_str[2];
+static char AudioFilter_str[2];
+static char VideoUpscaler_str[2];
+static char gwenesis_sync_mode_str[8];
 static char gwenesis_break_str[6]="BREAK";
 
 static bool gwenesis_break(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat) {
@@ -578,18 +580,6 @@ static bool gwenesis_break(odroid_dialog_choice_t *option, odroid_dialog_event_t
     assert(0);
   return event == ODROID_DIALOG_ENTER;
 }
-static odroid_dialog_choice_t options[] = {
-    {301, "keys: A-B-C", ABCkeys_str, 1, &gwenesis_submenu_setABC},
-    {302, "AudioFilter",AudioFilter_str,1,&gwenesis_submenu_setAudioFilter},
-    {303, "VideoUpscaler",VideoUpscaler_str,ENABLE_DEBUG_OPTIONS,&gwenesis_submenu_setVideoUpscaler},
-    {304, "Synchro", gwenesis_sync_mode_str, ENABLE_DEBUG_OPTIONS, &gwenesis_submenu_sync_mode},
-    {310, "Debug bar", debug_bar_str,ENABLE_DEBUG_OPTIONS, &gwenesis_submenu_debug_bar},
-  //  {320, "+GameGenie", gwenesis_GameGenie_str, 0, &gwenesis_submenu_GameGenie},
-  //  {330, "-GameGenie", gwenesis_GameGenie_reverse_str, 0, &gwenesis_submenu_GameGenie_reverse},
-  {399,"BREAK",gwenesis_break_str,ENABLE_DEBUG_OPTIONS,&gwenesis_break},
-
-    ODROID_DIALOG_CHOICE_LAST};
-    
 void gwenesis_save_local_data(void) {
   SaveState *state = saveGwenesisStateOpenForWrite("gwenesis");
 
@@ -724,10 +714,31 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
       joystick.values[ODROID_INPUT_SELECT] = key_state;
       #endif
 
-      common_emu_input_loop(&joystick, options);
+    odroid_dialog_choice_t options[] = {
+        {301, curr_lang->s_md_keydefine, ABCkeys_str, 1, &gwenesis_submenu_setABC},
+        {302, curr_lang->s_md_AudioFilter, AudioFilter_str, 1, &gwenesis_submenu_setAudioFilter},
+        {303, curr_lang->s_md_VideoUpscaler, VideoUpscaler_str, ENABLE_DEBUG_OPTIONS, &gwenesis_submenu_setVideoUpscaler},
+        {304, curr_lang->s_md_Synchro, gwenesis_sync_mode_str, ENABLE_DEBUG_OPTIONS, &gwenesis_submenu_sync_mode},
+        {310, curr_lang->s_md_Debug_bar, debug_bar_str, ENABLE_DEBUG_OPTIONS, &gwenesis_submenu_debug_bar},
+        //  {320, "+GameGenie", gwenesis_GameGenie_str, 0, &gwenesis_submenu_GameGenie},
+        //  {330, "-GameGenie", gwenesis_GameGenie_reverse_str, 0, &gwenesis_submenu_GameGenie_reverse},
+        //  {399,"BREAK",gwenesis_break_str,ENABLE_DEBUG_OPTIONS,&gwenesis_break},
 
-      // bool drawFrame =
-      common_emu_frame_loop();
+        ODROID_DIALOG_CHOICE_LAST};
+
+    common_emu_input_loop(&joystick, options);
+
+     uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
+     bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
+     bool turbo_b = (joystick.values[ODROID_INPUT_B] && (turbo_buttons & 2));
+     bool turbo_button = odroid_button_turbos();
+     if (turbo_a)
+       joystick.values[ODROID_INPUT_A] = turbo_button;
+     if (turbo_b)
+       joystick.values[ODROID_INPUT_B] = !turbo_button;
+
+    // bool drawFrame =
+    common_emu_frame_loop();
 
       /* Eumulator loop */
       hint_counter = gwenesis_vdp_regs[10];

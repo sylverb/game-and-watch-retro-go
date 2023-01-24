@@ -44,6 +44,19 @@ const lang_t lang_de_de LANG_DATA = {
     //.s_Palette = "Palette" dul
     .s_Default = "Standard",
     //=====================================================================
+    
+    // Core\Src\porting\md\main_gwenesis.c ================================
+    .s_md_keydefine = "keys: A-B-C",
+    .s_md_Synchro = "Synchro",
+    .s_md_Synchro_Audio = "AUDIO",
+    .s_md_Synchro_Vsync = "VSYNC",
+    .s_md_Dithering = "Dithering",
+    .s_md_Debug_bar = "Debug bar",
+    .s_md_Option_ON = "\x6",
+    .s_md_Option_OFF = "\x5",
+    .s_md_AudioFilter = "Audio Filter",
+    .s_md_VideoUpscaler = "Video Upscaler",
+    //=====================================================================
 
     // Core\Src\porting\gw\main_gw.c =======================================
     .s_copy_RTC_to_GW_time = "RTC -> G&W Zeit",
@@ -117,11 +130,11 @@ const lang_t lang_de_de LANG_DATA = {
     .s_Add_favorite = "Favorit hinzufügen",
     .s_Delete_save = "Spielstand löschen",
     .s_Confiem_del_save = "Spielstand wirklich löschen?",
-#if GAME_GENIE == 1
-    .s_Game_Genie_Codes = "Game Genie Codes",
-    .s_Game_Genie_Codes_Title = "GG Optionen",
-    .s_Game_Genie_Codes_ON = "\x6",
-    .s_Game_Genie_Codes_OFF = "\x5",
+#if CHEAT_CODES == 1
+    .s_Cheat_Codes = "Cheat Codes",
+    .s_Cheat_Codes_Title = "Cheat Options",
+    .s_Cheat_Codes_ON = "\x6",
+    .s_Cheat_Codes_OFF = "\x5",
 #endif
     //=====================================================================
 
@@ -175,6 +188,11 @@ const lang_t lang_de_de LANG_DATA = {
     .s_Weekday_Fri = "Fre",
     .s_Weekday_Sat = "Sam",
     .s_Weekday_Sun = "Son",
+    .s_Turbo_Button = "Turbo",
+    .s_Turbo_None = "None",
+    .s_Turbo_A = "A",
+    .s_Turbo_B = "B",
+    .s_Turbo_AB = "A & B",
 
     .s_Title_Date_Format = "%s %02d.%02d. %02d:%02d:%02d",
     .s_Date_Format = "%s der %02d.%02d.20%02d",

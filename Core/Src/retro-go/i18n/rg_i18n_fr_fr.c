@@ -54,6 +54,19 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_Default = "Par défaut",
     //=====================================================================
 
+    // Core\Src\porting\md\main_gwenesis.c ================================
+    .s_md_keydefine = "keys: A-B-C",
+    .s_md_Synchro = "Synchro",
+    .s_md_Synchro_Audio = "AUDIO",
+    .s_md_Synchro_Vsync = "VSYNC",
+    .s_md_Dithering = "Dithering",
+    .s_md_Debug_bar = "Debug bar",
+    .s_md_Option_ON = "\x6",
+    .s_md_Option_OFF = "\x5",
+    .s_md_AudioFilter = "Audio Filter",
+    .s_md_VideoUpscaler = "Video Upscaler",
+    //=====================================================================
+
     // Core\Src\porting\gw\main_gw.c =======================================
     .s_copy_RTC_to_GW_time = "Copie RTC vers horloge G&W",
     .s_copy_GW_time_to_RTC = "Copie temps G&W vers horloge RTC",
@@ -186,6 +199,12 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_Weekday_Fri = "Ven",
     .s_Weekday_Sat = "Sam",
     .s_Weekday_Sun = "Dim",
+    .s_Turbo_Button = "Turbo",
+    .s_Turbo_None = "Aucun",
+    .s_Turbo_A = "A",
+    .s_Turbo_B = "B",
+    .s_Turbo_AB = "A & B",
+
 
     .s_Title_Date_Format = "%02d-%02d %s %02d:%02d:%02d",
     .s_Date_Format = "%02d.%02d.20%02d %s",

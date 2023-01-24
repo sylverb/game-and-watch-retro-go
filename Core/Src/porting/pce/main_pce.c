@@ -26,6 +26,7 @@
 #include "sound_pce.h"
 #include "appid.h"
 #include "lzma.h"
+#include "rg_i18n.h"
 
 //#define PCE_SHOW_DEBUG
 //#define XBUF_WIDTH 	(480 + 32)
@@ -659,6 +660,15 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, uint8_t save_slot) {
             ODROID_DIALOG_CHOICE_LAST
         };
         common_emu_input_loop(&joystick, options);
+        uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
+        bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
+        bool turbo_b = (joystick.values[ODROID_INPUT_B] && (turbo_buttons & 2));
+        bool turbo_button = odroid_button_turbos();
+        if (turbo_a)
+            joystick.values[ODROID_INPUT_A] = turbo_button;
+        if (turbo_b)
+            joystick.values[ODROID_INPUT_B] = !turbo_button;
+
         pce_input_read(&joystick);
 
         for (PCE.Scanline = 0; PCE.Scanline < 263; ++PCE.Scanline) {

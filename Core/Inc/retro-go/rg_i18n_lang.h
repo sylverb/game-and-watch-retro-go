@@ -27,6 +27,18 @@ typedef struct
     // const char *s_Palette "Palette" dul
     const char *s_Default;
     //=====================================================================
+    // Core\Src\porting\md\main_gwenesis.c ================================
+    const char *s_md_keydefine;
+    const char *s_md_Synchro;
+    const char *s_md_Synchro_Audio;
+    const char *s_md_Synchro_Vsync;
+    const char *s_md_Dithering;
+    const char *s_md_Debug_bar;
+    const char *s_md_Option_ON;
+    const char *s_md_Option_OFF;
+    const char *s_md_AudioFilter;
+    const char *s_md_VideoUpscaler;
+    //=====================================================================
     // Core\Src\porting\gw\main_gw.c =======================================
     const char *s_copy_RTC_to_GW_time;
     const char *s_copy_GW_time_to_RTC;
@@ -148,6 +160,12 @@ typedef struct
     const char *s_Title_Date_Format;
     const char *s_Date_Format;
     const char *s_Time_Format;
+    const char *s_Turbo_Button;
+    const char *s_Turbo_None;
+    const char *s_Turbo_A;
+    const char *s_Turbo_B;
+    const char *s_Turbo_AB;
+
     const int (*fmt_Title_Date_Format)(char *outstr, const char *datefmt, uint16_t day, uint16_t month, const char *weekday, uint16_t hour, uint16_t minutes, uint16_t seconds);
     // const char *fmt_Title_Date_Format(outstr,datefmt,day,month,weekday,hour,minutes,seconds) sprintf(outstr,datefmt,day,month,weekday,hour,minutes,seconds)
     const int (*fmtDate)(char *outstr, const char *datefmt, uint16_t day, uint16_t month, uint16_t year, const char *weekday);
