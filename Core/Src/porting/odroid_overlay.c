@@ -1044,12 +1044,14 @@ static bool cheat_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_
         odroid_settings_ActiveGameGenieCodes_set(CHOSEN_FILE->id, option->id, is_on);
     }
     strcpy(option->value, is_on ? curr_lang->s_Cheat_Codes_ON : curr_lang->s_Cheat_Codes_OFF);
+#ifdef ENABLE_EMULATOR_MSX
     if (event == ODROID_DIALOG_ENTER) {
         retro_emulator_t *emu = file_to_emu(CHOSEN_FILE);
         if(strcmp(emu->system_name, "MSX") == 0) {
             update_cheats_msx();
         }
     }
+#endif
     return event == ODROID_DIALOG_ENTER;
 }
 
