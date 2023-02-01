@@ -80,6 +80,7 @@ WWDG_HandleTypeDef hwwdg1;
 
 #define BOOT_MODE_APP      0
 #define BOOT_MODE_FLASHAPP 1
+#define BOOT_MODE_WARM     2
 
 char logbuf[1024 * 4] PERSISTENT __attribute__((aligned(4)));
 uint32_t log_idx PERSISTENT;
@@ -111,7 +112,7 @@ static void MX_TIM1_Init(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 
-void app_main(void);
+void app_main(uint8_t boot_mode);
 
 /* USER CODE END PFP */
 
@@ -389,6 +390,7 @@ int main(void)
     break;
   case BOOT_MAGIC_RESET:
     printf("Boot from warm reset.\nboot_magic=0x%08lx\n", boot_magic);
+    boot_mode = BOOT_MODE_WARM;
     break;
   case BOOT_MAGIC_WATCHDOG:
     printf("Boot from watchdog reset!\nboot_magic=0x%08lx\n", boot_magic);
@@ -516,9 +518,10 @@ int main(void)
 
   switch (boot_mode) {
   case BOOT_MODE_APP:
+  case BOOT_MODE_WARM:
     wdog_enable();
     // Launch the emulator
-    app_main();
+    app_main(boot_mode);
     break;
   case BOOT_MODE_FLASHAPP:
     flashapp_main();

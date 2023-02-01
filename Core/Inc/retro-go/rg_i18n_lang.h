@@ -172,9 +172,6 @@ typedef struct
     const char *s_Disable_DBGMCU_CK;
     const char *s_Debug_Title;
     const char *s_Idle_power_off;
-    const char *s_Splash_Option;
-    const char *s_Splash_On;
-    const char *s_Splash_Off;
     const char *s_Time;
     const char *s_Date;
     const char *s_Time_Title;

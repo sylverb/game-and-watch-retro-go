@@ -210,9 +210,6 @@ const lang_t lang_it_it LANG_DATA = {
     //.s_Close = "Fermer",
     .s_Debug_Title = "Debug",
     .s_Idle_power_off = "Spegnimento automatico",
-    .s_Splash_Option = "Animazione accensione",
-    .s_Splash_On = "\x6",
-    .s_Splash_Off = "\x5",
 
     .s_Time = "Ora",
     .s_Date = "Data",

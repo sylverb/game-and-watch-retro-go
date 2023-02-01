@@ -45,8 +45,6 @@ int8_t odroid_settings_colors_get();
 void odroid_settings_colors_set(int8_t colors);
 int8_t odroid_settings_turbo_buttons_get();
 void odroid_settings_turbo_buttons_set(int8_t turbo_buttons);
-int8_t odroid_settings_splashani_get();
-void odroid_settings_splashani_set(int8_t splashani);
 
 int8_t odroid_settings_font_get();
 void odroid_settings_font_set(int8_t font);

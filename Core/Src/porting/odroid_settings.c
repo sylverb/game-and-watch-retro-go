@@ -63,7 +63,6 @@ typedef struct persistent_config {
     uint8_t font;
     uint8_t lang;
     uint8_t romlang;
-    uint8_t splashani;
     uint8_t startup_app;
     void *startup_file;
 
@@ -137,7 +136,6 @@ static const persistent_config_t persistent_config_default = {
 #else
     .romlang = 0,
 #endif
-    .splashani = 1,
     .startup_app = 0,
     .main_menu_timeout_s = 60 * 10, // Turn off after 10 minutes of idle time in the main menu
     .main_menu_selected_tab = 0,
@@ -241,16 +239,6 @@ int32_t odroid_settings_int32_get(const char *key, int32_t default_value)
 
 void odroid_settings_int32_set(const char *key, int32_t value)
 {
-}
-
-int8_t odroid_settings_splashani_get()
-{
-    return persistent_config_ram.splashani;
-}
-
-void odroid_settings_splashani_set(int8_t splashani)
-{
-    persistent_config_ram.splashani = splashani;
 }
 
 int8_t odroid_settings_colors_get()

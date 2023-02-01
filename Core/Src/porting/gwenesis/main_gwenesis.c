@@ -573,13 +573,8 @@ static char debug_bar_str[2];
 static char AudioFilter_str[2];
 static char VideoUpscaler_str[2];
 static char gwenesis_sync_mode_str[8];
-static char gwenesis_break_str[6]="BREAK";
 
-static bool gwenesis_break(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat) {
-  if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT)
-    assert(0);
-  return event == ODROID_DIALOG_ENTER;
-}
+
 void gwenesis_save_local_data(void) {
   SaveState *state = saveGwenesisStateOpenForWrite("gwenesis");
 
@@ -722,7 +717,6 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
         {310, curr_lang->s_md_Debug_bar, debug_bar_str, ENABLE_DEBUG_OPTIONS, &gwenesis_submenu_debug_bar},
         //  {320, "+GameGenie", gwenesis_GameGenie_str, 0, &gwenesis_submenu_GameGenie},
         //  {330, "-GameGenie", gwenesis_GameGenie_reverse_str, 0, &gwenesis_submenu_GameGenie_reverse},
-        //  {399,"BREAK",gwenesis_break_str,ENABLE_DEBUG_OPTIONS,&gwenesis_break},
 
         ODROID_DIALOG_CHOICE_LAST};
 

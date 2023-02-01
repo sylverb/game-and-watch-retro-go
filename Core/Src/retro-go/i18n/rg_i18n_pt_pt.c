@@ -199,9 +199,7 @@ const lang_t lang_pt_pt LANG_DATA = {
     //.s_Close                  = "Fechar",
     .s_Debug_Title = "Depuração",
     .s_Idle_power_off = "Desligamento inativo",
-    .s_Splash_Option = "Animação inicial",
-    .s_Splash_On = "\x6",
-    .s_Splash_Off = "\x5",
+
     .s_Time = "Horas",
     .s_Date = "Data",
     .s_Time_Title = "HORAS",

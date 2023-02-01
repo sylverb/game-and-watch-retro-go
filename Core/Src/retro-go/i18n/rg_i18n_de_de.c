@@ -199,9 +199,6 @@ const lang_t lang_de_de LANG_DATA = {
     //.s_Close                   = "Schlieﬂen",
     .s_Debug_Title = "Debug",
     .s_Idle_power_off = "Abschalten bei Leerlauf",
-    .s_Splash_Option = "Splash Animation",
-    .s_Splash_On = "\x6",
-    .s_Splash_Off = "\x5",
 
     .s_Time = "Zeit",
     .s_Date = "Datum",

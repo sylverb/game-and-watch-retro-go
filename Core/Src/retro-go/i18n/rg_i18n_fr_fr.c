@@ -209,9 +209,6 @@ const lang_t lang_fr_fr LANG_DATA = {
     //.s_Close                   = "Fermer",
     .s_Debug_Title = "Debug",
     .s_Idle_power_off = "Temps avant veille",
-    .s_Splash_Option = "Animation Splash",
-    .s_Splash_On = "\x6",
-    .s_Splash_Off = "\x5",
 
     .s_Time = "Heure",
     .s_Date = "Date",
