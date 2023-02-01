@@ -1,5 +1,8 @@
 ![](assets/gnw.gif)
 
+# Support
+You can support my (sylverb) work and get beta versions of new emulators on https://www.patreon.com/sylverb
+
 # NewUI howto
 Please run `make help` to see more information.
 
