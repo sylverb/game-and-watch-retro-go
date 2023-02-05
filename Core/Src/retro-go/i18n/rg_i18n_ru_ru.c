@@ -28,9 +28,9 @@ int ru_ru_fmt_Time(char *outstr, const char *timefmt, uint16_t hour, uint16_t mi
 
 const lang_t lang_ru_ru LANG_DATA = {
   .codepage = 1251,
-  .extra_font = NULL,
-  .s_LangUI = "язык интерфейса (UI Lang)",
-  .s_LangTitle = "язык (Title Lang)",
+  .extra_font = font_ru_ru,
+  .s_LangUI = "язык интерфейса",
+  .s_LangTitle = "язык",
   .s_LangName = "Russian",
   // Core\Src\porting\gb\main_gb.c =======================================
   .s_Palette = "ѕалитра",
@@ -90,7 +90,7 @@ const lang_t lang_ru_ru LANG_DATA = {
   .s_Quit_to_menu = "¬ыйти в меню",
   .s_Retro_Go_options = "Retro-Go",
 
-  .s_Font = "Ўрифт (Font)",
+  .s_Font = "Ўрифт",
   .s_Colors = "÷вета",
   .s_Theme_Title = "“ема интерфейса",
   .s_Theme_sList = "ѕростой список",

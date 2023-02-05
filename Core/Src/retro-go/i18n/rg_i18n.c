@@ -73,6 +73,9 @@
 #if INCLUDED_ZH_TW == 1
 #include "fonts/font_zh_tw.h"
 #endif
+#if INCLUDED_RU_RU == 1
+#include "fonts/font_ru_ru.h"
+#endif
 
 #if BIG_BANK == 1
 #define LANG_DATA
@@ -186,10 +189,6 @@ char *curr_font = font_un_17;
 #include "fonts/font_un_18.h"
 const char *gui_fonts[1] = { font_un_18 };
 char *curr_font = font_un_18;
-#elif ONEFONT == 19
-#include "fonts/font_1251_01.h"
-const char *gui_fonts[1] = { font_1251_01 };
-char *curr_font = font_1251_01;
 #else
 #include "fonts/font_un_01.h"
 #include "fonts/font_un_02.h"
@@ -209,12 +208,11 @@ char *curr_font = font_1251_01;
 #include "fonts/font_un_16.h"
 #include "fonts/font_un_17.h"
 #include "fonts/font_un_18.h"
-#include "fonts/font_1251_01.h"
-const char *gui_fonts[19] = {
+const char *gui_fonts[18] = {
     font_un_01,    font_un_02,    font_un_03,    font_un_04,    font_un_05,
     font_un_06,    font_un_07,    font_un_08,    font_un_09,    font_un_10,
     font_un_11,    font_un_12,    font_un_13,    font_un_14,    font_un_15,
-    font_un_16,    font_un_17,    font_un_18,    font_1251_01
+    font_un_16,    font_un_17,    font_un_18,
     };
 char *curr_font = font_un_01;
 #endif
@@ -298,16 +296,23 @@ int i18n_get_text_width(const char *text, const lang_t* lang)
     bool is_cjk = IS_CJK(lang);
     for (int i = 0; i < text_len; i++)
     {
-        if ((text[i] > 0xA0) && is_cjk)
+        if (text[i] > 0xA0)
         {
-            ret += 12;
-            i++;
+            if (is_cjk)
+            {
+                ret += 12;
+                i++;
+            }
+            else if (lang->extra_font != NULL)
+                ret += lang->extra_font[text[i]];
+            else
+                ret += curr_font[text[i]];
         }
         else
             ret += curr_font[text[i]];
     }
     return ret;
-}
+};
 
 int i18n_get_text_lines(const char *text, const int fix_width, const lang_t* lang)
 {
@@ -393,16 +398,19 @@ int i18n_draw_text_line(uint16_t x_pos, uint16_t y_pos, uint16_t width, const ch
         uint8_t c1 = realtxt[i];
         if ((! is_cjk) || (c1 < 0xA1))
         {
-            int cw = curr_font[c1]; // width;
+            char *draw_font = curr_font;
+            if ((c1 > 0xA0) && (lang->extra_font != NULL))
+                draw_font = (char *)lang->extra_font;
+            int cw = draw_font[c1]; // width;
             if ((x_offset + cw) > width)
                 break;
             if (cw != 0)
             {
-                int d_pos = curr_font[c1 * 2 + 0x100] + curr_font[c1 * 2 + 0x101] * 0x100; // data pos
+                int d_pos = draw_font[c1 * 2 + 0x100] + draw_font[c1 * 2 + 0x101] * 0x100; // data pos
                 int line_bytes = (cw + 7) / 8;
                 for (int y = 0; y < font_height; y++)
                 {
-                    uint32_t *pixels_data = (uint32_t *)&(curr_font[0x300 + d_pos + y * line_bytes]);
+                    uint32_t *pixels_data = (uint32_t *)&(draw_font[0x300 + d_pos + y * line_bytes]);
                     int offset = x_offset + (width * y);
 
                     for (int x = 0; x < cw; x++)
@@ -509,7 +517,11 @@ int i18n_draw_text(uint16_t x_pos, uint16_t y_pos, uint16_t width, uint16_t max_
             if (buffer[x] == 0)
                 break;
             bool l_is_cjk = (buffer[x] > 0xA0) && is_cjk;
-            int chr_width = l_is_cjk ? 12 : curr_font[buffer[x]];
+
+            char *draw_font = curr_font;
+            if ((buffer[x] > 0xA0) && (lang->extra_font != NULL))
+                draw_font = (char *)lang->extra_font;
+            int chr_width = l_is_cjk ? 12 : draw_font[buffer[x]];
             if ((width - w) < chr_width)
             {
                 buffer[x] = 0;
