@@ -90,7 +90,7 @@ static const persistent_config_t persistent_config_default = {
     .theme = 2, //use as theme index
     .colors = 0,
     .turbo_buttons = 0,
-    .font = 8,
+    .font = 18,
 #if CODEPAGE==12521
     .lang = 1,
 #elif CODEPAGE==12522

@@ -74,7 +74,8 @@
 #include "fonts/font_zh_tw.h"
 #endif
 #if INCLUDED_RU_RU == 1
-#include "fonts/font_ru_ru.h"
+//#include "fonts/font_ru_ru.h"
+#include "fonts/font_Greybeard_Bold_1251.h"
 #endif
 
 #if BIG_BANK == 1
@@ -189,6 +190,14 @@ char *curr_font = font_un_17;
 #include "fonts/font_un_18.h"
 const char *gui_fonts[1] = { font_un_18 };
 char *curr_font = font_un_18;
+#elif ONEFONT == 19
+#include "fonts/font_Greybeard_Bold.h"
+const char *gui_fonts[1] = { font_Greybeard_Bold };
+char *curr_font = font_Greybeard_Bold;
+#elif ONEFONT == 20
+#include "fonts/font_Greybeard.h"
+const char *gui_fonts[1] = { font_Greybeard };
+char *curr_font = font_Greybeard;
 #else
 #include "fonts/font_un_01.h"
 #include "fonts/font_un_02.h"
@@ -208,11 +217,15 @@ char *curr_font = font_un_18;
 #include "fonts/font_un_16.h"
 #include "fonts/font_un_17.h"
 #include "fonts/font_un_18.h"
-const char *gui_fonts[18] = {
+#include "fonts/font_Greybeard.h"
+#include "fonts/font_Greybeard_Bold.h"
+const char *gui_fonts[20] = {
     font_un_01,    font_un_02,    font_un_03,    font_un_04,    font_un_05,
     font_un_06,    font_un_07,    font_un_08,    font_un_09,    font_un_10,
     font_un_11,    font_un_12,    font_un_13,    font_un_14,    font_un_15,
     font_un_16,    font_un_17,    font_un_18,
+    font_Greybeard_Bold,
+    font_Greybeard,
     };
 char *curr_font = font_un_01;
 #endif

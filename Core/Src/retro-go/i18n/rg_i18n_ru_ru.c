@@ -28,7 +28,7 @@ int ru_ru_fmt_Time(char *outstr, const char *timefmt, uint16_t hour, uint16_t mi
 
 const lang_t lang_ru_ru LANG_DATA = {
     .codepage = 1251,
-    .extra_font = font_ru_ru,
+    .extra_font = font_Greybeard_Bold_1251,
     .s_LangUI = "язык интерфейса",
     .s_LangTitle = "язык",
     .s_LangName = "Russian",
