@@ -163,10 +163,10 @@ const lang_t lang_ru_ru LANG_DATA = {
     .s_Delete_save = "Удалить сохранение",
     .s_Confiem_del_save = "Удалить файл сохранения?",
 #if CHEAT_CODES == 1
-    .s_Game_Genie_Codes = "Game Genie Коды",
-    .s_Game_Genie_Codes_Title = "GG Опции",
-    .s_Game_Genie_Codes_ON = "\x6",
-    .s_Game_Genie_Codes_OFF = "\x5",
+    .s_Cheat_Codes = "Game Genie Коды",
+    .s_Cheat_Codes_Title = "GG Опции",
+    .s_Cheat_Codes_ON = "\x6",
+    .s_Cheat_Codes_OFF = "\x5",
 #endif
 
     //=====================================================================
