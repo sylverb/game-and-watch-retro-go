@@ -8,8 +8,7 @@ import sys
 
 
 
-s_prior_header = """
-________=0x00
+s_prior_header = """________=0x00
 _______X=0x01
 ______X_=0x02
 ______XX=0x03
@@ -267,7 +266,8 @@ XXXXXXX_=0xFE
 XXXXXXXX=0xFF
 
 fontdata = [
-    #  #05 OFF
+"""
+s_prior_header1 = """    #  #05 OFF
     0x05, 0x18, 0x10, 0x00,
     ________, ________,
     ____XXXX, XXXX____,
@@ -351,38 +351,36 @@ fontdata = [
     ________, ________,
     ________, ________,
     ________, ________,
-
 """
 
 def writestring(file, ss):
     "Write string data to file"
     file.write(bytes(ss, encoding="ASCII",errors = "ignore"))
 
-def Txt_Fromimg(font_name, priname, out_size:int, ckvale:int):
+def Txt_Fromimg(font_name, out_size:int, ckvale:int, startchrno:int):
     print("Process:" + font_name)
-    #if (priname == "__") :
-    #    priname = ""
     py_file = "fcdata.py"
-    txt_file = "txts" + "/" + priname + str((Path(font_name)).stem + ".txt")
-    out_file = "src" + "/" + priname + str((Path(font_name)).stem + ".h")
-    bmp_file = "fontimgs" + "/" + priname + str((Path(font_name)).stem + ".bmp")
+    out_file = Path(font_name).parent / ((Path(font_name)).stem + ".h")
+    png_file = Path(font_name).parent / ((Path(font_name)).stem + ".png")
     ckv = 0xff * 3 * ckvale // 100
     h_s = out_size // 2
     s_w = out_size * 4
     s_h = out_size * 4
 
-    if (Path(bmp_file).exists()):
-        img = Image.open(bmp_file)
+    if (Path(png_file).exists()):
+        img = Image.open(png_file).convert(mode="RGB")
         pixels = img.load()
         f = open(py_file, "wb")
 
         writestring(f, s_prior_header)
+        if (startchrno < 64):
+            writestring(f, s_prior_header1)
         for y in range(16):
             for x in range(16):
                     ssx = 16
                     smax = 0
                     chrno = y*16+x
-                    if ((chrno > 32) and (chrno < 127)) or ((chrno > 160) and (chrno < 256)):
+                    if (chrno > startchrno):
                         for dy in range (out_size):
                             for dx in range(16):
                                 pt = pixels[x * s_w + out_size * 2 + h_s - 1 + dx, y * s_h + out_size * 2 + h_s + dy]
@@ -419,47 +417,20 @@ def Txt_Fromimg(font_name, priname, out_size:int, ckvale:int):
         writestring(f, "    ]")
         f.close()
         import os
-        py_file = "fcdata.py"
-        os.system("cp fcdata.py \"" + txt_file + "\"")
-        os.system("python3 fontcreate.py \"" + out_file + "\"")
-        #print(d)
-        #run it
-
-
-def process_onefile(filename, fontdef):
-    fontdef.setdefault(filename, {})
-    fdef = fontdef[filename]
-    fdef.setdefault("fontsize", "12")  #
-    fdef.setdefault("fixedsize", "12") #
-    fdef.setdefault("resize", "12")
-    fdef.setdefault("xoffset", "0")
-    fdef.setdefault("yoffset", "0")
-    fdef.setdefault("check", "75")
-    fdef.setdefault("_a_", "_")
-    Txt_Fromimg(filename, fdef["_a_"] + "_", int(fdef["fixedsize"]), int(fdef["check"]))  #ogn font image
+        os.system("python3 genfonth.py \"" + str(out_file) + "\"")
+        os.system("del fcdata.py")
 
 
 def main():
-    import json
-    jsonfile = "fonts/fonts.json"
-    if Path(jsonfile).exists():
-        with open(jsonfile,'r') as load_f:
-            try:
-                fontdef = json.load(load_f)
-                #print("Rom define file loaded")
-                load_f.close()
-            except: 
-                print("Fonts define file load failed")
-                fontdef = {}
-                load_f.close()
-    else :
-        fontdef = {};
-
     if (len(sys.argv) > 1):
-        process_onefile(sys.argv[1], fontdef)
+        #Paint_Fontogn(font_name, font_size, xoffset, yoffset):
+        Txt_Fromimg(sys.argv[1], 
+            int(sys.argv[2]) if (len(sys.argv) > 2) else 12, 
+            int(sys.argv[3]) if (len(sys.argv) > 3) else 100, 
+            int(sys.argv[4]) if (len(sys.argv) > 4) else 32)
     else:
-        for key in fontdef:
-            process_onefile(key, fontdef)
+        print("Usage: " + sys.argv[0] + " imagefile [fontsize] [checkpixelvalue] [startchrno]")
+        print("startchrno : Default is 32 for all ansii, 127 for make other codepage font define file")
         
 if __name__ == "__main__":
     main()

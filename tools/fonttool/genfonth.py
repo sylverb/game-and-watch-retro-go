@@ -1,10 +1,11 @@
 import argparse
 
 from fcdata import fontdata 
+from pathlib import Path
 
 class char:
     pass
-    
+
 def write_fontpixels(fn, height):
     with open(fn, "w") as f:
         chars = [None] * 256;
@@ -50,6 +51,9 @@ def write_fontpixels(fn, height):
             start_pos += chars[i].size
 
         #write out file
+        f.write("#pragma once\n\nconst char ")
+        f.write(Path(fn).stem)
+        f.write("[] FONT_DATA = {\n")
         f.write("    // width data\n")
         for i in range(256):
             if (i % 16) == 0:
@@ -81,6 +85,7 @@ def write_fontpixels(fn, height):
                         f.write("0x%02x, "%(chars[i].mdata[j] % 0x100))
             f.write("\n")
 
+        f.write("};\n")
 def main():
     import sys
     #filepath.stem
