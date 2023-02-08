@@ -36,7 +36,9 @@ def Paint_Fontogn(font_name, font_size:int, codepage:str, xoffset:int, yoffset:i
             chrno = bytes([y*16+x])
             try:
                 character = chrno.decode(codepage)
+                draw.fontmode = "L"
                 draw.text((x * s_w + h_s, y * s_h + out_size * 2 + h_s), character, font=tipfnt, fill=(120,120,120))
+                draw.fontmode = "1"
                 draw.text((x * s_w + h_s + out_size * 2 + xoffset, y * s_h + out_size * 2 + h_s + yoffset), character, font=outfnt, fill=(255,255,255))
             except:
                 character = ""

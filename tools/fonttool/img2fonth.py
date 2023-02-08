@@ -360,7 +360,7 @@ def writestring(file, ss):
 def Txt_Fromimg(font_name, out_size:int, ckvale:int, startchrno:int):
     print("Process:" + font_name)
     py_file = "fcdata.py"
-    out_file = Path(font_name).parent / ((Path(font_name)).stem + ".h")
+    out_file = Path(font_name).parent / ("font_" + (Path(font_name)).stem + ".h")
     png_file = Path(font_name).parent / ((Path(font_name)).stem + ".png")
     ckv = 0xff * 3 * ckvale // 100
     h_s = out_size // 2
