@@ -12,13 +12,13 @@
 
 
 #include <stddef.h>
+#include <sys/types.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <signal.h>
-#include <malloc.h>
 #include <math.h>
 #include <limits.h>
 

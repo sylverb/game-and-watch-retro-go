@@ -19,3 +19,6 @@
 [submodule "caprice32-go"]
 	path = caprice32-go
 	url = https://github.com/sylverb/caprice32-go.git
+[submodule "fceumm-go"]
+	path = fceumm-go
+	url = https://github.com/sylverb/fceumm-go.git

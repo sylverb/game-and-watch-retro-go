@@ -74,7 +74,7 @@ Supported emulators:
 - Gameboy / Gameboy Color (gb/gbc)
 - Game & Watch / LCD Games (gw)
 - MSX1/2/2+ (msx) (check [MSX Emulator](#msx-emulator) section for details about MSX emulator)
-- Nintendo Entertainment System (nes)
+- Nintendo Entertainment System (nes) (check [NES Emulator](#nes-emulator) section for details about NES emulator)
 - PC Engine / TurboGrafx-16 (pce)
 - Sega Game Gear (gg)
 - Sega Genesis / Megadrive (md)
@@ -338,6 +338,16 @@ To flash the custom firmware, [follow the CFW README](https://github.com/BrianPu
 # In the game-and-watch-patch folder
 make PATCH_PARAMS="--internal-only" flash_patched_int
 ```
+
+## NES Emulator
+
+NES emulation was done using nofrendo-go emulator, it doesn't have the best compatibility but has good performances.
+To handle eveything that is not or badly emulated by nofrendo, fceumm emulator has been ported too.
+fceumm has very good compatibility but it's using more CPU power, currently about 65-85% of CPU depending on games, disks games (FDS) are taking even more CPU power (about 95%).
+Due to the large amount of mappers supported by fceumm, it's not possible to embbed all mappers codes in the G&W memory, so the parsing proccess is listing mappers used by games in the rom/nes folder so only needed mappers are loaded in the G&W. If you are using too much different mappers in the games you have selected, you will have runtime problems. The maximum number of mappers you can use will depends on embedded mappers, but basically it should fit most needs.
+FDS support requires you to put the FDS firmware in roms/nes_bios/disksys.rom file
+
+You can force usage of nofrendo-go instead of fceumm by adding FORCE_NOFRENDO=1 option in make command
 
 ## MSX Emulator
 

@@ -12,6 +12,7 @@ retro_emulator_file_t *ACTIVE_FILE = NULL;
 
 #include "gb_roms.c"
 #include "nes_roms.c"
+#include "nes_bios.c"
 #include "sms_roms.c"
 #include "gg_roms.c"
 #include "col_roms.c"
@@ -27,6 +28,7 @@ retro_emulator_file_t *ACTIVE_FILE = NULL;
 
 const rom_system_t *systems[] = {
     &nes_system,
+    &nes_bios,
     &gb_system,
     &sms_system,
     &gg_system,

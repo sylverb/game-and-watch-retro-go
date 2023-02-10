@@ -25,11 +25,35 @@ static void set_audio_frequency(uint32_t frequency)
 
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SAI1;
 
-    if (frequency == 16000)
+    if (frequency == 12000)
+    {
+
+        PeriphClkInitStruct.PLL2.PLL2M = 25;
+        PeriphClkInitStruct.PLL2.PLL2N = 96;
+        PeriphClkInitStruct.PLL2.PLL2P = 10;
+        PeriphClkInitStruct.PLL2.PLL2Q = 2;
+        PeriphClkInitStruct.PLL2.PLL2R = 5;
+        PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
+        PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+        PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+    }
+    else if (frequency == 16000)
     {
 
         PeriphClkInitStruct.PLL2.PLL2M = 25;
         PeriphClkInitStruct.PLL2.PLL2N = 128;
+        PeriphClkInitStruct.PLL2.PLL2P = 10;
+        PeriphClkInitStruct.PLL2.PLL2Q = 2;
+        PeriphClkInitStruct.PLL2.PLL2R = 5;
+        PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
+        PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+        PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+    }
+    else if (frequency == 18000)
+    {
+
+        PeriphClkInitStruct.PLL2.PLL2M = 25;
+        PeriphClkInitStruct.PLL2.PLL2N = 144;
         PeriphClkInitStruct.PLL2.PLL2P = 10;
         PeriphClkInitStruct.PLL2.PLL2Q = 2;
         PeriphClkInitStruct.PLL2.PLL2R = 5;
@@ -167,6 +191,7 @@ static void set_audio_frequency(uint32_t frequency)
         hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_MCKDIV;
         hsai_BlockA1.Init.Mckdiv = 4;
     /* Set Audio sample rate at various standard frequencies using AudioFrequency mode */
+//    } else if (frequency == 12000) {
     } else {
         /* default value 48KHz */
         hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_48K;
@@ -178,7 +203,9 @@ static void set_audio_frequency(uint32_t frequency)
             (frequency == SAI_AUDIO_FREQUENCY_44K) ||
             (frequency == SAI_AUDIO_FREQUENCY_32K) ||
             (frequency == SAI_AUDIO_FREQUENCY_22K) ||
+            (frequency == 18000) ||
             (frequency == SAI_AUDIO_FREQUENCY_16K) ||
+            (frequency == 12000) ||
             (frequency == SAI_AUDIO_FREQUENCY_11K) ||
             (frequency == SAI_AUDIO_FREQUENCY_8K))
             hsai_BlockA1.Init.AudioFrequency = frequency;

@@ -984,9 +984,9 @@ static void draw_game_status_bar(runtime_stats_t stats)
 
 int odroid_overlay_game_settings_menu(odroid_dialog_choice_t *extra_options)
 {
-    char speedup_value[12];
-    char scaling_value[12];
-    char filtering_value[12];
+    char speedup_value[15];
+    char scaling_value[15];
+    char filtering_value[15];
     strcpy(filtering_value, curr_lang->s_FilteringOff);
     strcpy(scaling_value, curr_lang->s_SCalingFull);
 
@@ -1044,12 +1044,14 @@ static bool cheat_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_
         odroid_settings_ActiveGameGenieCodes_set(CHOSEN_FILE->id, option->id, is_on);
     }
     strcpy(option->value, is_on ? curr_lang->s_Cheat_Codes_ON : curr_lang->s_Cheat_Codes_OFF);
+#ifdef ENABLE_EMULATOR_MSX
     if (event == ODROID_DIALOG_ENTER) {
         retro_emulator_t *emu = file_to_emu(CHOSEN_FILE);
         if(strcmp(emu->system_name, "MSX") == 0) {
             update_cheats_msx();
         }
     }
+#endif
     return event == ODROID_DIALOG_ENTER;
 }
 

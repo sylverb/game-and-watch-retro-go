@@ -79,7 +79,8 @@ const rom_system_t {name} EMU_DATA = {{
 """
 
 SAVE_SIZES = {
-    "nes": 24 * 1024,
+#    "nes": 24 * 1024,
+    "nes": 176 * 1024,
     "sms": 60 * 1024,
     "gg": 60 * 1024,
     "col": 60 * 1024,
@@ -95,7 +96,7 @@ SAVE_SIZES = {
 
 
 # TODO: Find a better way to find this before building
-MAX_COMPRESSED_NES_SIZE = 0x00081000
+MAX_COMPRESSED_NES_SIZE = 0x00080010 #512kB + 16 bytes header
 MAX_COMPRESSED_PCE_SIZE = 0x00049000
 MAX_COMPRESSED_WSV_SIZE = 0x00080000
 MAX_COMPRESSED_SG_COL_SIZE = 60 * 1024
@@ -372,25 +373,6 @@ class NoArtworkError(Exception):
     """No artwork found for this ROM"""
 
 
-def is_valid_game_genie_code(code):
-    if '+' in code:
-        subcodes = code.split('+')
-        if len(subcodes) > 3:
-            return False
-        for subcode in subcodes:
-            if not is_valid_game_genie_code(subcode):
-                return False
-        return True
-
-    valid_characters = "APZLGITYEOXUKSVN"
-    if all(c in valid_characters for c in code) == False:
-        return False
-    if len(code) != 6 and len(code) != 8:
-        return False
-
-    return True
-
-
 class ROM:
     def __init__(self, system_name: str, filepath: str, extension: str, romdefs: dict):
         filepath = Path(filepath)
@@ -514,9 +496,6 @@ class ROM:
                     continue
                 # Capitalize letters
                 code = code.upper()
-                # Remove invalid codes
-                if not is_valid_game_genie_code(code):
-                    continue
 
                 # Shorten description
                 if desc is not None:
@@ -633,6 +612,8 @@ class ROM:
         mapper = 0
         if self.system_name == "MSX":
             mapper = int(subprocess.check_output([sys.executable, "./tools/findblueMsxMapper.py", "roms/msx_bios/msxromdb.xml", str(self.path)]))
+        if self.system_name == "Nintendo Entertainment System":
+            mapper = int(subprocess.check_output([sys.executable, "./fceumm-go/nesmapper.py", "mapper", str(self.path).replace('.lzma','')]))
         return mapper
 
     @property
@@ -890,6 +871,16 @@ class ROMParser:
 
         return 0
 
+    def get_nes_save_size(self, file: Path):
+        file = Path(file)
+
+        if file.suffix in COMPRESSIONS:
+            file = file.with_suffix("")  # Remove compression suffix
+
+        total_size = int(subprocess.check_output([sys.executable, "./fceumm-go/nesmapper.py", "savesize", file]))
+        return total_size
+
+        return 0
     def _compress_rom(self, variable_name, rom, compress_gb_speed=False, compress=None):
         """This will create a compressed rom file next to the original rom."""
         global sms_reserved_flash_size
@@ -1184,6 +1175,8 @@ class ROMParser:
                     continue
                 if folder == "gb":
                     save_size = self.get_gameboy_save_size(rom.path)
+                elif folder == "nes":
+                    save_size = self.get_nes_save_size(rom.path)
 
                 # Aligned
                 aligned_size = 4 * 1024
@@ -1265,6 +1258,7 @@ class ROMParser:
 
         romdef.setdefault('gb', {})
         romdef.setdefault('nes', {})
+        romdef.setdefault('nes_bios', {})
         romdef.setdefault('sms', {})
         romdef.setdefault('gg', {})
         romdef.setdefault('col', {})
@@ -1297,12 +1291,20 @@ class ROMParser:
         build_config += "#define ENABLE_EMULATOR_GB\n" if rom_size > 0 else ""
         if system_save_size > larger_save_size : larger_save_size = system_save_size
 
+        # Delete NES bios/mappers.h file to recreate it
+        mappers_file = "build/mappers.h"
+        if os.path.isfile(mappers_file):
+            os.remove(mappers_file)
+        # Create empty file to prevent compilation crash
+        mappers = open(mappers_file, 'w')
+        mappers.close
+
         system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/nes_roms.c",
             "Nintendo Entertainment System",
             "nes_system",
             "nes",
-            ["nes"],
+            ["nes","fds"],
             "SAVE_NES_",
             romdef["nes"],
             "GG_NES_",
@@ -1314,6 +1316,35 @@ class ROMParser:
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_NES\n" if rom_size > 0 else ""
         if system_save_size > larger_save_size : larger_save_size = system_save_size
+
+        # NES FDS bios (only parse if there are some NES games)
+        if rom_size > 0:
+            system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+                "Core/Src/retro-go/nes_bios.c",
+                "NES_BIOS",
+                "nes_bios",
+                "nes_bios",
+                ["rom","nes"],
+                "SAVE_NESB_",
+                romdef["nes_bios"],
+                None,
+                current_id
+            )
+            total_save_size += save_size
+            total_rom_size += rom_size
+            total_img_size += img_size
+        else:
+            system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+                "Core/Src/retro-go/nes_bios.c",
+                "NES_BIOS",
+                "nes_bios",
+                "nes_bios",
+                ["fakeToGenerateEmtyC"],
+                "SAVE_NESB_",
+                romdef["nes_bios"],
+                None,
+                current_id
+            )
 
         system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/sms_roms.c",

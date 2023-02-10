@@ -14,6 +14,7 @@
 #include "main.h"
 #include "main_gb.h"
 #include "main_nes.h"
+#include "main_nes_fceu.h"
 #include "main_smsplusgx.h"
 #include "main_pce.h"
 #include "main_msx.h"
@@ -490,10 +491,17 @@ void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_pau
 #endif
     } else if(strcmp(emu->system_name, "Nintendo Entertainment System") == 0) {
 #ifdef ENABLE_EMULATOR_NES
+#if FORCE_NOFRENDO == 1
         memcpy(&__RAM_EMU_START__, &_OVERLAY_NES_LOAD_START, (size_t)&_OVERLAY_NES_SIZE);
         memset(&_OVERLAY_NES_BSS_START, 0x0, (size_t)&_OVERLAY_NES_BSS_SIZE);
         SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_NES_SIZE);
         app_main_nes(load_state, start_paused, save_slot);
+#else
+        memcpy(&__RAM_EMU_START__, &_OVERLAY_NES_FCEU_LOAD_START, (size_t)&_OVERLAY_NES_FCEU_SIZE);
+        memset(&_OVERLAY_NES_FCEU_BSS_START, 0x0, (size_t)&_OVERLAY_NES_FCEU_BSS_SIZE);
+        SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_NES_FCEU_SIZE);
+        app_main_nes_fceu(load_state, start_paused, save_slot);
+#endif
 #endif
     } else if(strcmp(emu->system_name, "Sega Master System") == 0 ||
               strcmp(emu->system_name, "Sega Game Gear") == 0     ||
