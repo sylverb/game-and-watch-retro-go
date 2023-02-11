@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 import sys
 
 
-def Paint_Fontogn(font_name, font_size:int, codepage:str, xoffset:int, yoffset:int):
+def Paint_Fontogn(font_name, font_size:int, codepage:str, xoffset:int, yoffset:int, index):
     print("Process:" + font_name)
     out_size = 12
     h_s = out_size // 2
@@ -15,8 +15,8 @@ def Paint_Fontogn(font_name, font_size:int, codepage:str, xoffset:int, yoffset:i
     s_h = out_size * 4
     #new image
     img = Image.new('RGB', (s_w * 16, s_h * 16) , 0)
-    tipfnt = ImageFont.truetype("cour.ttf", out_size)
-    outfnt = ImageFont.truetype(font_name, font_size)
+    tipfnt = ImageFont.truetype("Courier New", out_size)
+    outfnt = ImageFont.truetype(font_name, font_size, index)
     draw = ImageDraw.Draw(img)
     for x in range(16):
         for y in range(16):
@@ -54,10 +54,10 @@ def main():
             int(sys.argv[2]) if (len(sys.argv) > 2) else 12, 
             str(sys.argv[3]) if (len(sys.argv) > 3) else "cp1252", 
             int(sys.argv[4]) if (len(sys.argv) > 4) else 0, 
-            int(sys.argv[5]) if (len(sys.argv) > 5) else 0)
+            int(sys.argv[5]) if (len(sys.argv) > 5) else 0,
+            int(sys.argv[6]) if (len(sys.argv) > 6) else 0)
     else:
-        print("Usage: " + sys.argv[0] + " fontfile [fontsize] [codepage] [xoffset] [yoffset]")
-        print("put cour.ttf to this folder to use")
+        print("Usage: " + sys.argv[0] + " fontfile [fontsize] [codepage] [xoffset] [yoffset] [index]")
         print("python support .ttf .bdf .pcf or more fontfile")
 
 if __name__ == "__main__":
