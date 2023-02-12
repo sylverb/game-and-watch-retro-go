@@ -1,7 +1,7 @@
 /*
 ***************************************************
 *                Warning!!!!!!!                   *
-*  This file must be saved with EUC-KR Encoding   *
+*  This file must be saved with cp949(EUC-KR) Encoding   *
 ***************************************************
 */
 #if !defined (INCLUDED_KO_KR)
@@ -26,7 +26,7 @@ int ko_kr_fmt_Time(char *outstr, const char *timefmt, uint16_t hour, uint16_t mi
 
 const lang_t lang_ko_kr LANG_DATA = {
     .codepage = 949,
-    .extra_font = cjk_ko_kr,
+    .extra_font = ko_kr_fonts,
     .s_LangUI = "UI 언어",
     .s_LangTitle = "언어",
     .s_LangName = "Korean",

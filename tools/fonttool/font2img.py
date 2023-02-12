@@ -15,7 +15,7 @@ def Paint_Fontogn(font_name, font_size:int, codepage:str, xoffset:int, yoffset:i
     s_h = out_size * 4
     #new image
     img = Image.new('RGB', (s_w * 16, s_h * 16) , 0)
-    tipfnt = ImageFont.truetype("Courier New", out_size)
+    tipfnt = ImageFont.truetype("cour.ttf", out_size)
     outfnt = ImageFont.truetype(font_name, font_size, index)
     draw = ImageDraw.Draw(img)
     for x in range(16):
@@ -43,7 +43,7 @@ def Paint_Fontogn(font_name, font_size:int, codepage:str, xoffset:int, yoffset:i
             except:
                 character = ""
                 #print(y*16+x)
-    png_file = Path(font_name).parent / ((Path(font_name)).stem + ".png")
+    png_file = Path(font_name).parent / ((Path(font_name)).stem + '_' + codepage + ".png")
     img.save(png_file, "png")
 
 
@@ -58,6 +58,7 @@ def main():
             int(sys.argv[6]) if (len(sys.argv) > 6) else 0)
     else:
         print("Usage: " + sys.argv[0] + " fontfile [fontsize] [codepage] [xoffset] [yoffset] [index]")
+        print("put cour.ttf to this folder to use")
         print("python support .ttf .bdf .pcf or more fontfile")
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 /*
 ***************************************************************
 *                Warning!!!!!!!                               *
-*  This file must be saved with BIG(or Big5-HKCSC) Encoding   *
+*  This file must be saved with cp950(BIG5)        Encoding   *
 ***************************************************************
 */
 #if !defined (INCLUDED_ZH_TW)
@@ -27,7 +27,7 @@ int zh_tw_fmt_Time(char *outstr, const char *timefmt, uint16_t hour, uint16_t mi
 
 const lang_t lang_zh_tw LANG_DATA = {
     .codepage = 950,
-    .extra_font = cjk_zh_tw,
+    .extra_font = zh_tw_fonts,
     .s_LangUI = "介面語言",
     .s_LangTitle = "遊戲標題",
     .s_LangName = "T_Chinese",

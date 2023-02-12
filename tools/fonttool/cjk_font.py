@@ -8,7 +8,7 @@ import sys
 
 
 
-def Paint_One(img, draw, fnt, character, xoffset, yoffset)->str:
+def Paint_One(img, draw, fnt, character, xoffset, yoffset, half=False)->str:
     ret = ""
     draw.rectangle((0,0,16,16), fill='#000000')
     draw.fontmode = "1"
@@ -34,8 +34,11 @@ def Paint_One(img, draw, fnt, character, xoffset, yoffset)->str:
                     s2 += 'O'
                 else:
                     s2 += '.'
-        ret += '  0x%02x'%(b1) + ',0x%02x'%(b2) + ', //  ' + s1 + s2 +'\n'
-        #print(ret)
+        if half:
+            ret += '  0x%02x'%(b1)  + ', //  ' + s1[:6] +'\n'
+        else:
+            ret += '  0x%02x'%(b1) + ',0x%02x'%(b2) + ', //  ' + s1 + s2 +'\n'
+            #print(ret)
     return ret
 
 def Paint_All(font_name, font_size:int, codepage:str, xoffset, yoffset, index):
@@ -46,10 +49,10 @@ def Paint_All(font_name, font_size:int, codepage:str, xoffset, yoffset, index):
     draw = ImageDraw.Draw(img)
     fn = Path(font_name).parent / ((Path(font_name)).stem + '_' + codepage + ".h")
     with open(fn, "w") as f:
-        f.write("#pragma once\n\nconst unsigned char cjk_font_")
+        f.write("#pragma once\n\nconst char font_")
         f.write(codepage)
         f.write("[] __attribute__((section(\".extflash_font\"))) = {\n")
-        cjklist = ['cp932', 'cp936', 'cp949']
+        cjklist = ['cp936', 'cp949']
 
         if (codepage in cjklist):
             for b1 in range(0xFE - 0xA1 + 1):
@@ -69,6 +72,40 @@ def Paint_All(font_name, font_size:int, codepage:str, xoffset, yoffset, index):
                     oneline = Paint_One(img, draw, outfnt, s1, xoffset, yoffset)
                     f.write(oneline)
 
+        if (codepage == 'cp932'): #ja_jp
+            for b1 in range(0xDF - 0xA1 + 1):
+                bb1 = b1 + 0xA1
+                s = ''
+                chno = bytes([bb1])
+                s1 = ''
+                try:
+                    s1 = chno.decode(codepage)
+                    s = chno
+                except:
+                    s1 = ''
+                    s = 'NULL'
+                f.write('// ' + str(s) + ' 0x%02x'%(bb1) + '\n')
+                oneline = Paint_One(img, draw, outfnt, s1, xoffset, yoffset, True)
+                f.write(oneline)
+
+            for b1 in range(0xEF - 0x81 + 1):
+                for b2 in range (0xFC - 0x40 + 1):
+                    bb1 = b1 + 0x81
+                    bb2 = b2 + 0x40
+                    if ((bb1 <= 0x9F) or (bb1 >= 0xe0)) and ((bb2 <= 0x7E) or (bb2 >= 0x80)):
+                        s = ''
+                        chno = bytes([bb1, bb2])
+                        s1 = ''
+                        try:
+                            s1 = chno.decode(codepage)
+                            s = chno
+                        except:
+                            s1 = ''
+                            s = 'NULL'
+                        f.write('// ' + str(s) + ' 0x%02x'%(bb1) + '%02x'%(bb2) + '\n')
+                        oneline = Paint_One(img, draw, outfnt, s1, xoffset, yoffset)
+                        f.write(oneline)
+
         if (codepage == 'cp950'): #zh_tw
             for b1 in range(0xF9 - 0xA1 + 1):
                 for b2 in range (0xFE - 0x40 + 1):
@@ -87,6 +124,7 @@ def Paint_All(font_name, font_size:int, codepage:str, xoffset, yoffset, index):
                         f.write('// ' + str(s) + ' 0x%02x'%(bb1) + '%02x'%(bb2) + '\n')
                         oneline = Paint_One(img, draw, outfnt, s1, xoffset, yoffset)
                         f.write(oneline)
+        f.write('};\n')
 
 def main():
     if (len(sys.argv) > 1):

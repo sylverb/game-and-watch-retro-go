@@ -124,7 +124,6 @@ ZH_CN ?= 0
 ZH_TW ?= 0
 KO_KR ?= 0
 JA_JP ?= 0
-FONT ?=0
 
 SCODEPAGE = "ascii"
 
@@ -375,13 +374,12 @@ C_DEFS +=  \
 -DINCLUDED_PT_PT=$(PT_PT) \
 -DINCLUDED_FR_FR=$(FR_FR) \
 -DINCLUDED_IT_IT=$(IT_IT) \
+-DINCLUDED_DE_DE=$(DE_DE) \
 -DINCLUDED_RU_RU=$(RU_RU) \
 -DINCLUDED_ZH_CN=$(ZH_CN) \
 -DINCLUDED_ZH_TW=$(ZH_TW) \
 -DINCLUDED_KO_KR=$(KO_KR) \
 -DINCLUDED_JA_JP=$(JA_JP) \
--DINCLUDED_DE_DE=$(DE_DE) \
--DONEFONT=$(FONT) \
 -DLANG=$(LANG) \
 -DCOVERFLOW=$(COVERFLOW) \
 -DEXTFLASH_FORCE_SPI=$(EXTFLASH_FORCE_SPI) \
@@ -850,8 +848,6 @@ help:
 	@echo "  IT_IT,ZH_CN,ZH_TW,  "
 	@echo "  KO_KR,JA_JP,DE_DE,  "
 	@echo "  RU_RU               - Set to 1 to include or exclude some other language"
-	@echo "  FONT                - Only persist one font and set the font number. "
-	@echo "                        Font effect see: Core\\Inc\\retro-go\\fonts\\font_un_xx.h"
 	@echo "  COVERFLOW           - Set to 1 include cover art with rom (default=0)"
 	@echo "  JPG_QUALITY         - Set convert cover art image jpg quality (default = 90)"
 	@echo "  ENABLE_SCREENSHOT   - Set to 1 to enable screenshot support (default disabled if extflash is 1MB)"
@@ -895,7 +891,6 @@ help:
 	@echo "  ZH_TW=$(ZH_TW)"
 	@echo "  KO_KR=$(KO_KR)"
 	@echo "  JA_JP=$(JA_JP)"
-	@echo "  FONT=$(FONT)"
 	@echo ""
 	@echo "Targets:"
 	@echo "  docker            - Runs a docker container using the image created by docker_build"

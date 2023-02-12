@@ -75,16 +75,22 @@ def write_fontpixels(fn, height):
         f.write("\n")
         f.write("    // Real font's pixels data\n")
         for i in range(256):
-            f.write("     /* %03d */ "%i)
+            f.write("     /* %03d */ \n"%i)
             if (chars[i].width > 0):
                 for j in range(height):
                     if (chars[i].width > 8):
-                        f.write("0x%02x,"%(chars[i].mdata[j] % 0x100))
+                        f.write("     0x%02x,"%(chars[i].mdata[j] % 0x100))
                         f.write("0x%02x,  "%(chars[i].mdata[j] >> 8))
                     else:
-                        f.write("0x%02x, "%(chars[i].mdata[j] % 0x100))
-            f.write("\n")
-
+                        f.write("     0x%02x, "%(chars[i].mdata[j] % 0x100))
+                    s = '// '
+                    for k in range (chars[i].width):
+                        if ((0x1 << k) & chars[i].mdata[j]):
+                            s += 'O'
+                        else:
+                            s +='.'
+                    f.write(s + '\n')
+            #f.write("\n")
         f.write("};\n")
 def main():
     import sys

@@ -5,7 +5,7 @@
 typedef struct
 {
     const uint32_t codepage;
-    const unsigned char *extra_font; 
+    const char **extra_font; 
     const char *s_LangUI;
     const char *s_LangTitle;
     const char *s_LangName;

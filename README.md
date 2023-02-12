@@ -62,9 +62,6 @@ Use `make ROMINFOCODE=[ascii|?]` to set charset of rominfo sourcecode to enabled
 
 `make romdef` is run patched mode for `*emu*.json` if the file already exist, each time only append new rom's information when command execute.
 
-### FONT
-`FONT=[num]` Only include one specific font. Refer to Core\Src\retro-go\i18n\rg_i18n.c.
-All the font effect you can see in: `Core\Inc\retro-go\fonts\font_un_xx.h`
 
 ***********
 # Emulator collection for Nintendo® Game & Watch™

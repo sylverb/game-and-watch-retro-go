@@ -537,7 +537,7 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
     {
         odroid_overlay_draw_rect(box_x - 1, box_y - 1, box_width + 2, row_height + 8, 1, box_border_color);
         odroid_overlay_draw_fill_rect(box_x, box_y, box_width, row_height + 7, curr_colors->main_c);
-        i18n_draw_text_line(x, box_y + 5, inner_width, header, curr_colors->sel_c, curr_colors->main_c, 0, curr_lang);
+        i18n_draw_text_line(x, box_y + 5, inner_width - 8, header, curr_colors->sel_c, curr_colors->main_c, 0, curr_lang);
         odroid_overlay_draw_fill_rect(x + inner_width - 2, box_y + 5, 4, 4, curr_colors->sel_c);
         odroid_overlay_draw_fill_rect(x + inner_width, box_y + 11, 2, 4, curr_colors->dis_c);
         y += row_height + 8;

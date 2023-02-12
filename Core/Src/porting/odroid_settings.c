@@ -90,7 +90,7 @@ static const persistent_config_t persistent_config_default = {
     .theme = 2, //use as theme index
     .colors = 0,
     .turbo_buttons = 0,
-    .font = 18,
+    .font = 0,
 #if CODEPAGE==12521
     .lang = 1,
 #elif CODEPAGE==12522
@@ -195,7 +195,7 @@ void odroid_settings_init()
     //set colors;
     curr_colors = (colors_t *)(&gui_colors[persistent_config_flash.colors]);
     //set font
-    curr_font = (char *)gui_fonts[odroid_settings_font_get()];
+    curr_font = odroid_settings_font_get();
     //set lang
     curr_lang = (lang_t *)gui_lang[odroid_settings_lang_get()];
     curr_romlang = (lang_t *)gui_lang[odroid_settings_romlang_get()];

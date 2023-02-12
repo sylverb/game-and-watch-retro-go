@@ -1,7 +1,7 @@
 /*
 ***************************************************
 *                Warning!!!!!!!                   *
-*  This file must be saved with EUC-JP Encoding   *
+*  This file must be saved with cp932  Encoding   *
 ***************************************************
 */
 #if !defined (INCLUDED_JA_JP)
@@ -28,9 +28,9 @@ int ja_jp_fmt_Time(char *outstr, const char *timefmt, uint16_t hour, uint16_t mi
 
 const lang_t lang_ja_jp LANG_DATA = {
     .codepage = 932,
-    .extra_font = cjk_ja_jp,
-    .s_LangUI = "UI ¸À¸ì",
-    .s_LangTitle = "¸À¸ì",
+    .extra_font = ja_jp_fonts,
+    .s_LangUI = "UI Œ¾Œê",
+    .s_LangTitle = "Œ¾Œê",
     .s_LangName = "Japanese",
     // Core\Src\porting\gb\main_gb.c =======================================
     .s_Palette = "Palette",
@@ -125,7 +125,7 @@ const lang_t lang_ja_jp LANG_DATA = {
     .s_PlsChose = "Question",
     .s_OK = "OK",
     .s_Confirm = "Confirm",
-    .s_Brightness = "Brightness",
+    .s_Brightness = "BrÁ±htness",
     .s_Volume = "Volume",
     .s_OptionsTit = "Options",
     .s_FPS = "FPS",
@@ -189,7 +189,7 @@ const lang_t lang_ja_jp LANG_DATA = {
     .s_Author = "By",
     .s_Author_ = "\t\t+",
     .s_UI_Mod = "UI Mod",
-    .s_Lang = "ÆüËÜ¸ì",
+    .s_Lang = "“ú–{Œê",
     .s_LangAuthor = "Default",
     .s_Debug_menu = "Debug menu",
     .s_Reset_settings = "Reset settings",
