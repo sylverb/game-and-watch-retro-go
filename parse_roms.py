@@ -79,8 +79,7 @@ const rom_system_t {name} EMU_DATA = {{
 """
 
 SAVE_SIZES = {
-#    "nes": 24 * 1024,
-    "nes": 176 * 1024,
+    "nes": 24 * 1024, # only when using nofrendo, elseway it's given by nesmapper script
     "sms": 60 * 1024,
     "gg": 60 * 1024,
     "col": 60 * 1024,
@@ -1175,7 +1174,7 @@ class ROMParser:
                     continue
                 if folder == "gb":
                     save_size = self.get_gameboy_save_size(rom.path)
-                elif folder == "nes":
+                elif folder == "nes" and args.nofrendo == 0:
                     save_size = self.get_nes_save_size(rom.path)
 
                 # Aligned
@@ -1665,6 +1664,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Apply only selective compression to gameboy banks. Only apply "
         "if bank decompression during switching is too slow.",
+    )
+    parser.add_argument(
+        "--nofrendo",
+        type=int,
+        default=0,
+        help="force nofrendo nes emulator instead of fceumm",
     )
     parser.add_argument(
         "--no-compress_gb_speed", dest="compress_gb_speed", action="store_false"

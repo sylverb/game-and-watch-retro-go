@@ -59,6 +59,7 @@ OVERCLOCKING_LEVEL ?= 1
 
 # Default NES emulator is fceumm
 FORCE_NOFRENDO ?= 0
+NOFRENDO_PARAM := --nofrendo=$(FORCE_NOFRENDO)
 
 # Configure external flash size in MB (Megabytes)
 EXTFLASH_SIZE_MB ?= 1
@@ -521,7 +522,7 @@ $(BUILD_DIR)/rom_files.txt: FORCE | $(BUILD_DIR)
 
 $(BUILD_DIR)/roms.a: $(BUILD_DIR)/rom_files.txt parse_roms.py
 	$(V)$(ECHO) [ PYTHON3 ] $(notdir $<)
-	$(V)$(PYTHON3) parse_roms.py --flash-size $(EXTFLASH_SIZE) $(SAVE_PARAM) $(COMPRESS_PARAM) $(CODEPAGE_PARAM) $(COVERFLOW_PARAM) $(JPG_QUALITY_PARAM) --off_saveflash=$(OFF_SAVESTATE)
+	$(V)$(PYTHON3) parse_roms.py --flash-size $(EXTFLASH_SIZE) $(SAVE_PARAM) $(COMPRESS_PARAM) $(CODEPAGE_PARAM) $(COVERFLOW_PARAM) $(JPG_QUALITY_PARAM) $(NOFRENDO_PARAM) --off_saveflash=$(OFF_SAVESTATE)
 
 $(BUILD_DIR)/config.h $(BUILD_DIR)/saveflash.ld $(BUILD_DIR)/cacheflash.ld $(BUILD_DIR)/offsaveflash.ld &: $(BUILD_DIR)/roms.a
 	$(V)/bin/sh -c true
