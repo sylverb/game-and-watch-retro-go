@@ -133,7 +133,7 @@ static uint16_t palette565[256];
 #define FPS_PAL   50
 static int8_t msx_fps = FPS_PAL;
 
-#define AUDIO_MSX_SAMPLE_RATE 16000
+#define AUDIO_MSX_SAMPLE_RATE 18000
 
 static const uint8_t IMG_DISKETTE[] = {
     0x00, 0x00, 0x00, 0x3F, 0xFF, 0xE0, 0x7C, 0x00, 0x70, 0x7C, 0x03, 0x78,
@@ -1644,6 +1644,7 @@ static void blit(uint8_t *msx_fb, uint16_t *framebuffer)
     // Full height, borders on the side
     case ODROID_DISPLAY_SCALING_FIT:
     case ODROID_DISPLAY_SCALING_FULL:
+    case ODROID_DISPLAY_SCALING_CUSTOM:
         offset = GW_LCD_WIDTH-26;
         use_overscan = false;
         update_fb_info();
