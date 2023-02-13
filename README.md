@@ -95,6 +95,7 @@ Supported emulators:
   - [Build and flash using Docker](#build-and-flash-using-docker)
   - [Backing up and restoring save state files](#backing-up-and-restoring-save-state-files)
   - [Screenshots](#screenshots)
+  - [Compression support](#compression-support)
   - [Cheat codes](#cheat-codes)
     - [Cheat codes on NES System](#cheat-codes-on-nes-system)
     - [Cheat codes on PCE System](#cheat-codes-on-pce-system)
@@ -254,6 +255,24 @@ Screenshots can be captured by pressing `PAUSE/SET` + `GAME`. This feature is di
 
 Screenshots can be downloaded by running `make dump_screenshot`, and will be saved as a 24-bit RGB PNG.
 
+## Compression support
+
+Default configuration when building a firmware is to compress files when possible. The compression is done in different ways depending on each emulator.
+General case is that we will be able to compress roms that can be decompressed in ram, for example if there is more than 512kB of ram free with a given emulator, then we will be able to compress roms up to 512kB. Larger roms will be stored in flash without compression. Here is the maximum size for compressed roms for different systems :
+- Atari 7800 : 128kB
+- MSX : 128kB
+- Nintendo NES/Famicom : 512kB
+- PC Engine : 292kB
+- SG1000/Colecovision : 60kB
+- Watara Supervision : 512kB
+
+Some systems are handling roms as pages of data, so it's possible to compress roms data following this page organization so the emulator will decompress a page of data on request. A caching system is often in place to prevent decompressing (often used) pages too often (as decompressing data is taking time). This is also possible with disks games as they are made of sides/tracks/sectors ! The following systems have no limit in the size of compressed roms thanks to that :
+- Amstrad CPC6128
+- Nintendo Gameboy/Gameboy Color
+- MSX (disks and HDD images only, roms compression is possible up to 128kB)
+
+Some systems are not supporting compression due to the lack of free ram (SMS/GG/Genesis), what could be possible is to decompress a rom and store it in an unused zone of flash, the only problem with that would be the wearing of flash chip blocks (a flash memory block has an erase/flash count limitation, typical value is 10 000 times).
+
 ## Cheat codes
 
 Note: Currently cheat codes are only working with NES, PCE and MSX games.
@@ -345,9 +364,14 @@ NES emulation was done using nofrendo-go emulator, it doesn't have the best comp
 To handle eveything that is not or badly emulated by nofrendo, fceumm emulator has been ported too.
 fceumm has very good compatibility but it's using more CPU power, currently about 65-85% of CPU depending on games, disks games (FDS) are taking even more CPU power (about 95%).
 Due to the large amount of mappers supported by fceumm, it's not possible to embbed all mappers codes in the G&W memory, so the parsing proccess is listing mappers used by games in the rom/nes folder so only needed mappers are loaded in the G&W. If you are using too much different mappers in the games you have selected, you will have runtime problems. The maximum number of mappers you can use will depends on embedded mappers, but basically it should fit most needs.
+
+Mappers compatibility is basically the same as fceumm version from 01/01/2023. Testing all mappers is not possible, so some mappers that could try to allocate too much ram will probably crash. If you find any mapper that crash, please report on discord support, or by opening a ticket on github.
+
+As Game & Watch CPU is not able to emulate YM2413 at 48kHz, mapper 85 (VRC-7) sound will play at 18kHz instead of 48kHz.
+
 FDS support requires you to put the FDS firmware in roms/nes_bios/disksys.rom file
 
-You can force usage of nofrendo-go instead of fceumm by adding FORCE_NOFRENDO=1 option in make command
+Note that you can force nofrendo-go usage instead of fceumm by adding FORCE_NOFRENDO=1 option in your make command
 
 ## MSX Emulator
 
