@@ -100,6 +100,7 @@ MAX_COMPRESSED_PCE_SIZE = 0x00049000
 MAX_COMPRESSED_WSV_SIZE = 0x00080000
 MAX_COMPRESSED_SG_COL_SIZE = 60 * 1024
 MAX_COMPRESSED_A7800_SIZE = 131200
+MAX_COMPRESSED_MSX_SIZE = 131200
 
 """
 All ``compress_*`` functions must be decorated ``@COMPRESSIONS`` and have the
@@ -492,7 +493,7 @@ class ROM:
     def mapper(self):
         mapper = 0
         if self.system_name == "MSX":
-            mapper = int(subprocess.check_output([sys.executable, "./tools/findblueMsxMapper.py", "roms/msx_bios/msxromdb.xml", str(self.path)]))
+            mapper = int(subprocess.check_output([sys.executable, "./tools/findblueMsxMapper.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk').replace('.lzma','')]))
         if self.system_name == "Nintendo Entertainment System":
             mapper = int(subprocess.check_output([sys.executable, "./fceumm-go/nesmapper.py", "mapper", str(self.path).replace('.lzma','')]))
         return mapper
@@ -504,7 +505,7 @@ class ROM:
             # MSX game_config structure :
             # b7-b0 : Controls profile
             # b8 : Does the game require to press ctrl at boot ?
-            sp_output = subprocess.check_output([sys.executable, "./tools/findblueMsxControls.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk')]).splitlines()
+            sp_output = subprocess.check_output([sys.executable, "./tools/findblueMsxControls.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk').replace('.lzma','')]).splitlines()
             value = int(sp_output[0]) + (int(sp_output[1]) << 8)
             if int(sp_output[0]) == 0xff :
                 print(f"Warning : {self.name} has no controls configuration in roms/msx_bios/msxromdb.xml, default controls will be used")
@@ -789,6 +790,14 @@ class ROMParser:
             output_file.write_bytes(compressed_data)
         elif "pce_system" in variable_name:  # PCE
             if rom.path.stat().st_size > MAX_COMPRESSED_PCE_SIZE:
+                print(
+                    f"INFO: {rom.name} is too large to compress, skipping compression!"
+                )
+                return
+            compressed_data = compress(data)
+            output_file.write_bytes(compressed_data)
+        elif "msx_system" in variable_name:  # MSX
+            if rom.path.stat().st_size > MAX_COMPRESSED_MSX_SIZE:
                 print(
                     f"INFO: {rom.name} is too large to compress, skipping compression!"
                 )

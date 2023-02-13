@@ -19,6 +19,9 @@
 #include "rom_manager.h"
 #include "gw_lcd.h"
 
+#include <assert.h>
+#include "lzma.h"
+
 #include "MSX.h"
 #include "Properties.h"
 #include "ArchFile.h"
@@ -110,6 +113,9 @@ static const uint8_t volume_table[ODROID_AUDIO_VOLUME_MAX + 1] = {
     80,
     100,
 };
+
+/* Compression buffer */
+static uint8_t rom_decompress_buffer[128*1024];
 
 /* Framebuffer management */
 uint8_t msx_framebuffer[272*240];
@@ -1436,7 +1442,10 @@ static void insertGame() {
             printf("Rom Mapper %d\n",ACTIVE_FILE->mapper);
             uint16_t mapper = ACTIVE_FILE->mapper;
             if (mapper == ROM_UNKNOWN) {
-                mapper = GuessROM(ACTIVE_FILE->address,ACTIVE_FILE->size);
+                uint32_t rom_size;
+                uint8_t *rom_data;
+                rom_size = msx_getromdata(&rom_data,(uint8_t *)ROM_DATA,ROM_DATA_LENGTH,ROM_EXT);
+                mapper = GuessROM(rom_data,rom_size);
             }
             if (!controls_found) {
                 // If game is using konami mapper, we setup a Konami key mapping
@@ -1655,6 +1664,27 @@ static void blit(uint8_t *msx_fb, uint16_t *framebuffer)
             idx++;
             }
         }
+    }
+}
+
+size_t msx_getromdata(uint8_t **data, uint8_t *src_data, size_t src_size, const char *ext)
+{
+    /* src pointer to the ROM data in the external flash (raw or LZ4) */
+    unsigned char *dest = (unsigned char *)rom_decompress_buffer;
+    uint32_t available_size = (uint32_t)sizeof(rom_decompress_buffer);
+
+    wdog_refresh();
+    if(strcmp(ext, "lzma") == 0){
+        size_t n_decomp_bytes;
+        n_decomp_bytes = lzma_inflate(dest, available_size, src_data, src_size);
+        *data = dest;
+        return n_decomp_bytes;
+    }
+    else
+    {
+        *data = (unsigned char *)src_data;
+
+        return src_size;
     }
 }
 
