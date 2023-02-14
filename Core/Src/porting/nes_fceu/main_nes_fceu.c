@@ -45,6 +45,8 @@ static uint8_t overclocking_type = 0;
 static uint8_t allow_swap_disk = 0;
 static bool disable_sprite_limit = false;
 
+uint8 *UNIFchrrama = 0;
+
 unsigned overclock_enabled = -1;
 unsigned overclocked = 0;
 unsigned skip_7bit_overclocking = 1; /* 7-bit samples have priority over overclocking */
