@@ -32,18 +32,6 @@ const lang_t lang_zh_tw LANG_DATA = {
     .s_LangTitle = "遊戲標題",
     .s_LangName = "T_Chinese",
 
-    // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
-    .s_Crop_Vertical_Overscan = "Crop Vertical Overscan",
-    .s_Crop_Horizontal_Overscan = "Crop Horizontal Overscan",
-    .s_Disable_Sprite_Limit = "Disable sprite limit",
-    .s_NES_CPU_OC = "NES CPU Overclocking",
-    .s_NES_Eject_Insert_FDS = "Eject/Insert Disk",
-    .s_NES_Eject_FDS = "Eject Disk",
-    .s_NES_Insert_FDS = "Insert Disk",
-    .s_NES_Swap_Side_FDS = "Swap FDisk side",
-    .s_NES_FDS_Side_Format = "Disk %d Side %s",
-    //=====================================================================
-
     // Core\Src\porting\gb\main_gb.c =======================================
     .s_Palette = "調色盤",
     //=====================================================================
@@ -134,6 +122,13 @@ const lang_t lang_zh_tw LANG_DATA = {
 
     //=====================================================================
     // Core\Src\retro-go\rg_main.c =========================================
+	.s_CPU_Overclock = "CPU Overclock (%d)",
+	.s_CPU_Overclock_0 = "0 - No",
+	.s_CPU_Overclock_1 = "1 - Intermediate",
+	.s_CPU_Overclock_2 = "2 - Maximum",
+	//.s_Reboot = "Reboot",
+	//.s_OC_Reboot_Tips = "(OC Needs)",
+	.s_Confirm_Reboot = "Confirm reboot?",
     .s_Second_Unit = "秒",
     .s_Version = "版　　本：",
     .s_Author = "特別貢獻：",

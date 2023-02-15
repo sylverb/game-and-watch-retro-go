@@ -102,6 +102,11 @@ typedef struct
 #endif    
     //=====================================================================
     // Core\Src\retro-go\rg_main.c =========================================
+	const char *s_CPU_Overclock;
+    const char *s_CPU_Overclock_0;
+    const char *s_CPU_Overclock_1;
+    const char *s_CPU_Overclock_2;
+    const char *s_Confirm_Reboot;
     const char *s_Second_Unit;
     const char *s_Version;
     const char *s_Author;

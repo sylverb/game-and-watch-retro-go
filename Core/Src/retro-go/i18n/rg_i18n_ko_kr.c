@@ -34,18 +34,6 @@ const lang_t lang_ko_kr LANG_DATA = {
     // If you can translate, please feed back the translation results to me, thank you
     // translate by  Augen(히힛마스터):
 
-    // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
-    .s_Crop_Vertical_Overscan = "Crop Vertical Overscan",
-    .s_Crop_Horizontal_Overscan = "Crop Horizontal Overscan",
-    .s_Disable_Sprite_Limit = "Disable sprite limit",
-    .s_NES_CPU_OC = "NES CPU Overclocking",
-    .s_NES_Eject_Insert_FDS = "Eject/Insert Disk",
-    .s_NES_Eject_FDS = "Eject Disk",
-    .s_NES_Insert_FDS = "Insert Disk",
-    .s_NES_Swap_Side_FDS = "Swap FDisk side",
-    .s_NES_FDS_Side_Format = "Disk %d Side %s",
-    //=====================================================================
-
     // Core\Src\porting\gb\main_gb.c =======================================
     .s_Palette = "팔레트",
     //=====================================================================
@@ -77,17 +65,17 @@ const lang_t lang_ko_kr LANG_DATA = {
     .s_Yes = "네",
     .s_No = "아니오",
     .s_PlsChose = "선택해 주세요 := ",
-    .s_OK = "확인",
+    .s_OK = "?인",
     .s_Confirm = "적용",
     .s_Brightness = "밝기",
     .s_Volume = "소리크기",
-    .s_OptionsTit = "환경 설정",
+    .s_OptionsTit = "?경 설정",
     .s_FPS = "FPS",
     .s_BUSY = "클럭(CPU)= ",
     .s_Scaling = "스케일",
     .s_SCalingOff = "Off",
     .s_SCalingFit = "Fit",
-    .s_SCalingFull = "전체화면",
+    .s_SCalingFull = "전체?면",
     .s_SCalingCustom = "Custom",
     .s_Filtering = "필터링",
     .s_FilteringNone = "필터링 없음",
@@ -138,6 +126,13 @@ const lang_t lang_ko_kr LANG_DATA = {
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================
+	.s_CPU_Overclock = "CPU Overclock (%d)",
+	.s_CPU_Overclock_0 = "0 - No",
+	.s_CPU_Overclock_1 = "1 - Intermediate",
+	.s_CPU_Overclock_2 = "2 - Maximum",
+	//.s_Reboot = "Reboot",
+	//.s_OC_Reboot_Tips = "(OC Needs)",
+	.s_Confirm_Reboot = "Confirm reboot?",
     .s_Second_Unit = "초",
     .s_Version = "Ver.",
     .s_Author = "By",
@@ -146,7 +141,7 @@ const lang_t lang_ko_kr LANG_DATA = {
     .s_Lang = "한국어",
     .s_LangAuthor = "Augen(히힛마스터)",
     .s_Debug_menu = "디버그 매뉴",
-    .s_Reset_settings = "모든 설정 초기화",
+    .s_Reset_settings = "모든 설정 초기?",
     //.s_Close                  = "닫기",
     .s_Retro_Go = "Retro-Go 정보= ",
     .s_Confirm_Reset_settings = "모든 설정을 재설정 하시겠습니까?",
@@ -157,8 +152,8 @@ const lang_t lang_ko_kr LANG_DATA = {
     .s_Flash_CR = "플래시 CR",
     .s_Smallest_erase = "Smallest 지우기",
     .s_DBGMCU_IDCODE = "DBGMCU IDCODE",
-    .s_Enable_DBGMCU_CK = "DBGMCU CK 활성화",
-    .s_Disable_DBGMCU_CK = "DBGMCU CK 비활성화",
+    .s_Enable_DBGMCU_CK = "DBGMCU CK ?성?",
+    .s_Disable_DBGMCU_CK = "DBGMCU CK 비?성?",
     //.s_Close                  = "닫기",
     .s_Debug_Title = "디버그",
     .s_Idle_power_off = "모든 전원 종료",
@@ -181,7 +176,7 @@ const lang_t lang_ko_kr LANG_DATA = {
     .s_Date_setup = "날짜 설정",
 
     .s_Weekday_Mon = "월",
-    .s_Weekday_Tue = "화",
+    .s_Weekday_Tue = "?",
     .s_Weekday_Wed = "수",
     .s_Weekday_Thu = "목",
     .s_Weekday_Fri = "금",

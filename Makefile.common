@@ -54,9 +54,6 @@ else
 	endif
 endif
 
-# Configure overclocking
-OVERCLOCKING_LEVEL ?= 1
-
 # Default NES emulator is fceumm
 FORCE_NOFRENDO ?= 0
 NOFRENDO_PARAM := --nofrendo=$(FORCE_NOFRENDO)
@@ -381,7 +378,6 @@ C_DEFS +=  \
 -DCHEAT_CODES=$(CHEAT_CODES) \
 -DFORCE_NOFRENDO=$(FORCE_NOFRENDO) \
 -DTARGET_GNW \
--DOVERCLOCKING_LEVEL=$(OVERCLOCKING_LEVEL) \
 -DNO_EMBEDDED_SAMPLES \
 -D__LIBRETRO__ \
 -DZ80_CUSTOM_CONFIGURATION \
@@ -840,7 +836,6 @@ help:
 	@echo "  GAME_GENIE          - Set to 1 to enable game genie support (deprecated, use CHEAT_CODES instead)"
 	@echo "  CHEAT_CODES         - Set to 1 to enable cheat codes support (default=0)"
 	@echo "  SHARED_HIBERNATE_SAVESTATE - Set to 1 to enable a separate savestate for off/on (default=0)"
-	@echo "  OVERCLOCKING_LEVEL  - Set OC level. 0 no OC, 1 intermediate OC, 2 maximum OC (default=1)"
 	@echo "  FORCE_NOFRENDO      - Set to 1 to force use of previous nofrendo-go emulator instead of fceumm (default=0)"
 	@echo ""
 	@echo "Current configuration:"
@@ -864,7 +859,6 @@ help:
 	@echo "  COVERFLOW=$(COVERFLOW)"
 	@echo "  ROMINFOCODE=$(ROMINFOCODE)"
 	@echo "  SHARED_HIBERNATE_SAVESTATE=$(SHARED_HIBERNATE_SAVESTATE)"
-	@echo "  OVERCLOCKING_LEVEL=$(OVERCLOCKING_LEVEL)"
 	@echo "  FORCE_NOFRENDO=$(FORCE_NOFRENDO)"
 	@echo "  ES_ES=$(ES_ES)"
 	@echo "  PT_PT=$(PT_PT)"
