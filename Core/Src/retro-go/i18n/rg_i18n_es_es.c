@@ -32,6 +32,19 @@ const lang_t lang_es_es LANG_DATA = {
     .s_LangUI = "UI Idioma",
     .s_LangTitle = "Idioma",
     .s_LangName = "Spanish",
+
+    // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
+    .s_Crop_Vertical_Overscan = "Recortar borde Vertical",
+    .s_Crop_Horizontal_Overscan = "Recortar borde Horizontal",
+    .s_Disable_Sprite_Limit = "Desactivar limite sprites",
+    .s_NES_CPU_OC = "NES CPU Overclocking",
+    .s_NES_Eject_Insert_FDS = "Sacar/Insertar Disco",
+    .s_NES_Eject_FDS = "Sacar Disco",
+    .s_NES_Insert_FDS = "Insertar Disco",
+    .s_NES_Swap_Side_FDS = "Cambiar cara Disco",
+    .s_NES_FDS_Side_Format = "Disco %d cara %s",
+    //=====================================================================
+
     // Core\Src\porting\gb\main_gb.c =======================================
     .s_Palette = "Paleta",
     //=====================================================================
@@ -47,8 +60,8 @@ const lang_t lang_es_es LANG_DATA = {
     .s_LCD_filter = "Filtro LCD",
     .s_Display_RAM = "Mostrar RAM",
     .s_Press_ACL = "Pulsar ACL or reset",
-    .s_Press_TIME = "Press TIME [B+TIME]",
-    .s_Press_ALARM = "Press ALARM [B+GAME]",
+    .s_Press_TIME = "Pulsar TIME [B+TIME]",
+    .s_Press_ALARM = "Pulsar ALARM [B+GAME]",
     .s_filter_0_none = "0-Ninguno",
     .s_filter_1_medium = "1-Medio",
     .s_filter_2_high = "2-Alto",
@@ -94,10 +107,10 @@ const lang_t lang_es_es LANG_DATA = {
     .s_Colors = "Colores",
     .s_Theme_Title = "UI Tema",
     .s_Theme_sList = "Listado",
-    .s_Theme_CoverV = "Flow V",
-    .s_Theme_CoverH = "Flow H",
-    .s_Theme_CoverLightV = "Light V",
-    .s_Theme_CoverLightH = "Light H",
+    .s_Theme_CoverV = "Imagen Flow V",
+    .s_Theme_CoverH = "Imagen Flow H",
+    .s_Theme_CoverLightV = "Imagen Light V",
+    .s_Theme_CoverLightH = "Imagen Light H",
     //=====================================================================
 
     // Core\Src\retro-go\rg_emulators.c ====================================
@@ -115,8 +128,8 @@ const lang_t lang_es_es LANG_DATA = {
     .s_Delete_save = "Borrar guardado",
     .s_Confiem_del_save = "¿Borrar guardado?",
 #if CHEAT_CODES == 1
-    .s_Cheat_Codes = "Cheat Codes",
-    .s_Cheat_Codes_Title = "Cheat Options",
+    .s_Cheat_Codes = "Codigos Cheat",
+    .s_Cheat_Codes_Title = "Opciones Cheat",
     .s_Cheat_Codes_ON = "\x6",
     .s_Cheat_Codes_OFF = "\x5",
 #endif        
@@ -148,7 +161,7 @@ const lang_t lang_es_es LANG_DATA = {
     //.s_Close= "Cerrar",
     .s_Debug_Title = "Debug",
     .s_Idle_power_off = "Apagado automático",
-    .s_Splash_Option = "Splash Animation",
+    .s_Splash_Option = "Animación arranque",
     .s_Splash_On = "\x6",
     .s_Splash_Off = "\x5",
 
