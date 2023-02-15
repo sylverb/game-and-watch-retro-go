@@ -36,6 +36,18 @@ const lang_t lang_ja_jp LANG_DATA = {
     .s_Palette = "Palette",
     //=====================================================================
 
+    // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
+    .s_Crop_Vertical_Overscan = "Crop Vertical Overscan",
+    .s_Crop_Horizontal_Overscan = "Crop Horizontal Overscan",
+    .s_Disable_Sprite_Limit = "Disable sprite limit",
+    .s_NES_CPU_OC = "NES CPU Overclocking",
+    .s_NES_Eject_Insert_FDS = "Eject/Insert Disk",
+    .s_NES_Eject_FDS = "Eject Disk",
+    .s_NES_Insert_FDS = "Insert Disk",
+    .s_NES_Swap_Side_FDS = "Swap FDisk side",
+    .s_NES_FDS_Side_Format = "Disk %d Side %s",
+    //=====================================================================
+
     // Core\Src\porting\nes\main_nes.c =====================================
     //.s_Palette = "Palette" dul
     .s_Default = "Default",

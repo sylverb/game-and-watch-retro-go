@@ -36,6 +36,18 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_LangTitle = "游戏标题",
     .s_LangName = "S_Chinese",
     
+    // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
+    .s_Crop_Vertical_Overscan = "Crop Vertical Overscan",
+    .s_Crop_Horizontal_Overscan = "Crop Horizontal Overscan",
+    .s_Disable_Sprite_Limit = "Disable sprite limit",
+    .s_NES_CPU_OC = "NES CPU Overclocking",
+    .s_NES_Eject_Insert_FDS = "Eject/Insert Disk",
+    .s_NES_Eject_FDS = "Eject Disk",
+    .s_NES_Insert_FDS = "Insert Disk",
+    .s_NES_Swap_Side_FDS = "Swap FDisk side",
+    .s_NES_FDS_Side_Format = "Disk %d Side %s",
+    //=====================================================================
+
     // Core\Src\porting\gb\main_gb.c =======================================
     .s_Palette = "调色板",
     //=====================================================================
