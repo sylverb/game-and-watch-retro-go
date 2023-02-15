@@ -13,7 +13,6 @@ extern const char* gui_fonts[];
 extern const int gui_font_count;
 
 extern lang_t* curr_lang;
-extern lang_t *curr_romlang;
 extern const lang_t* gui_lang[];
 extern const int gui_lang_count;
 
@@ -46,6 +45,3 @@ int8_t odroid_settings_lang_get();
 int8_t odroid_settings_get_next_lang(uint8_t cur);
 int8_t odroid_settings_get_prior_lang(uint8_t cur);
 void odroid_settings_lang_set(int8_t lang);
-
-int8_t odroid_settings_romlang_get();
-void odroid_settings_romlang_set(int8_t lang);

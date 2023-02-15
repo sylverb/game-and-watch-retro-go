@@ -27,8 +27,7 @@ int ko_kr_fmt_Time(char *outstr, const char *timefmt, uint16_t hour, uint16_t mi
 const lang_t lang_ko_kr LANG_DATA = {
     .codepage = 949,
     .extra_font = ko_kr_fonts,
-    .s_LangUI = "UI 언어",
-    .s_LangTitle = "언어",
+    .s_LangUI = "언어",
     .s_LangName = "Korean",
     //한국어
     // If you can translate, please feed back the translation results to me, thank you
@@ -186,6 +185,13 @@ const lang_t lang_ko_kr LANG_DATA = {
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================
+    .s_CPU_Overclock = "CPU Overclock (%d)",
+    .s_CPU_Overclock_0 = "0 - No",
+    .s_CPU_Overclock_1 = "1 - Intermediate",
+    .s_CPU_Overclock_2 = "2 - Maximum",
+    .s_Reboot = "Reboot",
+    .s_OC_Reboot_Tips = "(OC Needs)",
+    .s_Confirm_Reboot = "Confirm reboot?",
     .s_Second_Unit = "초",
     .s_Version = "Ver.",
     .s_Author = "By",

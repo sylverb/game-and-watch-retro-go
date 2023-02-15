@@ -29,8 +29,7 @@ int ru_ru_fmt_Time(char *outstr, const char *timefmt, uint16_t hour, uint16_t mi
 const lang_t lang_ru_ru LANG_DATA = {
     .codepage = 1251,
     .extra_font = cp1251_fonts,
-    .s_LangUI = "язык интерфейса",
-    .s_LangTitle = "язык",
+    .s_LangUI = "язык",
     .s_LangName = "Russian",
     // Core\Src\porting\gb\main_gb.c =======================================
     .s_Palette = "ѕалитра",
@@ -172,6 +171,13 @@ const lang_t lang_ru_ru LANG_DATA = {
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================
+    .s_CPU_Overclock = "CPU Overclock (%d)",
+    .s_CPU_Overclock_0 = "0 - No",
+    .s_CPU_Overclock_1 = "1 - Intermediate",
+    .s_CPU_Overclock_2 = "2 - Maximum",
+    .s_Reboot = "Reboot",
+    .s_OC_Reboot_Tips = "(OC Needs)",
+    .s_Confirm_Reboot = "Confirm reboot?",
     .s_Second_Unit = "c",
     .s_Version = "¬ер.",
     .s_Author = "от",

@@ -7,8 +7,7 @@ typedef struct
     const uint32_t codepage;
     const char **extra_font; 
     const char *s_LangUI;
-    const char *s_LangTitle;
-    const char *s_LangName;
+    const char *s_LangName;  //used for English name
     // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
     const char *s_Crop_Vertical_Overscan;
     const char *s_Crop_Horizontal_Overscan;
@@ -151,6 +150,13 @@ typedef struct
 #endif    
     //=====================================================================
     // Core\Src\retro-go\rg_main.c =========================================
+    const char *s_CPU_Overclock;
+    const char *s_CPU_Overclock_0;
+    const char *s_CPU_Overclock_1;
+    const char *s_CPU_Overclock_2;
+    const char *s_Reboot;
+    const char *s_OC_Reboot_Tips;
+    const char *s_Confirm_Reboot;
     const char *s_Second_Unit;
     const char *s_Version;
     const char *s_Author;

@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "appid.h"
+#include "main.h"
 #include "rg_emulators.h"
 #include "gui.h"
 #include "githash.h"
@@ -101,6 +102,35 @@ static bool color_shift_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t
 #if !defined(COVERFLOW)
 #define COVERFLOW 0
 #endif /* COVERFLOW */
+
+
+static bool main_menu_cpu_oc_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    int cpu_oc = oc_level_gets();
+    if (event == ODROID_DIALOG_PREV) {
+        cpu_oc--;
+        if (cpu_oc < 0)
+            cpu_oc = 2;
+    }
+    else if (event == ODROID_DIALOG_NEXT) {
+        cpu_oc++;
+        if (cpu_oc > 2)
+            cpu_oc = 0;
+    }
+    oc_level_set(cpu_oc);
+    switch (cpu_oc){
+    case 1:
+        sprintf(option->value, "%s", curr_lang->s_CPU_Overclock_1);
+        break;
+    case 2:
+        sprintf(option->value, "%s", curr_lang->s_CPU_Overclock_2);
+        break;
+    default:
+        sprintf(option->value, "%s", curr_lang->s_CPU_Overclock_0);
+        break;
+    }
+    return event == ODROID_DIALOG_ENTER;
+}
 
 static bool main_menu_timeout_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
@@ -258,28 +288,6 @@ static bool lang_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t
     //sprintf(option->label, "%s", curr_lang->s_Lang);
     return event == ODROID_DIALOG_ENTER;
 }
-
-
-static bool romlang_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
-{
-    int8_t lang = odroid_settings_romlang_get();
-
-    if (event == ODROID_DIALOG_PREV)
-    {
-        lang = odroid_settings_get_prior_lang(lang);
-        odroid_settings_romlang_set(lang);
-    }
-    else if (event == ODROID_DIALOG_NEXT)
-    {
-        lang = odroid_settings_get_next_lang(lang);
-        odroid_settings_romlang_set(lang);
-    }
-    curr_romlang = (lang_t *)gui_lang[lang];
-    sprintf(option->value, "%s", curr_romlang->s_LangName);
-    //sprintf(option->label, "%s", curr_lang->s_Lang);
-    return event == ODROID_DIALOG_ENTER;
-}
-
 
 static inline bool tab_enabled(tab_t *tab)
 {
@@ -483,22 +491,27 @@ void retro_loop()
                 char timeout_value[16];
                 char theme_value[16];
                 char colors_value[16];
-                char UIlang_value[64];
                 char lang_value[64];
+                char ov_value[64];
+                char reboot_value[64];
+                sprintf(reboot_value, "%s", curr_lang->s_OC_Reboot_Tips);
+                char ov_Title[64];
+                sprintf(ov_Title,curr_lang->s_CPU_Overclock, oc_level_get());
 
                 odroid_dialog_choice_t choices[] = {
                     ODROID_DIALOG_CHOICE_SEPARATOR,
+                    {0, curr_lang->s_Font, font_value, 1, &font_update_cb},
+                    {0, curr_lang->s_LangUI, lang_value, 1, &lang_update_cb},
 #if COVERFLOW != 0
                      //ODROID_DIALOG_CHOICE_SEPARATOR,
                     {0, curr_lang->s_Theme_Title, theme_value, 1, &theme_update_cb},
 #endif
                     {0x0F0F0E0E, curr_lang->s_Colors, colors_value, 1, &colors_update_cb},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
-                    {0, curr_lang->s_Font, font_value, 1, &font_update_cb},
-                    {0, curr_lang->s_LangUI, UIlang_value, 1, &lang_update_cb},
-                    {0, curr_lang->s_LangTitle, lang_value, 1, &romlang_update_cb},
-                    ODROID_DIALOG_CHOICE_SEPARATOR,
                     {0, curr_lang->s_Idle_power_off, timeout_value, 1, &main_menu_timeout_cb},
+                    ODROID_DIALOG_CHOICE_SEPARATOR,
+                    {9, ov_Title, ov_value, 1, &main_menu_cpu_oc_cb},
+                    {9, curr_lang->s_Reboot, reboot_value, 1, NULL},
                     // {0, "Color theme", "1/10", 1, &color_shift_cb},
                     // {0, "Font size", "Small", 1, &font_size_cb},
                     // {0, "Show cover", "Yes", 1, &show_cover_cb},
@@ -506,7 +519,15 @@ void retro_loop()
                     // {0, "---", "", -1, NULL},
                     // {0, "Startup app", "Last", 1, &startup_app_cb},
                     ODROID_DIALOG_CHOICE_LAST};
-                odroid_overlay_settings_menu(choices);
+                switch (odroid_overlay_settings_menu(choices))
+                {
+                case 9:
+                    //reboot;
+                    if (odroid_overlay_confirm(curr_lang->s_Confirm_Reboot, false) == 1)
+                        odroid_system_switch_app(0);
+                    break;
+                };
+
                 gui_redraw();
             }
             // TIME menu

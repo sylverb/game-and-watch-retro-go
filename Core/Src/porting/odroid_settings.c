@@ -62,7 +62,6 @@ typedef struct persistent_config {
     uint8_t turbo_buttons;
     uint8_t font;
     uint8_t lang;
-    uint8_t romlang;
     uint8_t startup_app;
     void *startup_file;
 
@@ -113,28 +112,6 @@ static const persistent_config_t persistent_config_default = {
     .lang = 8,
 #else
     .lang = 0,
-#endif
-
-#if UICODEPAGE==12521
-    .romlang = 1,
-#elif UICODEPAGE==12522
-    .romlang = 2,
-#elif UICODEPAGE==12523
-    .romlang = 3,
-#elif UICODEPAGE==12524
-    .romlang = 4,
-#elif UICODEPAGE==12525
-    .romlang = 5,
-#elif UICODEPAGE==932
-    .romlang = 9,
-#elif UICODEPAGE==936
-    .romlang = 6,
-#elif UICODEPAGE==949
-    .romlang = 8,
-#elif UICODEPAGE==950
-    .romlang = 7,
-#else
-    .romlang = 0,
 #endif
     .startup_app = 0,
     .main_menu_timeout_s = 60 * 10, // Turn off after 10 minutes of idle time in the main menu
@@ -198,7 +175,6 @@ void odroid_settings_init()
     curr_font = odroid_settings_font_get();
     //set lang
     curr_lang = (lang_t *)gui_lang[odroid_settings_lang_get()];
-    curr_romlang = (lang_t *)gui_lang[odroid_settings_romlang_get()];
 }
 
 void odroid_settings_commit()
@@ -342,22 +318,6 @@ void odroid_settings_lang_set(int8_t lang)
     else if (lang >= gui_lang_count)
         lang = gui_lang_count - 1;
     persistent_config_ram.lang = lang;
-}
-
-
-int8_t odroid_settings_romlang_get()
-{
-    int lang = persistent_config_ram.romlang;
-    return odroid_settings_get_prior_lang(lang + 1);
-}
-
-void odroid_settings_romlang_set(int8_t lang)
-{
-    if (lang < 0)
-        lang = 0;
-    else if (lang >= gui_lang_count)
-        lang = gui_lang_count - 1;
-    persistent_config_ram.romlang = lang;
 }
 
 #if COVERFLOW != 0

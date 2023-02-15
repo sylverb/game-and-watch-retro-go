@@ -32,8 +32,7 @@ int zh_cn_fmt_Time(char *outstr, const char *timefmt, uint16_t hour, uint16_t mi
 const lang_t lang_zh_cn LANG_DATA = {
     .codepage = 936,
     .extra_font = zh_cn_fonts,
-    .s_LangUI = "界面语言",
-    .s_LangTitle = "游戏标题",
+    .s_LangUI = "语言",
     .s_LangName = "S_Chinese",
     
     // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
@@ -154,10 +153,9 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_Quit_to_menu = "× 退出游戏",
     .s_Retro_Go_options = "游戏选项",
 
-    .s_Font = "字体样式",
-    .s_Colors = "色彩方案",
-
-    .s_Theme_Title = "界面样式",
+    .s_Font = "字体",
+    .s_Colors = "色彩",
+    .s_Theme_Title = "展示",
     .s_Theme_sList = "简单列表",
     .s_Theme_CoverV = "垂直滚动", // vertical
     .s_Theme_CoverH = "水平滚动", // horizontal
@@ -189,6 +187,13 @@ const lang_t lang_zh_cn LANG_DATA = {
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================
+    .s_CPU_Overclock = "超频 (%d)",
+    .s_CPU_Overclock_0 = "0 - 关闭",
+    .s_CPU_Overclock_1 = "1 - 适度",
+    .s_CPU_Overclock_2 = "2 - 极限",
+    .s_Reboot = "重启",
+    .s_OC_Reboot_Tips = "超频需重启生效",
+    .s_Confirm_Reboot = "您确定要重启设备？",
     .s_Second_Unit = "秒",
     .s_Version = "版　　本：",
     .s_Author = "特别贡献：",
@@ -212,7 +217,7 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_Disable_DBGMCU_CK = "禁用 DBGMCU CK",
     //.s_Close                  = "Close",
     .s_Debug_Title = "调试选项",
-    .s_Idle_power_off = "空闲待机",
+    .s_Idle_power_off = "待机",
 
     .s_Time = "时间：",
     .s_Date = "日期：",
@@ -237,7 +242,7 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_Weekday_Sun = "日",
 
     .s_Turbo_Button = "连发",
-    .s_Turbo_None = "关闭",
+    .s_Turbo_None = "无",
     .s_Turbo_A = "Ａ",
     .s_Turbo_B = "Ｂ",
     .s_Turbo_AB = "Ａ和Ｂ",    

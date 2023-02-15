@@ -97,8 +97,6 @@
 #include "fonts/font_cp1251_Greybeard.h"
 #endif
 
-
-
 const char *gui_fonts[9] = {
     font_cp1252_Serif,    font_cp1252_Serif_Bold,    font_cp1252_Serif_CJK,
     font_cp1252_Sans_serif,    font_cp1252_Sans_serif_Bold,    font_cp1252_Greybeard,
@@ -236,7 +234,6 @@ const lang_t *gui_lang[11] = {
 };
 
 lang_t *curr_lang = &lang_en_us;
-lang_t *curr_romlang = &lang_en_us;
 const int gui_lang_count = 11;
 
 int i18n_get_text_height()

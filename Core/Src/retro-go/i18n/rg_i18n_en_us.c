@@ -20,8 +20,7 @@ int en_us_fmt_Time(char *outstr, const char *timefmt, uint16_t hour, uint16_t mi
 const lang_t lang_en_us LANG_DATA = {
     .codepage = 1252,
     .extra_font = NULL,
-    .s_LangUI = "UI Language",
-    .s_LangTitle = "Title Language",
+    .s_LangUI = "Language",
     .s_LangName = "English",
 
     // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
@@ -175,6 +174,13 @@ const lang_t lang_en_us LANG_DATA = {
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================
+    .s_CPU_Overclock = "CPU Overclock (%d)",
+    .s_CPU_Overclock_0 = "0 - No",
+    .s_CPU_Overclock_1 = "1 - Intermediate",
+    .s_CPU_Overclock_2 = "2 - Maximum",
+    .s_Reboot = "Reboot",
+    .s_OC_Reboot_Tips = "(OC Needs)",
+    .s_Confirm_Reboot = "Confirm reboot?",
     .s_Second_Unit = "s",
     .s_Version = "Ver.",
     .s_Author = "By",

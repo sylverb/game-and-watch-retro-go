@@ -28,8 +28,7 @@ int zh_tw_fmt_Time(char *outstr, const char *timefmt, uint16_t hour, uint16_t mi
 const lang_t lang_zh_tw LANG_DATA = {
     .codepage = 950,
     .extra_font = zh_tw_fonts,
-    .s_LangUI = "介面語言",
-    .s_LangTitle = "遊戲標題",
+    .s_LangUI = "語言",
     .s_LangName = "T_Chinese",
 
     // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
@@ -150,10 +149,8 @@ const lang_t lang_zh_tw LANG_DATA = {
     .s_Power_off = "ω 關機休眠",
     .s_Quit_to_menu = "× 離開遊戲",
     .s_Retro_Go_options = "遊戲選項",
-
     .s_Font = "字型樣式",
     .s_Colors = "配色方案",
-
     .s_Theme_Title = "介面樣式",
     .s_Theme_sList = "至簡列表",
     .s_Theme_CoverV = "垂直捲動",
@@ -183,6 +180,13 @@ const lang_t lang_zh_tw LANG_DATA = {
 
     //=====================================================================
     // Core\Src\retro-go\rg_main.c =========================================
+    .s_CPU_Overclock = "超頻 (%d)",
+    .s_CPU_Overclock_0 = "0 - 關閉",
+    .s_CPU_Overclock_1 = "1 - 適度",
+    .s_CPU_Overclock_2 = "2 - 極限",
+    .s_Reboot = "重啟",
+    .s_OC_Reboot_Tips = "超頻需重啟生效",
+    .s_Confirm_Reboot = "您確定要重啟設備？",
     .s_Second_Unit = "秒",
     .s_Version = "版　　本：",
     .s_Author = "特別貢獻：",
