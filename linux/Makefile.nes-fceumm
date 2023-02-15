@@ -206,7 +206,7 @@ porting.c \
 ../fceumm-go/src/boards/edu2000.c \
 ../fceumm-go/src/boards/eeprom_93C66.c \
 ../fceumm-go/src/boards/eh8813a.c \
-../fceumm-go/src/boards/emu2413_nes.c \
+../fceumm-go/src/boards/fceu-emu2413.c \
 ../fceumm-go/src/boards/et-100.c \
 ../fceumm-go/src/boards/et-4320.c \
 ../fceumm-go/src/boards/f-15.c \
