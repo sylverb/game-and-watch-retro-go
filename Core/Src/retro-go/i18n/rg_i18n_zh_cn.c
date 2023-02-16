@@ -187,13 +187,19 @@ const lang_t lang_zh_cn LANG_DATA = {
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================
-    .s_CPU_Overclock = "超频 (%d)",
-    .s_CPU_Overclock_0 = "0 - 关闭",
-    .s_CPU_Overclock_1 = "1 - 适度",
-    .s_CPU_Overclock_2 = "2 - 极限",
+    .s_CPU_Overclock = "超频",
+    .s_CPU_Overclock_0 = "关闭",
+    .s_CPU_Overclock_1 = "适度",
+    .s_CPU_Overclock_2 = "极限",
+    .s_CPU_OC_Upgrade_to = "升至",
+    .s_CPU_OC_Downgrade_to = "降至",
+    .s_CPU_OC_Stay_at = "保持",
+    .s_Confirm_OC_Reboot = "超频配置需要重启后才能生效。\n您确认立即重启？",
+#if INTFLASH_BANK == 2
     .s_Reboot = "重启",
-    .s_OC_Reboot_Tips = "超频需重启生效",
+    .s_Original_system = "原生系统",
     .s_Confirm_Reboot = "您确定要重启设备？",
+#endif
     .s_Second_Unit = "秒",
     .s_Version = "版　　本：",
     .s_Author = "特别贡献：",

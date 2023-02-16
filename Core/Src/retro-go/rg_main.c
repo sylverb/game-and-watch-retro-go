@@ -118,15 +118,21 @@ static bool main_menu_cpu_oc_cb(odroid_dialog_choice_t *option, odroid_dialog_ev
             cpu_oc = 0;
     }
     oc_level_set(cpu_oc);
+    int cpu_oc1 = cpu_oc - oc_level_get();
+    char *s = (char *)(curr_lang->s_CPU_OC_Stay_at);
+    if (cpu_oc1 > 0)
+        s = (char *)(curr_lang->s_CPU_OC_Upgrade_to);
+    else if (cpu_oc1 < 0)
+        s = (char *)(curr_lang->s_CPU_OC_Downgrade_to);
     switch (cpu_oc){
     case 1:
-        sprintf(option->value, "%s", curr_lang->s_CPU_Overclock_1);
+        sprintf(option->value, "%s%s", s, curr_lang->s_CPU_Overclock_1);
         break;
     case 2:
-        sprintf(option->value, "%s", curr_lang->s_CPU_Overclock_2);
+        sprintf(option->value, "%s%s", s, curr_lang->s_CPU_Overclock_2);
         break;
     default:
-        sprintf(option->value, "%s", curr_lang->s_CPU_Overclock_0);
+        sprintf(option->value, "%s%s", s, curr_lang->s_CPU_Overclock_0);
         break;
     }
     return event == ODROID_DIALOG_ENTER;
@@ -269,6 +275,7 @@ static bool font_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t
     return event == ODROID_DIALOG_ENTER;
 }
 
+
 static bool lang_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
     int8_t lang = odroid_settings_lang_get();
@@ -304,6 +311,35 @@ static inline bool tab_enabled(tab_t *tab)
     return (disabled_tabs == gui.tabcount) || (tab->initialized && !tab->is_empty);
 }
 
+#if INTFLASH_BANK == 2
+void soft_reset_do(void)
+{
+    uint32_t addr = 0x08000000;
+    //         0x08000000;//APP_ADDR0;
+    *((uint32_t *)0x2001FFF8) = 0x544F4F42; // "BOOT"
+    *((uint32_t *)0x2001FFFC) = 0x08000000; // vector table
+
+    NVIC_SystemReset();
+    
+/* 
+    //u32 base = addr > NVIC_VectTab_FLASH ? NVIC_VectTab_FLASH:NVIC_VectTab_RAM;
+#if GNW_TARGET_ZELDA != 0                    
+    u32 base = 0x0801ad49;  //zelda
+#else
+    u32 base = 0x08017a45;  //mario
+#endif
+   u32 offset = addr - base;
+ 
+    NVIC_SetVectorTable(base, offset);
+*/    
+    uint32_t map = *((uint32_t *)addr);
+    uint32_t reset = *((uint32_t *)(addr + 4));
+    __set_MSP(map);
+    ((void(*)())(reset))();
+
+}
+#endif
+
 void retro_loop()
 {
     tab_t *tab = gui_get_current_tab();
@@ -311,6 +347,9 @@ void retro_loop()
     int repeat = 0;
     int selected_tab_last = -1;
     uint32_t idle_s;
+
+#pragma GCC diagnostic ignored "-Wint-conversion"
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
 
     // Read the initial state as to not trigger on button held down during boot
     odroid_input_read_gamepad(&gui.joystick);
@@ -493,10 +532,6 @@ void retro_loop()
                 char colors_value[16];
                 char lang_value[64];
                 char ov_value[64];
-                char reboot_value[64];
-                sprintf(reboot_value, "%s", curr_lang->s_OC_Reboot_Tips);
-                char ov_Title[64];
-                sprintf(ov_Title,curr_lang->s_CPU_Overclock, oc_level_get());
 
                 odroid_dialog_choice_t choices[] = {
                     ODROID_DIALOG_CHOICE_SEPARATOR,
@@ -510,24 +545,19 @@ void retro_loop()
                     ODROID_DIALOG_CHOICE_SEPARATOR,
                     {0, curr_lang->s_Idle_power_off, timeout_value, 1, &main_menu_timeout_cb},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
-                    {9, ov_Title, ov_value, 1, &main_menu_cpu_oc_cb},
-                    {9, curr_lang->s_Reboot, reboot_value, 1, NULL},
-                    // {0, "Color theme", "1/10", 1, &color_shift_cb},
-                    // {0, "Font size", "Small", 1, &font_size_cb},
-                    // {0, "Show cover", "Yes", 1, &show_cover_cb},
-                    // {0, "Show empty", "Yes", 1, &show_empty_cb},
-                    // {0, "---", "", -1, NULL},
-                    // {0, "Startup app", "Last", 1, &startup_app_cb},
+                    {0, curr_lang->s_CPU_Overclock, ov_value, 1, &main_menu_cpu_oc_cb},
+#if INTFLASH_BANK == 2
+                    //{9, curr_lang->s_Reboot, curr_lang->s_Original_system, 1, NULL},
+#endif
                     ODROID_DIALOG_CHOICE_LAST};
-                switch (odroid_overlay_settings_menu(choices))
-                {
-                case 9:
+#if INTFLASH_BANK == 2
+                if (odroid_overlay_settings_menu(choices) == 9)
+                    soft_reset_do();
+#endif
+                if (oc_level_gets() != oc_level_get())
                     //reboot;
-                    if (odroid_overlay_confirm(curr_lang->s_Confirm_Reboot, false) == 1)
+                    if (odroid_overlay_confirm(curr_lang->s_Confirm_OC_Reboot, false) == 1)
                         odroid_system_switch_app(0);
-                    break;
-                };
-
                 gui_redraw();
             }
             // TIME menu
