@@ -548,6 +548,7 @@ void retro_loop()
                     {0, curr_lang->s_Splash_Option, splashani_value, 1, &splashani_update_cb},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
                     {9, ov_Title, ov_value, 1, &main_menu_cpu_oc_cb},
+					ODROID_DIALOG_CHOICE_SEPARATOR,
 #if (FONT_COUNT > 1)
                     {0, curr_lang->s_Font, font_value, 1, &font_update_cb},
 #endif

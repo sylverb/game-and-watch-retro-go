@@ -32,8 +32,8 @@ const lang_t lang_es_es LANG_DATA = {
     .s_LangUI = "UI Idioma",
     .s_LangTitle = "Idioma",
     .s_LangName = "Spanish",
-	
-	// Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
+
+    // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
     .s_Crop_Vertical_Overscan = "Recortar borde Vertical",
     .s_Crop_Horizontal_Overscan = "Recortar borde Horizontal",
     .s_Disable_Sprite_Limit = "Desactivar limite sprites",
@@ -137,14 +137,14 @@ const lang_t lang_es_es LANG_DATA = {
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================
-	.s_CPU_Overclock = "CPU Overclock (%d)",
-	.s_CPU_Overclock_0 = "0 - stock",
-	.s_CPU_Overclock_1 = "1 - Intermedio",
-	.s_CPU_Overclock_2 = "2 - Máximo",
-	//.s_Reboot = "Reiniciar",
-	//.s_OC_Reboot_Tips = "(OC Necesidades)",
-	.s_Confirm_Reboot = "¿Confirmar reinicio?",
-    .s_Second_Unit = "s",
+    .s_CPU_Overclock = "CPU Overclock (%d)",
+    .s_CPU_Overclock_0 = "0 - Stock",
+    .s_CPU_Overclock_1 = "1 - Intermedio",
+    .s_CPU_Overclock_2 = "2 - Máximo",
+    //.s_Reboot = "Reiniciar",
+    //.s_OC_Reboot_Tips = "(Fijar OC)",
+    .s_Confirm_Reboot = "¿Confirmar reinicio?",
+	.s_Second_Unit = "s",
     .s_Version = "Ver.",
     .s_Author = "Por",
     .s_Author_ = "\t\t+",
