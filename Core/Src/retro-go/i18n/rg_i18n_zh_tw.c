@@ -187,7 +187,7 @@ const lang_t lang_zh_tw LANG_DATA = {
     .s_CPU_OC_Upgrade_to = "升至",
     .s_CPU_OC_Downgrade_to = "降至",
     .s_CPU_OC_Stay_at = "保持",
-    .s_Confirm_OC_Reboot = "超頻配置需要重啟後才能生效。\n您確認立即重啟？",
+    .s_Confirm_OC_Reboot = "超頻配置需要重啟後才能生效。您確認立即重啟？",
 #if INTFLASH_BANK == 2
     .s_Reboot = "重啟",
     .s_Original_system = "原生系統",

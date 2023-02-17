@@ -161,8 +161,8 @@ typedef struct
 #if INTFLASH_BANK == 2
     const char *s_Reboot;
     const char *s_Original_system;
-#endif
     const char *s_Confirm_Reboot;
+#endif
     const char *s_Second_Unit;
     const char *s_Version;
     const char *s_Author;
