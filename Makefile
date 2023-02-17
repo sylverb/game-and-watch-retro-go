@@ -495,6 +495,7 @@ Core/Src/porting/msx/main_msx.c \
 Core/Src/porting/msx/save_msx.c
 
 GW_C_SOURCES = \
+Core/Src/porting/lib/lz4_depack.c \
 LCD-Game-Emulator/src/cpus/sm500op.c \
 LCD-Game-Emulator/src/cpus/sm510op.c \
 LCD-Game-Emulator/src/cpus/sm500core.c \
