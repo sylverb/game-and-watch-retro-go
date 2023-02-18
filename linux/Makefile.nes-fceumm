@@ -283,6 +283,7 @@ porting.c \
 ../fceumm-go/src/ines.c \
 ../fceumm-go/src/input.c \
 ../fceumm-go/src/md5.c \
+../fceumm-go/src/nsf.c \
 ../fceumm-go/src/palette.c \
 ../fceumm-go/src/ppu.c \
 ../fceumm-go/src/video.c \
@@ -329,7 +330,9 @@ vpath %.c $(sort $(dir $(C_SOURCES)))
 
 outDir:
 	mkdir -p build
-	touch build/config.h
+	if ! [ -f ./build/config.h ]; then \
+		touch build/config.h; \
+	fi
 
 $(BUILD_DIR)/%.o: %.c Makefile.nes | $(BUILD_DIR) 
 	$(CC) -c $(CFLAGS) $< -o $@

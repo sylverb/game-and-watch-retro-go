@@ -1194,7 +1194,7 @@ class ROMParser:
             "Nintendo Entertainment System",
             "nes_system",
             "nes",
-            ["nes","fds"],
+            ["nes","fds","nsf"],
             "SAVE_NES_",
             romdef["nes"],
             "GG_NES_",

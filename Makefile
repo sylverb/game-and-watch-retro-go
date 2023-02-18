@@ -394,6 +394,7 @@ fceumm-go/src/general.c \
 fceumm-go/src/ines.c \
 fceumm-go/src/input.c \
 fceumm-go/src/md5.c \
+fceumm-go/src/nsf.c \
 fceumm-go/src/palette.c \
 fceumm-go/src/ppu.c \
 fceumm-go/src/video.c \
