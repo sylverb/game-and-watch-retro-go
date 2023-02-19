@@ -478,18 +478,20 @@ void FCEUD_Message(char *s)
 
 static bool SaveState(char *pathName)
 {
+    if (ACTIVE_FILE->save_size > 0) {
 #if OFF_SAVESTATE==1
-    if (strcmp(pathName,"1") == 0) {
-        // Save in common save slot (during a power off)
-        memstream_set_buffer((uint8_t*)&__OFFSAVEFLASH_START__, (uint64_t)ACTIVE_FILE->save_size);
-        FCEUSS_Save_Mem();
-    } else {
+        if (strcmp(pathName,"1") == 0) {
+            // Save in common save slot (during a power off)
+            memstream_set_buffer((uint8_t*)&__OFFSAVEFLASH_START__, (uint64_t)ACTIVE_FILE->save_size);
+            FCEUSS_Save_Mem();
+        } else {
 #endif
-        memstream_set_buffer((uint8_t*)ACTIVE_FILE->save_address, (uint64_t)ACTIVE_FILE->save_size);
-        FCEUSS_Save_Mem();
+            memstream_set_buffer((uint8_t*)ACTIVE_FILE->save_address, (uint64_t)ACTIVE_FILE->save_size);
+            FCEUSS_Save_Mem();
 #if OFF_SAVESTATE==1
+        }
+#endif
     }
-#endif
     return 0;
 }
 
