@@ -79,7 +79,7 @@ const rom_system_t {name} EMU_DATA = {{
 """
 
 SAVE_SIZES = {
-    "nes": 24 * 1024,
+    "nes": 24 * 1024, # only when using nofrendo, elseway it's given by nesmapper script
     "sms": 60 * 1024,
     "gg": 60 * 1024,
     "col": 60 * 1024,
@@ -95,11 +95,12 @@ SAVE_SIZES = {
 
 
 # TODO: Find a better way to find this before building
-MAX_COMPRESSED_NES_SIZE = 0x00081000
+MAX_COMPRESSED_NES_SIZE = 0x00080010 #512kB + 16 bytes header
 MAX_COMPRESSED_PCE_SIZE = 0x00049000
 MAX_COMPRESSED_WSV_SIZE = 0x00080000
 MAX_COMPRESSED_SG_COL_SIZE = 60 * 1024
 MAX_COMPRESSED_A7800_SIZE = 131200
+MAX_COMPRESSED_MSX_SIZE = 131200
 
 """
 All ``compress_*`` functions must be decorated ``@COMPRESSIONS`` and have the
@@ -133,124 +134,6 @@ class CompressionRegistry(dict):
 
 
 COMPRESSIONS = CompressionRegistry()
-
-
-@COMPRESSIONS
-def compress_lz4(data, level=None):
-    if level == DONT_COMPRESS:
-        frame = []
-
-        # Write header
-        # write MAGIC WORD
-        magic = b"\x04\x22\x4D\x18"
-        frame.append(magic)
-
-        # write FLG, BD, HC
-        flg = b"\x68"  # independent blocks, no checksum, content-size enabled
-        # the uncompressed size of data included within the frame will be present
-        # as an 8 bytes unsigned little endian value, after the flags
-        frame.append(flg)
-
-        bd = b"\x40"
-        frame.append(bd)
-
-        # write uncompressed frame size
-        content_size = len(data).to_bytes(8, "little")
-        frame.append(content_size)
-
-        if len(data) == 16384:
-            # Hardcode in the checksum for this length to reduce dependencies
-            hc = b"\x25"
-        else:
-            from xxhash import xxh32
-
-            hc = xxh32(b"".join(frame[1:])).digest()[2].to_bytes(1, "little")
-        frame.append(hc)
-
-        # Write block data
-        # Block size in bytes with the highest bit set to 1 to mark the
-        # data as uncompressed.
-        block_size = (len(data) + 2 ** 31).to_bytes(4, "little")
-        frame.append(block_size)
-
-        frame.append(data)
-
-        # Write footer
-        # write END_MARK 0x0000
-        footer = b"\x00\x00\x00\x00"
-        frame.append(footer)
-
-        return b"".join(frame)
-
-    if level is None:
-        # TODO: test out lz4.COMPRESSIONLEVEL_MAX
-        level = 9
-
-    try:
-        import lz4.frame as lz4
-
-        return lz4.compress(
-            data,
-            compression_level=level,
-            block_size=lz4.BLOCKSIZE_MAX1MB,
-            block_linked=False,
-        )
-    except ImportError:
-        pass
-
-    # CLI fallback, WARNING: this is slow for individually compressing GB banks
-    lz4_path = os.environ["LZ4_PATH"] if "LZ4_PATH" in os.environ else "lz4"
-    if not shutil.which(lz4_path):
-        raise ImportError
-    with TemporaryDirectory() as d:
-        d = Path(d)
-        file_in = d / "in"
-        file_out = d / "out"
-        file_in.write_bytes(data)
-        cmd = [
-            lz4_path,
-            "-" + str(level),
-            "--content-size",
-            "--no-frame-crc",
-            file_in,
-            file_out,
-        ]
-        subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
-        compressed_data = file_out.read_bytes()
-    return compressed_data
-
-
-@COMPRESSIONS
-def compress_zopfli(data, level=None):
-    if level == DONT_COMPRESS:
-        assert 0 <= len(data) <= 65535
-        frame = []
-
-        frame.append(b"\x01")  # Not compressed block
-
-        data_len = len(data).to_bytes(2, "little")
-        frame.append(data_len)
-
-        data_nlen = (len(data) ^ 0xFFFF).to_bytes(2, "little")
-        frame.append(data_nlen)
-
-        frame.append(data)
-
-        return b"".join(frame)
-
-    # Actual zopfli compression is temporarily disabled until a GB/GBC bank
-    # swapping bug is resolved.
-    # Slightly less efficient vanilla deflate compression is applied
-
-    # import zopfli
-    # c = zopfli.ZopfliCompressor(zopfli.ZOPFLI_FORMAT_DEFLATE)
-
-    import zlib
-
-    c = zlib.compressobj(level=9, method=zlib.DEFLATED, wbits=-15, memLevel=9)
-
-    compressed_data = c.compress(data) + c.flush()
-    return compressed_data
 
 
 @COMPRESSIONS
@@ -370,25 +253,6 @@ def write_covart(srcfile, fn, w, h, jpg_quality):
 
 class NoArtworkError(Exception):
     """No artwork found for this ROM"""
-
-
-def is_valid_game_genie_code(code):
-    if '+' in code:
-        subcodes = code.split('+')
-        if len(subcodes) > 3:
-            return False
-        for subcode in subcodes:
-            if not is_valid_game_genie_code(subcode):
-                return False
-        return True
-
-    valid_characters = "APZLGITYEOXUKSVN"
-    if all(c in valid_characters for c in code) == False:
-        return False
-    if len(code) != 6 and len(code) != 8:
-        return False
-
-    return True
 
 
 class ROM:
@@ -514,9 +378,6 @@ class ROM:
                     continue
                 # Capitalize letters
                 code = code.upper()
-                # Remove invalid codes
-                if not is_valid_game_genie_code(code):
-                    continue
 
                 # Shorten description
                 if desc is not None:
@@ -632,7 +493,9 @@ class ROM:
     def mapper(self):
         mapper = 0
         if self.system_name == "MSX":
-            mapper = int(subprocess.check_output([sys.executable, "./tools/findblueMsxMapper.py", "roms/msx_bios/msxromdb.xml", str(self.path)]))
+            mapper = int(subprocess.check_output([sys.executable, "./tools/findblueMsxMapper.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk').replace('.lzma','')]))
+        if self.system_name == "Nintendo Entertainment System":
+            mapper = int(subprocess.check_output([sys.executable, "./fceumm-go/nesmapper.py", "mapper", str(self.path).replace('.lzma','')]))
         return mapper
 
     @property
@@ -642,7 +505,7 @@ class ROM:
             # MSX game_config structure :
             # b7-b0 : Controls profile
             # b8 : Does the game require to press ctrl at boot ?
-            sp_output = subprocess.check_output([sys.executable, "./tools/findblueMsxControls.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk')]).splitlines()
+            sp_output = subprocess.check_output([sys.executable, "./tools/findblueMsxControls.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk').replace('.lzma','')]).splitlines()
             value = int(sp_output[0]) + (int(sp_output[1]) << 8)
             if int(sp_output[0]) == 0xff :
                 print(f"Warning : {self.name} has no controls configuration in roms/msx_bios/msxromdb.xml, default controls will be used")
@@ -890,6 +753,16 @@ class ROMParser:
 
         return 0
 
+    def get_nes_save_size(self, file: Path):
+        file = Path(file)
+
+        if file.suffix in COMPRESSIONS:
+            file = file.with_suffix("")  # Remove compression suffix
+
+        total_size = int(subprocess.check_output([sys.executable, "./fceumm-go/nesmapper.py", "savesize", file]))
+        return total_size
+
+        return 0
     def _compress_rom(self, variable_name, rom, compress_gb_speed=False, compress=None):
         """This will create a compressed rom file next to the original rom."""
         global sms_reserved_flash_size
@@ -917,6 +790,14 @@ class ROMParser:
             output_file.write_bytes(compressed_data)
         elif "pce_system" in variable_name:  # PCE
             if rom.path.stat().st_size > MAX_COMPRESSED_PCE_SIZE:
+                print(
+                    f"INFO: {rom.name} is too large to compress, skipping compression!"
+                )
+                return
+            compressed_data = compress(data)
+            output_file.write_bytes(compressed_data)
+        elif "msx_system" in variable_name:  # MSX
+            if rom.path.stat().st_size > MAX_COMPRESSED_MSX_SIZE:
                 print(
                     f"INFO: {rom.name} is too large to compress, skipping compression!"
                 )
@@ -1184,6 +1065,8 @@ class ROMParser:
                     continue
                 if folder == "gb":
                     save_size = self.get_gameboy_save_size(rom.path)
+                elif folder == "nes" and args.nofrendo == 0:
+                    save_size = self.get_nes_save_size(rom.path)
 
                 # Aligned
                 aligned_size = 4 * 1024
@@ -1265,6 +1148,7 @@ class ROMParser:
 
         romdef.setdefault('gb', {})
         romdef.setdefault('nes', {})
+        romdef.setdefault('nes_bios', {})
         romdef.setdefault('sms', {})
         romdef.setdefault('gg', {})
         romdef.setdefault('col', {})
@@ -1297,12 +1181,20 @@ class ROMParser:
         build_config += "#define ENABLE_EMULATOR_GB\n" if rom_size > 0 else ""
         if system_save_size > larger_save_size : larger_save_size = system_save_size
 
+        # Delete NES bios/mappers.h file to recreate it
+        mappers_file = "build/mappers.h"
+        if os.path.isfile(mappers_file):
+            os.remove(mappers_file)
+        # Create empty file to prevent compilation crash
+        mappers = open(mappers_file, 'w')
+        mappers.close
+
         system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/nes_roms.c",
             "Nintendo Entertainment System",
             "nes_system",
             "nes",
-            ["nes"],
+            ["nes","fds","nsf"],
             "SAVE_NES_",
             romdef["nes"],
             "GG_NES_",
@@ -1314,6 +1206,35 @@ class ROMParser:
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_NES\n" if rom_size > 0 else ""
         if system_save_size > larger_save_size : larger_save_size = system_save_size
+
+        # NES FDS bios (only parse if there are some NES games)
+        if rom_size > 0:
+            system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+                "Core/Src/retro-go/nes_bios.c",
+                "NES_BIOS",
+                "nes_bios",
+                "nes_bios",
+                ["rom","nes"],
+                "SAVE_NESB_",
+                romdef["nes_bios"],
+                None,
+                current_id
+            )
+            total_save_size += save_size
+            total_rom_size += rom_size
+            total_img_size += img_size
+        else:
+            system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+                "Core/Src/retro-go/nes_bios.c",
+                "NES_BIOS",
+                "nes_bios",
+                "nes_bios",
+                ["fakeToGenerateEmtyC"],
+                "SAVE_NESB_",
+                romdef["nes_bios"],
+                None,
+                current_id
+            )
 
         system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/sms_roms.c",
@@ -1634,6 +1555,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Apply only selective compression to gameboy banks. Only apply "
         "if bank decompression during switching is too slow.",
+    )
+    parser.add_argument(
+        "--nofrendo",
+        type=int,
+        default=0,
+        help="force nofrendo nes emulator instead of fceumm",
     )
     parser.add_argument(
         "--no-compress_gb_speed", dest="compress_gb_speed", action="store_false"

@@ -71,7 +71,7 @@ class ROMParser:
         self.parse_one(json_file,"gb",["gb", "gbc"])
 
         json_file = script_path / "roms" / "nes.json"
-        self.parse_one(json_file, "nes",["nes"])
+        self.parse_one(json_file, "nes",["nes", "fds", "nsf"])
 
         json_file = script_path / "roms" / "sms.json"
         self.parse_one(json_file, "sms",["sms"])

@@ -288,6 +288,31 @@ SECTIONS
   _OVERLAY_NES_BSS_SIZE = SIZEOF(.overlay_nes_bss);
   _NES_ROM_UNPACK_BUFFER_SIZE = __RAM_EMU_START__ + __RAM_EMU_LENGTH__ - _NES_ROM_UNPACK_BUFFER;
 
+  .overlay_nes_fceu __RAM_EMU_START__ : {
+    . = ALIGN(4);
+    __ram_emu_nes_fceu_start__ = .;
+    build/nes_fceu/*.o (.data .data* .text .text* .rodata .rodata*)
+    . = ALIGN(4);
+    _OVERLAY_NES_FCEU_LOAD_END = .;
+  } AT> EXTFLASH
+  _OVERLAY_NES_FCEU_LOAD_START = LOADADDR(.overlay_nes_fceu);
+  _OVERLAY_NES_FCEU_SIZE = SIZEOF(.overlay_nes_fceu);
+
+  .overlay_nes_fceu_bss _OVERLAY_NES_FCEU_LOAD_END : {
+    . = ALIGN(4);
+    _OVERLAY_NES_FCEU_BSS_START = .;
+    build/nes_fceu/*.o (.bss .bss*)
+    . = ALIGN(4);
+    build/nes_fceu/*.o (COMMON)
+    . = ALIGN(4);
+    _NES_FCEU_ROM_UNPACK_BUFFER = .;
+    _OVERLAY_NES_FCEU_BSS_END = .;
+    __ram_emu_nes_fceu_end__ = .;
+    ASSERT(ABSOLUTE(_OVERLAY_NES_FCEU_BSS_END) < __RAM_EMU_END__, "Error: NES_FCEU BSS overflow");
+  }
+  _OVERLAY_NES_FCEU_BSS_SIZE = SIZEOF(.overlay_nes_fceu_bss);
+  _NES_FCEU_ROM_UNPACK_BUFFER_SIZE = __RAM_EMU_START__ + __RAM_EMU_LENGTH__ - _NES_FCEU_ROM_UNPACK_BUFFER;
+
   .overlay_gb __RAM_EMU_START__ : {
     . = ALIGN(4);
     __ram_emu_gb_start__ = .;

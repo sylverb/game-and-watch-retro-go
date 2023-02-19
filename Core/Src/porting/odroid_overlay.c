@@ -984,9 +984,9 @@ static void draw_game_status_bar(runtime_stats_t stats)
 
 int odroid_overlay_game_settings_menu(odroid_dialog_choice_t *extra_options)
 {
-    char speedup_value[12];
-    char scaling_value[12];
-    char filtering_value[12];
+    char speedup_value[15];
+    char scaling_value[15];
+    char filtering_value[15];
     strcpy(filtering_value, curr_lang->s_FilteringOff);
     strcpy(scaling_value, curr_lang->s_SCalingFull);
 

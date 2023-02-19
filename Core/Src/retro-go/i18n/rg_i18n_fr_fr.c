@@ -33,6 +33,18 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_LangTitle = "Langue des Titres",
     .s_LangName = "French",
 
+    // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
+    .s_Crop_Vertical_Overscan = "Recadrage Vertical",
+    .s_Crop_Horizontal_Overscan = "Recadrage Horizontal",
+    .s_Disable_Sprite_Limit = "Désactiver limit. nb sprites",
+    .s_NES_CPU_OC = "Overclocking du CPU NES",
+    .s_NES_Eject_Insert_FDS = "Ejecter/Insérer le disque",
+    .s_NES_Eject_FDS = "Ejecter Disque",
+    .s_NES_Insert_FDS = "Insérer Disque",
+    .s_NES_Swap_Side_FDS = "Changer la face du disque",
+    .s_NES_FDS_Side_Format = "Disque %d Face %s",
+    //=====================================================================
+
     // Core\Src\porting\gb\main_gb.c =======================================
     .s_Palette = "Palette",
     //=====================================================================
