@@ -1071,10 +1071,12 @@ class ROMParser:
                 # Aligned
                 aligned_size = 4 * 1024
                 if rom.enable_save:
-                    system_save_size = (
+                    rom_save_size = (
                         (save_size + aligned_size - 1) // (aligned_size)
                     ) * aligned_size
-                    total_save_size += system_save_size
+                    total_save_size += rom_save_size
+                    if system_save_size < rom_save_size:
+                        system_save_size = rom_save_size
                 total_rom_size += rom.size
                 if (args.coverflow != 0) :
                     total_img_size += rom.img_size
