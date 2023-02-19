@@ -41,6 +41,10 @@ else
 $(error Missing or invalid GNW_TARGET option. Valid values {mario|zelda})
 endif
 
+# Default NES emulator is fceumm
+FORCE_NOFRENDO ?= 0 
+NOFRENDO_PARAM := --nofrendo=$(FORCE_NOFRENDO)
+
 # Configure external flash size by setting EXTFLASH_SIZE
 ifeq ($(LARGE_FLASH),1)
 	# 16MB
