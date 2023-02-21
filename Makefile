@@ -591,7 +591,6 @@ NES_FCEU_C_INCLUDES +=  \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
 -Ifceumm-go/src/ \
--Ifceumm-go/src/drivers/libretro/libretro-common/include \
 -I./
 
 SMSPLUSGX_C_INCLUDES +=  \
