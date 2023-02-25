@@ -118,6 +118,7 @@ static bool main_menu_cpu_oc_cb(odroid_dialog_choice_t *option, odroid_dialog_ev
             cpu_oc = 0;
     }
     oc_level_set(cpu_oc);
+    odroid_settings_cpu_oc_level_set(cpu_oc);
     int cpu_oc1 = cpu_oc - oc_level_get();
     char *s = (char *)(curr_lang->s_CPU_OC_Stay_at);
     if (cpu_oc1 > 0)
@@ -320,23 +321,6 @@ void soft_reset_do(void)
     *((uint32_t *)0x2001FFFC) = 0x08000000; // vector table
 
     NVIC_SystemReset();
-    
-/* 
-    //u32 base = addr > NVIC_VectTab_FLASH ? NVIC_VectTab_FLASH:NVIC_VectTab_RAM;
-#if GNW_TARGET_ZELDA != 0                    
-    u32 base = 0x0801ad49;  //zelda
-#else
-    u32 base = 0x08017a45;  //mario
-#endif
-   u32 offset = addr - base;
- 
-    NVIC_SetVectorTable(base, offset);
-*/    
-    uint32_t map = *((uint32_t *)addr);
-    uint32_t reset = *((uint32_t *)(addr + 4));
-    __set_MSP(map);
-    ((void(*)())(reset))();
-
 }
 #endif
 
@@ -824,6 +808,14 @@ void app_main(uint8_t boot_mode)
 
     lcd_set_buffers(framebuffer1, framebuffer2);
     odroid_system_init(ODROID_APPID_LAUNCHER, 32000);
+    uint8_t oc = odroid_settings_cpu_oc_level_get();
+    if (oc != oc_level_get())
+    {
+        //reboot to oc level;
+        oc_level_set(oc);
+        boot_magic_set(BOOT_MAGIC_STANDBY);
+        odroid_system_switch_app(9);
+    }    
     odroid_overlay_draw_fill_rect(0, 0, ODROID_SCREEN_WIDTH, ODROID_SCREEN_HEIGHT, curr_colors->bg_c);
     // odroid_display_clear(0);
 

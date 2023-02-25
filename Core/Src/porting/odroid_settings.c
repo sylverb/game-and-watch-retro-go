@@ -63,6 +63,7 @@ typedef struct persistent_config {
     uint8_t font;
     uint8_t lang;
     uint8_t startup_app;
+    uint8_t cpu_oc_level;
     void *startup_file;
 
     uint16_t main_menu_timeout_s;
@@ -114,6 +115,7 @@ static const persistent_config_t persistent_config_default = {
     .lang = 0,
 #endif
     .startup_app = 0,
+    .cpu_oc_level = 0,
     .main_menu_timeout_s = 60 * 10, // Turn off after 10 minutes of idle time in the main menu
     .main_menu_selected_tab = 0,
     .main_menu_cursor = 0,
@@ -215,6 +217,17 @@ int32_t odroid_settings_int32_get(const char *key, int32_t default_value)
 
 void odroid_settings_int32_set(const char *key, int32_t value)
 {
+}
+
+void odroid_settings_cpu_oc_level_set(uint8_t oc)
+{
+    oc = (oc < 0) ? 0 : ((oc > 2) ? 2 : oc);
+    persistent_config_ram.cpu_oc_level = oc;
+}
+
+uint8_t odroid_settings_cpu_oc_level_get(void)
+{
+    return persistent_config_ram.cpu_oc_level;
 }
 
 int8_t odroid_settings_colors_get()

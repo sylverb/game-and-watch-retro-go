@@ -45,3 +45,5 @@ int8_t odroid_settings_lang_get();
 int8_t odroid_settings_get_next_lang(uint8_t cur);
 int8_t odroid_settings_get_prior_lang(uint8_t cur);
 void odroid_settings_lang_set(int8_t lang);
+uint8_t odroid_settings_cpu_oc_level_get(void);
+void odroid_settings_cpu_oc_level_set(uint8_t oc);
