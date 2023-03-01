@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-
 void ahb_init();
 void *ahb_malloc(size_t size);
 void *ahb_calloc(size_t count,size_t size);

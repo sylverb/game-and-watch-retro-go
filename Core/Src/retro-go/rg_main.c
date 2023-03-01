@@ -297,6 +297,20 @@ static bool lang_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t
     return event == ODROID_DIALOG_ENTER;
 }
 
+static bool splashani_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    int8_t splashani = odroid_settings_splashani_get();
+
+    if ((event == ODROID_DIALOG_PREV) || (event == ODROID_DIALOG_NEXT))
+    {
+        splashani = splashani ? 0 : 1;
+        odroid_settings_splashani_set(splashani);
+    };
+
+    sprintf(option->value, "%s", splashani ? curr_lang->s_Splash_On : curr_lang->s_Splash_Off);
+    return event == ODROID_DIALOG_ENTER;
+}
+
 static inline bool tab_enabled(tab_t *tab)
 {
     int disabled_tabs = 0;
@@ -510,7 +524,8 @@ void retro_loop()
             }
             else if ((last_key == ODROID_INPUT_VOLUME) || (last_key == ODROID_INPUT_Y))
             {
-                char font_value[16];
+                char splashani_value[16];
+				char font_value[16];
                 char timeout_value[16];
                 char theme_value[16];
                 char colors_value[16];
@@ -526,10 +541,12 @@ void retro_loop()
                     {0, curr_lang->s_Theme_Title, theme_value, 1, &theme_update_cb},
 #endif
                     {0x0F0F0E0E, curr_lang->s_Colors, colors_value, 1, &colors_update_cb},
+					{0, curr_lang->s_Splash_Option, splashani_value, 1, &splashani_update_cb},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
                     {0, curr_lang->s_Idle_power_off, timeout_value, 1, &main_menu_timeout_cb},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
                     {0, curr_lang->s_CPU_Overclock, ov_value, 1, &main_menu_cpu_oc_cb},
+					ODROID_DIALOG_CHOICE_SEPARATOR,
 #if INTFLASH_BANK == 2
                     //{9, curr_lang->s_Reboot, curr_lang->s_Original_system, 1, NULL},
 #endif
@@ -736,11 +753,22 @@ void app_check_data_loop()
 
 void app_start_logo()
 {
+    if (! odroid_settings_splashani_get())
+        return;
+    odroid_overlay_draw_fill_rect(0, 0, ODROID_SCREEN_WIDTH, ODROID_SCREEN_HEIGHT, curr_colors->bg_c);
+    //tab_t *tab = gui_get_tab(odroid_settings_MainMenuSelectedTab_get());
+    //tab = tab ? tab : gui_get_tab(0);
+    tab_t *tab = gui_set_current_tab(odroid_settings_MainMenuSelectedTab_get());
+    retro_logo_image *l_top = (retro_logo_image *)(tab->img_header);
+    retro_logo_image *l_bot = (retro_logo_image *)(tab->img_logo);
+
     const retro_logo_image* logos[] =   {&logo_nitendo, &logo_sega,     &logo_nitendo, &logo_sega,  &logo_nitendo, &logo_pce,    &logo_sega,  &logo_coleco, &logo_microsoft, &logo_watara, &logo_sega,  &logo_atari,   &logo_amstrad};
     const retro_logo_image* headers[] = {&header_gb,    &header_sg1000, &header_nes,   &header_gg,  &header_gw,    &header_pce,  &header_sms, &header_col,  &header_msx,     &header_wsv,  &header_gen, &header_a7800, &header_amstrad};
     odroid_overlay_draw_fill_rect(0, 0, ODROID_SCREEN_WIDTH, ODROID_SCREEN_HEIGHT, curr_colors->bg_c);
     for (int i = 0; i < 13; i++)
     {
+		if (l_top == (retro_logo_image *)headers[i])
+            l_bot = (retro_logo_image *)logos[i];
         odroid_overlay_draw_fill_rect(0, 0, ODROID_SCREEN_WIDTH, ODROID_SCREEN_HEIGHT, curr_colors->bg_c);
         odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - ((retro_logo_image *)(headers[i]))->width) / 2, 90, (retro_logo_image *)(headers[i]), curr_colors->sel_c);
         odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - ((retro_logo_image *)(logos[i]))->width) / 2, 160 + (40 - ((retro_logo_image *)(logos[i]))->height) / 2, (retro_logo_image *)(logos[i]), curr_colors->dis_c);
@@ -808,14 +836,14 @@ void app_main(uint8_t boot_mode)
 
     lcd_set_buffers(framebuffer1, framebuffer2);
     odroid_system_init(ODROID_APPID_LAUNCHER, 32000);
-    uint8_t oc = odroid_settings_cpu_oc_level_get();
-    if (oc != oc_level_get())
-    {
-        //reboot to oc level;
-        oc_level_set(oc);
-        boot_magic_set(BOOT_MAGIC_STANDBY);
-        odroid_system_switch_app(9);
-    }    
+	uint8_t oc = odroid_settings_cpu_oc_level_get();
+	if (oc != oc_level_get())
+	{
+		//reboot to oc level;
+		oc_level_set(oc);
+		boot_magic_set(BOOT_MAGIC_STANDBY);
+		odroid_system_switch_app(9);
+	}
     odroid_overlay_draw_fill_rect(0, 0, ODROID_SCREEN_WIDTH, ODROID_SCREEN_HEIGHT, curr_colors->bg_c);
     // odroid_display_clear(0);
 
@@ -823,6 +851,7 @@ void app_main(uint8_t boot_mode)
     app_check_data_loop();
     emulators_init();
 
+	app_start_logo();
     app_logo();
 
     if (boot_mode != 2)

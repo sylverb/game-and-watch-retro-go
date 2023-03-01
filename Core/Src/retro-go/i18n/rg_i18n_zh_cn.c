@@ -223,8 +223,11 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_Disable_DBGMCU_CK = "禁用 DBGMCU CK",
     //.s_Close                  = "Close",
     .s_Debug_Title = "调试选项",
-    .s_Idle_power_off = "待机",
-
+	.s_Idle_power_off = "空闲待机",
+    .s_Splash_Option = "启动动画",
+    .s_Splash_On = "\x6",
+    .s_Splash_Off = "\x5",
+	
     .s_Time = "时间：",
     .s_Date = "日期：",
     .s_Time_Title = "时间",

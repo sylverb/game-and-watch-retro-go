@@ -123,8 +123,8 @@ void odroid_system_switch_app(int app)
          */
         *((uint32_t *)0x2001FFF8) = 0x544F4F42; // "BOOT"
         *((uint32_t *)0x2001FFFC) = (uint32_t) &__INTFLASH__; // vector table
-
-        NVIC_SystemReset();
+			
+		NVIC_SystemReset();
         break;
     case 9:
         *((uint32_t *)0x2001FFF8) = 0x544F4F42; // "BOOT"

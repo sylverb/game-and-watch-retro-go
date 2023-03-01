@@ -221,7 +221,10 @@ const lang_t lang_es_es LANG_DATA = {
     //.s_Close= "Cerrar",
     .s_Debug_Title = "Debug",
     .s_Idle_power_off = "Apagado automático",
-
+	.s_Splash_Option = "Animación inicio",
+    .s_Splash_On = "\x6",
+    .s_Splash_Off = "\x5",
+	
     .s_Time = "Hora",
     .s_Date = "Fecha",
     .s_Time_Title = "Fecha y hora",

@@ -62,8 +62,9 @@ typedef struct persistent_config {
     uint8_t turbo_buttons;
     uint8_t font;
     uint8_t lang;
+	uint8_t splashani;
     uint8_t startup_app;
-    uint8_t cpu_oc_level;
+	uint8_t cpu_oc_level;
     void *startup_file;
 
     uint16_t main_menu_timeout_s;
@@ -114,8 +115,9 @@ static const persistent_config_t persistent_config_default = {
 #else
     .lang = 0,
 #endif
+	.splashani = 0,
     .startup_app = 0,
-    .cpu_oc_level = 0,
+	.cpu_oc_level = 0,
     .main_menu_timeout_s = 60 * 10, // Turn off after 10 minutes of idle time in the main menu
     .main_menu_selected_tab = 0,
     .main_menu_cursor = 0,
@@ -217,6 +219,16 @@ int32_t odroid_settings_int32_get(const char *key, int32_t default_value)
 
 void odroid_settings_int32_set(const char *key, int32_t value)
 {
+}
+
+int8_t odroid_settings_splashani_get()
+{
+    return persistent_config_ram.splashani;
+}
+
+void odroid_settings_splashani_set(int8_t splashani)
+{
+    persistent_config_ram.splashani = splashani;
 }
 
 void odroid_settings_cpu_oc_level_set(uint8_t oc)

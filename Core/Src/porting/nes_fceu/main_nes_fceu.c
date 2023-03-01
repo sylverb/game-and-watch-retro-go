@@ -27,8 +27,6 @@
 #define NES_WIDTH  256
 #define NES_HEIGHT 240
 
-extern uint32_t ram_start;
-
 extern CartInfo iNESCart;
 
 static uint8_t nes_framebuffer[(NES_WIDTH+16)*NES_HEIGHT];
@@ -781,7 +779,6 @@ static size_t nes_getromdata(unsigned char **data)
         size_t n_decomp_bytes;
         n_decomp_bytes = lzma_inflate(dest, available_size, src, ROM_DATA_LENGTH);
         *data = dest;
-        ram_start = (uint32_t)dest + n_decomp_bytes;
         return n_decomp_bytes;
     }
     else
@@ -792,13 +789,9 @@ static size_t nes_getromdata(unsigned char **data)
         if (ROM_DATA_LENGTH <= 262000) {
             memcpy(dest, ROM_DATA, ROM_DATA_LENGTH);
             *data = (unsigned char *)dest;
-            ram_start = (uint32_t)dest + ROM_DATA_LENGTH;
         } else 
 #endif
-        {
             *data = (unsigned char *)ROM_DATA;
-            ram_start = (uint32_t)dest;
-        }
 
         return ROM_DATA_LENGTH;
     }

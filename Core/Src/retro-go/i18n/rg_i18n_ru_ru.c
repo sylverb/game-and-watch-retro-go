@@ -229,6 +229,9 @@ const lang_t lang_ru_ru LANG_DATA = {
     .s_Minute = "Минуты",
     .s_Second = "Секунды",
     .s_Time_setup = "Настройка времени",
+	.s_Splash_Option = "загрузочная анимация",
+    .s_Splash_On = "\x6",
+    .s_Splash_Off = "\x5",
 
     .s_Day = "День",
     .s_Month = "Месяц",

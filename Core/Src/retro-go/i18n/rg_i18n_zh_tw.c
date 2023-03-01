@@ -217,6 +217,9 @@ const lang_t lang_zh_tw LANG_DATA = {
     //.s_Close                  = "Close",
     .s_Debug_Title = "調試選項",
     .s_Idle_power_off = "省電待機",
+	.s_Splash_Option = "啟動畫面",
+    .s_Splash_On = "\x6",
+    .s_Splash_Off = "\x5",
 
     .s_Time = "時間：",
     .s_Date = "日期：",
