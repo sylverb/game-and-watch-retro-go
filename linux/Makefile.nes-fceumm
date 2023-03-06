@@ -302,7 +302,7 @@ HEX = $(CP) -O ihex
 BIN = $(CP) -O binary -S
 
 C_DEFS =  \
--DIS_LITTLE_ENDIAN -DFCEU_VERSION_NUMERIC=9813 -DTARGET_GNW -DFCEU_NO_MALLOC -DLINUX_EMU -DFCEU_LOW_RAM -DENABLE_EMULATOR_NES -DFORCE_NOFRENDO=0
+-DIS_LITTLE_ENDIAN -DFCEU_VERSION_NUMERIC=9813 -DTARGET_GNW -DFCEU_NO_MALLOC -DLINUX_EMU -DFCEU_LOW_RAM -DENABLE_EMULATOR_NES -DFORCE_NOFRENDO=0 -DNES_MAPPER_NSF
 
 #-DFCEU_ENABLE_GAMEGENIE_ROM -DCHEAT_CODES=1
 
@@ -332,6 +332,9 @@ outDir:
 	mkdir -p build
 	if ! [ -f ./build/config.h ]; then \
 		touch build/config.h; \
+	fi
+	if ! [ -f ./build/mappers.h ]; then \
+		touch build/mappers.h; \
 	fi
 
 $(BUILD_DIR)/%.o: %.c Makefile.nes | $(BUILD_DIR) 
