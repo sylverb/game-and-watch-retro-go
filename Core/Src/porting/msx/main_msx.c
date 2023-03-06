@@ -116,7 +116,7 @@ static const uint8_t volume_table[ODROID_AUDIO_VOLUME_MAX + 1] = {
 };
 
 /* Compression buffer */
-static uint8_t rom_decompress_buffer[128*1024];
+static uint8_t rom_decompress_buffer[136*1024];
 
 /* Framebuffer management */
 uint8_t msx_framebuffer[272*240];
