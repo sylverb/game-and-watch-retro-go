@@ -73,6 +73,30 @@ static void set_audio_frequency(uint32_t frequency)
         PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
         PeriphClkInitStruct.PLL2.PLL2FRACN = 131;
     }
+    else if (frequency == 31200)
+    {
+//DIVM2=42, DIVN2=419, FRACN2=51 DIVP2=10 => 31176.05845, error=0.07679%
+        PeriphClkInitStruct.PLL2.PLL2M = 42;
+        PeriphClkInitStruct.PLL2.PLL2N = 419;
+        PeriphClkInitStruct.PLL2.PLL2P = 10;
+        PeriphClkInitStruct.PLL2.PLL2Q = 2;
+        PeriphClkInitStruct.PLL2.PLL2R = 5;
+        PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
+        PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+        PeriphClkInitStruct.PLL2.PLL2FRACN = 51;
+    }
+    else if (frequency == 31440)
+    {
+
+        PeriphClkInitStruct.PLL2.PLL2M = 33;
+        PeriphClkInitStruct.PLL2.PLL2N = 166;
+        PeriphClkInitStruct.PLL2.PLL2P = 5;
+        PeriphClkInitStruct.PLL2.PLL2Q = 2;
+        PeriphClkInitStruct.PLL2.PLL2R = 5;
+        PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
+        PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+        PeriphClkInitStruct.PLL2.PLL2FRACN = 27;
+    }
     else if (frequency == GW_AUDIO_FREQUENCY)
     {
         /* Reconfigure on the fly PLL2 */
@@ -202,6 +226,8 @@ static void set_audio_frequency(uint32_t frequency)
             (frequency == SAI_AUDIO_FREQUENCY_48K) ||
             (frequency == SAI_AUDIO_FREQUENCY_44K) ||
             (frequency == SAI_AUDIO_FREQUENCY_32K) ||
+            (frequency == 31440) ||
+            (frequency == 31200) ||
             (frequency == SAI_AUDIO_FREQUENCY_22K) ||
             (frequency == 18000) ||
             (frequency == SAI_AUDIO_FREQUENCY_16K) ||

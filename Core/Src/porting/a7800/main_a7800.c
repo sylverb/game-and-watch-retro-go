@@ -7,6 +7,7 @@
 #include "gw_lcd.h"
 #include "gw_linker.h"
 #include "gw_buttons.h"
+#include "gw_malloc.h"
 #include "rom_manager.h"
 #include "common.h"
 #include "lz4_depack.h"
@@ -37,13 +38,6 @@ static int videoHeight                 = 240;
 static uint16_t display_palette16[256] = {0};
 static uint8_t keyboard_data[17]       = {0};
 
-#define A7800_SAMPLE_RATE 48000
-#define A7800_FPS 60
-
-/* Required buffer size is exactly TIA_BUFFER_SIZE,
- * but round up to nearest multiple of 128 for
- * peace of mind... */
-#define AUDIO_SAMPLE_BUFFER_SIZE ((TIA_BUFFER_SIZE + 0x7F) & ~0x7F)
 static uint8_t *pokeyMixBuffer         = NULL;
 
 static uint8_t save_buffer[32796];
@@ -247,8 +241,7 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     }
     common_emu_state.frame_time_10us = (uint16_t)(100000 / 60.0 + 0.5f);
 
-    odroid_system_init(APPID_A7800, A7800_SAMPLE_RATE);
-    odroid_system_emu_init(&LoadState, &SaveState, NULL);
+    pokeyMixBuffer = (uint8_t*)itc_malloc(TIA_BUFFER_SIZE * sizeof(uint8_t));
 
     memset(keyboard_data, 0, sizeof(keyboard_data));
 
@@ -278,9 +271,12 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     memset(framebuffer1, 0, sizeof(framebuffer1));
     memset(framebuffer2, 0, sizeof(framebuffer2));
 
+    odroid_system_init(APPID_A7800, tia_size*prosystem_frequency); // 31200Hz for PAL, 31440Hz for NTSC
+    odroid_system_emu_init(&LoadState, &SaveState, NULL);
+
     // Init Sound
     memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, 2*AUDIO_SAMPLE_BUFFER_SIZE);
+    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, 2*tia_size);
 
     if (load_state) {
 #if OFF_SAVESTATE==1
@@ -320,7 +316,7 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
         BLIT_VIDEO_BUFFER(uint16_t, buffer, display_palette16, 320, 240, 320, lcd_get_active_buffer());
 
-        offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_SAMPLE_BUFFER_SIZE;
+        offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : tia_size;
 
         sound_store(&audiobuffer_dma[offset]);
 
