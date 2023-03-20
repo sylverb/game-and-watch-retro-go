@@ -239,7 +239,6 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     } else {
         common_emu_state.pause_after_frames = 0;
     }
-    common_emu_state.frame_time_10us = (uint16_t)(100000 / 60.0 + 0.5f);
 
     pokeyMixBuffer = (uint8_t*)itc_malloc(TIA_BUFFER_SIZE * sizeof(uint8_t));
 
@@ -266,6 +265,9 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     display_ResetPalette();
     database_Load(cartridge_digest);
     prosystem_Reset();
+
+    // Use detected system frequency
+    common_emu_state.frame_time_10us = (uint16_t)(100000 / prosystem_frequency + 0.5f);
 
     // Black background
     memset(framebuffer1, 0, sizeof(framebuffer1));
