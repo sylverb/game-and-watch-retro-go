@@ -41,6 +41,9 @@ else
 $(error Missing or invalid GNW_TARGET option. Valid values {mario|zelda})
 endif
 
+# Disable system logos splash screen at startup
+DISABLE_SPLASH_SCREEN ?= 0
+
 # Default NES emulator is fceumm
 FORCE_NOFRENDO ?= 0 
 NOFRENDO_PARAM := --nofrendo=$(FORCE_NOFRENDO)
@@ -392,6 +395,7 @@ C_DEFS +=  \
 -DGNW_TARGET_ZELDA=$(GNW_TARGET_ZELDA) \
 -DCHEAT_CODES=$(CHEAT_CODES) \
 -DFORCE_NOFRENDO=$(FORCE_NOFRENDO) \
+-DDISABLE_SPLASH_SCREEN=$(DISABLE_SPLASH_SCREEN) \
 -DTARGET_GNW \
 -DNO_EMBEDDED_SAMPLES \
 -D__LIBRETRO__ \
@@ -851,6 +855,7 @@ help:
 	@echo "  GAME_GENIE          - Set to 1 to enable game genie support (deprecated, use CHEAT_CODES instead)"
 	@echo "  CHEAT_CODES         - Set to 1 to enable cheat codes support (default=0)"
 	@echo "  SHARED_HIBERNATE_SAVESTATE - Set to 1 to enable a separate savestate for off/on (default=0)"
+	@echo "  DISABLE_SPLASH_SCREEN - Set to 1 to disable the slash screen animation at startup (default=0)"
 	@echo "  FORCE_NOFRENDO      - Set to 1 to force use of previous nofrendo-go emulator instead of fceumm (default=0)"
 	@echo ""
 	@echo "Current configuration:"

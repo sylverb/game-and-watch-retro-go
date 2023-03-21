@@ -734,6 +734,7 @@ void app_check_data_loop()
 }
 
 
+#if DISABLE_SPLASH_SCREEN == 0
 void app_start_logo()
 {
     const retro_logo_image* logos[] =   {&logo_nitendo, &logo_sega,     &logo_nitendo, &logo_sega,  &logo_nitendo, &logo_pce,    &logo_sega,  &logo_coleco, &logo_microsoft, &logo_watara, &logo_sega,  &logo_atari,   &logo_amstrad};
@@ -753,6 +754,7 @@ void app_start_logo()
         }
     }
 }
+#endif
 
 void app_logo()
 {
@@ -825,8 +827,10 @@ void app_main(uint8_t boot_mode)
 
     app_logo();
 
+#if DISABLE_SPLASH_SCREEN == 0
     if (boot_mode != 2)
         app_start_logo();
+#endif
 
     // favorites_init();
 
