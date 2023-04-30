@@ -723,7 +723,7 @@ start_bank_2:
 		-c 'resume;exit'
 .PHONY: start_bank_2
 
-start_bank:  # Start code located at INTFLASH_ADDRESS
+start:  # Start code located at INTFLASH_ADDRESS
 	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg \
 		-c 'init; reset halt' \
 		-c 'set MSP 0x[string range [mdw $(INTFLASH_ADDRESS)] 12 19]' \
@@ -733,7 +733,7 @@ start_bank:  # Start code located at INTFLASH_ADDRESS
 		-c 'reg msp $$MSP' \
 		-c 'reg pc $$PC' \
 		-c 'resume;exit'
-.PHONY: start_bank
+.PHONY: start
 
 
 # Programs the internal flash using a new OpenOCD instance
@@ -745,15 +745,6 @@ flash_intflash: $(BUILD_DIR)/$(TARGET)_intflash.bin
 flash_intflash_nc: $(BUILD_DIR)/$(TARGET)_intflash.bin
 	echo "program $< $(INTFLASH_ADDRESS) verify reset" | nc -c localhost 4444
 .PHONY: flash_intflash_nc
-
-flash_intflash2: $(BUILD_DIR)/$(TARGET)_intflash2.bin
-#	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "program $< 0x08100000 verify reset exit"
-.PHONY: flash_intflash2
-
-# Flashes using an existing openocd instance
-flash_intflash2_nc: $(BUILD_DIR)/$(TARGET)_intflash2.bin
-	echo "program $< 0x08100000 verify reset" | nc -c localhost 4444
-.PHONY: flash_intflash2_nc
 
 flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin
 	$(FLASH_MULTI) $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
