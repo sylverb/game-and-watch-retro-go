@@ -365,6 +365,7 @@ AS_DEFS +=
 C_DEFS +=  \
 -D_GNU_SOURCE \
 -DINTFLASH_BANK=$(INTFLASH_BANK) \
+-DINTFLASH_ADDRESS=$(INTFLASH_ADDRESS) \
 -DBIG_BANK=$(BIG_BANK) \
 -DEXTFLASH_SIZE=$(EXTFLASH_SIZE) \
 -DOFF_SAVESTATE=$(OFF_SAVESTATE) \
@@ -457,9 +458,9 @@ LDFLAGS += -Wl,--defsym=__EXTFLASH_TOTAL_LENGTH__=$(EXTFLASH_SIZE)
 LDFLAGS += -Wl,--defsym=ENABLE_SCREENSHOT=$(ENABLE_SCREENSHOT)
 
 ifeq ($(INTFLASH_BANK), 1)
-	INTFLASH_ADDRESS = 0x08000000
+	INTFLASH_ADDRESS ?= 0x08000000
 else ifeq ($(INTFLASH_BANK), 2)
-	INTFLASH_ADDRESS = 0x08100000
+	INTFLASH_ADDRESS ?= 0x08100000
 endif
 
 LDFLAGS += -Wl,--defsym=__INTFLASH__=$(INTFLASH_ADDRESS)
@@ -688,11 +689,11 @@ reset:
 
 erase_intflash_1:
 	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; halt; flash erase_address 0x08000000 131072; resume; exit"
-.PHONY: erase_intflash1
+.PHONY: erase_intflash_1
 
 erase_intflash_2:
 	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; halt; flash erase_address 0x08100000 131072; resume; exit"
-.PHONY: erase_intflash2
+.PHONY: erase_intflash_2
 
 erase_extflash: flash_intflash
 	$(V)./scripts/extflash_erase.sh $(EXTFLASH_SIZE)
@@ -721,6 +722,19 @@ start_bank_2:
 		-c 'reg pc $$PC' \
 		-c 'resume;exit'
 .PHONY: start_bank_2
+
+start_bank:  # Start code located at INTFLASH_ADDRESS
+	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg \
+		-c 'init; reset halt' \
+		-c 'set MSP 0x[string range [mdw $(INTFLASH_ADDRESS)] 12 19]' \
+		-c 'set PC 0x[string range [mdw [format 0x%x [expr {$(INTFLASH_ADDRESS) + 0x4}]]] 12 19]' \
+		-c 'echo "Setting MSP -> $$MSP"' \
+		-c 'echo "Setting PC -> $$PC"' \
+		-c 'reg msp $$MSP' \
+		-c 'reg pc $$PC' \
+		-c 'resume;exit'
+.PHONY: start_bank
+
 
 # Programs the internal flash using a new OpenOCD instance
 flash_intflash: $(BUILD_DIR)/$(TARGET)_intflash.bin
@@ -832,6 +846,7 @@ help:
 	@echo "  LARGE_FLASH         - Sets the external flash size to 16MB  (deprecated)"
 	@echo "  EXTFLASH_OFFSET     - Places the data at an offset in the external flash (useful for dual boot)"
 	@echo "  INTFLASH_BANK       - Sets the internal flash bank. Valid values {1,2} (default=1)."
+	@echo "  INTFLASH_ADDRESS    - Explicit internal flash address. If not provided, derived from INTFLASH_BANK.
 	@echo "  BIG_BANK            - Use internal flash bank as undocumented 256k.(default=1, set 0 to 128k)."
 	@echo "                        It's required patched OPENOCD to work"
 	@echo "  COMPRESS            - Configures ROM compression, Valid values {0,lzma} (default=lzma)."
