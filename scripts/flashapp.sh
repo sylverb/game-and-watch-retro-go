@@ -40,10 +40,12 @@ VAR_program_chunk_count=$(     printf '0x%08x\n' $(get_symbol "program_chunk_cou
 VAR_program_expected_sha256=$( printf '0x%08x\n' $(get_symbol "program_expected_sha256"))
 
 INTFLASH_BANK=${INTFLASH_BANK:-1}
-if [ $INTFLASH_BANK -eq 2 ]; then
-    INTFLASH_ADDRESS=0x08100000
-else
-    INTFLASH_ADDRESS=0x08000000
+if [ -z "$INTFLASH_ADDRESS" ]; then
+    if [ $INTFLASH_BANK -eq 2 ]; then
+        INTFLASH_ADDRESS=0x08100000
+    else
+        INTFLASH_ADDRESS=0x08000000
+    fi
 fi
 
 # $1: file to hash

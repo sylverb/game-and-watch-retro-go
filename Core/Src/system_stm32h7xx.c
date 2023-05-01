@@ -59,9 +59,21 @@
   #define HSI_VALUE    ((uint32_t)64000000) /*!< Value of the Internal oscillator in Hz*/
 #endif /* HSI_VALUE */
 
+
 #if !defined  (INTFLASH_BANK)
   #define INTFLASH_BANK 1
 #endif /* INTFLASH_BANK */
+
+
+#if !defined  (INTFLASH_ADDRESS)
+  #if INTFLASH_BANK == 1
+    #define INTFLASH_ADDRESS 0x08000000
+  #elif INTFLASH_BANK == 2
+    #define INTFLASH_ADDRESS 0x08100000
+  #else
+    #error INTFLASH_BANK must be either 1 (default) or 2
+  #endif /* INTFLASH_ADDRESS */
+#endif /* INTFLASH_ADDRESS */
 
 /**
   * @}
@@ -267,15 +279,7 @@ void SystemInit (void)
 #ifdef VECT_TAB_SRAM
   SCB->VTOR = D1_AXISRAM_BASE  | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal AXI-RAM */
 #else
-
-#if INTFLASH_BANK == 1
-  SCB->VTOR = FLASH_BANK1_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
-#elif INTFLASH_BANK == 2
-  SCB->VTOR = FLASH_BANK2_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
-#else
-#error INTFLASH_BANK must be either 1 (default) or 2
-#endif
-
+  SCB->VTOR = INTFLASH_ADDRESS | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
 #endif
 
 #endif /*DUAL_CORE && CORE_CM4*/
