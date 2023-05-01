@@ -782,9 +782,6 @@ flash_test: flash_intflash
 # Programs both the external and internal flash.
 flash: CheckTools CheckDirtySubmodules
 	$(V)$(MAKE) flash_intflash
-ifeq ($(INTFLASH_BANK), 1)
-	$(V)$(MAKE) flash_intflash2
-endif
 	$(V)$(MAKE) flash_extflash
 	$(V)$(RESET_DBGMCU_CMD)
 .PHONY: flash
