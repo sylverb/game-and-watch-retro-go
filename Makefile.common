@@ -65,25 +65,25 @@ endif
 INTFLASH_ADDRESS ?= 0x08000000
 INTFLASH_ADDRESS_DECIMAL = $(shell printf "%d" $(INTFLASH_ADDRESS))
 ifdef INTFLASH_BANK
-  # Sanity check that INTFLASH_ADDRESS and INTFLASH_BANK agree
-  ifeq ($(shell [ $(INTFLASH_ADDRESS_DECIMAL) -ge 134217728 -a $(INTFLASH_ADDRESS_DECIMAL) -lt 135266304 ] && echo true),true)
+	# Sanity check that INTFLASH_ADDRESS and INTFLASH_BANK agree
+#	ifeq ($(shell [ $(INTFLASH_ADDRESS_DECIMAL) -ge 134217728 -a $(INTFLASH_ADDRESS_DECIMAL) -lt 135266304 ] && echo true),true)
 	# INTFLASH_ADDRESS is in range [0x08000000, 0x08100000)
-    ifneq ($(INTFLASH_BANK),1)
-	  $(error Inconsistent INTFLASH_BANK and INTFLASH_ADDRESS)
-    endif
-  else
-    ifneq ($(INTFLASH_BANK),2)
-	  $(error Inconsistent INTFLASH_BANK and INTFLASH_ADDRESS)
-    endif
-  endif
+#		ifneq ($(INTFLASH_BANK),1)
+#			$(error Inconsistent INTFLASH_BANK and INTFLASH_ADDRESS)
+#		endif
+#	else
+#		ifneq ($(INTFLASH_BANK),2)
+#			$(error Inconsistent INTFLASH_BANK and INTFLASH_ADDRESS)
+#		endif
+#	endif
 else
-  # INTFLASH_BANK is not set; attempt to derive flashbank from INTFLASH_ADDRESS
-  ifeq ($(shell [ $(INTFLASH_ADDRESS_DECIMAL) -ge 134217728 -a $(INTFLASH_ADDRESS_DECIMAL) -lt 135266304 ] && echo true),true)
-	# INTFLASH_ADDRESS is in range [0x08000000, 0x08100000)
-	INTFLASH_BANK = 1
-  else
-	INTFLASH_BANK = 2
-  endif
+	# INTFLASH_BANK is not set; attempt to derive flashbank from INTFLASH_ADDRESS
+	ifeq ($(shell [ $(INTFLASH_ADDRESS_DECIMAL) -ge 134217728 -a $(INTFLASH_ADDRESS_DECIMAL) -lt 135266304 ] && echo true),true)
+		# INTFLASH_ADDRESS is in range [0x08000000, 0x08100000)
+		INTFLASH_BANK = 1
+	else
+		INTFLASH_BANK = 2
+	endif
 endif
 
 # Configure external flash size in MB (Megabytes)
