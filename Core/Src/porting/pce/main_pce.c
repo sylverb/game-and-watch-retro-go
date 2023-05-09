@@ -51,7 +51,6 @@ static int current_height, current_width;
 static short audioBuffer_pce[ AUDIO_BUFFER_LENGTH_PCE * 2];
 static uint8_t pce_framebuffer[XBUF_WIDTH * XBUF_HEIGHT * 2];
 static uint8_t PCE_EXRAM_BUF[0x8000];
-static int framePerSecond=0;
 
 // TODO: Move to lcd.c/h
 extern LTDC_HandleTypeDef hltdc;
@@ -482,16 +481,17 @@ void pce_input_read(odroid_gamepad_state_t* out_state) {
 }
 
 void pce_osd_gfx_blit(bool drawFrame) {
-    static uint32_t lastFPSTime = 0;
-    static uint32_t frames = 0;
     if (!drawFrame) {
         memset(pce_framebuffer,0,sizeof(pce_framebuffer));
         return;
     }
 
+#ifdef PCE_SHOW_DEBUG
     uint32_t currentTime = HAL_GetTick();
     uint32_t delta = currentTime - lastFPSTime;
-
+    static uint32_t frames = 0;
+    static uint32_t lastFPSTime = 0;
+    static int framePerSecond=0;
     frames++;
     if (delta >= 1000) {
         framePerSecond = (10000 * frames) / delta;
@@ -499,43 +499,43 @@ void pce_osd_gfx_blit(bool drawFrame) {
         frames = 0;
         lastFPSTime = currentTime;
     }
+#endif
+
+    odroid_display_scaling_t scaling = odroid_display_get_scaling_mode();
 
     uint8_t *emuFrameBuffer = osd_gfx_framebuffer();
     pixel_t *framebuffer_active = lcd_get_active_buffer();
-    int x2=0,y=0, offsetY;
-    int xScaleDownModulo = 0;
-    int xScaleUpModulo = 0;
+    int y=0, offsetY, offsetX = 0;
+    float xScaleDown = 0;
+    float xScaleUp = 0;
     uint8_t *fbTmp;
-    if (GW_LCD_WIDTH<current_width) xScaleDownModulo = current_width/(current_width-GW_LCD_WIDTH);
-    if (GW_LCD_WIDTH>current_width) xScaleUpModulo = current_width/(GW_LCD_WIDTH-current_width);
+    if (GW_LCD_WIDTH<current_width) 
+        xScaleDown = (float) current_width / (float) GW_LCD_WIDTH ;
+    else if (GW_LCD_WIDTH>current_width && scaling != ODROID_DISPLAY_SCALING_OFF) 
+        xScaleUp = (float) GW_LCD_WIDTH / (float) current_width ;
+    else offsetX = (GW_LCD_WIDTH - current_width)/2; //center the image horizontally
+
     int renderHeight = (current_height<=GW_LCD_HEIGHT)?current_height:GW_LCD_HEIGHT;
 
     for(y=0;y<renderHeight;y++) {
-        x2=0;
         fbTmp = emuFrameBuffer+(y*XBUF_WIDTH);
         offsetY = y*GW_LCD_WIDTH;
-        if (xScaleUpModulo) {
+        if (xScaleUp) {
             // Horizontal - Scale up
-            for(int x=0;x<current_width;x++) {
-                framebuffer_active[offsetY+x2]=mypalette[fbTmp[x]];
-                x2++;
-                if ((x+1)%xScaleUpModulo==0) {
-                    framebuffer_active[offsetY+x2]=mypalette[fbTmp[x]];
-                    x2++;
-                }
+            for(int x=0;x<GW_LCD_WIDTH;x++) {
+                int input_x = (int) (x / xScaleUp);
+                framebuffer_active[offsetY+x]=mypalette[fbTmp[input_x]];
             }
-        } else if (xScaleDownModulo) {
+        } else if (xScaleDown) {
             // Horizontal - Scale down
-            for(int x=0;x<current_width;x++) {
-                if (x%xScaleDownModulo!=0) {
-                    framebuffer_active[offsetY+x2]=mypalette[fbTmp[x]];
-                    x2++;
-                }
+            for(int x=0;x<GW_LCD_WIDTH;x++) {
+                int input_x = (int) (x * xScaleDown);
+                framebuffer_active[offsetY+x]= mypalette[fbTmp[input_x]];
             }
         } else {
             // No scaling, 1:1
             for(int x=0;x<current_width;x++) {
-                   framebuffer_active[offsetY+x]=mypalette[fbTmp[x]];
+                   framebuffer_active[offsetY+x+offsetX]=mypalette[fbTmp[x]];
             }
         }
     }
@@ -544,7 +544,7 @@ void pce_osd_gfx_blit(bool drawFrame) {
         fbTmp = emuFrameBuffer+(y*XBUF_WIDTH);
         offsetY = y*GW_LCD_WIDTH;
         for(int x=0;x<GW_LCD_WIDTH;x++) {
-            framebuffer_active[offsetY+x]=0;
+            framebuffer_active[offsetY+x+offsetX]=0;
         }
     }
 
