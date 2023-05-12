@@ -875,7 +875,7 @@ help:
 	@echo "  LARGE_FLASH         - Sets the external flash size to 16MB  (deprecated)"
 	@echo "  EXTFLASH_OFFSET     - Places the data at an offset in the external flash (useful for dual boot)"
 	@echo "  INTFLASH_BANK       - Sets the internal flash bank. Valid values {1,2} (default=1)."
-	@echo "  INTFLASH_ADDRESS    - Explicit internal flash address. If not provided, derived from INTFLASH_BANK.
+	@echo "  INTFLASH_ADDRESS    - Explicit internal flash address. If not provided, derived from INTFLASH_BANK."
 	@echo "  BIG_BANK            - Use internal flash bank as undocumented 256k.(default=1, set 0 to 128k)."
 	@echo "                        It's required patched OPENOCD to work"
 	@echo "  COMPRESS            - Configures ROM compression, Valid values {0,lzma} (default=lzma)."
