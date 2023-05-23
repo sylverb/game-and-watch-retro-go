@@ -275,6 +275,7 @@ fceumm-go/src/boards/463.c \
 fceumm-go/src/boards/465.c \
 fceumm-go/src/boards/466.c \
 fceumm-go/src/boards/467.c \
+fceumm-go/src/boards/468.c \
 fceumm-go/src/boards/516.c \
 fceumm-go/src/boards/533.c \
 fceumm-go/src/boards/539.c \
@@ -310,6 +311,7 @@ fceumm-go/src/boards/bonza.c \
 fceumm-go/src/boards/bs-5.c \
 fceumm-go/src/boards/cheapocabra.c \
 fceumm-go/src/boards/cityfighter.c \
+fceumm-go/src/boards/coolgirl.c \
 fceumm-go/src/boards/dance2000.c \
 fceumm-go/src/boards/datalatch.c \
 fceumm-go/src/boards/dream.c \
@@ -563,8 +565,6 @@ Core/Src/porting/amstrad/amstrad_catalog.c \
 Core/Src/porting/amstrad/amstrad_format.c \
 Core/Src/porting/amstrad/amstrad_loader.c \
 Core/Src/porting/amstrad/amstrad_video8bpp.c
-
-#caprice32-go/cap32/tape.c \
 
 GNUBOY_C_INCLUDES +=  \
 -ICore/Inc \
