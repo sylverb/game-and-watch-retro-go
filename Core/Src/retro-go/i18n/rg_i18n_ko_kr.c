@@ -222,6 +222,9 @@ const lang_t lang_ko_kr LANG_DATA = {
     //.s_Close                  = "닫기",
     .s_Debug_Title = "디버그",
     .s_Idle_power_off = "모든 전원 종료",
+	.s_Splash_Option = "부팅 애니메이션",
+    .s_Splash_On = "\x6",
+    .s_Splash_Off = "\x5",	
 
     .s_Time = "시간",
     .s_Date = "날싸",

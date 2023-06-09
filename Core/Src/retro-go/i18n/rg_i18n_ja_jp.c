@@ -29,7 +29,7 @@ int ja_jp_fmt_Time(char *outstr, const char *timefmt, uint16_t hour, uint16_t mi
 const lang_t lang_ja_jp LANG_DATA = {
     .codepage = 932,
     .extra_font = ja_jp_fonts,
-    .s_LangUI = "Œ¾Œê",
+    .s_LangUI = "Œ?Œ?",
     .s_LangName = "Japanese",
     // Core\Src\porting\gb\main_gb.c =======================================
     .s_Palette = "Palette",
@@ -201,7 +201,7 @@ const lang_t lang_ja_jp LANG_DATA = {
     .s_Author = "By",
     .s_Author_ = "\t\t+",
     .s_UI_Mod = "UI Mod",
-    .s_Lang = "“ú–{Œê",
+    .s_Lang = "“?–{Œ?",
     .s_LangAuthor = "Default",
     .s_Debug_menu = "Debug menu",
     .s_Reset_settings = "Reset settings",
@@ -228,7 +228,10 @@ const lang_t lang_ja_jp LANG_DATA = {
     .s_Minute = "Minute",
     .s_Second = "Second",
     .s_Time_setup = "Time setup",
-
+	.s_Splash_Option = "Splash Animation",
+    .s_Splash_On = "\x6",
+    .s_Splash_Off = "\x5",
+	
     .s_Day = "Day",
     .s_Month = "Month",
     .s_Year = "Year",
