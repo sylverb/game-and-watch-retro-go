@@ -22,3 +22,6 @@
 [submodule "fceumm-go"]
 	path = fceumm-go
 	url = https://github.com/sylverb/fceumm-go.git
+[submodule "Core/Src/porting/lib/littlefs"]
+	path = Core/Src/porting/lib/littlefs
+	url = https://github.com/littlefs-project/littlefs.git

@@ -28,6 +28,8 @@ Core/Src/bq24072.c \
 Core/Src/porting/lib/lzma/LzmaDec.c \
 Core/Src/porting/lib/lzma/lzma.c \
 Core/Src/porting/lib/hw_jpeg_decoder.c \
+Core/Src/porting/lib/littlefs/lfs.c \
+Core/Src/porting/lib/littlefs/lfs_util.c \
 Core/Src/porting/common.c \
 Core/Src/porting/odroid_audio.c \
 Core/Src/porting/odroid_display.c \
@@ -37,6 +39,7 @@ Core/Src/porting/odroid_overlay.c \
 Core/Src/porting/odroid_sdcard.c \
 Core/Src/porting/odroid_system.c \
 Core/Src/porting/crc32.c \
+Core/Src/porting/filesystem.c \
 Core/Src/stm32h7xx_hal_msp.c \
 Core/Src/stm32h7xx_it.c \
 Core/Src/system_stm32h7xx.c
@@ -645,6 +648,7 @@ C_INCLUDES +=  \
 -ICore/Inc \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
+-ICore/Src/porting/lib/littlefs/ \
 -Iretro-go-stm32/nofrendo-go/components/nofrendo/cpu \
 -Iretro-go-stm32/nofrendo-go/components/nofrendo/mappers \
 -Iretro-go-stm32/nofrendo-go/components/nofrendo/nes \
