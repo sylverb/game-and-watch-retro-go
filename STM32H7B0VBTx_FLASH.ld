@@ -91,6 +91,7 @@ __RAM_EMU_END__     = __RAM_EMU_START__ + __RAM_EMU_LENGTH__;
 INCLUDE build/saveflash.ld
 INCLUDE build/cacheflash.ld
 INCLUDE build/offsaveflash.ld
+INCLUDE build/filesystem.ld
 __CONFIGFLASH_LENGTH__ = 4096;
 __FBFLASH_LENGTH__ = ENABLE_SCREENSHOT ? ((320 * 240 * 2 + 4095) / 4096) * 4096 : 0;
 
@@ -131,7 +132,7 @@ __FBFLASH_LENGTH__ = ENABLE_SCREENSHOT ? ((320 * 240 * 2 + 4095) / 4096) * 4096 
  *            |                                  |
  *            +----------------------------------+  __FBFLASH_END__
  */
-__EXTFLASH_LENGTH__ = __EXTFLASH_TOTAL_LENGTH__ - (__CACHEFLASH_LENGTH__ + __OFFSAVEFLASH_LENGTH__ + __SAVEFLASH_LENGTH__ + __CONFIGFLASH_LENGTH__ + __FBFLASH_LENGTH__);
+__EXTFLASH_LENGTH__ = __EXTFLASH_TOTAL_LENGTH__ - (__CACHEFLASH_LENGTH__ + __OFFSAVEFLASH_LENGTH__ + __SAVEFLASH_LENGTH__ + __CONFIGFLASH_LENGTH__ + __FBFLASH_LENGTH__ + __FILESYSTEM_LENGTH__);
 __EXTFLASH_END__ = __EXTFLASH_START__ + __EXTFLASH_LENGTH__;
 __CACHEFLASH_START__ = __EXTFLASH_END__;
 __CACHEFLASH_END__   = __CACHEFLASH_START__ + __CACHEFLASH_LENGTH__;
@@ -143,6 +144,9 @@ __CONFIGFLASH_START__ = __SAVEFLASH_END__;
 __CONFIGFLASH_END__   = __CONFIGFLASH_START__ + __CONFIGFLASH_LENGTH__;
 __FBFLASH_START__ = __CONFIGFLASH_END__;
 __FBFLASH_END__   = __FBFLASH_START__ + __FBFLASH_LENGTH__;
+/* TODO: It would be nice to start the extflash with the filesystem so it starts at a constant location */
+__FILESYSTEM_START__ = __FBFLASH_END__;
+__FILESYSTEM_END__ = __FILESYSTEM_START__ + __FILESYSTEM_LENGTH__;
 
 
 __INTFLASH__ = DEFINED(__INTFLASH__) ? __INTFLASH__ : 0x08000000;
@@ -168,6 +172,7 @@ MEMORY
   SAVEFLASH  (xr ) : ORIGIN = __SAVEFLASH_START__, LENGTH = __SAVEFLASH_LENGTH__
   CONFIGFLASH(xr ) : ORIGIN = __CONFIGFLASH_START__, LENGTH = __CONFIGFLASH_LENGTH__
   FBFLASH (xr ) : ORIGIN = __FBFLASH_START__, LENGTH = __FBFLASH_LENGTH__
+  FILESYSTEM (xr ) : ORIGIN = __FILESYSTEM_START__, LENGTH = __FILESYSTEM_LENGTH__
 }
 
 
@@ -562,6 +567,14 @@ SECTIONS
     *(.fbflash)
     __fbflash_end__ = .;
   } > FBFLASH
+
+  ._filesystem (NOLOAD):
+  {
+    . = ALIGN(4K);
+    __filesystem_start__ = .;
+    *(.filesystem)
+    __filesystem_end__ = .;
+  } > FILESYSTEM
 
   ._ram (NOLOAD) :
   {

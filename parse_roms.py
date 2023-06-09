@@ -1507,6 +1507,9 @@ class ROMParser:
         self.write_if_changed(
              "build/cacheflash.ld", f"__CACHEFLASH_LENGTH__ = {sega_larger_rom_size};\n")
         self.write_if_changed("build/config.h", build_config)
+        self.write_if_changed(
+            "build/filesystem.ld", f"__FILESYSTEM_LENGTH__ = {1 << 20};\n"  # TODO: make configurable
+        )
 
 
 if __name__ == "__main__":
