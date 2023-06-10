@@ -25,6 +25,7 @@ Core/Src/main.c \
 Core/Src/sha256.c \
 Core/Src/flashapp.c \
 Core/Src/bq24072.c \
+Core/Src/filesystem.c \
 Core/Src/porting/lib/lzma/LzmaDec.c \
 Core/Src/porting/lib/lzma/lzma.c \
 Core/Src/porting/lib/hw_jpeg_decoder.c \
@@ -39,7 +40,6 @@ Core/Src/porting/odroid_overlay.c \
 Core/Src/porting/odroid_sdcard.c \
 Core/Src/porting/odroid_system.c \
 Core/Src/porting/crc32.c \
-Core/Src/porting/filesystem.c \
 Core/Src/stm32h7xx_hal_msp.c \
 Core/Src/stm32h7xx_it.c \
 Core/Src/system_stm32h7xx.c

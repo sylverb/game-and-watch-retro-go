@@ -30,6 +30,7 @@
 #include "githash.h"
 #include "flashapp.h"
 #include "bitmaps.h"
+#include "filesystem.h"
 
 #include "odroid_colors.h"
 #include "odroid_system.h"
@@ -533,6 +534,8 @@ int main(void)
   memcpy_no_check((uint32_t *) copy_areas2[1], (uint32_t *) copy_areas2[0], copy_areas2[3]);
 
   bq24072_init();
+
+  filesystem_init();
 
   switch (boot_mode) {
   case BOOT_MODE_APP:
