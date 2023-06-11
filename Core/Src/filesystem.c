@@ -76,13 +76,46 @@ static const struct lfs_config cfg = {
     .block_cycles = 500,
 };
 
+/**
+ * Demo function to demonstrate the filesystem working
+ */
+static void boot_counter(){
+    lfs_file_t file;
+    uint8_t buffer[LFS_CACHE_SIZE] = {0};
+    int flags = LFS_O_RDWR | LFS_O_CREAT;
+    struct lfs_file_config file_cfg = {
+        .buffer = buffer,
+        .attrs=NULL,
+        .attr_count=0,
+    };
+
+    assert(0 == lfs_file_opencfg(&lfs, &file, "boot_counter", flags, &file_cfg));
+
+    // read current count
+    uint32_t boot_count = 0;
+    lfs_file_read(&lfs, &file, &boot_count, sizeof(boot_count));
+
+    // update boot count
+    boot_count += 1;
+    assert(0 == lfs_file_rewind(&lfs, &file));
+    assert(sizeof(boot_count) == lfs_file_write(&lfs, &file, &boot_count, sizeof(boot_count)));
+
+    lfs_file_close(&lfs, &file);
+
+    printf("boot_count: %ld\n", boot_count);
+}
+
 void filesystem_init(void){
     // reformat if we can't mount the filesystem
     // this should only happen on the first boot
     if (lfs_mount(&lfs, &cfg)) {
+        printf("Formatting filesystem...\n");
         assert(lfs_format(&lfs, &cfg) == 0);
         assert(lfs_mount(&lfs, &cfg) == 0);
     }
+
+    boot_counter();
+    boot_counter();
 }
 
 void filesystem_write(const char *path, unsigned char *data, size_t size){
