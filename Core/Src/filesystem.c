@@ -1,10 +1,13 @@
 #include "gw_flash.h"
 #include "gw_linker.h"
+#include "gw_lcd.h"
 #include <string.h>
 #include "filesystem.h"
+#include "rg_rtc.h"
 
 #define LFS_CACHE_SIZE 256
 #define LFS_LOOKAHEAD_SIZE 16
+#define LFS_NUM_ATTRS 1
 
 #ifndef LFS_NO_MALLOC
     #error "GW does not support malloc"
@@ -80,4 +83,34 @@ void filesystem_init(void){
         assert(lfs_format(&lfs, &cfg) == 0);
         assert(lfs_mount(&lfs, &cfg) == 0);
     }
+}
+
+void filesystem_write(const char *path, unsigned char *data, size_t size){
+    // Lets just use the inactive frame buffer (153600 bytes)
+    uint8_t *buffer = (uint8_t *)lcd_get_inactive_buffer();
+
+    lfs_file_t file;
+    int flags = LFS_O_WRONLY | LFS_O_CREAT; // Write-only, create if it doesn't exist
+    struct lfs_attr file_attrs[LFS_NUM_ATTRS] = {0};
+    struct lfs_file_config file_cfg = {
+        .buffer = buffer,
+        .attrs=file_attrs,
+        .attr_count=LFS_NUM_ATTRS
+    };
+    buffer += LFS_CACHE_SIZE;
+
+    // Add time attribute
+    uint32_t current_time = GW_GetUnixTime();
+    assert(current_time);
+    file_attrs[0].type = 't';  // 't' for "time"
+    file_attrs[0].size = 4;
+    file_attrs[0].buffer = &current_time;
+
+    // TODO: add error handling; maybe delete oldest file(s) to make room
+    assert(0 == lfs_file_opencfg(&lfs, &file, path, flags, &file_cfg));
+
+    // TODO: error handling
+    assert(size == lfs_file_write(&lfs, &file, data, size));
+
+    assert(lfs_file_close(&lfs, &file));
 }
