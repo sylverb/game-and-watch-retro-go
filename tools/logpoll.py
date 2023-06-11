@@ -37,7 +37,10 @@ def logpoll(args):
             if args.halt:
                 ocd.send("halt")
 
-            log_idx = ocd.read_memory(32, log_idx_addr, 1)[0]
+            try:
+                log_idx = ocd.read_memory(32, log_idx_addr, 1)[0]
+            except IndexError:
+                pass
 
             if log_idx > last_idx:
                 # print the new data since last iteration
