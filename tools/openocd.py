@@ -1,7 +1,8 @@
 import socket
 
-class OpenOCD():
-    COMMAND_TOKEN = '\x1a'
+
+class OpenOCD:
+    COMMAND_TOKEN = "\x1a"
 
     def __init__(self, host, port):
         self.host = host
@@ -44,6 +45,13 @@ class OpenOCD():
         self.send("array unset output")  # better to clear the array before
         self.send("mem2array output %d 0x%x %d" % (wordLen, address, n))
 
-        output = self.send("capture \"echo \$output\"").split(" ")
+        output = self.send('capture "echo \$output"').split(" ")
 
-        return [int(output[2*i+1]) for i in range(len(output)//2)]
+        def to_number(x):
+            try:
+                return int(x)
+            except ValueError:
+                pass
+            return int(x, 16)
+
+        return [to_number(output[2 * i + 1]) for i in range(len(output) // 2)]
