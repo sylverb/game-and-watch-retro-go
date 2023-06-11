@@ -87,7 +87,9 @@ void filesystem_init(void){
 
 void filesystem_write(const char *path, unsigned char *data, size_t size){
     // Lets just use the inactive frame buffer (153600 bytes)
-    uint8_t *buffer = (uint8_t *)lcd_get_inactive_buffer();
+    // Offset deep into frame buffer so we can save most states to mem
+    // prior to flushing to disk.
+    uint8_t *buffer = (uint8_t *)lcd_get_inactive_buffer() + (144 * 1024);
 
     lfs_file_t file;
     int flags = LFS_O_WRONLY | LFS_O_CREAT; // Write-only, create if it doesn't exist

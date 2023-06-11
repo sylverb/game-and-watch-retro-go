@@ -11,6 +11,8 @@ extern "C" {
 
 void filesystem_init(void);
 
+void filesystem_write(const char *path, unsigned char *data, size_t size);
+
 #ifdef __cplusplus
 }
 #endif
