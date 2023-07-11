@@ -36606,7 +36606,19 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<dump>
 			<megarom>
 				<type>KonamiSCC</type>
+				<hash algo="sha1">7f5a81cdc9bf9722ce205ad22987339a542bc700</hash>
+				<remark>
+					<text>v1.0</text>
+				</remark>
+			</megarom>
+		</dump>
+		<dump>
+			<megarom>
+				<type>KonamiSCC</type>
 				<hash algo="sha1">f80484c8544b33f3dae37527a5606936f781e6fb</hash>
+				<remark>
+					<text>v1.1</text>
+				</remark>
 			</megarom>
 		</dump>
 	</software>
