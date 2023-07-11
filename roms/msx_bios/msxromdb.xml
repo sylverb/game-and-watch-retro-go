@@ -37646,6 +37646,16 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 				</remark>
 			</disk>
 		</dump>
+		<dump>
+			<original value="false" />
+			<megarom>
+				<type>ASCII8</type>
+				<hash algo="sha1">df29d62a536ebaaf7a101478574ff3cc44833cd4</hash>
+				<remark>
+					<text>Aleste 2 ROM convertion by Jose Angel Morente</text>
+				</remark>
+			</megarom>
+		</dump>
 	</software>
 	<software>
 		<title xml:lang="en">Ys : Omen</title>
