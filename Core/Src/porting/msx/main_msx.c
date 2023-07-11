@@ -1433,6 +1433,21 @@ static void insertGame() {
             msx_button_start_key = EC_F1;
             msx_button_select_key = EC_F5;
         break;
+        case 44: // Super Mario World
+#if GNW_TARGET_MARIO != 0
+            msx_button_a_key = EC_X; // Jump
+            msx_button_b_key = EC_C; // Run/Grab/Fire
+            msx_button_game_key = EC_SPACE; // Start
+            msx_button_time_key = EC_Z; // Spin Jump
+#else
+            msx_button_a_key = EC_X; // Jump
+            msx_button_b_key = EC_C; // Run/Grab/Fire
+            msx_button_game_key = EC_ESC; // Menu
+            msx_button_time_key = EC_SPACE; // Pause
+            msx_button_start_key = EC_Z; // Spin Jump
+            msx_button_select_key = EC_V; // Drop power reserve
+#endif
+        break;
         default:
             controls_found = false;
         break;

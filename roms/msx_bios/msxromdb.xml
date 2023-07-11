@@ -36598,6 +36598,19 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		</dump>
 	</software>
 	<software>
+		<title xml:lang="en">Super Mario World</title>
+		<system>MSX</system>
+		<company>Daemos et al.</company>
+		<year>2021</year>
+		<controls>44</controls>
+		<dump>
+			<megarom>
+				<type>KonamiSCC</type>
+				<hash algo="sha1">f80484c8544b33f3dae37527a5606936f781e6fb</hash>
+			</megarom>
+		</dump>
+	</software>
+	<software>
 		<title xml:lang="en">Super Rambo Special</title>
 		<system>MSX</system>
 		<company>Pack In Video</company>
