@@ -39,7 +39,7 @@ Expert `UICODEPAGE=lang` set the ui display language, default `UICODEPAGE=CODEPA
 - 12524 : Italiano (translation by [SantX27](https://github.com/SantX27))
 - 12521 : Russian (translation by [teuchezh](https://github.com/teuchezh))
 - 12525 : German (translation by [LeZerb](https://github.com/LeZerb))
-- 932 : 日本語(Wait for translate support)
+- 932 : 日本語(translation by [macohime](https://github.com/macohime))
 
 You can set `[OPT]=[0|1]` to include or exclude some language, List of `OPT` parameter:
 `EN_US`  English; `ES_ES`  Español; `PT_PT` Portuguese; `FR_FR` Français; `IT_IT` Italiano; `ZH_CN` 简体中文; `ZH_TW` 繁體中文;`KO_KR` 한국어; `JA_JP` 日本語; `DE_DE` Deutsch; `RU_RU` Russian;
