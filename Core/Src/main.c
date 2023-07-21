@@ -510,6 +510,12 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  SCB_DisableICache();
+  SCB_DisableDCache();
+
+  SCB_InvalidateICache();
+  SCB_InvalidateDCache();
+
   SCB_EnableICache();
   SCB_EnableDCache();
 

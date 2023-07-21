@@ -10,8 +10,8 @@ extern uint8_t __CACHEFLASH_START__;
 extern uint8_t __CACHEFLASH_END__;
 extern uint8_t __EXTFLASH_START__;
 extern uint8_t __EXTFLASH_BASE__;
-extern const uint8_t __FILESYSTEM_START__;
-extern const uint32_t __FILESYSTEM_LENGTH__;
+extern uint8_t __FILESYSTEM_START__;
+extern uint8_t __FILESYSTEM_END__;
 extern uint32_t __INTFLASH__;  // From linker, usually value 0x08000000 for bank 1, or 0x08100000 for bank 2
 
 extern uint8_t __NULLPTR_LENGTH__;
