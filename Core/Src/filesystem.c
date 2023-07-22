@@ -53,9 +53,14 @@ static int littlefs_api_prog(const struct lfs_config *c, lfs_block_t block,
     uint32_t address = (filesystem_partition - &__EXTFLASH_BASE__) + (block * c->block_size) + off;
     assert((address & 0xFF) == 0);
 
+    SCB_DisableDCache();
+    SCB_InvalidateDCache();
+
     OSPI_DisableMemoryMappedMode();
     OSPI_Program(address, buffer, size);
     OSPI_EnableMemoryMappedMode();
+
+    SCB_EnableDCache();
 
     return 0;
 }
