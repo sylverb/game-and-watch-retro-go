@@ -143,7 +143,7 @@ void filesystem_init(void){
     boot_counter();  // TODO: remove when done developing; causes unnecessary writes.
 }
 
-static bool file_is_using_compression(lfs_file_t *file){
+static bool file_is_using_compression(filesystem_file_t *file){
     for(uint8_t i=0; i < MAX_OPEN_FILES; i++){
         if(file == &(file_handles[i].file) && i == file_index_using_compression)
             return true;
@@ -186,7 +186,7 @@ static filesystem_file_handle_t *acquire_file_handle(bool use_compression){
  *
  * If we want to use dynamic allocation in the future, free inside this function.
  */
-static void release_file_handle(lfs_file_t *file){
+static void release_file_handle(filesystem_file_t *file){
     uint8_t test_bit = 0x01;
 
     for(uint8_t i=0; i < MAX_OPEN_FILES; i++){
@@ -202,7 +202,7 @@ static void release_file_handle(lfs_file_t *file){
     assert(0);  // Should never reach here.
 }
 
-lfs_file_t *filesystem_open(const char *path, bool use_compression){
+filesystem_file_t *filesystem_open(const char *path, bool use_compression){
     const int flags = LFS_O_RDWR | LFS_O_CREAT;
     
     filesystem_file_handle_t *fs_file_handle = acquire_file_handle(use_compression);
@@ -226,14 +226,14 @@ lfs_file_t *filesystem_open(const char *path, bool use_compression){
     return &fs_file_handle->file;
 }
 
-int filesystem_write(lfs_file_t *file, unsigned char *data, size_t size){
+int filesystem_write(filesystem_file_t *file, unsigned char *data, size_t size){
     if(file_is_using_compression(file)){
         assert(0 && "tamp compression not yet implemented");
     }
     return lfs_file_write(&lfs, file, data, size);
 }
 
-int filesystem_read(lfs_file_t *file, unsigned char *buffer, size_t size){
+int filesystem_read(filesystem_file_t *file, unsigned char *buffer, size_t size){
     if(file_is_using_compression(file)){
         assert(0 && "tamp compression not yet implemented");
     }
