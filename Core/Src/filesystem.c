@@ -65,17 +65,13 @@ static int littlefs_api_erase(const struct lfs_config *c, lfs_block_t block) {
 
     assert((address & (4*1024 - 1)) == 0);
 
-    SCB_DisableICache();
     SCB_DisableDCache();
-
-    SCB_InvalidateICache();
     SCB_InvalidateDCache();
 
     OSPI_DisableMemoryMappedMode();
     OSPI_EraseSync(address, c->block_size);
     OSPI_EnableMemoryMappedMode();
 
-    SCB_EnableICache();
     SCB_EnableDCache();
 
     return 0;
