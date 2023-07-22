@@ -274,9 +274,11 @@ void store_save(const uint8_t *flash_ptr, const uint8_t *data, size_t size)
     return;
   }
 
+  printf("savestating; erasing %08X\n", flash_ptr);
   store_erase(flash_ptr, size);
 
   OSPI_DisableMemoryMappedMode();
+  printf("savestating; programming %08X\n", save_address);
   OSPI_Program(save_address, data, size);
   OSPI_EnableMemoryMappedMode();
 }
