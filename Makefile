@@ -131,7 +131,6 @@ retro-go-stm32/nofrendo-go/components/nofrendo/nes/nes.c
 
 NES_FCEU_C_SOURCES = \
 Core/Src/porting/nes_fceu/main_nes_fceu.c \
-Core/Src/porting/nes_fceu/nes_memory_stream.c \
 fceumm-go/src/boards/09-034a.c \
 fceumm-go/src/boards/3d-block.c \
 fceumm-go/src/boards/8in1.c \

@@ -22,7 +22,6 @@
 #include "driver.h"
 #include "video.h"
 #include "gw_malloc.h"
-#include "nes_memory_stream.h"
 
 #define NES_WIDTH  256
 #define NES_HEIGHT 240
@@ -484,11 +483,11 @@ static bool SaveState(char *pathName)
 #if OFF_SAVESTATE==1
         if (strcmp(pathName,"1") == 0) {
             // Save in common save slot (during a power off)
-            memstream_set_buffer((uint8_t*)&__OFFSAVEFLASH_START__, (uint64_t)ACTIVE_FILE->save_size);
+            // TODO: pass pathName
             FCEUSS_Save_Mem();
         } else {
 #endif
-            memstream_set_buffer((uint8_t*)ACTIVE_FILE->save_address, (uint64_t)ACTIVE_FILE->save_size);
+            // TODO: pass pathName
             FCEUSS_Save_Mem();
 #if OFF_SAVESTATE==1
         }
@@ -502,7 +501,7 @@ extern int nes_state_load(uint8_t* flash_ptr, size_t size);
 
 static bool LoadState(char *pathName)
 {
-    memstream_set_buffer((uint8_t*)ACTIVE_FILE->save_address, ACTIVE_FILE->save_size);
+    // TODO: pass pathName
     FCEUSS_Load_Mem();
     return true;
 }
@@ -1088,7 +1087,7 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
 #if OFF_SAVESTATE==1
         if (save_slot == 1) {
             // Load from common save slot if needed
-            memstream_set_buffer((uint8_t*)&__OFFSAVEFLASH_START__, ACTIVE_FILE->save_size);
+            // TODO: pass pathName to NES_OFFSAVE_SAVESTATE
             FCEUSS_Load_Mem();
         } else {
 #endif
