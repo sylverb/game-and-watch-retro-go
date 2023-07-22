@@ -4,6 +4,8 @@
 #include <string.h>
 #include "filesystem.h"
 #include "rg_rtc.h"
+#include "tamp/compressor.h"
+#include "tamp/decompressor.h"
 
 #define LFS_CACHE_SIZE 256
 #define LFS_LOOKAHEAD_SIZE 16

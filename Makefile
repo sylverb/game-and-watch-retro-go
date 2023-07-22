@@ -31,6 +31,9 @@ Core/Src/porting/lib/lzma/lzma.c \
 Core/Src/porting/lib/hw_jpeg_decoder.c \
 Core/Src/porting/lib/littlefs/lfs.c \
 Core/Src/porting/lib/littlefs/lfs_util.c \
+Core/Src/porting/lib/tamp/tamp/_c_src/tamp/common.c \
+Core/Src/porting/lib/tamp/tamp/_c_src/tamp/compressor.c \
+Core/Src/porting/lib/tamp/tamp/_c_src/tamp/decompressor.c \
 Core/Src/porting/common.c \
 Core/Src/porting/odroid_audio.c \
 Core/Src/porting/odroid_display.c \
@@ -648,6 +651,7 @@ C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -ICore/Src/porting/lib/littlefs/ \
+-ICore/Src/porting/lib/tamp/tamp/_c_src \
 -Iretro-go-stm32/nofrendo-go/components/nofrendo/cpu \
 -Iretro-go-stm32/nofrendo-go/components/nofrendo/mappers \
 -Iretro-go-stm32/nofrendo-go/components/nofrendo/nes \
