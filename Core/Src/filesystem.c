@@ -132,9 +132,11 @@ void filesystem_init(void){
     // this should only happen on the first boot
     cfg.block_count = (&__FILESYSTEM_END__ - &__FILESYSTEM_START__) >> 12;  // divide by block size
     if (lfs_mount(&lfs, &cfg)) {
+        printf("Filesystem formatting...\n");
         assert(lfs_format(&lfs, &cfg) == 0);
         assert(lfs_mount(&lfs, &cfg) == 0);
     }
+    printf("Filesystem mounted.\n");
 
     boot_counter();  // TODO: remove when done developing; causes unnecessary writes.
 }
