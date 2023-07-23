@@ -31,9 +31,6 @@ Core/Src/porting/lib/lzma/lzma.c \
 Core/Src/porting/lib/hw_jpeg_decoder.c \
 Core/Src/porting/lib/littlefs/lfs.c \
 Core/Src/porting/lib/littlefs/lfs_util.c \
-Core/Src/porting/lib/tamp/tamp/_c_src/tamp/common.c \
-Core/Src/porting/lib/tamp/tamp/_c_src/tamp/compressor.c \
-Core/Src/porting/lib/tamp/tamp/_c_src/tamp/decompressor.c \
 Core/Src/porting/common.c \
 Core/Src/porting/odroid_audio.c \
 Core/Src/porting/odroid_display.c \
@@ -46,6 +43,11 @@ Core/Src/porting/crc32.c \
 Core/Src/stm32h7xx_hal_msp.c \
 Core/Src/stm32h7xx_it.c \
 Core/Src/system_stm32h7xx.c
+
+TAMP_C_SOURCES = \
+Core/Src/porting/lib/tamp/tamp/_c_src/tamp/common.c \
+Core/Src/porting/lib/tamp/tamp/_c_src/tamp/compressor.c \
+Core/Src/porting/lib/tamp/tamp/_c_src/tamp/decompressor.c
 
 GNUBOY_C_SOURCES = \
 Core/Src/porting/gb/main_gb.c \
@@ -571,6 +573,8 @@ Core/Src/porting/amstrad/amstrad_format.c \
 Core/Src/porting/amstrad/amstrad_loader.c \
 Core/Src/porting/amstrad/amstrad_video8bpp.c
 
+TAMP_C_INCLUDES += -ICore/Src/porting/lib/tamp/tamp/_c_src
+
 GNUBOY_C_INCLUDES +=  \
 -ICore/Inc \
 -ICore/Src/porting/lib \
@@ -659,14 +663,6 @@ C_INCLUDES +=  \
 -Iretro-go-stm32/components/odroid \
 -Iretro-go-stm32/gnuboy-go/components \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus \
--I./
-
-GNUBOY_C_INCLUDES +=  \
--ICore/Inc \
--ICore/Src/porting/lib \
--ICore/Src/porting/lib/lzma \
--Iretro-go-stm32/components/odroid \
--Iretro-go-stm32/gnuboy-go/components \
 -I./
 
 MSX_C_INCLUDES += \
