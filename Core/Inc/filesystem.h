@@ -9,20 +9,20 @@
 extern "C" {
 #endif
 
-#define FILESYSTEM_WRITE true
-#define FILESYSTEM_READ false
+#define fs_WRITE true
+#define fs_READ false
 
-#define FILESYSTEM_COMPRESS true
-#define FILESYSTEM_RAW false
+#define fs_COMPRESS true
+#define fs_RAW false
 
-typedef lfs_file_t filesystem_file_t;
-void filesystem_init(void);
+typedef lfs_file_t fs_file_t;
+void fs_init(void);
 
-filesystem_file_t *filesystem_open(const char *path, bool write_mode, bool use_compression);
-int filesystem_write(filesystem_file_t *file, unsigned char *data, size_t size);
-int filesystem_read(filesystem_file_t *file, unsigned char *buffer, size_t size);
-int filesystem_seek(filesystem_file_t *file, lfs_soff_t off, int whence);
-void filesystem_close(filesystem_file_t *file);
+fs_file_t *fs_open(const char *path, bool write_mode, bool use_compression);
+int fs_write(fs_file_t *file, unsigned char *data, size_t size);
+int fs_read(fs_file_t *file, unsigned char *buffer, size_t size);
+int fs_seek(fs_file_t *file, lfs_soff_t off, int whence);
+void fs_close(fs_file_t *file);
 
 #ifdef __cplusplus
 }

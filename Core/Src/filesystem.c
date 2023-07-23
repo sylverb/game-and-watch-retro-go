@@ -25,9 +25,9 @@ typedef struct{
     uint8_t buffer[LFS_CACHE_SIZE];
     struct lfs_attr file_attrs[LFS_NUM_ATTRS];
     struct lfs_file_config config;
-} filesystem_file_handle_t;
+} fs_file_handle_t;
 
-static filesystem_file_handle_t file_handles[MAX_OPEN_FILES];
+static fs_file_handle_t file_handles[MAX_OPEN_FILES];
 static uint8_t file_handles_used_bitmask = 0;
 static int8_t file_index_using_compression = -1;  //negative value indicates that compressor/decompressor is available.
 
@@ -49,7 +49,7 @@ static tamp_compressor_or_decompressor_t tamp_obj;
  * LittleFS Driver Definition *
  ******************************/
 // Pointer to the data "on disk"
-uint8_t filesystem_partition[1 << 20] __attribute__((section(".filesystem"))) __attribute__((aligned(4096)));
+static uint8_t fs_partition[1 << 20] __attribute__((section(".filesystem"))) __attribute__((aligned(4096)));
 
 lfs_t lfs = {0};
 
@@ -60,14 +60,14 @@ static uint8_t lookahead_buffer[LFS_LOOKAHEAD_SIZE] __attribute__((aligned(4))) 
 
 static int littlefs_api_read(const struct lfs_config *c, lfs_block_t block,
         lfs_off_t off, void *buffer, lfs_size_t size) {
-    unsigned char *address = filesystem_partition + (block * c->block_size) + off;
+    unsigned char *address = fs_partition + (block * c->block_size) + off;
     memcpy(buffer, address, size);
     return 0;
 }
 
 static int littlefs_api_prog(const struct lfs_config *c, lfs_block_t block,
         lfs_off_t off, const void *buffer, lfs_size_t size) {
-    uint32_t address = (filesystem_partition - &__EXTFLASH_BASE__) + (block * c->block_size) + off;
+    uint32_t address = (fs_partition - &__EXTFLASH_BASE__) + (block * c->block_size) + off;
     assert((address & 0xFF) == 0);
 
     SCB_DisableDCache();
@@ -83,7 +83,7 @@ static int littlefs_api_prog(const struct lfs_config *c, lfs_block_t block,
 }
 
 static int littlefs_api_erase(const struct lfs_config *c, lfs_block_t block) {
-    uint32_t address = (filesystem_partition - &__EXTFLASH_BASE__) + (block * c->block_size);
+    uint32_t address = (fs_partition - &__EXTFLASH_BASE__) + (block * c->block_size);
 
     assert((address & (4*1024 - 1)) == 0);
 
@@ -138,35 +138,35 @@ static void boot_counter(){
     const char filename[] = "boot_counter";
 
     // read current count
-    file = filesystem_open(filename, FILESYSTEM_READ, FILESYSTEM_RAW);
-    filesystem_read(file, (unsigned char *)&boot_count, sizeof(boot_count));
-    filesystem_close(file);
+    file = fs_open(filename, fs_READ, fs_RAW);
+    fs_read(file, (unsigned char *)&boot_count, sizeof(boot_count));
+    fs_close(file);
 
     boot_count += 1;  // update boot count
 
     // write back new boot count
-    file = filesystem_open(filename, FILESYSTEM_WRITE, FILESYSTEM_RAW);
-    assert(sizeof(boot_count) == filesystem_write(file, (unsigned char*)&boot_count, sizeof(boot_count)));
-    filesystem_close(file);
+    file = fs_open(filename, fs_WRITE, fs_RAW);
+    assert(sizeof(boot_count) == fs_write(file, (unsigned char*)&boot_count, sizeof(boot_count)));
+    fs_close(file);
 
     printf("boot_count: %ld\n", boot_count);
 }
 
-void filesystem_init(void){
-    // reformat if we can't mount the filesystem
+void fs_init(void){
+    // reformat if we can't mount the fs
     // this should only happen on the first boot
     cfg.block_count = (&__FILESYSTEM_END__ - &__FILESYSTEM_START__) >> 12;  // divide by block size
     if (lfs_mount(&lfs, &cfg)) {
-        printf("Filesystem formatting...\n");
+        printf("filesystem formatting...\n");
         assert(lfs_format(&lfs, &cfg) == 0);
         assert(lfs_mount(&lfs, &cfg) == 0);
     }
-    printf("Filesystem mounted.\n");
+    printf("filesytem mounted.\n");
 
     boot_counter();  // TODO: remove when done developing; causes unnecessary writes.
 }
 
-static bool file_is_using_compression(filesystem_file_t *file){
+static bool file_is_using_compression(fs_file_t *file){
     for(uint8_t i=0; i < MAX_OPEN_FILES; i++){
         if(file == &(file_handles[i].file) && i == file_index_using_compression)
             return true;
@@ -180,12 +180,12 @@ static bool file_is_using_compression(filesystem_file_t *file){
  *
  * If we want to use dynamic allocation in the future, malloc inside this function.
  */
-static filesystem_file_handle_t *acquire_file_handle(bool use_compression){
+static fs_file_handle_t *acquire_file_handle(bool use_compression){
     uint8_t test_bit = 0x01;
 
     for(uint8_t i=0; i < MAX_OPEN_FILES; i++){
         if(!(file_handles_used_bitmask & test_bit)){
-            filesystem_file_handle_t *handle;
+            fs_file_handle_t *handle;
             // Set the bit, indicating this file_handle is in use.
             file_handles_used_bitmask |= test_bit;
 
@@ -197,7 +197,7 @@ static filesystem_file_handle_t *acquire_file_handle(bool use_compression){
                 file_index_using_compression = i;
             }
             handle = &file_handles[i];
-            memset(handle, 0, sizeof(filesystem_file_handle_t));
+            memset(handle, 0, sizeof(fs_file_handle_t));
             return handle;
         }
         test_bit <<= 1;
@@ -212,7 +212,7 @@ static filesystem_file_handle_t *acquire_file_handle(bool use_compression){
  *
  * If we want to use dynamic allocation in the future, free inside this function.
  */
-static void release_file_handle(filesystem_file_t *file){
+static void release_file_handle(fs_file_t *file){
     uint8_t test_bit = 0x01;
 
     for(uint8_t i=0; i < MAX_OPEN_FILES; i++){
@@ -235,10 +235,10 @@ static void release_file_handle(filesystem_file_t *file){
  *   * write_mode==true: Opens the file for writing; creates file if it doesn't exist.
  *   * write_mode==false: Opens the file for reading; erroring (returning NULL) if it doesn't exist.
  */
-filesystem_file_t *filesystem_open(const char *path, bool write_mode, bool use_compression){
+fs_file_t *fs_open(const char *path, bool write_mode, bool use_compression){
     int flags = write_mode ? LFS_O_WRONLY | LFS_O_CREAT : LFS_O_RDONLY;
     
-    filesystem_file_handle_t *fs_file_handle = acquire_file_handle(use_compression);
+    fs_file_handle_t *fs_file_handle = acquire_file_handle(use_compression);
 
     if(!fs_file_handle){
         printf("Unable to allocate file handle.");
@@ -271,21 +271,21 @@ filesystem_file_t *filesystem_open(const char *path, bool write_mode, bool use_c
     return &fs_file_handle->file;
 }
 
-int filesystem_write(filesystem_file_t *file, unsigned char *data, size_t size){
+int fs_write(fs_file_t *file, unsigned char *data, size_t size){
     if(file_is_using_compression(file)){
         assert(0 && "tamp compression not yet implemented");
     }
     return lfs_file_write(&lfs, file, data, size);
 }
 
-int filesystem_read(filesystem_file_t *file, unsigned char *buffer, size_t size){
+int fs_read(fs_file_t *file, unsigned char *buffer, size_t size){
     if(file_is_using_compression(file)){
         assert(0 && "tamp compression not yet implemented");
     }
     return lfs_file_read(&lfs, file, buffer, size);
 }
 
-void filesystem_close(lfs_file_t *file){
+void fs_close(lfs_file_t *file){
     if(file_is_using_compression(file)){
         assert(0 && "tamp compression not yet implemented");
     }
@@ -293,7 +293,7 @@ void filesystem_close(lfs_file_t *file){
     release_file_handle(file);
 }
 
-int filesystem_seek(lfs_file_t *file, lfs_soff_t off, int whence){
+int fs_seek(lfs_file_t *file, lfs_soff_t off, int whence){
     assert(file_is_using_compression(file) == false);  // Cannot seek with compression.
     return lfs_file_seek(&lfs, file, off, whence);
 }

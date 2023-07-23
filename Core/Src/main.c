@@ -543,7 +543,7 @@ int main(void)
 
   bq24072_init();
 
-  filesystem_init();
+  fs_init();
 
   switch (boot_mode) {
   case BOOT_MODE_APP:
