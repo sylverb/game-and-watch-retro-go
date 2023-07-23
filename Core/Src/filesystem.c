@@ -35,14 +35,14 @@ static int8_t file_index_using_compression = -1;  //negative value indicates tha
  * Tamp Compressor/Decompressor definitions *
  ********************************************/
 
-#define TAMP_WINDOW_BUFFER_BITS 10
+#define TAMP_WINDOW_BUFFER_BITS 10  // 1KB
+// TODO: if we want to save RAM, we could reuse the inactive lcd frame buffer.
 static unsigned char tamp_window_buffer[1 << TAMP_WINDOW_BUFFER_BITS];
 typedef union{
-    TampDecompressor decompressor;
-    TampCompressor compressor;
+    TampDecompressor d;
+    TampCompressor c;
 } tamp_compressor_or_decompressor_t;
-
-static tamp_compressor_or_decompressor_t tamp_obj;
+static tamp_compressor_or_decompressor_t tamp_engine;
 
 
 /******************************
@@ -152,6 +152,9 @@ static void boot_counter(){
     printf("boot_count: %ld\n", boot_count);
 }
 
+/**
+ * Initialize and mount the filesystem. Format the filesystem if unmountable (and then reattempt mount).
+ */
 void fs_init(void){
     // reformat if we can't mount the fs
     // this should only happen on the first boot
@@ -247,7 +250,13 @@ fs_file_t *fs_open(const char *path, bool write_mode, bool use_compression){
 
     if(use_compression){
         // TODO: initialize tamp; it's globally already been reserved.
-        assert(0 && "tamp compression not yet implemented");
+        if(write_mode){
+            TampConf conf = {.window=TAMP_WINDOW_BUFFER_BITS, .literal=8, .use_custom_dictionary=false};
+            assert(TAMP_OK == tamp_compressor_init(&tamp_engine.c, &conf, tamp_window_buffer));
+        }
+        else{
+            assert(TAMP_OK == tamp_decompressor_init(&tamp_engine.d, NULL, tamp_window_buffer));
+        }
     }
 
     if(write_mode){
@@ -272,10 +281,41 @@ fs_file_t *fs_open(const char *path, bool write_mode, bool use_compression){
 }
 
 int fs_write(fs_file_t *file, unsigned char *data, size_t size){
+    // TODO: do we want to put delete-oldest-savestate-logic in here?
+    
     if(file_is_using_compression(file)){
+        int output_written_size = 0;
+        unsigned char output_buffer[4];
+        while(size){
+            size_t consumed;
+
+            // Sink Data into input buffer.
+            tamp_compressor_sink(&tamp_engine.c, data, size, &consumed);
+            data += consumed;
+            output_written_size += consumed;
+            size -= consumed;
+
+            // Run the engine; remaining size indicates that the compressor input buffer is full
+            if(TAMP_LIKELY(size)){
+                size_t chunk_output_written_size;
+                assert(TAMP_OK == tamp_compressor_compress_poll(
+                        &tamp_engine.c,
+                        output_buffer,
+                        sizeof(output_buffer),
+                        &chunk_output_written_size
+                        ));
+                // TODO: better error-handling if the disk is full.
+                assert(chunk_output_written_size == lfs_file_write(&lfs, file, output_buffer, chunk_output_written_size));
+            }
+            // Note: we really return the number of consumed bytes, not the number of
+            // compressed-bytes.
+            return output_written_size;
+        }
         assert(0 && "tamp compression not yet implemented");
     }
-    return lfs_file_write(&lfs, file, data, size);
+    else{
+        return lfs_file_write(&lfs, file, data, size);
+    }
 }
 
 int fs_read(fs_file_t *file, unsigned char *buffer, size_t size){
