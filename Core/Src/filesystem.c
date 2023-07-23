@@ -16,6 +16,9 @@
 #endif
 
 
+/**
+ *
+ */
 #define MAX_OPEN_FILES 2  // Cannot be >8
 typedef struct{
     lfs_file_t file;
@@ -27,7 +30,19 @@ typedef struct{
 static filesystem_file_handle_t file_handles[MAX_OPEN_FILES];
 static uint8_t file_handles_used_bitmask = 0;
 static int8_t file_index_using_compression = -1;  //negative value indicates that compressor/decompressor is available.
-// TODO: we can add a single tamp structure here, if we want to allow a single compressor file
+
+/********************************************
+ * Tamp Compressor/Decompressor definitions *
+ ********************************************/
+
+#define TAMP_WINDOW_BUFFER_BITS 10
+static unsigned char tamp_window_buffer[1 << TAMP_WINDOW_BUFFER_BITS];
+typedef union{
+    TampDecompressor decompressor;
+    TampCompressor compressor;
+} tamp_compressor_or_decompressor_t;
+
+static tamp_compressor_or_decompressor_t tamp_obj;
 
 
 /******************************
@@ -118,17 +133,20 @@ static struct lfs_config cfg = {
  * Demo function to demonstrate the filesystem working.
  */
 static void boot_counter(){
-    lfs_file_t *file = filesystem_open("boot_counter", false);
+    lfs_file_t *file;
+    uint32_t boot_count = 0;
+    const char filename[] = "boot_counter";
 
     // read current count
-    uint32_t boot_count = 0;
-    filesystem_read(file, &boot_count, sizeof(boot_count));
+    file = filesystem_open(filename, FILESYSTEM_READ, FILESYSTEM_RAW);
+    filesystem_read(file, (unsigned char *)&boot_count, sizeof(boot_count));
+    filesystem_close(file);
 
-    // update boot count
-    boot_count += 1;
-    assert(0 == filesystem_seek(file, 0, LFS_SEEK_SET));
-    assert(sizeof(boot_count) == filesystem_write(file, &boot_count, sizeof(boot_count)));
+    boot_count += 1;  // update boot count
 
+    // write back new boot count
+    file = filesystem_open(filename, FILESYSTEM_WRITE, FILESYSTEM_RAW);
+    assert(sizeof(boot_count) == filesystem_write(file, (unsigned char*)&boot_count, sizeof(boot_count)));
     filesystem_close(file);
 
     printf("boot_count: %ld\n", boot_count);
@@ -167,17 +185,20 @@ static filesystem_file_handle_t *acquire_file_handle(bool use_compression){
 
     for(uint8_t i=0; i < MAX_OPEN_FILES; i++){
         if(!(file_handles_used_bitmask & test_bit)){
+            filesystem_file_handle_t *handle;
             // Set the bit, indicating this file_handle is in use.
             file_handles_used_bitmask |= test_bit;
 
             if(use_compression){
                 // Check if the compressor/decompressor is available.
-                assert(file_index_using_compression < 0);
+                if(file_index_using_compression >= 0)
+                    return NULL;
                 // Indicate that this file is using the compressor/decompressor.
                 file_index_using_compression = i;
             }
-
-            return &file_handles[i];
+            handle = &file_handles[i];
+            memset(handle, 0, sizeof(filesystem_file_handle_t));
+            return handle;
         }
         test_bit <<= 1;
     }
@@ -207,13 +228,32 @@ static void release_file_handle(filesystem_file_t *file){
     assert(0);  // Should never reach here.
 }
 
-filesystem_file_t *filesystem_open(const char *path, bool use_compression){
-    const int flags = LFS_O_RDWR | LFS_O_CREAT;
+/**
+ * Only 1 tamp-compressed file can be open at a time.
+ *
+ * If:
+ *   * write_mode==true: Opens the file for writing; creates file if it doesn't exist.
+ *   * write_mode==false: Opens the file for reading; erroring (returning NULL) if it doesn't exist.
+ */
+filesystem_file_t *filesystem_open(const char *path, bool write_mode, bool use_compression){
+    int flags = write_mode ? LFS_O_WRONLY | LFS_O_CREAT : LFS_O_RDONLY;
     
     filesystem_file_handle_t *fs_file_handle = acquire_file_handle(use_compression);
 
-    // Not sure if clearing is necessary, can maybe remove
-    memset(fs_file_handle, 0, sizeof(filesystem_file_handle_t));
+    if(!fs_file_handle){
+        printf("Unable to allocate file handle.");
+        return NULL;
+    }
+
+    if(use_compression){
+        // TODO: initialize tamp; it's globally already been reserved.
+        assert(0 && "tamp compression not yet implemented");
+    }
+
+    if(write_mode){
+        // TODO: create directories if necessary
+    }
+
     fs_file_handle->config.buffer = fs_file_handle->buffer;
     fs_file_handle->config.attrs = fs_file_handle->file_attrs;
     fs_file_handle->config.attr_count = LFS_NUM_ATTRS;

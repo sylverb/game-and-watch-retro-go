@@ -9,10 +9,16 @@
 extern "C" {
 #endif
 
+#define FILESYSTEM_WRITE true
+#define FILESYSTEM_READ false
+
+#define FILESYSTEM_COMPRESS true
+#define FILESYSTEM_RAW false
+
 typedef lfs_file_t filesystem_file_t;
 void filesystem_init(void);
 
-filesystem_file_t *filesystem_open(const char *path, bool use_compression);
+filesystem_file_t *filesystem_open(const char *path, bool write_mode, bool use_compression);
 int filesystem_write(filesystem_file_t *file, unsigned char *data, size_t size);
 int filesystem_read(filesystem_file_t *file, unsigned char *buffer, size_t size);
 int filesystem_seek(filesystem_file_t *file, lfs_soff_t off, int whence);
