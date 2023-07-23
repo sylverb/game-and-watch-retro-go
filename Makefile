@@ -44,10 +44,11 @@ Core/Src/stm32h7xx_hal_msp.c \
 Core/Src/stm32h7xx_it.c \
 Core/Src/system_stm32h7xx.c
 
+TAMP_DIR = Core/Src/porting/lib/tamp/tamp/_c_src/
 TAMP_C_SOURCES = \
-Core/Src/porting/lib/tamp/tamp/_c_src/tamp/common.c \
-Core/Src/porting/lib/tamp/tamp/_c_src/tamp/compressor.c \
-Core/Src/porting/lib/tamp/tamp/_c_src/tamp/decompressor.c
+$(TAMP_DIR)/tamp/common.c \
+/tTAMP_DIR)/tamp/compressor.c \
+/tTAMP_DIR)/tamp/decompressor.c
 
 GNUBOY_C_SOURCES = \
 Core/Src/porting/gb/main_gb.c \
@@ -573,7 +574,7 @@ Core/Src/porting/amstrad/amstrad_format.c \
 Core/Src/porting/amstrad/amstrad_loader.c \
 Core/Src/porting/amstrad/amstrad_video8bpp.c
 
-TAMP_C_INCLUDES += -ICore/Src/porting/lib/tamp/tamp/_c_src
+TAMP_C_INCLUDES += -I$(TAMP_DIR)
 
 GNUBOY_C_INCLUDES +=  \
 -ICore/Inc \

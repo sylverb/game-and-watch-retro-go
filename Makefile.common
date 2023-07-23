@@ -653,8 +653,10 @@ $(BUILD_DIR)/core/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/
 	$(V)$(ECHO) [ CC core ] $(notdir $<)
 	$(V)$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/core/$(notdir $(<:.c=.lst)) $< -o $@
 
-$(BUILD_DIR)/tamp/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+$(BUILD_DIR)/tamp/%.o: $(TAMP_DIR)/tamp/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
 	$(V)$(ECHO) [ CC tamp ] $(notdir $<)
+	$(V)$(ECHO) [ CC tamp ] $<
+	$(V)$(ECHO) [ CC tamp ] $@
 	$(V)$(CC) -c $(CFLAGS) $(TAMP_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/tamp/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/nes/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
