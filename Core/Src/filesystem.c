@@ -3,6 +3,7 @@
 #include "gw_lcd.h"
 #include <string.h>
 #include "filesystem.h"
+#include "porting/lib/littlefs/lfs.h"
 #include "rg_rtc.h"
 #include "tamp/compressor.h"
 #include "tamp/decompressor.h"
@@ -43,6 +44,7 @@ typedef union{
     TampCompressor c;
 } tamp_compressor_or_decompressor_t;
 static tamp_compressor_or_decompressor_t tamp_engine;
+static bool tamp_is_compressing;
 
 
 /******************************
@@ -244,9 +246,10 @@ static void release_file_handle(fs_file_t *file){
  */
 fs_file_t *fs_open(const char *path, bool write_mode, bool use_compression){
     int res;
-    int flags = write_mode ? LFS_O_WRONLY | LFS_O_CREAT : LFS_O_RDONLY;
+    int flags = write_mode ? LFS_O_WRONLY | LFS_O_CREAT | LFS_O_TRUNC: LFS_O_RDONLY;
     
     fs_file_handle_t *fs_file_handle = acquire_file_handle(use_compression);
+    tamp_is_compressing = write_mode;
 
     if(!fs_file_handle){
         printf("Unable to allocate file handle.");
@@ -337,7 +340,7 @@ int fs_read(fs_file_t *file, unsigned char *buffer, size_t size){
         unsigned char input_byte;
         bool file_exhausted = false;
 
-        while(true){
+        while(size){
             res = tamp_decompressor_decompress(
                     &tamp_engine.d,
                     buffer,
@@ -348,6 +351,7 @@ int fs_read(fs_file_t *file, unsigned char *buffer, size_t size){
                     &input_chunk_consumed_size
                     );
             assert(res >= TAMP_OK);  // i.e. an "ok" result
+            assert(input_chunk_consumed_size == read_size);
                                      
             output_written_size += output_chunk_written_size;
             buffer += output_chunk_written_size;
@@ -359,8 +363,7 @@ int fs_read(fs_file_t *file, unsigned char *buffer, size_t size){
                 break;
 
             read_size = lfs_file_read(&lfs, file, &input_byte, 1);
-            if(read_size == 0)
-                file_exhausted = true;
+            file_exhausted = read_size == 0;
         }
         return output_written_size;
     }
@@ -370,14 +373,39 @@ int fs_read(fs_file_t *file, unsigned char *buffer, size_t size){
 }
 
 void fs_close(lfs_file_t *file){
-    if(file_is_using_compression(file)){
-        assert(0 && "tamp compression not yet implemented");
+    if(file_is_using_compression(file) && tamp_is_compressing){
+        // flush the compressor
+        unsigned char output_buffer[32];
+        size_t output_written_size;
+        tamp_res res;
+        res = tamp_compressor_flush(
+                &tamp_engine.c,
+                output_buffer,
+                sizeof(output_buffer),
+                &output_written_size,
+                false
+        );
+        assert(res == TAMP_OK);
+        assert(output_written_size == lfs_file_write(&lfs, file, output_buffer, output_written_size));
     }
     assert(lfs_file_close(&lfs, file) >= 0);
     release_file_handle(file);
 }
 
 int fs_seek(lfs_file_t *file, lfs_soff_t off, int whence){
-    assert(file_is_using_compression(file) == false);  // Cannot seek with compression.
+    if(file_is_using_compression(file)){
+        if(whence == LFS_SEEK_CUR){
+            unsigned char byte_buffer;
+            assert(off > 0);
+            printf("Seek %d\n", off);
+            for(int i=0; i < off; i++){
+                fs_read(file, &byte_buffer, 1);
+            }
+            return 0;  // WARNING: this is not a compliant value!
+        }
+        else{
+            assert(0); // not implemented
+        }
+    }
     return lfs_file_seek(&lfs, file, off, whence);
 }
