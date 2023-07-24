@@ -340,7 +340,7 @@ int fs_read(fs_file_t *file, unsigned char *buffer, size_t size){
         unsigned char input_byte;
         bool file_exhausted = false;
 
-        while(size){
+        while(true){
             res = tamp_decompressor_decompress(
                     &tamp_engine.d,
                     buffer,
