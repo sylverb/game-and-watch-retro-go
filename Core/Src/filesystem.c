@@ -138,14 +138,18 @@ static void boot_counter(){
     const char filename[] = "boot_counter";
 
     // read current count
-    file = fs_open(filename, fs_READ, fs_RAW);
-    fs_read(file, (unsigned char *)&boot_count, sizeof(boot_count));
-    fs_close(file);
+    printf("Reading boot count\n");
+    file = fs_open(filename, FS_READ, FS_RAW);
+    if(file){
+        fs_read(file, (unsigned char *)&boot_count, sizeof(boot_count));
+        fs_close(file);
+    }
 
     boot_count += 1;  // update boot count
 
     // write back new boot count
-    file = fs_open(filename, fs_WRITE, fs_RAW);
+    printf("Writing boot count\n");
+    file = fs_open(filename, FS_WRITE, FS_RAW);
     assert(sizeof(boot_count) == fs_write(file, (unsigned char*)&boot_count, sizeof(boot_count)));
     fs_close(file);
 
@@ -239,6 +243,7 @@ static void release_file_handle(fs_file_t *file){
  *   * write_mode==false: Opens the file for reading; erroring (returning NULL) if it doesn't exist.
  */
 fs_file_t *fs_open(const char *path, bool write_mode, bool use_compression){
+    int res;
     int flags = write_mode ? LFS_O_WRONLY | LFS_O_CREAT : LFS_O_RDONLY;
     
     fs_file_handle_t *fs_file_handle = acquire_file_handle(use_compression);
@@ -269,15 +274,20 @@ fs_file_t *fs_open(const char *path, bool write_mode, bool use_compression){
 
     // Add time attribute; may be useful for deleting oldest savestates to make room for new ones.
     uint32_t current_time = GW_GetUnixTime();
-    assert(current_time);
     fs_file_handle->file_attrs[0].type = 't';  // 't' for "time"
     fs_file_handle->file_attrs[0].size = 4;
     fs_file_handle->file_attrs[0].buffer = &current_time;
 
     // TODO: add error handling; maybe delete oldest file(s) to make room
-    assert(0 == lfs_file_opencfg(&lfs, &fs_file_handle->file, path, flags, &fs_file_handle->config));
+    res = lfs_file_opencfg(&lfs, &fs_file_handle->file, path, flags, &fs_file_handle->config);
+    if(res != 0)
+        goto error;
 
     return &fs_file_handle->file;
+
+error:
+    release_file_handle(&fs_file_handle->file);
+    return NULL;
 }
 
 int fs_write(fs_file_t *file, unsigned char *data, size_t size){
@@ -307,11 +317,10 @@ int fs_write(fs_file_t *file, unsigned char *data, size_t size){
                 // TODO: better error-handling if the disk is full.
                 assert(chunk_output_written_size == lfs_file_write(&lfs, file, output_buffer, chunk_output_written_size));
             }
-            // Note: we really return the number of consumed bytes, not the number of
-            // compressed-bytes.
-            return output_written_size;
         }
-        assert(0 && "tamp compression not yet implemented");
+        // Note: we really return the number of consumed bytes, not the number of
+        // compressed-bytes.
+        return output_written_size;
     }
     else{
         return lfs_file_write(&lfs, file, data, size);
@@ -320,9 +329,44 @@ int fs_write(fs_file_t *file, unsigned char *data, size_t size){
 
 int fs_read(fs_file_t *file, unsigned char *buffer, size_t size){
     if(file_is_using_compression(file)){
-        assert(0 && "tamp compression not yet implemented");
+        tamp_res res;
+        int output_written_size = 0;
+        size_t input_chunk_consumed_size = 0;
+        size_t output_chunk_written_size;
+        int read_size = 0;
+        unsigned char input_byte;
+        bool file_exhausted = false;
+
+        while(true){
+            res = tamp_decompressor_decompress(
+                    &tamp_engine.d,
+                    buffer,
+                    size,
+                    &output_chunk_written_size,
+                    &input_byte,
+                    read_size,
+                    &input_chunk_consumed_size
+                    );
+            assert(res >= TAMP_OK);  // i.e. an "ok" result
+                                     
+            output_written_size += output_chunk_written_size;
+            buffer += output_chunk_written_size;
+            size -= output_chunk_written_size;
+
+            if(res == TAMP_OUTPUT_FULL)
+                break;
+            if(res == TAMP_INPUT_EXHAUSTED && file_exhausted)
+                break;
+
+            read_size = lfs_file_read(&lfs, file, &input_byte, 1);
+            if(read_size == 0)
+                file_exhausted = true;
+        }
+        return output_written_size;
     }
-    return lfs_file_read(&lfs, file, buffer, size);
+    else{
+        return lfs_file_read(&lfs, file, buffer, size);
+    }
 }
 
 void fs_close(lfs_file_t *file){

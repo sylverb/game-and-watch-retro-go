@@ -9,11 +9,11 @@
 extern "C" {
 #endif
 
-#define fs_WRITE true
-#define fs_READ false
+#define FS_WRITE true
+#define FS_READ false
 
-#define fs_COMPRESS true
-#define fs_RAW false
+#define FS_COMPRESS true
+#define FS_RAW false
 
 typedef lfs_file_t fs_file_t;
 void fs_init(void);

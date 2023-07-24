@@ -20,9 +20,11 @@ def main():
     if img.ndim == 3:
         if img.shape[-1] == 4:
             img = (img == [0, 0, 0, 255]).all(axis=-1)
-            img = ~img
+        elif img.shape[-1] == 3:
+            img = (img == [0, 0, 0]).all(axis=-1)
         else:
             raise NotImplementedError
+        img = ~img
     img = img.astype(bool)
     if args.invert:
         img = ~img
