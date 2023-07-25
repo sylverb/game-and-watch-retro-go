@@ -506,31 +506,22 @@ void pce_osd_gfx_blit(bool drawFrame) {
     uint8_t *emuFrameBuffer = osd_gfx_framebuffer();
     pixel_t *framebuffer_active = lcd_get_active_buffer();
     int y=0, offsetY, offsetX = 0;
-    float xScaleDown = 0;
-    float xScaleUp = 0;
+    int xScale = 0;
     uint8_t *fbTmp;
-    if (GW_LCD_WIDTH<current_width) 
-        xScaleDown = (float) current_width / (float) GW_LCD_WIDTH ;
-    else if (GW_LCD_WIDTH>current_width && scaling != ODROID_DISPLAY_SCALING_OFF) 
-        xScaleUp = (float) GW_LCD_WIDTH / (float) current_width ;
-    else offsetX = (GW_LCD_WIDTH - current_width)/2; //center the image horizontally
+    
+    if (scaling != ODROID_DISPLAY_SCALING_OFF) {
+        xScale = (current_width << 8) / GW_LCD_WIDTH ;
+    } else offsetX = (GW_LCD_WIDTH - current_width)/2; //center the image horizontally
 
     int renderHeight = (current_height<=GW_LCD_HEIGHT)?current_height:GW_LCD_HEIGHT;
 
     for(y=0;y<renderHeight;y++) {
         fbTmp = emuFrameBuffer+(y*XBUF_WIDTH);
         offsetY = y*GW_LCD_WIDTH;
-        if (xScaleUp) {
-            // Horizontal - Scale up
+        if (xScale) {
+            // Horizontal - Scale 
             for(int x=0;x<GW_LCD_WIDTH;x++) {
-                int input_x = (int) (x / xScaleUp);
-                framebuffer_active[offsetY+x]=mypalette[fbTmp[input_x]];
-            }
-        } else if (xScaleDown) {
-            // Horizontal - Scale down
-            for(int x=0;x<GW_LCD_WIDTH;x++) {
-                int input_x = (int) (x * xScaleDown);
-                framebuffer_active[offsetY+x]= mypalette[fbTmp[input_x]];
+                framebuffer_active[offsetY+x]= mypalette[fbTmp[ (x * xScale) >> 8 ]];
             }
         } else {
             // No scaling, 1:1
@@ -543,7 +534,7 @@ void pce_osd_gfx_blit(bool drawFrame) {
     for(;y<GW_LCD_HEIGHT;y++) {
         fbTmp = emuFrameBuffer+(y*XBUF_WIDTH);
         offsetY = y*GW_LCD_WIDTH;
-        for(int x=0;x<GW_LCD_WIDTH;x++) {
+        for(int x=0;x<current_width;x++) {
             framebuffer_active[offsetY+x+offsetX]=0;
         }
     }
