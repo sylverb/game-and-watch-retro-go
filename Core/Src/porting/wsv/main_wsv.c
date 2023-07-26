@@ -15,6 +15,7 @@
 #include "appid.h"
 #include "bilinear.h"
 #include "rg_i18n.h"
+#include "filesystem.h"
 
 #include "wsv_sound.h"
 #include "memorymap.h"
@@ -40,14 +41,25 @@ static uint8 wsv_rom_memory[WSV_ROM_BUFF_LENGTH];
 static void netplay_callback(netplay_event_t event, void *arg) {
     // Where we're going we don't need netplay!
 }
+
+#define STATE_SAVE_BUFFER_LENGTH (1024 * 28)
+
 static bool LoadState(char *pathName) {
-    supervision_load_state((uint8 *)ACTIVE_FILE->save_address);
+    fs_file_t *file;
+    file = fs_open(pathName, FS_READ, FS_COMPRESS);
+    fs_read(file, wsv_framebuffer, STATE_SAVE_BUFFER_LENGTH);
+    fs_close(file);
+    supervision_load_state(wsv_framebuffer);
     return 0;
 }
 static bool SaveState(char *pathName) {
     int size = supervision_save_state(wsv_framebuffer);
-    assert(size<ACTIVE_FILE->save_size);
-    store_save(ACTIVE_FILE->save_address, wsv_framebuffer, size);
+    assert(size<STATE_SAVE_BUFFER_LENGTH);
+
+    fs_file_t *file;
+    file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
+    fs_write(file, wsv_framebuffer, size);
+    fs_close(file);
     return 0;
 }
 
@@ -505,7 +517,7 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     supervision_load(rom_ptr, rom_length);
 
     if (load_state) {
-        LoadState(NULL);
+        odroid_system_emu_load_state(save_slot);
     }
     while(1)
     {
