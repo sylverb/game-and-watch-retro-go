@@ -719,40 +719,6 @@ class ROMParser:
 
         return str
 
-    def get_gameboy_save_size(self, file: Path):
-        total_size = 4096
-        file = Path(file)
-
-        if file.suffix in COMPRESSIONS:
-            file = file.with_suffix("")  # Remove compression suffix
-
-        with open(file, "rb") as f:
-            # cgb
-            f.seek(0x143)
-            cgb = ord(f.read(1))
-
-            # 0x80 = Gameboy color but supports old gameboy
-            # 0xc0 = Gameboy color only
-            if cgb & 0x80 or cgb == 0xC0:
-                # Bank 0 + 1-7 for gameboy color work ram
-                total_size += 8 * 4096  # irl
-
-                # Bank 0 + 1 for gameboy color video ram, 2*8KiB
-                total_size += 4 * 4096  # vrl
-            else:
-                # Bank 0 + 1 for gameboy classic work ram
-                total_size += 2 * 4096  # irl
-
-                # Bank 0 only for gameboy classic video ram, 1*8KiB
-                total_size += 2 * 4096  # vrl
-
-            # Cartridge ram size
-            f.seek(0x149)
-            total_size += [1, 1, 1, 4, 16, 8][ord(f.read(1))] * 8 * 1024
-            return total_size
-
-        return 0
-
     def _compress_rom(self, variable_name, rom, compress_gb_speed=False, compress=None):
         """This will create a compressed rom file next to the original rom."""
         global sms_reserved_flash_size
@@ -1053,8 +1019,6 @@ class ROMParser:
             for i, rom in enumerate(roms):
                 if not (rom.publish):
                     continue
-                if folder == "gb":
-                    save_size = self.get_gameboy_save_size(rom.path)
 
                 # Aligned
                 aligned_size = 4 * 1024
