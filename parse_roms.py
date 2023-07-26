@@ -79,7 +79,7 @@ const rom_system_t {name} EMU_DATA = {{
 """
 
 SAVE_SIZES = {
-    "nes": 24 * 1024, # only when using nofrendo, elseway it's given by nesmapper script
+    "nes": 0,  #24 * 1024,
     "sms": 60 * 1024,
     "gg": 60 * 1024,
     "col": 60 * 1024,
@@ -753,16 +753,6 @@ class ROMParser:
 
         return 0
 
-    def get_nes_save_size(self, file: Path):
-        file = Path(file)
-
-        if file.suffix in COMPRESSIONS:
-            file = file.with_suffix("")  # Remove compression suffix
-
-        total_size = int(subprocess.check_output([sys.executable, "./fceumm-go/nesmapper.py", "savesize", file]))
-        return total_size
-
-        return 0
     def _compress_rom(self, variable_name, rom, compress_gb_speed=False, compress=None):
         """This will create a compressed rom file next to the original rom."""
         global sms_reserved_flash_size
@@ -1065,8 +1055,6 @@ class ROMParser:
                     continue
                 if folder == "gb":
                     save_size = self.get_gameboy_save_size(rom.path)
-                elif folder == "nes" and args.nofrendo == 0:
-                    save_size = self.get_nes_save_size(rom.path)
 
                 # Aligned
                 aligned_size = 4 * 1024
@@ -1181,7 +1169,7 @@ class ROMParser:
         total_rom_size += rom_size
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_GB\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
+        if system_save_size > larger_save_size: larger_save_size = system_save_size
 
         # Delete NES bios/mappers.h file to recreate it
         mappers_file = "build/mappers.h"

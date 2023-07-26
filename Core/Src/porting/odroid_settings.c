@@ -9,6 +9,7 @@
 #include "game_genie.h"
 #include "gui.h"
 #include "rom_manager.h"
+#include "filesystem.h"
 
 #define CONFIG_MAGIC 0xcafef00d
 #define ODROID_APPID_COUNT 4
