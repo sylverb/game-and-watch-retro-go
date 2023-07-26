@@ -120,7 +120,6 @@ static bool gw_system_SaveState(char *pathName)
     fs_file_t *file;
     file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
 
-
     memset(state_save_buffer, '\x00', sizeof(state_save_buffer));
     gw_state_save(state_save_buffer);
 
