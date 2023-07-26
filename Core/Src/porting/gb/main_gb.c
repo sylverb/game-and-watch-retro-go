@@ -397,7 +397,6 @@ static bool SaveState(char *pathName)
 
 static bool LoadState(char *pathName)
 {
-    printf("Loading state... [%s]\n", pathName);
     fs_file_t *file;
     int savestate_size;
 
@@ -407,7 +406,6 @@ static bool LoadState(char *pathName)
     // as a temporary save buffer.
     memset(GB_ROM_SRAM_CACHE,  '\x00', STATE_SAVE_BUFFER_LENGTH);
     savestate_size = fs_read(file, GB_ROM_SRAM_CACHE, STATE_SAVE_BUFFER_LENGTH);
-    printf("read %d bytes\n", savestate_size);
     fs_close(file);
 
     gb_state_load(GB_ROM_SRAM_CACHE, savestate_size);
