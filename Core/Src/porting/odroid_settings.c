@@ -8,6 +8,7 @@
 #include "appid.h"
 #include "game_genie.h"
 #include "gui.h"
+#include "rom_manager.h"
 
 #define CONFIG_MAGIC 0xcafef00d
 #define ODROID_APPID_COUNT 4
@@ -378,7 +379,13 @@ void odroid_settings_FontSize_set(int32_t value)
 
 char* odroid_settings_RomFilePath_get()
 {
-  return odroid_settings_string_get(Key_RomFilePath, NULL);
+    static char filepath_buffer[192];  // This is fine since the name is immediately used.
+    snprintf(filepath_buffer,
+             sizeof(filepath_buffer),
+             "%s/%s.savestate",
+             ACTIVE_FILE->system->system_name,
+             ACTIVE_FILE->name);
+    return filepath_buffer;
 }
 void odroid_settings_RomFilePath_set(const char* value)
 {
