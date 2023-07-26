@@ -568,7 +568,6 @@ caprice32-go/cap32/psg.c \
 caprice32-go/cap32/slots.c \
 caprice32-go/cap32/cap32_z80.c \
 Core/Src/porting/amstrad/main_amstrad.c \
-Core/Src/porting/amstrad/save_amstrad.c \
 Core/Src/porting/amstrad/amstrad_catalog.c \
 Core/Src/porting/amstrad/amstrad_format.c \
 Core/Src/porting/amstrad/amstrad_loader.c \
