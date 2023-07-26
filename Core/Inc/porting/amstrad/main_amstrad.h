@@ -4,6 +4,8 @@
 #define CPC_SCREEN_WIDTH 384
 #define CPC_SCREEN_HEIGHT 272
 
+#include "filesystem.h"
+
 extern uint8_t amstrad_framebuffer[];
 
 // COMPUTER/EMU STATUS
@@ -13,8 +15,8 @@ extern uint8_t amstrad_framebuffer[];
 extern int emu_status;
 extern int cpc_kbd[];
 
-void load_amstrad_data(uint8_t *address);
-void save_amstrad_data();
+void load_amstrad_data(fs_file_t *file);
+void save_amstrad_data(fs_file_t *file);
 void video_set_palette_antialias_8bpp(void);
 unsigned int rgb2color_8bpp(unsigned int r, unsigned int g, unsigned int b);
 unsigned int * amstrad_getScreenPtr();

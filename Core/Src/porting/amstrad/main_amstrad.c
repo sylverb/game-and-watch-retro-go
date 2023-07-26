@@ -253,31 +253,24 @@ static const uint8_t volume_table[ODROID_AUDIO_VOLUME_MAX + 1] = {
     100,
 };
 
-void load_amstrad_data(uint8_t *address) {
-    SaveState* state = NULL;
-    if (initLoadAmstradState(address)) {
-        state = amstradSaveStateOpenForRead("main_amstrad");
-        printf("state = %x\n",(int)state);
-        selected_palette_index = amstradSaveStateGet(state, "selected_palette_index");
-        selected_disk_index = amstradSaveStateGet(state, "selected_disk_index");
-        selected_controls_index = amstradSaveStateGet(state, "selected_controls_index");
-        selected_key_index = amstradSaveStateGet(state, "selected_key_index");
-    }
+void load_amstrad_data(fs_file_t *file) {
+    fs_read(file, (unsigned char *)&selected_palette_index, 4);
+    fs_read(file, (unsigned char *)&selected_disk_index, 4);
+    fs_read(file, (unsigned char *)&selected_controls_index, 4);
+    fs_read(file, (unsigned char *)&selected_key_index, 4);
 }
 
 static bool amstrad_system_loadState(char *pathName)
 {
-    loadAmstradState((uint8_t *)ACTIVE_FILE->save_address);
+    loadAmstradState(pathName);
     return 0;
 }
 
-void save_amstrad_data() {
-    SaveState* state;
-    state = amstradSaveStateOpenForWrite("main_amstrad");
-    amstradSaveStateSet(state, "selected_palette_index", selected_palette_index);
-    amstradSaveStateSet(state, "selected_disk_index", selected_disk_index);
-    amstradSaveStateSet(state, "selected_controls_index", selected_controls_index);
-    amstradSaveStateSet(state, "selected_key_index", selected_key_index);
+void save_amstrad_data(fs_file_t *file) {
+    fs_write(file, (unsigned char *)&selected_palette_index, 4);
+    fs_write(file, (unsigned char *)&selected_disk_index, 4);
+    fs_write(file, (unsigned char *)&selected_controls_index, 4);
+    fs_write(file, (unsigned char *)&selected_key_index, 4);
 }
 
 static bool amstrad_system_saveState(char *pathName)
@@ -293,16 +286,7 @@ static bool amstrad_system_saveState(char *pathName)
         idx++;
         }
     }
-#if OFF_SAVESTATE==1
-    if (strcmp(pathName,"1") == 0) {
-        // Save in common save slot (during a power off)
-        saveAmstradState((uint8_t *)&__OFFSAVEFLASH_START__,ACTIVE_FILE->save_size);
-    } else {
-#endif
-        saveAmstradState((uint8_t *)ACTIVE_FILE->save_address,ACTIVE_FILE->save_size);
-#if OFF_SAVESTATE==1
-    }
-#endif
+    saveAmstradState(pathName);
     return true;
 }
 
@@ -836,19 +820,6 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
                         ((i & 0x3) * 31 / 3);
     }
 
-    if (load_state) {
-#if OFF_SAVESTATE==1
-        if (save_slot == 1) {
-            // Load from common save slot if needed
-            load_amstrad_data((uint8_t *)&__OFFSAVEFLASH_START__);
-        } else {
-#endif
-            load_amstrad_data((uint8_t *)ACTIVE_FILE->save_address);
-#if OFF_SAVESTATE==1
-        }
-#endif
-    }
-
     if (start_paused)
     {
         common_emu_state.pause_after_frames = 2;
@@ -891,18 +862,8 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
 
     cap32_set_palette(selected_palette_index);
 
-    if (load_state)
-    {
-#if OFF_SAVESTATE==1
-        if (save_slot == 1) {
-            // Load from common save slot if needed
-            load_result = loadAmstradState((uint8_t *)&__OFFSAVEFLASH_START__);
-        } else {
-#endif
-            load_result = loadAmstradState((uint8_t *)ACTIVE_FILE->save_address);
-#if OFF_SAVESTATE==1
-        }
-#endif
+    if (load_state) {
+        load_result = odroid_system_emu_load_state(save_slot);
     }
     // If disk loaded and no save state loaded, enter autoload command
     if ((disk_load_result == 0) && (load_result == 0)) {

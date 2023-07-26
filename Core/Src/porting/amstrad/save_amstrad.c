@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "filesystem.h"
 
 static char *headerString = "AMST0000";
 
@@ -22,8 +23,8 @@ static char *headerString = "AMST0000";
 static int flashBlockOffset = 0;
 static bool isLastFlashWrite = 0;
 
-extern int cap32_save_state();
-extern int cap32_load_state();
+extern int cap32_save_state(fs_file_t *file);
+extern int cap32_load_state(fs_file_t *file);
 
 // This function fills 4kB blocks and writes them in flash when full
 static void SaveFlashSaveData(uint8_t *dest, uint8_t *src, int size) {
@@ -73,37 +74,14 @@ static uint32_t tagFromName(const char* tagName)
 }
 
 /* Savestate functions */
-uint32_t saveAmstradState(uint8_t *destBuffer, uint32_t save_size) {
-    // Convert mem mapped pointer to flash address
-    uint32_t save_address = destBuffer - &__EXTFLASH_BASE__;
-    // Fill context data
-    amstradSaveState.buffer = (uint8_t *)save_address;
-    amstradSaveState.offset = 0;
-    amstradSaveState.section = 0;
-
-    // Erase flash memory
-    store_erase((const uint8_t *)destBuffer, save_size);
-
-    isLastFlashWrite = 0;
-    // Reserve a page of 256 Bytes for the header info
-    // We put 0xff to be able to update values at the end of process
-    SaveFlashSaveData(amstradSaveState.buffer,(uint8_t *)headerString,8);
-    memset(amstradSaveState.sections,0xff,sizeof(amstradSaveState.sections[0])*MAX_SECTIONS);
-    SaveFlashSaveData(amstradSaveState.buffer+8,(uint8_t *)amstradSaveState.sections,sizeof(amstradSaveState.sections[0])*MAX_SECTIONS);
-    amstradSaveState.offset += 8+sizeof(amstradSaveState.sections[0])*MAX_SECTIONS;
-    // Start saving data
-    cap32_save_state();
-    save_amstrad_data();
-
-    // Write dummy data to force writing last block of data
-    SaveFlashSaveData(amstradSaveState.buffer+amstradSaveState.offset,NULL,0);
-
-    // Copy header data in the first 256 bytes block of flash
-    SaveFlashSaveData(amstradSaveState.buffer,(uint8_t *)headerString,8);
-    isLastFlashWrite = true;
-    SaveFlashSaveData(amstradSaveState.buffer+8,(uint8_t *)amstradSaveState.sections,sizeof(amstradSaveState.sections[0])*MAX_SECTIONS);
-
-    return amstradSaveState.offset;
+uint32_t saveAmstradState(const char *pathName) {
+    fs_file_t *file;
+    file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
+    fs_write(file, headerString, 8);
+    cap32_save_state(file);
+    save_amstrad_data(file);
+    fs_close(file);
+    return 0;
 }
 
 void amstradSaveStateSet(SaveState* state, const char* tagName, uint32_t value)
@@ -140,18 +118,19 @@ bool initLoadAmstradState(uint8_t *srcBuffer) {
     return false;
 }
 
-uint32_t loadAmstradState(uint8_t *srcBuffer) {
-    amstradSaveState.offset = 0;
-    // Check for header
-    if (memcmp(headerString,srcBuffer,8) == 0) {
-        amstradSaveState.buffer = srcBuffer;
-        // Copy sections header in structure
-        memcpy(amstradSaveState.sections,amstradSaveState.buffer+8,sizeof(amstradSaveState.sections[0])*MAX_SECTIONS);
-        cap32_load_state();
+uint32_t loadAmstradState(const char *pathName) {
+    fs_file_t *file;
+    file = fs_open(pathName, FS_READ, FS_COMPRESS);
+    char readin_header[9] = {0};
+    fs_read(file, readin_header, 8);
 
-        load_amstrad_data(srcBuffer);
+    // Check for header
+    if (memcmp(headerString, readin_header, sizeof(readin_header)) == 0) { 
+        cap32_load_state(file);
+        load_amstrad_data(file);
     }
-    return amstradSaveState.offset;
+    fs_close(file);
+    return 0;
 }
 
 SaveState* amstradSaveStateOpenForRead(const char* fileName)

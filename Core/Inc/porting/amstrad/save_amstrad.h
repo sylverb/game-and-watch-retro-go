@@ -22,8 +22,8 @@ typedef struct  {
 } SaveState;
 
 bool initLoadAmstradState(uint8_t *srcBuffer);
-uint32_t saveAmstradState(uint8_t *destBuffer, uint32_t save_size);
-uint32_t loadAmstradState(uint8_t *srcBuffer);
+uint32_t saveAmstradState(const char *pathName);
+uint32_t loadAmstradState(const char *pathName);
 
 SaveState* amstradSaveStateOpenForRead(const char* fileName);
 SaveState* amstradSaveStateOpenForWrite(const char* fileName);

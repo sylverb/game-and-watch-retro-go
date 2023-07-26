@@ -60,6 +60,7 @@ rg_app_desc_t *odroid_system_get_app()
 const char OFF_SAVESTATE_PATH[] = "1";
 #endif
 
+/* Return true on successful load */
 bool odroid_system_emu_load_state(int slot)
 {
     char *filepath;
@@ -81,6 +82,7 @@ bool odroid_system_emu_load_state(int slot)
         }
         else{
             printf("Savestate does not exist.");
+            return false;
         }
     }
     return true;
