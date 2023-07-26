@@ -57,24 +57,41 @@ rg_app_desc_t *odroid_system_get_app()
 
 bool odroid_system_emu_load_state(int slot)
 {
-    if (ACTIVE_FILE->save_address == 0) {
-        return false;
-    }
+    printf("odroid_system_emu_load_state %d\n", slot);
+    assert(slot==0 || slot==1);  // TODO: allow more slots by passing slot info along to odroid_settings_RomFilePath_get();
     if (currentApp.loadState != NULL) {
-        (*currentApp.loadState)("");
+#if OFF_SAVESTATE==1
+        if (slot == 0) {
+#endif
+            char *filepath = odroid_settings_RomFilePath_get();
+            printf("Loading state from [%s]\n", filepath);
+            (*currentApp.loadState)(filepath);
+#if OFF_SAVESTATE==1
+        } else {
+            printf("Loading state from common OFF.\n");
+            (*currentApp.loadState)("1");
+        }
+#endif
+
     }
     return true;
 };
 
 bool odroid_system_emu_save_state(int slot)
 {
+    // slot_0 == typical per-rom-path
+    // slot_1 == power-on/power-off slot shared between all roms.
+    assert(slot==0 || slot==1);  // TODO: allow more slots by passing slot info along to odroid_settings_RomFilePath_get();
     if (currentApp.saveState != NULL) {
 #if OFF_SAVESTATE==1
         if (slot == 0) {
 #endif
-            (*currentApp.saveState)("0");
+            char *filepath = odroid_settings_RomFilePath_get();
+            printf("Savestating to [%s]\n", filepath);
+            (*currentApp.saveState)(filepath);
 #if OFF_SAVESTATE==1
         } else {
+            printf("Savestating to common OFF.\n");
             (*currentApp.saveState)("1");
         }
 #endif

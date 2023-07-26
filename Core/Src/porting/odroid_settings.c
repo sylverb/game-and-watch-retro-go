@@ -379,7 +379,7 @@ void odroid_settings_FontSize_set(int32_t value)
 
 char* odroid_settings_RomFilePath_get()
 {
-    static char filepath_buffer[192];  // This is fine since the name is immediately used.
+    static char filepath_buffer[FS_MAX_PATH_SIZE];  // Being static is fine since the name is immediately used.
     snprintf(filepath_buffer,
              sizeof(filepath_buffer),
              "%s/%s.savestate",
