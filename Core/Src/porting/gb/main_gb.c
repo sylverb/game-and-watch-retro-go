@@ -24,6 +24,7 @@
 #include "rom_manager.h"
 #include "appid.h"
 #include "gw_malloc.h"
+#include "filesystem.h"
 
 #define NVS_KEY_SAVE_SRAM "sram"
 
@@ -377,21 +378,16 @@ static void blit(void)
 static bool SaveState(char *pathName)
 {
     printf("Saving state...\n");
+    fs_file_t *file;
+    file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
 
     // Use GB_ROM_SRAM_CACHE (which points to _GB_ROM_UNPACK_BUFFER)
     // as a temporary save buffer.
     memset(GB_ROM_SRAM_CACHE,  '\x00', STATE_SAVE_BUFFER_LENGTH);
     size_t size = gb_state_save(GB_ROM_SRAM_CACHE, STATE_SAVE_BUFFER_LENGTH);
-#if OFF_SAVESTATE==1
-    if (strcmp(pathName,"1") == 0) {
-        // Save in common save slot (during a power off)
-        store_save((const uint8_t *)&__OFFSAVEFLASH_START__, GB_ROM_SRAM_CACHE, size);
-    } else {
-#endif
-        store_save(ACTIVE_FILE->save_address, GB_ROM_SRAM_CACHE, size);
-#if OFF_SAVESTATE==1
-    }
-#endif
+
+    fs_write(file, GB_ROM_SRAM_CACHE, size);
+    fs_close(file);
 
     // Restore the cache that was overwritten above.
     gb_loader_restore_cache();
@@ -401,7 +397,24 @@ static bool SaveState(char *pathName)
 
 static bool LoadState(char *pathName)
 {
-    gb_state_load(ACTIVE_FILE->save_address, ACTIVE_FILE->save_size);
+    printf("Loading state... [%s]\n", pathName);
+    fs_file_t *file;
+    int savestate_size;
+
+    file = fs_open(pathName, FS_READ, FS_COMPRESS);
+
+    // Use GB_ROM_SRAM_CACHE (which points to _GB_ROM_UNPACK_BUFFER)
+    // as a temporary save buffer.
+    memset(GB_ROM_SRAM_CACHE,  '\x00', STATE_SAVE_BUFFER_LENGTH);
+    savestate_size = fs_read(file, GB_ROM_SRAM_CACHE, STATE_SAVE_BUFFER_LENGTH);
+    printf("read %d bytes\n", savestate_size);
+    fs_close(file);
+
+    gb_state_load(GB_ROM_SRAM_CACHE, savestate_size);
+
+    // Restore the cache that was overwritten above.
+    gb_loader_restore_cache();
+
     return true;
 }
 
@@ -570,16 +583,7 @@ rg_app_desc_t * init(uint8_t load_state, uint8_t save_slot)
     pal_set_dmg(odroid_settings_Palette_get());
 
     if (load_state) {
-#if OFF_SAVESTATE==1
-        if (save_slot == 1) {
-            // Load from common save slot if needed
-            gb_state_load((const uint8_t *)&__OFFSAVEFLASH_START__, ACTIVE_FILE->save_size);
-        } else {
-#endif
-            LoadState("");
-#if OFF_SAVESTATE==1
-        }
-#endif
+        odroid_system_emu_load_state(save_slot);
     }
 
     return app;
