@@ -27,6 +27,7 @@
 #include "appid.h"
 #include "lzma.h"
 #include "rg_i18n.h"
+#include "filesystem.h"
 
 //#define PCE_SHOW_DEBUG
 //#define XBUF_WIDTH 	(480 + 32)
@@ -161,10 +162,12 @@ static void netplay_callback(netplay_event_t event, void *arg) {
     // Where we're going we don't need netplay!
 }
 
+#define SAVE_STATE_BUFFER_SIZE (76*1024)
+
 static bool SaveStateStm(char *pathName) {
     int pos=0;
     uint8_t *pce_save_buf = pce_framebuffer;
-    memset(pce_save_buf, 0x00, 76*1024); // 76K save size
+    memset(pce_save_buf, 0x00, SAVE_STATE_BUFFER_SIZE); // 76K save size
 
     uint8_t *pce_save_header=(uint8_t *)SAVESTATE_HEADER;
     for(int i=0;i<sizeof(SAVESTATE_HEADER);i++) {
@@ -182,27 +185,25 @@ static bool SaveStateStm(char *pathName) {
             pos++;
         }
     }
-    assert(pos<76*1024);
+    assert(pos<SAVE_STATE_BUFFER_SIZE);
 
-#if OFF_SAVESTATE==1
-    if (strcmp(pathName,"1") == 0) {
-        // Save in common save slot (during a power off)
-        store_save((const uint8_t *)&__OFFSAVEFLASH_START__, pce_save_buf, 76*1024);
-    } else {
-#endif
-        store_save(ACTIVE_FILE->save_address, pce_save_buf, 76*1024);
-#if OFF_SAVESTATE==1
-    }
-#endif
+    fs_file_t *file;
+    file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
+    fs_write(file, pce_save_buf, SAVE_STATE_BUFFER_SIZE);
+    fs_close(file);
+
     sprintf(pce_log,"%08lX",PCE.ROM_CRC);
     memset(pce_framebuffer,0,sizeof(pce_framebuffer));
     return false;
 }
 
 static bool LoadStateAddr(char *pathName, uint8_t *saveAddr) {
-    uint8_t *pce_save_buf = (uint8_t *)saveAddr;
-    if (ACTIVE_FILE->save_size==0) return true;
-    sprintf(pce_log,"%ld",ACTIVE_FILE->save_size);
+    uint8_t *pce_save_buf = pce_framebuffer;
+
+    fs_file_t *file;
+    file = fs_open(pathName, FS_READ, FS_COMPRESS);
+    fs_read(file, pce_save_buf, SAVE_STATE_BUFFER_SIZE);
+    fs_close(file);
 
     pce_save_buf+=sizeof(SAVESTATE_HEADER) + 1;
 
@@ -215,7 +216,6 @@ static bool LoadStateAddr(char *pathName, uint8_t *saveAddr) {
 #pragma GCC diagnostic pop
 
     pce_save_buf+=sizeof(uint32_t);
-
 
     int pos=0;
     for (int i = 0; SaveStateVars[i].len > 0; i++) {
@@ -636,16 +636,7 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, uint8_t save_slot) {
 
     // If user select "RESUME" in main menu
     if (load_state) {
-#if OFF_SAVESTATE==1
-        if (save_slot == 1) {
-            // Load from common save slot if needed
-            LoadStateAddr("",(uint8_t *)&__OFFSAVEFLASH_START__);
-        } else {
-#endif
-        LoadStateStm(NULL);
-#if OFF_SAVESTATE==1
-        }
-#endif
+        odroid_system_emu_load_state(save_slot);
     }
     // Main emulator loop
     printf("Main emulator loop start\n");

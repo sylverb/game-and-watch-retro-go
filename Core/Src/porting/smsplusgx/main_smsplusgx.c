@@ -209,7 +209,6 @@ static bool SaveState(char *pathName)
 
     fs_file_t *file;
     file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
-
     fs_write(file, state_save_buffer, SAVE_STATE_BUFFER_SIZE);
     fs_close(file);
 
