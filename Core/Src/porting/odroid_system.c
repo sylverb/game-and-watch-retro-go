@@ -5,6 +5,7 @@
 #include "gw_linker.h"
 #include "gui.h"
 #include "main.h"
+#include "filesystem.h"
 
 static rg_app_desc_t currentApp;
 static runtime_stats_t statistics;
@@ -55,24 +56,32 @@ rg_app_desc_t *odroid_system_get_app()
 }
 
 
+#if OFF_SAVESTATE==1
+const char OFF_SAVESTATE_PATH[] = "1";
+#endif
+
 bool odroid_system_emu_load_state(int slot)
 {
+    char *filepath;
     printf("odroid_system_emu_load_state %d\n", slot);
     assert(slot==0 || slot==1);  // TODO: allow more slots by passing slot info along to odroid_settings_RomFilePath_get();
     if (currentApp.loadState != NULL) {
 #if OFF_SAVESTATE==1
-        if (slot == 0) {
-#endif
-            char *filepath = odroid_settings_RomFilePath_get();
-            printf("Loading state from [%s]\n", filepath);
-            (*currentApp.loadState)(filepath);
-#if OFF_SAVESTATE==1
-        } else {
-            printf("Loading state from common OFF.\n");
-            (*currentApp.loadState)("1");
+        if (slot == 1) {
+            filepath = OFF_SAVESTATE_PATH;
         }
+        else
 #endif
-
+        {
+            filepath = odroid_settings_RomFilePath_get();
+        }
+        printf("Attempting to load state from [%s]\n", filepath);
+        if(fs_exists(filepath)){
+            (*currentApp.loadState)(filepath);
+        }
+        else{
+            printf("Savestate does not exist.");
+        }
     }
     return true;
 };

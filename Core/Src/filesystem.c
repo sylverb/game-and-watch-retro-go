@@ -433,3 +433,8 @@ int fs_seek(lfs_file_t *file, lfs_soff_t off, int whence){
     }
     return lfs_file_seek(&lfs, file, off, whence);
 }
+
+bool fs_exists(const char *path){
+    struct lfs_info info;
+    return lfs_stat(&lfs, path, &info) == LFS_ERR_OK;
+}
