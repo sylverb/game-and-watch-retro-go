@@ -9,6 +9,8 @@
 extern "C" {
 #endif
 
+#define FS_MAX_PATH_SIZE (192)  // including null-terminator
+
 #define FS_WRITE true
 #define FS_READ false
 

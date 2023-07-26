@@ -127,52 +127,26 @@ static struct lfs_config cfg = {
     .block_cycles = 500,
 };
 
-/*************************
- * Filesystem Public API *
- *************************/
-
 /**
- * Demo function to demonstrate the filesystem working.
+ * @brief Recursively make all parent directories for a file.
+ * @param[in] dir Path of directories to make up to. The last element
+ * of the path is assumed to be the file and IS NOT created.
+ *   e.g.
+ *       "foo/bar/baz"
+ *   will create directories "foo" and "bar"
  */
-static void boot_counter(){
-    lfs_file_t *file;
-    uint32_t boot_count = 0;
-    const char filename[] = "boot_counter";
+static void mkdirs(const char *path) {
+    char partial_path[FS_MAX_PATH_SIZE];
+    char *p = NULL;
 
-    // read current count
-    printf("Reading boot count\n");
-    file = fs_open(filename, FS_READ, FS_RAW);
-    if(file){
-        fs_read(file, (unsigned char *)&boot_count, sizeof(boot_count));
-        fs_close(file);
+    strlcpy(partial_path, path, sizeof(partial_path));
+    for(p = partial_path + 1; *p; p++) {
+        if(*p == '/') {
+            *p = '\0';
+            lfs_mkdir(&lfs, partial_path);
+            *p = '/';
+        }
     }
-
-    boot_count += 1;  // update boot count
-
-    // write back new boot count
-    printf("Writing boot count\n");
-    file = fs_open(filename, FS_WRITE, FS_RAW);
-    assert(sizeof(boot_count) == fs_write(file, (unsigned char*)&boot_count, sizeof(boot_count)));
-    fs_close(file);
-
-    printf("boot_count: %ld\n", boot_count);
-}
-
-/**
- * Initialize and mount the filesystem. Format the filesystem if unmountable (and then reattempt mount).
- */
-void fs_init(void){
-    // reformat if we can't mount the fs
-    // this should only happen on the first boot
-    cfg.block_count = (&__FILESYSTEM_END__ - &__FILESYSTEM_START__) >> 12;  // divide by block size
-    if (lfs_mount(&lfs, &cfg)) {
-        printf("filesystem formatting...\n");
-        assert(lfs_format(&lfs, &cfg) == 0);
-        assert(lfs_mount(&lfs, &cfg) == 0);
-    }
-    printf("filesytem mounted.\n");
-
-    boot_counter();  // TODO: remove when done developing; causes unnecessary writes.
 }
 
 static bool file_is_using_compression(fs_file_t *file){
@@ -237,8 +211,59 @@ static void release_file_handle(fs_file_t *file){
     assert(0);  // Should never reach here.
 }
 
+
+/*************************
+ * Filesystem Public API *
+ *************************/
+
+/**
+ * Demo function to demonstrate the filesystem working.
+ */
+static void boot_counter(){
+    lfs_file_t *file;
+    uint32_t boot_count = 0;
+    const char filename[] = "boot_counter";
+
+    // read current count
+    printf("Reading boot count\n");
+    file = fs_open(filename, FS_READ, FS_RAW);
+    if(file){
+        fs_read(file, (unsigned char *)&boot_count, sizeof(boot_count));
+        fs_close(file);
+    }
+
+    boot_count += 1;  // update boot count
+
+    // write back new boot count
+    printf("Writing boot count\n");
+    file = fs_open(filename, FS_WRITE, FS_RAW);
+    assert(sizeof(boot_count) == fs_write(file, (unsigned char*)&boot_count, sizeof(boot_count)));
+    fs_close(file);
+
+    printf("boot_count: %ld\n", boot_count);
+}
+
+/**
+ * Initialize and mount the filesystem. Format the filesystem if unmountable (and then reattempt mount).
+ */
+void fs_init(void){
+    // reformat if we can't mount the fs
+    // this should only happen on the first boot
+    cfg.block_count = (&__FILESYSTEM_END__ - &__FILESYSTEM_START__) >> 12;  // divide by block size
+    if (lfs_mount(&lfs, &cfg)) {
+        printf("filesystem formatting...\n");
+        assert(lfs_format(&lfs, &cfg) == 0);
+        assert(lfs_mount(&lfs, &cfg) == 0);
+    }
+    printf("filesytem mounted.\n");
+
+    boot_counter();  // TODO: remove when done developing; causes unnecessary writes.
+}
+
 /**
  * Only 1 tamp-compressed file can be open at a time.
+ *
+ * In write mode, directories are created as necessary.
  *
  * If:
  *   * write_mode==true: Opens the file for writing; creates file if it doesn't exist.
@@ -267,9 +292,8 @@ fs_file_t *fs_open(const char *path, bool write_mode, bool use_compression){
         }
     }
 
-    if(write_mode){
-        // TODO: create directories if necessary
-    }
+    if(write_mode)
+        mkdirs(path);
 
     fs_file_handle->config.buffer = fs_file_handle->buffer;
     fs_file_handle->config.attrs = fs_file_handle->file_attrs;
