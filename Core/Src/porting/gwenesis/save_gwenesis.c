@@ -90,58 +90,11 @@ static int tagFromName(const char* tagName)
 }
 
 /* Savestate functions */
-int saveGwenesisState(unsigned char *destBuffer, int save_size) {
-    // Convert mem mapped pointer to flash address
-    int save_address = destBuffer - &__EXTFLASH_BASE__;
-    // Fill context data
-    gwenesisSaveState.buffer = (unsigned char *)save_address;
-    gwenesisSaveState.offset = 0;
-    gwenesisSaveState.section = 0;
-
-    // Erase flash memory
-    store_erase((const unsigned char *)destBuffer, save_size);
-
-    isLastFlashWrite = 0;
-    // Reserve a page of 256 Bytes for the header info
-    // We put 0xff to be able to update values at the end of process
-    SaveGwenesisFlashSaveData(gwenesisSaveState.buffer,(unsigned char *)headerString,8);
-    memset(gwenesisSaveState.sections,0xff,sizeof(gwenesisSaveState.sections[0])*MAX_SECTIONS);
-    SaveGwenesisFlashSaveData(gwenesisSaveState.buffer+8,(unsigned char *)gwenesisSaveState.sections,sizeof(gwenesisSaveState.sections[0])*MAX_SECTIONS);
-    gwenesisSaveState.offset += 8+sizeof(gwenesisSaveState.sections[0])*MAX_SECTIONS;
-    // Start saving data
-    gwenesis_save_state();
-    gwenesis_save_local_data();
-
-    // Write dummy data to force writing last block of data
-    SaveGwenesisFlashSaveData(gwenesisSaveState.buffer+gwenesisSaveState.offset,NULL,0);
-
-    // Copy header data in the first 256 bytes block of flash
-    SaveGwenesisFlashSaveData(gwenesisSaveState.buffer,(unsigned char *)headerString,8);
-    isLastFlashWrite = true;
-    SaveGwenesisFlashSaveData(gwenesisSaveState.buffer+8,(unsigned char *)gwenesisSaveState.sections,sizeof(gwenesisSaveState.sections[0])*MAX_SECTIONS);
-
-    return gwenesisSaveState.offset;
-}
-
-void saveGwenesisStateSet(SaveState* state, const char* tagName, int value)
-{
-    SaveGwenesisFlashSaveData(state->buffer+state->offset,(unsigned char *)&value,sizeof(int));
-    state->offset+=sizeof(int);
-}
-
-void saveGwenesisStateSetBuffer(SaveState* state, const char* tagName, void* buffer, int length)
-{
-    SaveGwenesisFlashSaveData(state->buffer + state->offset, (unsigned char *)buffer, length);
-    state->offset += length;
-}
-
-SaveState* saveGwenesisStateOpenForWrite(const char* fileName)
-{
-    // Update section
-    gwenesisSaveState.sections[gwenesisSaveState.section].tag = tagFromName(fileName);
-    gwenesisSaveState.sections[gwenesisSaveState.section].offset = gwenesisSaveState.offset;
-    gwenesisSaveState.section++;
-    return &gwenesisSaveState;
+int saveGwenesisState(fs_file_t *file) {
+    fs_write(file, headerString, 8);
+    gwenesis_save_state(file);
+    gwenesis_save_local_data(file);
+    return 0;
 }
 
 /* Loadstate functions */
@@ -157,46 +110,15 @@ bool initLoadGwenesisState(unsigned char *srcBuffer) {
     return false;
 }
 
-int loadGwenesisState(unsigned char *srcBuffer) {
-    gwenesisSaveState.offset = 0;
+int loadGwenesisState(fs_file_t *file) {
+    char header[8];
+    fs_read(file, header, sizeof(header));
+
     // Check for header
-    if (memcmp(headerString,srcBuffer,8) == 0) {
-        gwenesisSaveState.buffer = srcBuffer;
-        // Copy sections header in structure
-        memcpy(gwenesisSaveState.sections,gwenesisSaveState.buffer+8,sizeof(gwenesisSaveState.sections[0])*MAX_SECTIONS);
-        gwenesis_load_state();
-        gwenesis_load_local_data();
+    if (memcmp(headerString, header, 8) == 0) {
+        gwenesis_load_state(file);
+        gwenesis_load_local_data(file);
     }
-    return gwenesisSaveState.offset;
-}
-
-SaveState* saveGwenesisStateOpenForRead(const char* fileName)
-{
-    // find offset
-    int tag = tagFromName(fileName);
-    for (int i = 0; i<MAX_SECTIONS; i++) {
-        if (gwenesisSaveState.sections[i].tag == tag) {
-            // Found tag
-            gwenesisSaveState.offset = gwenesisSaveState.sections[i].offset;
-            return &gwenesisSaveState;
-        }
-    }
-
-    return NULL;
-}
-
-int saveGwenesisStateGet(SaveState* state, const char* tagName)
-{
-    int value;
-
-    memcpy(&value, state->buffer + state->offset, sizeof(int));
-    state->offset+=sizeof(int);
-    return value;
-}
-
-void saveGwenesisStateGetBuffer(SaveState* state, const char* tagName, void* buffer, int length)
-{
-    memcpy(buffer, state->buffer + state->offset, length);
-    state->offset += length;
+    return 1;
 }
 #endif
