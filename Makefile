@@ -540,7 +540,6 @@ gwenesis/src/io/gwenesis_io.c \
 gwenesis/src/vdp/gwenesis_vdp_mem.c \
 gwenesis/src/vdp/gwenesis_vdp_gfx.c \
 gwenesis/src/savestate/gwenesis_savestate.c \
-Core/Src/porting/gwenesis/save_gwenesis.c \
 Core/Src/porting/gwenesis/main_gwenesis.c
 
 A7800_C_SOURCES = \

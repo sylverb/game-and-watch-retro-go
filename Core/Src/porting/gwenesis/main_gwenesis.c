@@ -62,6 +62,8 @@ static const uint8_t IMG_DISKETTE[] = {
     0x7C, 0x00, 0x3E, 0x7C, 0x00, 0x3E, 0x3F, 0xFF, 0xFC, 0x00, 0x00, 0x00,
 };
 
+static char *headerString = "Gene0000";
+
 static void load_rom_from_flash() {
   /* check if it's compressed */
 
@@ -599,7 +601,9 @@ static bool gwenesis_system_SaveState(char *pathName) {
   printf("Saving state...\n");
   fs_file_t *file;
   file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
-  saveGwenesisState(file);
+  fs_write(file, headerString, 8);
+  gwenesis_save_state(file);
+  gwenesis_save_local_data(file);
   fs_close(file);
   return true;
 }
@@ -608,7 +612,15 @@ static bool gwenesis_system_LoadState(char *pathName) {
   printf("Loading state...\n");
   fs_file_t *file;
   file = fs_open(pathName, FS_READ, FS_COMPRESS);
-  loadGwenesisState(file);
+  char header[8];
+  fs_read(file, header, sizeof(header));
+
+  // Check for header
+  if (memcmp(headerString, header, 8) == 0) {
+      gwenesis_load_state(file);
+      gwenesis_load_local_data(file);
+  }
+
   fs_close(file);
   return true;
 }
