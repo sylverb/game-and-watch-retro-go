@@ -20,7 +20,10 @@
 /**
  *
  */
-#define MAX_OPEN_FILES 2  // Cannot be >8
+#define MAX_OPEN_FILES 1  // Cannot be >8
+#if MAX_OPEN_FILES > 8 || MAX_OPEN_FILES < 1
+    #error "MAX_OPEN_FILES must be in range [1, 8]"
+#endif
 typedef struct{
     lfs_file_t file;
     uint8_t buffer[LFS_CACHE_SIZE];
