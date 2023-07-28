@@ -165,6 +165,7 @@ int odroid_overlay_draw_text_line(uint16_t x_pos, uint16_t y_pos, uint16_t width
 #define BOOT_MAGIC_WATCHDOG 0xd066cafe
 #define BOOT_MAGIC_BSOD     0xbad00000
 #define BOOT_MAGIC_FLASHAPP 0xf1a5f1a5
+#define BOOT_MAGIC_BANK2    0xb001b222
 
 #define BOOT_MAGIC_BSOD_MASK 0xffff0000
 

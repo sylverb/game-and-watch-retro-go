@@ -374,6 +374,13 @@ void wdog_refresh()
   }
 }
 
+static void  __attribute__((naked)) start_app(void (* const pc)(void), uint32_t sp) {
+    __asm("           \n\
+          msr msp, r1 /* load r1 into MSP */\n\
+          bx r0       /* branch to the address at r0 */\n\
+    ");
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -416,6 +423,12 @@ int main(void)
     break;
   case BOOT_MAGIC_FLASHAPP:
     boot_mode = BOOT_MODE_FLASHAPP;
+    break;
+  case BOOT_MAGIC_BANK2:
+    boot_magic_set(BOOT_MAGIC_RESET);
+    uint32_t sp = *((uint32_t *)0x08100000); // Bank2 SP @ offset 0x00
+    uint32_t pc = *((uint32_t *)0x08100004); // Bank2 PC @ offset 0x04
+    start_app((void (* const)(void)) pc, (uint32_t) sp);
     break;
   default:
     if ((boot_magic & BOOT_MAGIC_BSOD_MASK) == BOOT_MAGIC_BSOD) {
@@ -477,6 +490,12 @@ int main(void)
 
   // Save the button states as early as possible
   boot_buttons = buttons_get();
+
+  // Boot bank2 if Left is pressed at boot time
+  if (boot_buttons & B_Left) {
+    boot_magic_set(BOOT_MAGIC_BANK2);
+    HAL_NVIC_SystemReset();
+  }
 
   lcd_backlight_off();
 
