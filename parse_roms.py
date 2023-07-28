@@ -1442,8 +1442,8 @@ class ROMParser:
                 pass
             exit(-1)
 
-        build_config += "#define ROM_COUNT %d\n" % current_id
-        build_config += "#define MAX_CHEAT_CODES %d\n" % MAX_CHEAT_CODES
+        build_config += f"#define ROM_COUNT {current_id}\n"
+        build_config += f"#define MAX_CHEAT_CODES {MAX_CHEAT_CODES}\n"
 
         self.write_if_changed(
             "build/saveflash.ld", f"__SAVEFLASH_LENGTH__ = {total_save_size};\n"
@@ -1460,7 +1460,7 @@ class ROMParser:
              "build/cacheflash.ld", f"__CACHEFLASH_LENGTH__ = {sega_larger_rom_size};\n")
         self.write_if_changed("build/config.h", build_config)
         self.write_if_changed(
-            "build/filesystem.ld", f"__FILESYSTEM_LENGTH__ = {1 << 20};\n"  # TODO: make configurable
+            "build/filesystem.ld", f"__FILESYSTEM_LENGTH__ = {args.filesystem_size};\n"  # TODO: make configurable
         )
 
 
@@ -1473,6 +1473,12 @@ if __name__ == "__main__":
         type=int,
         default=1024 * 1024,
         help="Size of external SPI flash in bytes.",
+    )
+    parser.add_argument(
+        "--filesystem-size",
+        type=int,
+        default=1 << 20,
+        help="Size of filesystem in bytes.",
     )
     parser.add_argument(
         "--codepage",
@@ -1493,7 +1499,7 @@ if __name__ == "__main__":
         help="skip convert cover art image jpg quality",
     )
     parser.add_argument(
-        "--off_saveflash",
+        "--off-saveflash",
         type=int,
         default=0,
         help="set separate flash zone for off/on savestate",
@@ -1533,6 +1539,12 @@ if __name__ == "__main__":
     
     if args.compress and "." + args.compress not in COMPRESSIONS:
         raise ValueError(f"Unknown compression method specified: {args.compress}")
+
+    if args.filesystem_size > args.flash_size:
+        raise ValueError(f"Filesystem size must be smaller than flash_size")
+
+    if (args.filesystem_size % 4096) != 0:
+        raise ValueError(f"Filesystem size must be a multiple of 4096.")
 
     roms_path = Path("build/roms")
     roms_path.mkdir(mode=0o755, parents=True, exist_ok=True)

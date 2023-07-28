@@ -19,6 +19,9 @@ LARGE_FLASH ?= 0
 # setting EXTFLASH_OFFSET. Useful if the first 1MB are to be preserved.
 EXTFLASH_OFFSET ?= 0
 
+FILESYSTEM_SIZE ?= 1048576
+# TODO: FILESYSTEM_OFFSET; default to sticking it at the end of the EXTFLASH
+
 # Configure Game & Watch target device mario|zelda
 ifneq ($(findstring flash,$(MAKECMDGOALS)),flash)
 	GNW_TARGET ?= mario
@@ -580,7 +583,16 @@ $(BUILD_DIR)/rom_files.txt: FORCE | $(BUILD_DIR)
 
 $(BUILD_DIR)/roms.a: $(BUILD_DIR)/rom_files.txt parse_roms.py
 	$(V)$(ECHO) [ PYTHON3 ] $(notdir $<)
-	$(V)$(PYTHON3) parse_roms.py --flash-size $(EXTFLASH_SIZE) $(SAVE_PARAM) $(COMPRESS_PARAM) $(CODEPAGE_PARAM) $(COVERFLOW_PARAM) $(JPG_QUALITY_PARAM) $(NOFRENDO_PARAM) --off_saveflash=$(OFF_SAVESTATE)
+	$(V)$(PYTHON3) parse_roms.py \
+		--flash-size=$(EXTFLASH_SIZE) \
+		--filesystem-size=$(FILESYSTEM_SIZE) \
+		--off-saveflash=$(OFF_SAVESTATE) \
+		$(SAVE_PARAM) \
+		$(COMPRESS_PARAM) \
+		$(CODEPAGE_PARAM) \
+		$(COVERFLOW_PARAM) \
+		$(JPG_QUALITY_PARAM) \
+		$(NOFRENDO_PARAM) 
 
 $(BUILD_DIR)/config.h $(BUILD_DIR)/saveflash.ld $(BUILD_DIR)/cacheflash.ld $(BUILD_DIR)/offsaveflash.ld &: $(BUILD_DIR)/roms.a
 	$(V)/bin/sh -c true
@@ -881,6 +893,7 @@ help:
 	@echo "  EXTFLASH_FORCE_SPI  - Forces the use of legacy SPI mode for the external flash driver"
 	@echo "  EXTFLASH_SIZE_MB    - Sets the external flash size in megabytes"
 	@echo "  EXTFLASH_SIZE       - Sets the external flash size in bytes (has precedence over EXTFLASH_SIZE_MB)"
+	@echo "  FILESYSTEM_SIZE     - Sets the filesystem flash size in bytes
 	@echo "  LARGE_FLASH         - Sets the external flash size to 16MB  (deprecated)"
 	@echo "  EXTFLASH_OFFSET     - Places the data at an offset in the external flash (useful for dual boot)"
 	@echo "  INTFLASH_BANK       - Sets the internal flash bank. Valid values {1,2} (default=1)."
@@ -917,6 +930,7 @@ help:
 	@echo "  EXTFLASH_FORCE_SPI=$(EXTFLASH_FORCE_SPI)"
 	@echo "  EXTFLASH_SIZE_MB=$(EXTFLASH_SIZE_MB)"
 	@echo "  EXTFLASH_SIZE=$(EXTFLASH_SIZE)"
+	@echo "  FILESYSTEM_SIZE=$(FILESYSTEM_SIZE)"
 	@echo "  LARGE_FLASH=$(LARGE_FLASH)"
 	@echo "  EXTFLASH_OFFSET=$(EXTFLASH_OFFSET)"
 	@echo "  INTFLASH_BANK=$(INTFLASH_BANK)"

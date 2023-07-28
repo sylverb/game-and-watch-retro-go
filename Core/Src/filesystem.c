@@ -17,9 +17,6 @@
 #endif
 
 
-/**
- *
- */
 #define MAX_OPEN_FILES 1  // Cannot be >8
 #if MAX_OPEN_FILES > 8 || MAX_OPEN_FILES < 1
     #error "MAX_OPEN_FILES must be in range [1, 8]"
@@ -54,7 +51,7 @@ static bool tamp_is_compressing;
  * LittleFS Driver Definition *
  ******************************/
 // Pointer to the data "on disk"
-static uint8_t fs_partition[1 << 20] __attribute__((section(".filesystem"))) __attribute__((aligned(4096)));
+static uint8_t *fs_partition;
 
 lfs_t lfs = {0};
 
@@ -125,7 +122,7 @@ static struct lfs_config cfg = {
     .read_size = LFS_CACHE_SIZE,
     .prog_size = LFS_CACHE_SIZE,
     .lookahead_size = LFS_LOOKAHEAD_SIZE,
-    .block_size = 4096,
+    //.block_size will be set later
     //.block_count will be set later
     .block_cycles = 500,
 };
@@ -250,15 +247,19 @@ static void boot_counter(){
  * Initialize and mount the filesystem. Format the filesystem if unmountable (and then reattempt mount).
  */
 void fs_init(void){
+    fs_partition = (unsigned char *)&__FILESYSTEM_START__;
+    cfg.block_size = OSPI_GetSmallestEraseSize();
+    cfg.block_count = (&__FILESYSTEM_END__ - &__FILESYSTEM_START__) / cfg.block_size;
+
     // reformat if we can't mount the fs
     // this should only happen on the first boot
-    cfg.block_count = (&__FILESYSTEM_END__ - &__FILESYSTEM_START__) >> 12;  // divide by block size
     if (lfs_mount(&lfs, &cfg)) {
         printf("filesystem formatting...\n");
         assert(lfs_format(&lfs, &cfg) == 0);
         assert(lfs_mount(&lfs, &cfg) == 0);
     }
     printf("filesytem mounted.\n");
+    printf("%ld/%ld blocks allocated (block_size=%ld)\n", lfs_fs_size(&lfs), cfg.block_count, cfg.block_size);
 
     boot_counter();  // TODO: remove when done developing; causes unnecessary writes.
 }
