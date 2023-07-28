@@ -22,7 +22,7 @@
     #error "MAX_OPEN_FILES must be in range [1, 8]"
 #endif
 typedef struct{
-    lfs_file_t file;
+    lfs_file_t file;  // This MUST be the first attribute of this struct.
     uint8_t buffer[LFS_CACHE_SIZE];
     struct lfs_attr file_attrs[LFS_NUM_ATTRS];
     struct lfs_file_config config;
@@ -261,7 +261,7 @@ void fs_init(void){
     printf("filesytem mounted.\n");
     printf("%ld/%ld blocks allocated (block_size=%ld)\n", lfs_fs_size(&lfs), cfg.block_count, cfg.block_size);
 
-    boot_counter();  // TODO: remove when done developing; causes unnecessary writes.
+    //boot_counter();  // Commented out to prevent unnecessary disk writes every boot.
 }
 
 /**
@@ -278,12 +278,13 @@ fs_file_t *fs_open(const char *path, bool write_mode, bool use_compression){
     int flags = write_mode ? LFS_O_WRONLY | LFS_O_CREAT | LFS_O_TRUNC: LFS_O_RDONLY;
     
     fs_file_handle_t *fs_file_handle = acquire_file_handle(use_compression);
-    tamp_is_compressing = write_mode;
 
     if(!fs_file_handle){
         printf("Unable to allocate file handle.");
         return NULL;
     }
+
+    tamp_is_compressing = write_mode;
 
     if(use_compression){
         // TODO: initialize tamp; it's globally already been reserved.
@@ -323,81 +324,75 @@ error:
 
 int fs_write(fs_file_t *file, unsigned char *data, size_t size){
     // TODO: do we want to put delete-oldest-savestate-logic in here?
-    
-    if(file_is_using_compression(file)){
-        int output_written_size = 0;
-        unsigned char output_buffer[4];
-        while(size){
-            size_t consumed;
-
-            // Sink Data into input buffer.
-            tamp_compressor_sink(&tamp_engine.c, data, size, &consumed);
-            data += consumed;
-            output_written_size += consumed;
-            size -= consumed;
-
-            // Run the engine; remaining size indicates that the compressor input buffer is full
-            if(TAMP_LIKELY(size)){
-                size_t chunk_output_written_size;
-                assert(TAMP_OK == tamp_compressor_compress_poll(
-                        &tamp_engine.c,
-                        output_buffer,
-                        sizeof(output_buffer),
-                        &chunk_output_written_size
-                        ));
-                // TODO: better error-handling if the disk is full.
-                assert(chunk_output_written_size == lfs_file_write(&lfs, file, output_buffer, chunk_output_written_size));
-            }
-        }
-        // Note: we really return the number of consumed bytes, not the number of
-        // compressed-bytes.
-        return output_written_size;
-    }
-    else{
+    if(!file_is_using_compression(file))
         return lfs_file_write(&lfs, file, data, size);
+    int output_written_size = 0;
+    unsigned char output_buffer[4];
+    while(size){
+        size_t consumed;
+
+        // Sink Data into input buffer.
+        tamp_compressor_sink(&tamp_engine.c, data, size, &consumed);
+        data += consumed;
+        output_written_size += consumed;
+        size -= consumed;
+
+        // Run the engine; remaining size indicates that the compressor input buffer is full
+        if(TAMP_LIKELY(size)){
+            size_t chunk_output_written_size;
+            assert(TAMP_OK == tamp_compressor_compress_poll(
+                    &tamp_engine.c,
+                    output_buffer,
+                    sizeof(output_buffer),
+                    &chunk_output_written_size
+                    ));
+            // TODO: better error-handling if the disk is full.
+            assert(chunk_output_written_size == lfs_file_write(&lfs, file, output_buffer, chunk_output_written_size));
+        }
     }
+    // Note: we really return the number of consumed bytes, not the number of
+    // compressed-bytes.
+    return output_written_size;
 }
 
 int fs_read(fs_file_t *file, unsigned char *buffer, size_t size){
-    if(file_is_using_compression(file)){
-        tamp_res res;
-        int output_written_size = 0;
-        size_t input_chunk_consumed_size = 0;
-        size_t output_chunk_written_size;
-        int read_size = 0;
-        unsigned char input_byte;
-        bool file_exhausted = false;
-
-        while(true){
-            res = tamp_decompressor_decompress(
-                    &tamp_engine.d,
-                    buffer,
-                    size,
-                    &output_chunk_written_size,
-                    &input_byte,
-                    read_size,
-                    &input_chunk_consumed_size
-                    );
-            assert(res >= TAMP_OK);  // i.e. an "ok" result
-            assert(input_chunk_consumed_size == read_size);
-                                     
-            output_written_size += output_chunk_written_size;
-            buffer += output_chunk_written_size;
-            size -= output_chunk_written_size;
-
-            if(res == TAMP_OUTPUT_FULL)
-                break;
-            if(res == TAMP_INPUT_EXHAUSTED && file_exhausted)
-                break;
-
-            read_size = lfs_file_read(&lfs, file, &input_byte, 1);
-            file_exhausted = read_size == 0;
-        }
-        return output_written_size;
-    }
-    else{
+    if(!file_is_using_compression(file))
         return lfs_file_read(&lfs, file, buffer, size);
+
+    tamp_res res;
+    int output_written_size = 0;
+    size_t input_chunk_consumed_size = 0;
+    size_t output_chunk_written_size;
+    int read_size = 0;
+    unsigned char input_byte;
+    bool file_exhausted = false;
+
+    while(true){
+        res = tamp_decompressor_decompress(
+                &tamp_engine.d,
+                buffer,
+                size,
+                &output_chunk_written_size,
+                &input_byte,
+                read_size,
+                &input_chunk_consumed_size
+                );
+        assert(res >= TAMP_OK);  // i.e. an "ok" result
+        assert(input_chunk_consumed_size == read_size);
+                                 
+        output_written_size += output_chunk_written_size;
+        buffer += output_chunk_written_size;
+        size -= output_chunk_written_size;
+
+        if(res == TAMP_OUTPUT_FULL)
+            break;
+        if(res == TAMP_INPUT_EXHAUSTED && file_exhausted)
+            break;
+
+        read_size = lfs_file_read(&lfs, file, &input_byte, 1);
+        file_exhausted = read_size == 0;
     }
+    return output_written_size;
 }
 
 void fs_close(lfs_file_t *file){
@@ -422,10 +417,10 @@ void fs_close(lfs_file_t *file){
 
 int fs_seek(lfs_file_t *file, lfs_soff_t off, int whence){
     if(file_is_using_compression(file)){
+        assert(0);  // This code block is unused/untested.
         if(whence == LFS_SEEK_CUR){
             unsigned char byte_buffer;
             assert(off > 0);
-            printf("Seek %d\n", off);
             for(int i=0; i < off; i++){
                 fs_read(file, &byte_buffer, 1);
             }
