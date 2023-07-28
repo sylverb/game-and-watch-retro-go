@@ -289,7 +289,7 @@ bool saveAmstradState(char *pathName) {
 bool loadAmstradState(char *pathName) {
     fs_file_t *file;
     file = fs_open(pathName, FS_READ, FS_COMPRESS);
-    char readin_header[9] = {0};
+    char readin_header[8] = {0};
     fs_read(file, readin_header, 8);
 
     // Check for header
