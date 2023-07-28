@@ -398,7 +398,7 @@ int fs_read(fs_file_t *file, unsigned char *buffer, size_t size){
 void fs_close(lfs_file_t *file){
     if(file_is_using_compression(file) && tamp_is_compressing){
         // flush the compressor
-        unsigned char output_buffer[32];
+        unsigned char output_buffer[20];
         size_t output_written_size;
         tamp_res res;
         res = tamp_compressor_flush(
