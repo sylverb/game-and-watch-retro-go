@@ -43,3 +43,4 @@ venv
 .vs/*
 .vscode/*
 *.bin
+.gdbinit
