@@ -157,7 +157,7 @@ void msxLedSetFdd1(int state) {
 
 static bool msx_system_LoadState(char *pathName)
 {
-    loadMsxState((UInt8 *)ACTIVE_FILE->save_address);
+    loadMsxState(pathName);  // internally calls load_gnw_msx_data
     return true;
 }
 
@@ -174,16 +174,7 @@ static bool msx_system_SaveState(char *pathName)
         idx++;
         }
     }
-#if OFF_SAVESTATE==1
-    if (strcmp(pathName,"1") == 0) {
-        // Save in common save slot (during a power off)
-        saveMsxState((UInt8 *)&__OFFSAVEFLASH_START__,ACTIVE_FILE->save_size);
-    } else {
-#endif
-        saveMsxState((UInt8 *)ACTIVE_FILE->save_address,ACTIVE_FILE->save_size);
-#if OFF_SAVESTATE==1
-    }
-#endif
+    saveMsxState(pathName); // internally calls save_gnw_msx_data
     return true;
 }
 
@@ -200,19 +191,17 @@ void save_gnw_msx_data() {
     saveStateClose(state);
 }
 
-void load_gnw_msx_data(UInt8 *address) {
+void load_gnw_msx_data() {
     SaveState* state;
-    if (initLoadMsxState(address)) {
-        state = saveStateOpenForRead("main_msx");
-        selected_msx_index = saveStateGet(state, "selected_msx_index", 0);
-        selected_disk_index = saveStateGet(state, "selected_disk_index", 0);
-        msx_button_a_key = saveStateGet(state, "msx_button_a_key", 0);
-        msx_button_b_key = saveStateGet(state, "msx_button_b_key", 0);
-        selected_frequency_index = saveStateGet(state, "selected_frequency_index", 0);
-        selected_key_index = saveStateGet(state, "selected_key_index", 0);
-        msx_fps = saveStateGet(state, "msx_fps", 0);
-        saveStateClose(state);
-    }
+    state = saveStateOpenForRead("main_msx");
+    selected_msx_index = saveStateGet(state, "selected_msx_index", 0);
+    selected_disk_index = saveStateGet(state, "selected_disk_index", 0);
+    msx_button_a_key = saveStateGet(state, "msx_button_a_key", 0);
+    msx_button_b_key = saveStateGet(state, "msx_button_b_key", 0);
+    selected_frequency_index = saveStateGet(state, "selected_frequency_index", 0);
+    selected_key_index = saveStateGet(state, "selected_key_index", 0);
+    msx_fps = saveStateGet(state, "msx_fps", 0);
+    saveStateClose(state);
 }
 
 /* Core stubs */
@@ -1709,18 +1698,6 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
                          ((i&0x3)*31/3);
     }
 
-    if (load_state) {
-#if OFF_SAVESTATE==1
-        if (save_slot == 1) {
-            // Load from common save slot if needed
-            load_gnw_msx_data((UInt8 *)&__OFFSAVEFLASH_START__);
-        } else {
-#endif
-            load_gnw_msx_data((UInt8 *)ACTIVE_FILE->save_address);
-#if OFF_SAVESTATE==1
-        }
-#endif
-    }
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
     } else {
@@ -1746,16 +1723,7 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     createOptionMenu(options);
 
     if (load_state) {
-#if OFF_SAVESTATE==1
-        if (save_slot == 1) {
-            // Load from common save slot if needed
-            loadMsxState((UInt8 *)&__OFFSAVEFLASH_START__);
-        } else {
-#endif
-            loadMsxState((UInt8 *)ACTIVE_FILE->save_address);
-#if OFF_SAVESTATE==1
-        }
-#endif
+        odroid_system_emu_load_state(save_slot);
     }
 
     while (1) {
