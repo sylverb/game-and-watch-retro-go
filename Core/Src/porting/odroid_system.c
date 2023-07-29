@@ -56,7 +56,7 @@ rg_app_desc_t *odroid_system_get_app()
 }
 
 
-const char OFF_SAVESTATE_PATH[] = "savestate/off";
+const char OFF_SAVESTATE_PATH[] = "savestate/common";
 
 static void parse_rom_path(char *path, size_t size, int slot){
     if (slot == -1) {

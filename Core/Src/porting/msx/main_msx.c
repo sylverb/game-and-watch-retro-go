@@ -1679,7 +1679,7 @@ size_t msx_getromdata(uint8_t **data, uint8_t *src_data, size_t src_size, const 
     }
 }
 
-void app_main_msx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
+void app_main_msx(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
     pixel_t *fb;
     odroid_dialog_choice_t options[10];

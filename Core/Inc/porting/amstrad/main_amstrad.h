@@ -20,4 +20,4 @@ void save_amstrad_data(fs_file_t *file);
 void video_set_palette_antialias_8bpp(void);
 unsigned int rgb2color_8bpp(unsigned int r, unsigned int g, unsigned int b);
 unsigned int * amstrad_getScreenPtr();
-void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slot);
+void app_main_amstrad(uint8_t load_state, uint8_t start_paused, int8_t save_slot);

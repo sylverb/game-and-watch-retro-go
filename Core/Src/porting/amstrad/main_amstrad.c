@@ -815,7 +815,7 @@ static void computer_autoload()
 
 extern uint8_t *pbSndBuffer;
 
-void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
+void app_main_amstrad(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
     pixel_t *fb;
     static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;

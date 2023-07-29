@@ -572,7 +572,7 @@ void pce_pcm_submit() {
     }
 }
 
-int app_main_pce(uint8_t load_state, uint8_t start_paused, uint8_t save_slot) {
+int app_main_pce(uint8_t load_state, uint8_t start_paused, int8_t save_slot) {
 
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;

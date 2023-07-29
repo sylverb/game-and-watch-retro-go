@@ -206,7 +206,7 @@ static void sound_store(int16_t *audio_out_buf)
     }
 }
 
-int app_main_a7800(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
+int app_main_a7800(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
     size_t offset;
     const uint8_t *buffer = NULL;

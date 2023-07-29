@@ -479,7 +479,7 @@ size_t wsv_getromdata(unsigned char **data) {
     }
 }
 
-int app_main_wsv(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
+int app_main_wsv(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
     char pal_name[16];
     uint32 rom_length = 0;

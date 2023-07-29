@@ -73,7 +73,7 @@ extern const unsigned int intflash_magic_sign;
 
 void emulators_init();
 void emulator_init(retro_emulator_t *emu);
-void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_paused, uint8_t save_slot);
+void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_paused, int8_t save_slot);
 bool emulator_show_file_menu(retro_emulator_file_t *file);
 void emulator_show_file_info(retro_emulator_file_t *file);
 void emulator_crc32_file(retro_emulator_file_t *file);

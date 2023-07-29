@@ -452,7 +452,7 @@ static void sms_update_keys( odroid_gamepad_state_t* joystick )
 
 
 int
-app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, uint8_t is_coleco)
+app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, int8_t save_slot, uint8_t is_coleco)
 {
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;

@@ -419,7 +419,7 @@ static void gw_display_ram_overlay(){
 
 
 /* Main */
-int app_main_gw(uint8_t load_state, uint8_t save_slot)
+int app_main_gw(uint8_t load_state, int8_t save_slot)
 {
 
     odroid_dialog_choice_t options[] = {

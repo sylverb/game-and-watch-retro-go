@@ -1007,7 +1007,7 @@ void apply_cheat_code(const char *cheatcode) {
 }
 #endif
 
-int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
+int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
     uint8_t *rom_data;
     uint32_t rom_size;

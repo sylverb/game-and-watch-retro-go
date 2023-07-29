@@ -525,7 +525,7 @@ void pcm_submit() {
     }
 }
 
-rg_app_desc_t * init(uint8_t load_state, uint8_t save_slot)
+rg_app_desc_t * init(uint8_t load_state, int8_t save_slot)
 {
     odroid_system_init(APPID_GB, AUDIO_SAMPLE_RATE);
     odroid_system_emu_init(&LoadState, &SaveState, &netplay_callback);
@@ -583,7 +583,7 @@ rg_app_desc_t * init(uint8_t load_state, uint8_t save_slot)
     return app;
 }
 
-void app_main_gb(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
+void app_main_gb(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
     init(load_state, save_slot);
     odroid_gamepad_state_t joystick;

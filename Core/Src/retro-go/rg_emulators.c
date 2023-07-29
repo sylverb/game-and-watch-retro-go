@@ -436,9 +436,13 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
 
     int sel = odroid_overlay_dialog(file->name, choices, has_save ? 0 : 1);
 
-    if (sel == 0 || sel == 1) {
+    if (sel == 0) { // Resume game
         gui_save_current_tab();
-        emulator_start(file, sel == 0, false, 0);
+        emulator_start(file, true, false, 0);
+    }
+    if (sel == 1) { // New game
+        gui_save_current_tab();
+        emulator_start(file, false, false, 0);
     }
     else if (sel == 2) {
         if (odroid_overlay_confirm(curr_lang->s_Confiem_del_save, false) == 1) {
@@ -466,7 +470,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     return force_redraw;
 }
 
-void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_paused, uint8_t save_slot)
+void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_paused, int8_t save_slot)
 {
     printf("Retro-Go: Starting game: %s\n", file->name);
     rom_manager_set_active_file(file);
