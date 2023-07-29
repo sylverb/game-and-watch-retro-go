@@ -383,9 +383,7 @@ static bool SaveState(char *pathName)
 
     // Use GB_ROM_SRAM_CACHE (which points to _GB_ROM_UNPACK_BUFFER)
     // as a temporary save buffer.
-    memset(GB_ROM_SRAM_CACHE,  '\x00', STATE_SAVE_BUFFER_LENGTH);
     size_t size = gb_state_save(GB_ROM_SRAM_CACHE, STATE_SAVE_BUFFER_LENGTH);
-
     fs_write(file, GB_ROM_SRAM_CACHE, size);
     fs_close(file);
 
@@ -401,10 +399,8 @@ static bool LoadState(char *pathName)
     int savestate_size;
 
     file = fs_open(pathName, FS_READ, FS_COMPRESS);
-
     // Use GB_ROM_SRAM_CACHE (which points to _GB_ROM_UNPACK_BUFFER)
     // as a temporary save buffer.
-    memset(GB_ROM_SRAM_CACHE,  '\x00', STATE_SAVE_BUFFER_LENGTH);
     savestate_size = fs_read(file, GB_ROM_SRAM_CACHE, STATE_SAVE_BUFFER_LENGTH);
     fs_close(file);
 
