@@ -197,7 +197,7 @@ static bool SaveStateStm(char *pathName) {
     return false;
 }
 
-static bool LoadStateAddr(char *pathName, uint8_t *saveAddr) {
+static bool LoadStateStm(char *pathName) {
     uint8_t *pce_save_buf = pce_framebuffer;
 
     fs_file_t *file;
@@ -234,12 +234,7 @@ static bool LoadStateAddr(char *pathName, uint8_t *saveAddr) {
     return true;
 }
 
-static bool LoadStateStm(char *pathName) {
-    return LoadStateAddr(pathName, (uint8_t *)ACTIVE_FILE->save_address);
-}
-
-static void
-pce_rom_full_patch()
+static void pce_rom_full_patch()
 {
     for (int i = 0; i < PCE.rp_count; i++)
     {
