@@ -109,7 +109,7 @@ uint32_t FLASHAPP_VAR(program_status);
 uint32_t FLASHAPP_VAR(program_size);
 
 // Where to program in the flash
-uint32_t FLASHAPP_VAR(program_address);
+uint32_t FLASHAPP_VAR(program_address);  // offset into flash, not an absolute address 0x9XXX_XXXX
 
 // Control if chip should be erased or not
 uint32_t FLASHAPP_VAR(program_erase);
