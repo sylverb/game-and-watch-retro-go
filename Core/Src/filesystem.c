@@ -7,6 +7,7 @@
 #include "rg_rtc.h"
 #include "tamp/compressor.h"
 #include "tamp/decompressor.h"
+#include "stm32h7xx.h"
 
 #define LFS_CACHE_SIZE 256
 #define LFS_LOOKAHEAD_SIZE 16
@@ -50,6 +51,10 @@ static bool tamp_is_compressing;
 /******************************
  * LittleFS Driver Definition *
  ******************************/
+static inline bool is_dcache_enabled() {
+    return (SCB->CCR & SCB_CCR_DC_Msk) != 0;
+}
+
 // Pointer to the data "on disk"
 static uint8_t *fs_partition;
 
@@ -69,34 +74,45 @@ static int littlefs_api_read(const struct lfs_config *c, lfs_block_t block,
 
 static int littlefs_api_prog(const struct lfs_config *c, lfs_block_t block,
         lfs_off_t off, const void *buffer, lfs_size_t size) {
+    bool toggle_dcache = is_dcache_enabled();
     uint32_t address = (fs_partition - &__EXTFLASH_BASE__) + (block * c->block_size) + off;
     assert((address & 0xFF) == 0);
 
-    SCB_InvalidateDCache();
-    SCB_DisableDCache();
+    
+    if(toggle_dcache){
+        SCB_InvalidateDCache();
+        SCB_DisableDCache();
+    }
 
     OSPI_DisableMemoryMappedMode();
     OSPI_Program(address, buffer, size);
     OSPI_EnableMemoryMappedMode();
 
-    SCB_EnableDCache();
+    if(toggle_dcache){
+        SCB_EnableDCache();
+    }
 
     return 0;
 }
 
 static int littlefs_api_erase(const struct lfs_config *c, lfs_block_t block) {
+    bool toggle_dcache = is_dcache_enabled();
     uint32_t address = (fs_partition - &__EXTFLASH_BASE__) + (block * c->block_size);
 
     assert((address & (4*1024 - 1)) == 0);
 
-    SCB_InvalidateDCache();
-    SCB_DisableDCache();
+    if(toggle_dcache){
+        SCB_InvalidateDCache();
+        SCB_DisableDCache();
+    }
 
     OSPI_DisableMemoryMappedMode();
     OSPI_EraseSync(address, c->block_size);
     OSPI_EnableMemoryMappedMode();
 
-    SCB_EnableDCache();
+    if(toggle_dcache){
+        SCB_EnableDCache();
+    }
 
     return 0;
 }
