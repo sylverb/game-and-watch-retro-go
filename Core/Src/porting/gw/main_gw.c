@@ -11,6 +11,7 @@
 #include "gw_linker.h"
 #include "gw_buttons.h"
 #include "appid.h"
+#include "filesystem.h"
 
 /* TO move elsewhere */
 #include "stm32h7xx_hal.h"
@@ -116,26 +117,26 @@ static unsigned char state_save_buffer[sizeof(gw_state_t)];
 static bool gw_system_SaveState(char *pathName)
 {
     printf("Saving state...\n");
+    fs_file_t *file;
+    file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
 
     memset(state_save_buffer, '\x00', sizeof(state_save_buffer));
     gw_state_save(state_save_buffer);
-#if OFF_SAVESTATE==1
-    if (strcmp(pathName,"1") == 0) {
-        // Save in common save slot (during a power off)
-        store_save((const uint8_t *)&__OFFSAVEFLASH_START__, state_save_buffer, sizeof(state_save_buffer));
-    } else {
-#endif
-        store_save(ACTIVE_FILE->save_address, state_save_buffer, sizeof(state_save_buffer));
-#if OFF_SAVESTATE==1
-    }
-#endif
+
+    fs_write(file, state_save_buffer, sizeof(state_save_buffer));
+    fs_close(file);
+
     return false;
 }
 
 static bool gw_system_LoadState(char *pathName)
 {
     printf("Loading state...\n");
-    return gw_state_load((unsigned char *)(ACTIVE_FILE->save_address));
+    fs_file_t *file;
+    file = fs_open(pathName, FS_READ, FS_COMPRESS);
+    fs_read(file, state_save_buffer, sizeof(state_save_buffer));
+    fs_close(file);
+    return gw_state_load((unsigned char *)state_save_buffer);
 
 }
 
@@ -418,7 +419,7 @@ static void gw_display_ram_overlay(){
 
 
 /* Main */
-int app_main_gw(uint8_t load_state, uint8_t save_slot)
+int app_main_gw(uint8_t load_state, int8_t save_slot)
 {
 
     odroid_dialog_choice_t options[] = {
@@ -468,16 +469,8 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
     /* check if we have to load state */
     bool LoadState_done = false;
     if (load_state != 0) {
-#if OFF_SAVESTATE==1
-        if (save_slot == 1) {
-            // Load from common save slot if needed
-            LoadState_done = gw_state_load((unsigned char *)&__OFFSAVEFLASH_START__);
-        } else {
-#endif
-            LoadState_done = gw_system_LoadState(NULL);
-#if OFF_SAVESTATE==1
-        }
-#endif
+        LoadState_done = odroid_system_emu_load_state(save_slot);
+
         if (LoadState_done) {
             gw_check_time();
             gw_set_time();

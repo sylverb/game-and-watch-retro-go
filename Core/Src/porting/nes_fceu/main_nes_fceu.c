@@ -22,7 +22,6 @@
 #include "driver.h"
 #include "video.h"
 #include "gw_malloc.h"
-#include "nes_memory_stream.h"
 
 #define NES_WIDTH  256
 #define NES_HEIGHT 240
@@ -480,20 +479,7 @@ void FCEUD_Message(char *s)
 
 static bool SaveState(char *pathName)
 {
-    if (ACTIVE_FILE->save_size > 0) {
-#if OFF_SAVESTATE==1
-        if (strcmp(pathName,"1") == 0) {
-            // Save in common save slot (during a power off)
-            memstream_set_buffer((uint8_t*)&__OFFSAVEFLASH_START__, (uint64_t)ACTIVE_FILE->save_size);
-            FCEUSS_Save_Mem();
-        } else {
-#endif
-            memstream_set_buffer((uint8_t*)ACTIVE_FILE->save_address, (uint64_t)ACTIVE_FILE->save_size);
-            FCEUSS_Save_Mem();
-#if OFF_SAVESTATE==1
-        }
-#endif
-    }
+    FCEUSS_Save_Fs(pathName);
     return 0;
 }
 
@@ -502,8 +488,7 @@ extern int nes_state_load(uint8_t* flash_ptr, size_t size);
 
 static bool LoadState(char *pathName)
 {
-    memstream_set_buffer((uint8_t*)ACTIVE_FILE->save_address, ACTIVE_FILE->save_size);
-    FCEUSS_Load_Mem();
+    FCEUSS_Load_Fs(pathName);
     return true;
 }
 
@@ -1022,7 +1007,7 @@ void apply_cheat_code(const char *cheatcode) {
 }
 #endif
 
-int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
+int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
     uint8_t *rom_data;
     uint32_t rom_size;
@@ -1085,17 +1070,8 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
     AddExState(&gnw_save_data, ~0, 0, 0);
 
     if (load_state) {
-#if OFF_SAVESTATE==1
-        if (save_slot == 1) {
-            // Load from common save slot if needed
-            memstream_set_buffer((uint8_t*)&__OFFSAVEFLASH_START__, ACTIVE_FILE->save_size);
-            FCEUSS_Load_Mem();
-        } else {
-#endif
-        LoadState("");
-#if OFF_SAVESTATE==1
-        }
-#endif
+        odroid_system_emu_load_state(save_slot);
+
         // Update local settings
         setCustomPalette(palette_index);
         update_overclocking(overclocking_type);

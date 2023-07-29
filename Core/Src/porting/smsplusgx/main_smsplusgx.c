@@ -18,6 +18,7 @@
 #include "rg_i18n.h"
 #include "lzma.h"
 #include "gw_malloc.h"
+#include "filesystem.h"
 
 #define SMS_WIDTH 256
 #define SMS_HEIGHT 192
@@ -198,22 +199,18 @@ static void netplay_callback(netplay_event_t event, void *arg)
 }
 
 extern uint32 glob_bp_lut[0x10000];
+#define SAVE_STATE_BUFFER_SIZE (60 * 1024)
 
 static bool SaveState(char *pathName)
 {
     uint8_t *state_save_buffer = (uint8_t *)glob_bp_lut;
-    memset(state_save_buffer, 0x00, 60 * 1024);
     system_save_state(state_save_buffer);
-#if OFF_SAVESTATE==1
-    if (strcmp(pathName,"1") == 0) {
-        // Save in common save slot (during a power off)
-        store_save((const uint8_t *)&__OFFSAVEFLASH_START__, state_save_buffer, 60 * 1024);
-    } else {
-#endif
-        store_save(ACTIVE_FILE->save_address, state_save_buffer, 60 * 1024);
-#if OFF_SAVESTATE==1
-    }
-#endif
+
+    fs_file_t *file;
+    file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
+    fs_write(file, state_save_buffer, SAVE_STATE_BUFFER_SIZE);
+    fs_close(file);
+
     /* restore the contents of _bp_lut */
     render_init();
     return false;
@@ -221,7 +218,17 @@ static bool SaveState(char *pathName)
 
 static bool LoadState(char *pathName)
 {
-    system_load_state((void *)ACTIVE_FILE->save_address);
+    uint8_t *state_save_buffer = (uint8_t *)glob_bp_lut;
+
+    fs_file_t *file;
+    file = fs_open(pathName, FS_READ, FS_COMPRESS);
+    fs_read(file, state_save_buffer, SAVE_STATE_BUFFER_SIZE);
+    fs_close(file);
+
+    system_load_state((void *)state_save_buffer);
+    /* restore the contents of _bp_lut */
+    render_init();
+
     return true;
 }
 
@@ -445,7 +452,7 @@ static void sms_update_keys( odroid_gamepad_state_t* joystick )
 
 
 int
-app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, uint8_t is_coleco)
+app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, int8_t save_slot, uint8_t is_coleco)
 {
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
@@ -503,16 +510,7 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, 
     memset(framebuffer2, 0, sizeof(framebuffer2));
 
     if (load_state) {
-#if OFF_SAVESTATE==1
-        if (save_slot == 1) {
-            // Load from common save slot if needed
-            system_load_state((void *)&__OFFSAVEFLASH_START__);
-        } else {
-#endif
-            LoadState(NULL);
-#if OFF_SAVESTATE==1
-        }
-#endif
+        odroid_system_emu_load_state(save_slot);
     }
 
     while (true)

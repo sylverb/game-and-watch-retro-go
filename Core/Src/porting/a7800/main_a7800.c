@@ -16,6 +16,7 @@
 #include "appid.h"
 #include "bilinear.h"
 #include "rg_i18n.h"
+#include "filesystem.h"
 
 #include "Bios.h"
 #include "Cartridge.h"
@@ -40,52 +41,36 @@ static uint8_t keyboard_data[17]       = {0};
 
 static uint8_t *pokeyMixBuffer         = NULL;
 
-static uint8_t save_buffer[32796];
+static uint8_t save_buffer[32832];
 
 static bool LoadState(char *pathName) {
-    if ((ACTIVE_FILE->save_address[0] == '7') &&
-        (ACTIVE_FILE->save_address[1] == '8') &&
-        (ACTIVE_FILE->save_address[2] == '0') &&
-        (ACTIVE_FILE->save_address[3] == '0')) {
+    fs_file_t *file;
+    file = fs_open(pathName, FS_READ, FS_COMPRESS);
+    fs_read(file, save_buffer, sizeof(save_buffer));
+    fs_close(file);
+
+    if ((save_buffer[0] == '7') &&
+        (save_buffer[1] == '8') &&
+        (save_buffer[2] == '0') &&
+        (save_buffer[3] == '0')) {
             printf("LoadState OK\n");
-            prosystem_Load((const char *)ACTIVE_FILE->save_address+4);
+            prosystem_Load((const char *)save_buffer+4);
         }
     return 0;
 }
-
-#if OFF_SAVESTATE==1
-#pragma GCC diagnostic ignored "-Warray-bounds"
-static bool LoadA7800State(int8_t *srcBuffer) {
-    if ((srcBuffer[0] == '7') &&
-        (srcBuffer[1] == '8') &&
-        (srcBuffer[2] == '0') &&
-        (srcBuffer[3] == '0')) {
-            printf("LoadState OK\n");
-            prosystem_Load((const char *)(srcBuffer+4));
-        }
-    return 0;
-}
-#pragma GCC diagnostic pop
-#endif
-
 
 static bool SaveState(char *pathName) {
     save_buffer[0] = '7';
     save_buffer[1] = '8';
     save_buffer[2] = '0';
     save_buffer[3] = '0';
-    prosystem_Save((char *)save_buffer+4, false);
-    uint32_t size = 32833;
-#if OFF_SAVESTATE==1
-    if (strcmp(pathName,"1") == 0) {
-        // Save in common save slot (during a power off)
-        store_save((const uint8_t *)&__OFFSAVEFLASH_START__, save_buffer, size);
-    } else {
-#endif
-        store_save(ACTIVE_FILE->save_address, save_buffer, size);
-#if OFF_SAVESTATE==1
-    }
-#endif
+    int size = prosystem_Save((char *)save_buffer+4) + 4;
+
+    fs_file_t *file;
+    file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
+    fs_write(file, save_buffer, size);
+    fs_close(file);
+
     return 0;
 }
 
@@ -221,7 +206,7 @@ static void sound_store(int16_t *audio_out_buf)
     }
 }
 
-int app_main_a7800(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
+int app_main_a7800(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
     size_t offset;
     const uint8_t *buffer = NULL;
@@ -281,16 +266,7 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, 2*tia_size);
 
     if (load_state) {
-#if OFF_SAVESTATE==1
-        if (save_slot == 1) {
-            // Load from common save slot if needed
-            LoadA7800State((int8_t *)&__OFFSAVEFLASH_START__);
-        } else {
-#endif
-            LoadState("");
-#if OFF_SAVESTATE==1
-        }
-#endif
+        odroid_system_emu_load_state(save_slot);
     }
     while (1)
     {

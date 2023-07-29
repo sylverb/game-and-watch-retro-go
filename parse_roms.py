@@ -79,18 +79,18 @@ const rom_system_t {name} EMU_DATA = {{
 """
 
 SAVE_SIZES = {
-    "nes": 24 * 1024, # only when using nofrendo, elseway it's given by nesmapper script
-    "sms": 60 * 1024,
-    "gg": 60 * 1024,
-    "col": 60 * 1024,
-    "sg": 60 * 1024,
-    "pce": 76 * 1024,
-    "msx": 272 * 1024,
-    "gw": 4 * 1024,
-    "wsv": 28 * 1024,
-    "md": 144 * 1024,
-    "a7800": 36 * 1024,
-    "amstrad": 132 * 1024,
+    "nes": 0,  # 24 * 1024,
+    "sms": 0,  # 60 * 1024,
+    "gg": 0,  # 60 * 1024,
+    "col": 0,  # 60 * 1024,
+    "sg": 0,  # 60 * 1024,
+    "pce": 0,  # 76 * 1024,
+    "msx": 0,  # 272 * 1024,
+    "gw": 0,  # 4 * 1024,
+    "wsv": 0,  # 28 * 1024,
+    "md": 0,  # 144 * 1024,
+    "a7800": 0,  # 36 * 1024,
+    "amstrad": 0,  # 132 * 1024,
 }
 
 
@@ -719,50 +719,6 @@ class ROMParser:
 
         return str
 
-    def get_gameboy_save_size(self, file: Path):
-        total_size = 4096
-        file = Path(file)
-
-        if file.suffix in COMPRESSIONS:
-            file = file.with_suffix("")  # Remove compression suffix
-
-        with open(file, "rb") as f:
-            # cgb
-            f.seek(0x143)
-            cgb = ord(f.read(1))
-
-            # 0x80 = Gameboy color but supports old gameboy
-            # 0xc0 = Gameboy color only
-            if cgb & 0x80 or cgb == 0xC0:
-                # Bank 0 + 1-7 for gameboy color work ram
-                total_size += 8 * 4096  # irl
-
-                # Bank 0 + 1 for gameboy color video ram, 2*8KiB
-                total_size += 4 * 4096  # vrl
-            else:
-                # Bank 0 + 1 for gameboy classic work ram
-                total_size += 2 * 4096  # irl
-
-                # Bank 0 only for gameboy classic video ram, 1*8KiB
-                total_size += 2 * 4096  # vrl
-
-            # Cartridge ram size
-            f.seek(0x149)
-            total_size += [1, 1, 1, 4, 16, 8][ord(f.read(1))] * 8 * 1024
-            return total_size
-
-        return 0
-
-    def get_nes_save_size(self, file: Path):
-        file = Path(file)
-
-        if file.suffix in COMPRESSIONS:
-            file = file.with_suffix("")  # Remove compression suffix
-
-        total_size = int(subprocess.check_output([sys.executable, "./fceumm-go/nesmapper.py", "savesize", file]))
-        return total_size
-
-        return 0
     def _compress_rom(self, variable_name, rom, compress_gb_speed=False, compress=None):
         """This will create a compressed rom file next to the original rom."""
         global sms_reserved_flash_size
@@ -1063,10 +1019,6 @@ class ROMParser:
             for i, rom in enumerate(roms):
                 if not (rom.publish):
                     continue
-                if folder == "gb":
-                    save_size = self.get_gameboy_save_size(rom.path)
-                elif folder == "nes" and args.nofrendo == 0:
-                    save_size = self.get_nes_save_size(rom.path)
 
                 # Aligned
                 aligned_size = 4 * 1024
@@ -1181,7 +1133,7 @@ class ROMParser:
         total_rom_size += rom_size
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_GB\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
+        if system_save_size > larger_save_size: larger_save_size = system_save_size
 
         # Delete NES bios/mappers.h file to recreate it
         mappers_file = "build/mappers.h"
@@ -1490,23 +1442,15 @@ class ROMParser:
                 pass
             exit(-1)
 
-        build_config += "#define ROM_COUNT %d\n" % current_id
-        build_config += "#define MAX_CHEAT_CODES %d\n" % MAX_CHEAT_CODES
+        build_config += f"#define ROM_COUNT {current_id}\n"
+        build_config += f"#define MAX_CHEAT_CODES {MAX_CHEAT_CODES}\n"
 
-        self.write_if_changed(
-            "build/saveflash.ld", f"__SAVEFLASH_LENGTH__ = {total_save_size};\n"
-        )
-        if (args.off_saveflash == 1):
-            self.write_if_changed(
-                "build/offsaveflash.ld", f"__OFFSAVEFLASH_LENGTH__ = {larger_save_size};\n"
-            )
-        else:
-            self.write_if_changed(
-                "build/offsaveflash.ld", f"__OFFSAVEFLASH_LENGTH__ = 0;\n"
-            )
         self.write_if_changed(
              "build/cacheflash.ld", f"__CACHEFLASH_LENGTH__ = {sega_larger_rom_size};\n")
         self.write_if_changed("build/config.h", build_config)
+        self.write_if_changed(
+            "build/filesystem.ld", f"__FILESYSTEM_LENGTH__ = {args.filesystem_size};\n"  # TODO: make configurable
+        )
 
 
 if __name__ == "__main__":
@@ -1518,6 +1462,12 @@ if __name__ == "__main__":
         type=int,
         default=1024 * 1024,
         help="Size of external SPI flash in bytes.",
+    )
+    parser.add_argument(
+        "--filesystem-size",
+        type=int,
+        default=1 << 20,
+        help="Size of filesystem in bytes.",
     )
     parser.add_argument(
         "--codepage",
@@ -1536,12 +1486,6 @@ if __name__ == "__main__":
         type=int,
         default=90,
         help="skip convert cover art image jpg quality",
-    )
-    parser.add_argument(
-        "--off_saveflash",
-        type=int,
-        default=0,
-        help="set separate flash zone for off/on savestate",
     )
     compression_choices = [t for t in COMPRESSIONS if not t[0] == "."]
     parser.add_argument(
@@ -1578,6 +1522,12 @@ if __name__ == "__main__":
     
     if args.compress and "." + args.compress not in COMPRESSIONS:
         raise ValueError(f"Unknown compression method specified: {args.compress}")
+
+    if args.filesystem_size > args.flash_size:
+        raise ValueError(f"Filesystem size must be smaller than flash_size")
+
+    if (args.filesystem_size % 4096) != 0:
+        raise ValueError(f"Filesystem size must be a multiple of 4096.")
 
     roms_path = Path("build/roms")
     roms_path.mkdir(mode=0o755, parents=True, exist_ok=True)

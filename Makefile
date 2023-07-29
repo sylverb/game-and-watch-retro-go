@@ -25,9 +25,12 @@ Core/Src/main.c \
 Core/Src/sha256.c \
 Core/Src/flashapp.c \
 Core/Src/bq24072.c \
+Core/Src/filesystem.c \
 Core/Src/porting/lib/lzma/LzmaDec.c \
 Core/Src/porting/lib/lzma/lzma.c \
 Core/Src/porting/lib/hw_jpeg_decoder.c \
+Core/Src/porting/lib/littlefs/lfs.c \
+Core/Src/porting/lib/littlefs/lfs_util.c \
 Core/Src/porting/common.c \
 Core/Src/porting/odroid_audio.c \
 Core/Src/porting/odroid_display.c \
@@ -40,6 +43,12 @@ Core/Src/porting/crc32.c \
 Core/Src/stm32h7xx_hal_msp.c \
 Core/Src/stm32h7xx_it.c \
 Core/Src/system_stm32h7xx.c
+
+TAMP_DIR = Core/Src/porting/lib/tamp/tamp/_c_src/
+TAMP_C_SOURCES = \
+$(TAMP_DIR)/tamp/common.c \
+$(TAMP_DIR)/tamp/compressor.c \
+$(TAMP_DIR)/tamp/decompressor.c
 
 GNUBOY_C_SOURCES = \
 Core/Src/porting/gb/main_gb.c \
@@ -128,7 +137,6 @@ retro-go-stm32/nofrendo-go/components/nofrendo/nes/nes.c
 
 NES_FCEU_C_SOURCES = \
 Core/Src/porting/nes_fceu/main_nes_fceu.c \
-Core/Src/porting/nes_fceu/nes_memory_stream.c \
 fceumm-go/src/boards/09-034a.c \
 fceumm-go/src/boards/3d-block.c \
 fceumm-go/src/boards/8in1.c \
@@ -532,7 +540,6 @@ gwenesis/src/io/gwenesis_io.c \
 gwenesis/src/vdp/gwenesis_vdp_mem.c \
 gwenesis/src/vdp/gwenesis_vdp_gfx.c \
 gwenesis/src/savestate/gwenesis_savestate.c \
-Core/Src/porting/gwenesis/save_gwenesis.c \
 Core/Src/porting/gwenesis/main_gwenesis.c
 
 A7800_C_SOURCES = \
@@ -560,11 +567,12 @@ caprice32-go/cap32/psg.c \
 caprice32-go/cap32/slots.c \
 caprice32-go/cap32/cap32_z80.c \
 Core/Src/porting/amstrad/main_amstrad.c \
-Core/Src/porting/amstrad/save_amstrad.c \
 Core/Src/porting/amstrad/amstrad_catalog.c \
 Core/Src/porting/amstrad/amstrad_format.c \
 Core/Src/porting/amstrad/amstrad_loader.c \
 Core/Src/porting/amstrad/amstrad_video8bpp.c
+
+TAMP_C_INCLUDES += -I$(TAMP_DIR)
 
 GNUBOY_C_INCLUDES +=  \
 -ICore/Inc \
@@ -645,6 +653,8 @@ C_INCLUDES +=  \
 -ICore/Inc \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
+-ICore/Src/porting/lib/littlefs/ \
+-ICore/Src/porting/lib/tamp/tamp/_c_src \
 -Iretro-go-stm32/nofrendo-go/components/nofrendo/cpu \
 -Iretro-go-stm32/nofrendo-go/components/nofrendo/mappers \
 -Iretro-go-stm32/nofrendo-go/components/nofrendo/nes \
@@ -652,14 +662,6 @@ C_INCLUDES +=  \
 -Iretro-go-stm32/components/odroid \
 -Iretro-go-stm32/gnuboy-go/components \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus \
--I./
-
-GNUBOY_C_INCLUDES +=  \
--ICore/Inc \
--ICore/Src/porting/lib \
--ICore/Src/porting/lib/lzma \
--Iretro-go-stm32/components/odroid \
--Iretro-go-stm32/gnuboy-go/components \
 -I./
 
 MSX_C_INCLUDES += \

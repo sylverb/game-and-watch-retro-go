@@ -30,6 +30,7 @@
 #include "githash.h"
 #include "flashapp.h"
 #include "bitmaps.h"
+#include "filesystem.h"
 
 #include "odroid_colors.h"
 #include "odroid_system.h"
@@ -230,8 +231,6 @@ void store_erase(const uint8_t *flash_ptr, uint32_t size)
   }
   // Only allow addresses in the areas meant for erasing and writing.
   assert(
-    ((flash_ptr >= &__OFFSAVEFLASH_START__)   && ((flash_ptr + size) <= &__OFFSAVEFLASH_END__)) ||
-    ((flash_ptr >= &__SAVEFLASH_START__)   && ((flash_ptr + size) <= &__SAVEFLASH_END__)) ||
     ((flash_ptr >= &__configflash_start__) && ((flash_ptr + size) <= &__configflash_end__)) ||
     ((flash_ptr >= &__fbflash_start__) && ((flash_ptr + size) <= &__fbflash_end__))
   );
@@ -509,6 +508,9 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  SCB_CleanInvalidateDCache();
+  SCB_InvalidateICache();
+
   SCB_EnableICache();
   SCB_EnableDCache();
 
@@ -533,6 +535,8 @@ int main(void)
   memcpy_no_check((uint32_t *) copy_areas2[1], (uint32_t *) copy_areas2[0], copy_areas2[3]);
 
   bq24072_init();
+
+  fs_init();
 
   switch (boot_mode) {
   case BOOT_MODE_APP:

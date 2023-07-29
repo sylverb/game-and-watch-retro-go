@@ -29,12 +29,12 @@
 #define SAVE_STATE_H
  
 #include "MsxTypes.h"
+#include "filesystem.h"
 
-typedef struct SaveState SaveState;
+typedef fs_file_t SaveState;
 
-bool initLoadMsxState(UInt8 *srcBuffer);
-UInt32 saveMsxState(UInt8 *destBuffer, UInt32 save_size);
-UInt32 loadMsxState(UInt8 *srcBuffer);
+UInt32 saveMsxState(char *pathName);
+UInt32 loadMsxState(char *pathName);
 
 void saveStateCreateForRead(const char* fileName);
 void saveStateCreateForWrite(const char* fileName);
