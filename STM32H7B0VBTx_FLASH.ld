@@ -631,22 +631,57 @@ SECTIONS
     PROVIDE_HIDDEN (__fini_array_end = .);
   } >FLASH
 
+  /* Force some variables at fixed locations to openocd can easily interact without needing ELF file */
+  ._flashapp_rw :
+  {
+    . = ALIGN(4);
+    __dtcram_start__ = .;
+    _sbss_flashapp = .;
+    *(.flashapp_flashapp_state)
+    *(.flashapp_program_start)
+    *(.flashapp_program_status)
+    *(.flashapp_program_size)
+    *(.flashapp_program_address)
+    *(.flashapp_program_erase)
+    *(.flashapp_program_erase_bytes)
+    *(.flashapp_program_chunk_idx)
+    *(.flashapp_program_chunk_count)
+    *(.flashapp_program_expected_sha256)
+    . = ALIGN(4);
+    _ebss_flashapp = .;
+  } >DTCMRAM
+
+  ._persistent (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.persistent_boot_magic)
+    *(.persistent_oc_level)
+    . = ALIGN(4);
+  } >DTCMRAM
+
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);
 
   /* Initialized data sections goes into RAM, load LMA copy after code */
   .data :
   {
-    __dtcram_start__ = .;
-
     . = ALIGN(4);
     _sdata = .;        /* create a global symbol at data start */
+    *(.filesystem_cfg)
     *(.data)           /* .data sections */
     *(.data*)          /* .data* sections */
 
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
   } >DTCMRAM AT> FLASH
+
+  ._persistent_log (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.persistent_log_idx)
+    *(.persistent_logbuf)
+    . = ALIGN(4);
+  } >DTCMRAM
 
   ._flash_end :
   {
@@ -677,13 +712,6 @@ SECTIONS
     . = ALIGN(4);
     _ebss = .;         /* define a global symbol at bss end */
     __bss_end__ = _ebss;
-  } >DTCMRAM
-
-  ._persistent (NOLOAD) :
-  {
-    . = ALIGN(8);
-    *(.persistent)
-    . = ALIGN(8);
   } >DTCMRAM
 
   ._user_heap :

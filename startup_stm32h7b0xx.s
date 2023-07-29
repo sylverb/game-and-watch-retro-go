@@ -44,6 +44,9 @@ defined in linker script */
 .word  _sbss
 /* end address for the .bss section. defined in linker script */
 .word  _ebss
+
+.word _sbss_flashapp
+.word _ebss_flashapp
 /* stack used for SystemInit_ExtMemCtl; always internal RAM used */
 
 /**
@@ -80,18 +83,28 @@ LoopCopyDataInit:
   adds  r2, r0, r1
   cmp  r2, r3
   bcc  CopyDataInit
+/* Zero fill the bss segment. */
   ldr  r2, =_sbss
   b  LoopFillZerobss
-/* Zero fill the bss segment. */
 FillZerobss:
   movs  r3, #0
   str  r3, [r2], #4
-    
 LoopFillZerobss:
   ldr  r3, = _ebss
   cmp  r2, r3
   bcc  FillZerobss
-   
+/* Zero fill the bss flashapp segment. */
+  ldr  r2, =_sbss_flashapp
+  b  LoopFillZerobssflashapp
+FillZerobssflashapp:
+  movs  r3, #0
+  str  r3, [r2], #4
+    
+LoopFillZerobssflashapp:
+  ldr  r3, = _ebss_flashapp
+  cmp  r2, r3
+  bcc  FillZerobssflashapp
+  
 /* Call static constructors */
     bl __libc_init_array
 /* Call the application's entry point.*/

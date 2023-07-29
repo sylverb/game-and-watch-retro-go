@@ -105,7 +105,7 @@ static int littlefs_api_sync(const struct lfs_config *c) {
     return 0;
 }
 
-static struct lfs_config cfg = {
+__attribute__((section (".filesystem_cfg"))) static struct lfs_config lfs_cfg = {
     // block device operations
     .read  = littlefs_api_read,
     .prog  = littlefs_api_prog,
@@ -221,18 +221,18 @@ static void release_file_handle(fs_file_t *file){
  */
 void fs_init(void){
     fs_partition = (unsigned char *)&__FILESYSTEM_START__;
-    cfg.block_size = OSPI_GetSmallestEraseSize();
-    cfg.block_count = (&__FILESYSTEM_END__ - &__FILESYSTEM_START__) / cfg.block_size;
+    lfs_cfg.block_size = OSPI_GetSmallestEraseSize();
+    lfs_cfg.block_count = (&__FILESYSTEM_END__ - &__FILESYSTEM_START__) / lfs_cfg.block_size;
 
     // reformat if we can't mount the fs
     // this should only happen on the first boot
-    if (lfs_mount(&lfs, &cfg)) {
+    if (lfs_mount(&lfs, &lfs_cfg)) {
         printf("filesystem formatting...\n");
-        assert(lfs_format(&lfs, &cfg) == 0);
-        assert(lfs_mount(&lfs, &cfg) == 0);
+        assert(lfs_format(&lfs, &lfs_cfg) == 0);
+        assert(lfs_mount(&lfs, &lfs_cfg) == 0);
     }
     printf("filesytem mounted.\n");
-    printf("%ld/%ld blocks allocated (block_size=%ld)\n", lfs_fs_size(&lfs), cfg.block_count, cfg.block_size);
+    printf("%ld/%ld blocks allocated (block_size=%ld)\n", lfs_fs_size(&lfs), lfs_cfg.block_count, lfs_cfg.block_size);
 }
 
 /**

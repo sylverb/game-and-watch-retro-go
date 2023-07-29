@@ -92,36 +92,39 @@ typedef struct {
 static uint8_t *flash_buffer = (uint8_t *) framebuffer2;
 
 // Values below are read or written by the debugger
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define FLASHAPP_VAR(x) __attribute__((used)) __attribute__((section (".flashapp_" TOSTRING(x)))) volatile x
 
 // Store state in a uint32_t
-uint32_t flashapp_state;
+uint32_t FLASHAPP_VAR(flashapp_state);
 
 // Set to non-zero to start programming
-uint32_t program_start;
+uint32_t FLASHAPP_VAR(program_start);
 
 // Status register
-uint32_t program_status;
+uint32_t FLASHAPP_VAR(program_status);
 
 // Number of bytes to program in the flash
-uint32_t program_size;
+uint32_t FLASHAPP_VAR(program_size);
 
 // Where to program in the flash
-uint32_t program_address;
+uint32_t FLASHAPP_VAR(program_address);
 
 // Control if chip should be erased or not
-uint32_t program_erase;
+uint32_t FLASHAPP_VAR(program_erase);
 
 // Number of bytes to be erased from program_address
-int32_t program_erase_bytes;
+int32_t FLASHAPP_VAR(program_erase_bytes);
 
 // Current chunk index
-uint32_t program_chunk_idx;
+uint32_t FLASHAPP_VAR(program_chunk_idx);
 
 // Number of chunks
-uint32_t program_chunk_count;
+uint32_t FLASHAPP_VAR(program_chunk_count);
 
 // The expected sha256 of the loaded binary
-uint8_t program_expected_sha256[65];
+uint8_t FLASHAPP_VAR(program_expected_sha256)[65];
 
 // TODO: Expose properly
 int odroid_overlay_draw_text_line(uint16_t x_pos,

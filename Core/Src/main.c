@@ -53,6 +53,9 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define PERSISTENT(x) __attribute__((used)) __attribute__((section (".persistent_" TOSTRING(x))))
 
 /* USER CODE END PM */
 
@@ -83,10 +86,10 @@ WWDG_HandleTypeDef hwwdg1;
 #define BOOT_MODE_FLASHAPP 1
 #define BOOT_MODE_WARM     2
 
-char logbuf[1024 * 4] PERSISTENT __attribute__((aligned(4)));
-uint32_t log_idx PERSISTENT;
-PERSISTENT volatile uint32_t boot_magic;
-PERSISTENT volatile uint32_t oc_level;
+PERSISTENT(boot_magic) volatile uint32_t boot_magic;
+PERSISTENT(oc_level) volatile uint32_t oc_level;
+uint32_t log_idx PERSISTENT(log_idx);
+char logbuf[1024 * 4] PERSISTENT(logbuf) __attribute__((aligned(4)));
 
 uint32_t boot_buttons;
 
