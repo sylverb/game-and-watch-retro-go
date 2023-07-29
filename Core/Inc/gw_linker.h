@@ -2,8 +2,6 @@
 
 #include <stdint.h>
 
-extern uint8_t __OFFSAVEFLASH_START__;
-extern uint8_t __OFFSAVEFLASH_END__;
 extern uint8_t __CACHEFLASH_START__;
 extern uint8_t __CACHEFLASH_END__;
 extern uint8_t __EXTFLASH_START__;

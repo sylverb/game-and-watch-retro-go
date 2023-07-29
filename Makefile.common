@@ -586,7 +586,6 @@ $(BUILD_DIR)/roms.a: $(BUILD_DIR)/rom_files.txt parse_roms.py
 	$(V)$(PYTHON3) parse_roms.py \
 		--flash-size=$(EXTFLASH_SIZE) \
 		--filesystem-size=$(FILESYSTEM_SIZE) \
-		--off-saveflash=$(OFF_SAVESTATE) \
 		$(SAVE_PARAM) \
 		$(COMPRESS_PARAM) \
 		$(CODEPAGE_PARAM) \
@@ -594,9 +593,9 @@ $(BUILD_DIR)/roms.a: $(BUILD_DIR)/rom_files.txt parse_roms.py
 		$(JPG_QUALITY_PARAM) \
 		$(NOFRENDO_PARAM) 
 
-$(BUILD_DIR)/config.h $(BUILD_DIR)/cacheflash.ld $(BUILD_DIR)/offsaveflash.ld &: $(BUILD_DIR)/roms.a
+$(BUILD_DIR)/config.h $(BUILD_DIR)/cacheflash.ld &: $(BUILD_DIR)/roms.a
 	$(V)/bin/sh -c true
-STM32H7B0VBTx_FLASH.ld: $(BUILD_DIR)/offsaveflash.ld $(BUILD_DIR)/cacheflash.ld
+STM32H7B0VBTx_FLASH.ld: $(BUILD_DIR)/cacheflash.ld
 
 # rom_manager.c depends on the different *_roms.c files but they only change when roms.a changes
 $(BUILD_DIR)/core/rom_manager.o: Core/Src/retro-go/rom_manager.c $(BUILD_DIR)/roms.a

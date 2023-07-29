@@ -1445,14 +1445,6 @@ class ROMParser:
         build_config += f"#define ROM_COUNT {current_id}\n"
         build_config += f"#define MAX_CHEAT_CODES {MAX_CHEAT_CODES}\n"
 
-        if (args.off_saveflash == 1):
-            self.write_if_changed(
-                "build/offsaveflash.ld", f"__OFFSAVEFLASH_LENGTH__ = {larger_save_size};\n"
-            )
-        else:
-            self.write_if_changed(
-                "build/offsaveflash.ld", f"__OFFSAVEFLASH_LENGTH__ = 0;\n"
-            )
         self.write_if_changed(
              "build/cacheflash.ld", f"__CACHEFLASH_LENGTH__ = {sega_larger_rom_size};\n")
         self.write_if_changed("build/config.h", build_config)
@@ -1494,12 +1486,6 @@ if __name__ == "__main__":
         type=int,
         default=90,
         help="skip convert cover art image jpg quality",
-    )
-    parser.add_argument(
-        "--off-saveflash",
-        type=int,
-        default=0,
-        help="set separate flash zone for off/on savestate",
     )
     compression_choices = [t for t in COMPRESSIONS if not t[0] == "."]
     parser.add_argument(
