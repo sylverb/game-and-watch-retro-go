@@ -81,7 +81,7 @@ bool odroid_system_emu_load_state(int slot)
             (*currentApp.loadState)(filepath);
         }
         else{
-            printf("Savestate does not exist.");
+            printf("Savestate does not exist.\n");
             return false;
         }
     }

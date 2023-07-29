@@ -257,8 +257,7 @@ static void pce_rom_full_patch()
 }
 
 
-static void
-pce_rom_patch()
+static void pce_rom_patch()
 {
     unsigned char *dest = (unsigned char *)&_PCE_ROM_UNPACK_BUFFER;
     uint32_t available_size = (uint32_t)&_PCE_ROM_UNPACK_BUFFER_SIZE;

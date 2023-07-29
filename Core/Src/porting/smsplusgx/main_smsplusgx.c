@@ -204,7 +204,6 @@ extern uint32 glob_bp_lut[0x10000];
 static bool SaveState(char *pathName)
 {
     uint8_t *state_save_buffer = (uint8_t *)glob_bp_lut;
-    memset(state_save_buffer, 0x00, SAVE_STATE_BUFFER_SIZE);
     system_save_state(state_save_buffer);
 
     fs_file_t *file;
@@ -220,7 +219,6 @@ static bool SaveState(char *pathName)
 static bool LoadState(char *pathName)
 {
     uint8_t *state_save_buffer = (uint8_t *)glob_bp_lut;
-    memset(state_save_buffer, 0x00, SAVE_STATE_BUFFER_SIZE);
 
     fs_file_t *file;
     file = fs_open(pathName, FS_READ, FS_COMPRESS);
