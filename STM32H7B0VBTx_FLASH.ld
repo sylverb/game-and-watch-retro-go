@@ -656,6 +656,8 @@ SECTIONS
     . = ALIGN(4);
     *(.persistent_boot_magic)
     *(.persistent_oc_level)
+    *(.persistent_log_idx)
+    *(.persistent_logbuf)
     . = ALIGN(4);
   } >DTCMRAM
 
@@ -674,14 +676,6 @@ SECTIONS
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
   } >DTCMRAM AT> FLASH
-
-  ._persistent_log (NOLOAD) :
-  {
-    . = ALIGN(4);
-    *(.persistent_log_idx)
-    *(.persistent_logbuf)
-    . = ALIGN(4);
-  } >DTCMRAM
 
   ._flash_end :
   {
