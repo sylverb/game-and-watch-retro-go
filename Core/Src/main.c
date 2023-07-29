@@ -511,7 +511,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  SCB_CleanInvalidateDCache();
+  SCB_InvalidateDCache();
   SCB_InvalidateICache();
 
   SCB_EnableICache();

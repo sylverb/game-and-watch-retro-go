@@ -72,7 +72,7 @@ static int littlefs_api_prog(const struct lfs_config *c, lfs_block_t block,
     uint32_t address = (fs_partition - &__EXTFLASH_BASE__) + (block * c->block_size) + off;
     assert((address & 0xFF) == 0);
 
-    SCB_CleanInvalidateDCache();
+    SCB_InvalidateDCache();
     SCB_DisableDCache();
 
     OSPI_DisableMemoryMappedMode();
@@ -89,7 +89,7 @@ static int littlefs_api_erase(const struct lfs_config *c, lfs_block_t block) {
 
     assert((address & (4*1024 - 1)) == 0);
 
-    SCB_CleanInvalidateDCache();
+    SCB_InvalidateDCache();
     SCB_DisableDCache();
 
     OSPI_DisableMemoryMappedMode();
