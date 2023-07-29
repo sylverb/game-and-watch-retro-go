@@ -86,9 +86,7 @@ __RAM_EMU_START__   = __RAM_CORE_START__ + __RAM_CORE_LENGTH__;
 
 __RAM_EMU_END__     = __RAM_EMU_START__ + __RAM_EMU_LENGTH__;
 
-/* saveflash.ld sets __SAVEFLASH_LENGTH__ */
 /* offsaveflash.ld sets __OFFSAVEFLASH_LENGTH__ */
-INCLUDE build/saveflash.ld
 INCLUDE build/cacheflash.ld
 INCLUDE build/offsaveflash.ld
 INCLUDE build/filesystem.ld
@@ -108,6 +106,10 @@ __FBFLASH_LENGTH__ = ENABLE_SCREENSHOT ? ((320 * 240 * 2 + 4095) / 4096) * 4096 
  *            |   Executable emulator data and   |
  *            |         constant ROM data        |
  *            |                                  |
+ *            +----------------------------------+
+ *            |                                  |
+ *            |         Possibly Unused          |
+ *            |                                  |
  *            +----------------------------------+  __EXTFLASH_END__ __CACHEFLASH_START__
  *            |                                  |
  *            |          Reserved space          |
@@ -117,34 +119,31 @@ __FBFLASH_LENGTH__ = ENABLE_SCREENSHOT ? ((320 * 240 * 2 + 4095) / 4096) * 4096 
  *            |                                  |
  *            |        ON/OFF state save         |
  *            |                                  |
- *            +----------------------------------+  __OFFSAVEFLASH_END__  __SAVEFLASH_START__
- *            |                                  |
- *            |          Save States             |
- *            |                                  |
- *            +----------------------------------+  __SAVEFLASH_END__  __CONFIGFLASH_START__
+ *            +----------------------------------+  __OFFSAVEFLASH_END__ __CONFIGFLASH_START__
  *            |                                  |
  *            |    Store changable persistent    |
  *            |      retro-go configurations     |
  *            |                                  |
- *            +----------------------------------+  __CONFIGFLASH_END__
+ *            +----------------------------------+  __CONFIGFLASH_END__ __FBFLASH_START__
  *            |                                  |
  *            | Framebuffer / Screenshot storage |
  *            |                                  |
- *            +----------------------------------+  __FBFLASH_END__
+ *            +----------------------------------+  __FBFLASH_END__  __FILESYSTEM_START__
+ *            |                                  |
+ *            |            Filesystem            |
+ *            |                                  |
+ *            +----------------------------------+  __EXTFLASH_END__ __FILESYSTEM_END__
  */
-__EXTFLASH_LENGTH__ = __EXTFLASH_TOTAL_LENGTH__ - (__CACHEFLASH_LENGTH__ + __OFFSAVEFLASH_LENGTH__ + __SAVEFLASH_LENGTH__ + __CONFIGFLASH_LENGTH__ + __FBFLASH_LENGTH__ + __FILESYSTEM_LENGTH__);
+__EXTFLASH_LENGTH__ = __EXTFLASH_TOTAL_LENGTH__ - (__CACHEFLASH_LENGTH__ + __OFFSAVEFLASH_LENGTH__ + __CONFIGFLASH_LENGTH__ + __FBFLASH_LENGTH__ + __FILESYSTEM_LENGTH__);
 __EXTFLASH_END__ = __EXTFLASH_START__ + __EXTFLASH_LENGTH__;
 __CACHEFLASH_START__ = __EXTFLASH_END__;
 __CACHEFLASH_END__   = __CACHEFLASH_START__ + __CACHEFLASH_LENGTH__;
 __OFFSAVEFLASH_START__ = __CACHEFLASH_END__;
 __OFFSAVEFLASH_END__   = __OFFSAVEFLASH_START__ + __OFFSAVEFLASH_LENGTH__;
-__SAVEFLASH_START__ = __OFFSAVEFLASH_END__;
-__SAVEFLASH_END__   = __SAVEFLASH_START__ + __SAVEFLASH_LENGTH__;
-__CONFIGFLASH_START__ = __SAVEFLASH_END__;
+__CONFIGFLASH_START__ = __OFFSAVEFLASH_END__;
 __CONFIGFLASH_END__   = __CONFIGFLASH_START__ + __CONFIGFLASH_LENGTH__;
 __FBFLASH_START__ = __CONFIGFLASH_END__;
 __FBFLASH_END__   = __FBFLASH_START__ + __FBFLASH_LENGTH__;
-/* TODO: It would be nice to start the extflash with the filesystem so it starts at a constant location */
 __FILESYSTEM_START__ = __FBFLASH_END__;
 __FILESYSTEM_END__ = __FILESYSTEM_START__ + __FILESYSTEM_LENGTH__;
 
@@ -169,7 +168,6 @@ MEMORY
   EXTFLASH   (xr ) : ORIGIN = __EXTFLASH_START__,  LENGTH = __EXTFLASH_LENGTH__
   CACHEFLASH (xr ) : ORIGIN = __CACHEFLASH_START__,  LENGTH = __CACHEFLASH_LENGTH__
   OFFSAVEFLASH (xr ) : ORIGIN = __OFFSAVEFLASH_START__, LENGTH = __OFFSAVEFLASH_LENGTH__
-  SAVEFLASH  (xr ) : ORIGIN = __SAVEFLASH_START__, LENGTH = __SAVEFLASH_LENGTH__
   CONFIGFLASH(xr ) : ORIGIN = __CONFIGFLASH_START__, LENGTH = __CONFIGFLASH_LENGTH__
   FBFLASH (xr ) : ORIGIN = __FBFLASH_START__, LENGTH = __FBFLASH_LENGTH__
   FILESYSTEM (xr ) : ORIGIN = __FILESYSTEM_START__, LENGTH = __FILESYSTEM_LENGTH__
@@ -544,13 +542,6 @@ SECTIONS
     *(.offsaveflash)
     __offsaveflash_end__ = .;
   } > OFFSAVEFLASH
-
-  ._saveflash (NOLOAD) :
-  {
-    __saveflash_start__ = .;
-    *(.saveflash)
-    __saveflash_end__ = .;
-  } > SAVEFLASH
 
   ._configflash (NOLOAD):
   {

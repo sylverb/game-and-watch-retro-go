@@ -1445,9 +1445,6 @@ class ROMParser:
         build_config += f"#define ROM_COUNT {current_id}\n"
         build_config += f"#define MAX_CHEAT_CODES {MAX_CHEAT_CODES}\n"
 
-        self.write_if_changed(
-            "build/saveflash.ld", f"__SAVEFLASH_LENGTH__ = {total_save_size};\n"
-        )
         if (args.off_saveflash == 1):
             self.write_if_changed(
                 "build/offsaveflash.ld", f"__OFFSAVEFLASH_LENGTH__ = {larger_save_size};\n"
