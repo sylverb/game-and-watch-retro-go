@@ -47,8 +47,8 @@ Core/Src/system_stm32h7xx.c
 TAMP_DIR = Core/Src/porting/lib/tamp/tamp/_c_src/
 TAMP_C_SOURCES = \
 $(TAMP_DIR)/tamp/common.c \
-/tTAMP_DIR)/tamp/compressor.c \
-/tTAMP_DIR)/tamp/decompressor.c
+$(TAMP_DIR)/tamp/compressor.c \
+$(TAMP_DIR)/tamp/decompressor.c
 
 GNUBOY_C_SOURCES = \
 Core/Src/porting/gb/main_gb.c \

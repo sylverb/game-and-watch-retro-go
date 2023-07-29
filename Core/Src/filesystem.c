@@ -217,33 +217,6 @@ static void release_file_handle(fs_file_t *file){
  *************************/
 
 /**
- * Demo function to demonstrate the filesystem working.
- */
-static void boot_counter(){
-    lfs_file_t *file;
-    uint32_t boot_count = 0;
-    const char filename[] = "boot_counter";
-
-    // read current count
-    printf("Reading boot count\n");
-    file = fs_open(filename, FS_READ, FS_RAW);
-    if(file){
-        fs_read(file, (unsigned char *)&boot_count, sizeof(boot_count));
-        fs_close(file);
-    }
-
-    boot_count += 1;  // update boot count
-
-    // write back new boot count
-    printf("Writing boot count\n");
-    file = fs_open(filename, FS_WRITE, FS_RAW);
-    assert(sizeof(boot_count) == fs_write(file, (unsigned char*)&boot_count, sizeof(boot_count)));
-    fs_close(file);
-
-    printf("boot_count: %ld\n", boot_count);
-}
-
-/**
  * Initialize and mount the filesystem. Format the filesystem if unmountable (and then reattempt mount).
  */
 void fs_init(void){
@@ -260,8 +233,6 @@ void fs_init(void){
     }
     printf("filesytem mounted.\n");
     printf("%ld/%ld blocks allocated (block_size=%ld)\n", lfs_fs_size(&lfs), cfg.block_count, cfg.block_size);
-
-    //boot_counter();  // Commented out to prevent unnecessary disk writes every boot.
 }
 
 /**
