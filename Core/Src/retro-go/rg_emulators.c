@@ -472,7 +472,6 @@ void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_pau
     rom_manager_set_active_file(file);
 
     // odroid_settings_StartAction_set(load_state ? ODROID_START_ACTION_RESUME : ODROID_START_ACTION_NEWGAME);
-    // odroid_settings_RomFilePath_set(path);
     // odroid_settings_commit();
 
     // Reinit AHB & ITC RAM memory allocation

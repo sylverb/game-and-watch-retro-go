@@ -56,57 +56,49 @@ rg_app_desc_t *odroid_system_get_app()
 }
 
 
-#if OFF_SAVESTATE==1
-const char OFF_SAVESTATE_PATH[] = "1";
-#endif
+const char OFF_SAVESTATE_PATH[] = "savestate/off";
 
-/* Return true on successful load */
+static void parse_rom_path(char *path, size_t size, int slot){
+    if (slot == -1) {
+        strcpy(path, OFF_SAVESTATE_PATH);
+    }
+    else {
+        snprintf(path,
+                 size,
+                 "savestate/%s/%s/%d",
+                 ACTIVE_FILE->system->extension,
+                 ACTIVE_FILE->name,
+                 slot
+                 );
+    }
+}
+/* Return true on successful load.
+ * Slot -1 is for the OFF_SAVESTATE
+ * */
 bool odroid_system_emu_load_state(int slot)
 {
-    char *filepath;
-    printf("odroid_system_emu_load_state %d\n", slot);
-    assert(slot==0 || slot==1);  // TODO: allow more slots by passing slot info along to odroid_settings_RomFilePath_get();
-    if (currentApp.loadState != NULL) {
-#if OFF_SAVESTATE==1
-        if (slot == 1) {
-            filepath = OFF_SAVESTATE_PATH;
-        }
-        else
-#endif
-        {
-            filepath = odroid_settings_RomFilePath_get();
-        }
-        printf("Attempting to load state from [%s]\n", filepath);
-        if(fs_exists(filepath)){
-            (*currentApp.loadState)(filepath);
-        }
-        else{
-            printf("Savestate does not exist.\n");
-            return false;
-        }
+    char path[FS_MAX_PATH_SIZE];
+    if (currentApp.loadState == NULL)
+        return true;
+    parse_rom_path(path, sizeof(path), slot);
+    printf("Attempting to load state from [%s]\n", path);
+    if(!fs_exists(path)){
+        printf("Savestate does not exist.\n");
+        return false;
     }
+    (*currentApp.loadState)(path);
     return true;
 };
 
 bool odroid_system_emu_save_state(int slot)
 {
-    // slot_0 == typical per-rom-path
-    // slot_1 == power-on/power-off slot shared between all roms.
-    assert(slot==0 || slot==1);  // TODO: allow more slots by passing slot info along to odroid_settings_RomFilePath_get();
-    if (currentApp.saveState != NULL) {
-#if OFF_SAVESTATE==1
-        if (slot == 0) {
-#endif
-            char *filepath = odroid_settings_RomFilePath_get();
-            printf("Savestating to [%s]\n", filepath);
-            (*currentApp.saveState)(filepath);
-#if OFF_SAVESTATE==1
-        } else {
-            printf("Savestating to common OFF.\n");
-            (*currentApp.saveState)("1");
-        }
-#endif
-    }
+    char path[FS_MAX_PATH_SIZE];
+    if (currentApp.saveState == NULL)
+        return true;
+
+    parse_rom_path(path, sizeof(path), slot);
+    printf("Savestating to [%s]\n", path);
+    (*currentApp.saveState)(path);
     return true;
 };
 
