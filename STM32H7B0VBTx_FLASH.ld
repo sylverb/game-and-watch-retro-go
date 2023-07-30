@@ -632,28 +632,10 @@ SECTIONS
   } >FLASH
 
   /* Force some variables at fixed locations to openocd can easily interact without needing ELF file */
-  ._flashapp_rw :
-  {
-    . = ALIGN(4);
-    __dtcram_start__ = .;
-    _sbss_flashapp = .;
-    *(.flashapp_flashapp_state)
-    *(.flashapp_program_start)
-    *(.flashapp_program_status)
-    *(.flashapp_program_size)
-    *(.flashapp_program_address)
-    *(.flashapp_program_erase)
-    *(.flashapp_program_erase_bytes)
-    *(.flashapp_program_chunk_idx)
-    *(.flashapp_program_chunk_count)
-    *(.flashapp_program_expected_sha256)
-    . = ALIGN(4);
-    _ebss_flashapp = .;
-  } >DTCMRAM
-
   ._persistent (NOLOAD) :
   {
     . = ALIGN(4);
+    __dtcram_start__ = .;
     *(.persistent_boot_magic)
     *(.persistent_oc_level)
     *(.persistent_log_idx)

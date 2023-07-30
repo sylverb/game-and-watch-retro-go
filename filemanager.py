@@ -11,7 +11,7 @@ from littlefs import LittleFS, LittleFSError
 
 
 def sha256(data):
-    return hashlib.sha256(data).hexdigest().encode() + b"\x00"  # Flashapp works with Hex strings
+    return hashlib.sha256(data).hexdigest().encode() + b"\x00"  # Flashapp uses null-terminated hex strings
 
 _EMPTY_HASH_HEXDIGEST = sha256(b"")
 Variable = namedtuple("Variable", ['address', 'size'])
@@ -21,21 +21,26 @@ Variable = namedtuple("Variable", ['address', 'size'])
 variables = {
     "framebuffer1":            Variable(0x2400_0000, 320 * 240 * 2),
     "framebuffer2":            Variable(0x2402_5800, 320 * 240 * 2),
-    "flashapp_state":          Variable(0x2000_0000, 4),
-    "program_start":           Variable(0x2000_0004, 4),
-    "program_status":          Variable(0x2000_0008, 4),
-    "program_size":            Variable(0x2000_000c, 4),
-    "program_address":         Variable(0x2000_0010, 4),
-    "program_erase":           Variable(0x2000_0014, 4),  # Basically a bool; erase on True; erase start at program_address
-    "program_erase_bytes":     Variable(0x2000_0018, 4),  # Number of bytes to erase; 0 for the entire chip.
-    "program_chunk_idx":       Variable(0x2000_001c, 4),
-    "program_chunk_count":     Variable(0x2000_0020, 4),
-    "program_expected_sha256": Variable(0x2000_0024, 65),
-    "boot_magic":              Variable(0x2000_0068, 4),
-    "log_idx":                 Variable(0x2000_0070, 4),
-    "logbuf":                  Variable(0x2000_0074, 4096),
-    "lfs_cfg":                 Variable(0x2000_1078, 4),
+    "boot_magic":              Variable(0x2000_0000, 4),
+    "log_idx":                 Variable(0x2000_0008, 4),
+    "logbuf":                  Variable(0x2000_000c, 4096),
+    "lfs_cfg":                 Variable(0x2000_1010, 4),
 }
+
+# Communication Variables
+variables["flashapp_comm"] = variables["framebuffer2"]
+
+variables["flashapp_state"]            = Variable(variables["flashapp_comm"].address + 0,  4)
+variables["program_start"]             = Variable(variables["flashapp_comm"].address + 4,  4)
+variables["program_status"]            = Variable(variables["flashapp_comm"].address + 8,  4)
+variables["program_size"]              = Variable(variables["flashapp_comm"].address + 12, 4)
+variables["program_address"]           = Variable(variables["flashapp_comm"].address + 16, 4)
+variables["program_erase"]             = Variable(variables["flashapp_comm"].address + 20, 4)
+variables["program_erase_bytes"]       = Variable(variables["flashapp_comm"].address + 24, 4)
+variables["program_chunk_idx"]         = Variable(variables["flashapp_comm"].address + 28, 4)
+variables["program_chunk_count"]       = Variable(variables["flashapp_comm"].address + 32, 4)
+variables["program_expected_sha256"]   = Variable(variables["flashapp_comm"].address + 36, 65)
+variables["work_buffer"]               = Variable(variables["flashapp_comm"].address + 4096, 768 << 10)
 
 # littlefs config struct elements
 variables["lfs_cfg_context"]      = Variable(variables["lfs_cfg"].address + 0,  4)
@@ -49,8 +54,6 @@ variables["lfs_cfg_block_size"]   = Variable(variables["lfs_cfg"].address + 28, 
 variables["lfs_cfg_block_count"]  = Variable(variables["lfs_cfg"].address + 32, 4)
 # TODO: too lazy to add the other lfs_config attributes
 
-# alias the transfer buffer
-variables["flash_buffer"] = variables["framebuffer2"]
 
 _flashapp_state_enum_to_str = {
     0x00000000: "INIT",
@@ -237,7 +240,7 @@ def extflash_write(offset:int, data: bytes, erase=True) -> None:
 
     target.write_memory_block8(variables["program_expected_sha256"].address, sha256(data))
     target.write32(variables["program_start"].address, 1)
-    target.write_memory_block8(variables["flash_buffer"].address, data)
+    target.write_memory_block8(variables["work_buffer"].address, data)
     target.resume()
     wait_for_program_start_0()
     wait_for("IDLE")
@@ -291,8 +294,7 @@ def flash(args, fs, block_size, block_count):
     """Flash a binary to the external flash."""
     validate_extflash_offset(args.address)
     data = args.file.read_bytes()
-    #chunk_size = variables["flash_buffer"].size & ~(block_size - 1)
-    chunk_size = 832 << 10
+    chunk_size = variables["work_buffer"].size
     chunks = chunk_bytes(data, chunk_size)
     write_chunk_count(len(chunks));
     for i, chunk in enumerate(chunks):

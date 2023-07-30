@@ -87,44 +87,47 @@ typedef struct {
     uint32_t progress_value;
 } flashapp_t;
 
+struct flashapp_comm {  // Values are read or written by the debugger
+                        // only add attributes at the end (before work_buffer)
+                        // so that addresses don't change.
+    // FlashApp state-machine state
+    uint32_t flashapp_state;
+
+    // Set to non-zero to start programming
+    uint32_t program_start;
+
+    // Status register
+    uint32_t program_status;
+
+    // Number of bytes to program in the flash
+    uint32_t program_size;
+
+    // Where to program in the flash
+    // offset into flash, not an absolute address 0x9XXX_XXXX
+    uint32_t program_address;
+
+    // Control if chip should be erased or not
+    uint32_t program_erase;
+
+    // Number of bytes to be erased from program_address
+    int32_t program_erase_bytes;
+
+    // Current chunk index
+    uint32_t program_chunk_idx;
+
+    // Number of chunks
+    uint32_t program_chunk_count;
+
+    // The expected sha256 of the loaded binary
+    uint8_t program_expected_sha256[65];
+
+    // Give a lot of room for future communication variables
+    unsigned char work_buffer[786432] __attribute__((aligned(4096)));
+};
+
 // framebuffer1 is used as an actual framebuffer.
 // framebuffer2 and onwards is used as a buffer for the flash.
-static uint8_t *flash_buffer = (uint8_t *) framebuffer2;
-
-// Values below are read or written by the debugger
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-#define FLASHAPP_VAR(x) __attribute__((used)) __attribute__((section (".flashapp_" TOSTRING(x)))) volatile x
-
-// Store state in a uint32_t
-uint32_t FLASHAPP_VAR(flashapp_state);
-
-// Set to non-zero to start programming
-uint32_t FLASHAPP_VAR(program_start);
-
-// Status register
-uint32_t FLASHAPP_VAR(program_status);
-
-// Number of bytes to program in the flash
-uint32_t FLASHAPP_VAR(program_size);
-
-// Where to program in the flash
-uint32_t FLASHAPP_VAR(program_address);  // offset into flash, not an absolute address 0x9XXX_XXXX
-
-// Control if chip should be erased or not
-uint32_t FLASHAPP_VAR(program_erase);
-
-// Number of bytes to be erased from program_address
-int32_t FLASHAPP_VAR(program_erase_bytes);
-
-// Current chunk index
-uint32_t FLASHAPP_VAR(program_chunk_idx);
-
-// Number of chunks
-uint32_t FLASHAPP_VAR(program_chunk_count);
-
-// The expected sha256 of the loaded binary
-uint8_t FLASHAPP_VAR(program_expected_sha256)[65];
+static struct flashapp_comm *comm = (struct flashapp_comm *)framebuffer2;
 
 // TODO: Expose properly
 int odroid_overlay_draw_text_line(uint16_t x_pos,
@@ -277,13 +280,13 @@ static void test_flash(flashapp_t *flashapp)
     OSPI_EnableMemoryMappedMode();
     assert(validate_erased(address, size));
 
-    generate_random((uint32_t *) flash_buffer, rand_size, 0x12345678);
+    generate_random((uint32_t *) comm->work_buffer, rand_size, 0x12345678);
 
     // Write and verify 512kB random data
     address = 0;
     size = rand_size;
     OSPI_DisableMemoryMappedMode();
-    OSPI_Program(address, &flash_buffer[address], size);
+    OSPI_Program(address, &comm->work_buffer[address], size);
     OSPI_EnableMemoryMappedMode();
 
     // Erase parts of the flash and verify that the non erased data is still intact
@@ -296,7 +299,7 @@ static void test_flash(flashapp_t *flashapp)
         sprintf(flashapp->tab.name, "Erase test %d start=%08lx end=%08lx", i, start, end);
 
         // Check that data is ok first
-        assert(memcmp(&flash_ptr[start], &flash_buffer[start], size) == 0);
+        assert(memcmp(&flash_ptr[start], &comm->work_buffer[start], size) == 0);
 
         // Erase
         OSPI_DisableMemoryMappedMode();
@@ -307,7 +310,7 @@ static void test_flash(flashapp_t *flashapp)
         assert(validate_erased(start, size));
 
         // Check that the rest of the data is still there
-        assert(memcmp(&flash_ptr[start + size], &flash_buffer[start + size], rand_size - end) == 0);
+        assert(memcmp(&flash_ptr[start + size], &comm->work_buffer[start + size], rand_size - end) == 0);
 
         lcd_swap();
         lcd_wait_for_vblank();
@@ -328,31 +331,25 @@ static void test_flash(flashapp_t *flashapp)
 
 static void state_set(flashapp_state_t state_next)
 {
-    printf("State: %ld -> %d\n", flashapp_state, state_next);
+    printf("State: %ld -> %d\n", comm->flashapp_state, state_next);
 
-    flashapp_state = state_next;
+    comm->flashapp_state = state_next;
 }
 
 static void state_inc(void)
 {
-    state_set(flashapp_state + 1);
+    state_set(comm->flashapp_state + 1);
 }
 
 static void flashapp_run(flashapp_t *flashapp)
 {
     uint8_t program_calculated_sha256[65];
 
-    switch (flashapp_state) {
+    switch (comm->flashapp_state) {
     case FLASHAPP_INIT:
         // Clear variables shared with the host
-        program_size = 0;
-        program_address = 0;
-        program_status = 0;
-        program_erase = 0;
-        program_erase_bytes = 0;
-        program_chunk_idx = 1;
-        program_chunk_count = 1;
-        memset(program_expected_sha256, 0, sizeof(program_expected_sha256));
+        memset(comm, 0, sizeof(*comm));
+        comm->program_chunk_count = 1;
         memset(program_calculated_sha256, 0, sizeof(program_calculated_sha256));
 
         flashapp->progress_value = 0;
@@ -364,41 +361,41 @@ static void flashapp_run(flashapp_t *flashapp)
         sprintf(flashapp->tab.name, "1. Waiting for data");
 
         // Notify that we are ready to start
-        program_status = FLASHAPP_STATUS_IDLE;
+        comm->program_status = FLASHAPP_STATUS_IDLE;
         flashapp->progress_value = 0;
         flashapp->progress_max = 0;
 
         // program_start is set by the flash script
-        switch (program_start) {
-        case 1: // Normal flash operation
-            program_start = 0;
-            state_inc();
-            break;
-        case 2: // Test flash
-            program_start = 0;
-            state_set(FLASHAPP_TEST_NEXT);
-            break;
-        default:
-            break;
+        switch (comm->program_start) {
+            case 1: // Normal flash operation
+                comm->program_start = 0;
+                state_inc();
+                break;
+            case 2: // Test flash
+                comm->program_start = 0;
+                state_set(FLASHAPP_TEST_NEXT);
+                break;
+            default:
+                break;
         }
 
         break;
     case FLASHAPP_START:
-        program_status = FLASHAPP_STATUS_BUSY;
+        comm->program_status = FLASHAPP_STATUS_BUSY;
         state_inc();
         break;
     case FLASHAPP_CHECK_HASH_RAM_NEXT:
-        sprintf(flashapp->tab.name, "2. Checking hash in RAM (%ld bytes)", program_size);
+        sprintf(flashapp->tab.name, "2. Checking hash in RAM (%ld bytes)", comm->program_size);
         state_inc();
         break;
     case FLASHAPP_CHECK_HASH_RAM:
         // Calculate sha256 hash of the RAM first
-        sha256_to_string(program_calculated_sha256, (const BYTE*) flash_buffer, program_size);
+        sha256_to_string(program_calculated_sha256, (const BYTE*) comm->work_buffer, comm->program_size);
 
-        if (strncmp((char *)program_calculated_sha256, (char *)program_expected_sha256, 64) != 0) {
+        if (strncmp((char *)program_calculated_sha256, (char *)comm->program_expected_sha256, 64) != 0) {
             // Hashes don't match even in RAM, openocd loading failed.
             sprintf(flashapp->tab.name, "*** Hash mismatch in RAM ***");
-            program_status = FLASHAPP_STATUS_BAD_HASH_RAM;
+            comm->program_status = FLASHAPP_STATUS_BAD_HASH_RAM;
             state_set(FLASHAPP_ERROR);
             break;
         } else {
@@ -409,18 +406,18 @@ static void flashapp_run(flashapp_t *flashapp)
     case FLASHAPP_ERASE_NEXT:
         OSPI_DisableMemoryMappedMode();
 
-        if (program_erase) {
-            if (program_erase_bytes == 0) {
+        if (comm->program_erase) {
+            if (comm->program_erase_bytes == 0) {
                 sprintf(flashapp->tab.name, "4. Performing Chip Erase (takes time)");
             } else {
-                flashapp->erase_address = program_address;
-                flashapp->erase_bytes_left = program_erase_bytes;
+                flashapp->erase_address = comm->program_address;
+                flashapp->erase_bytes_left = comm->program_erase_bytes;
 
                 uint32_t smallest_erase = OSPI_GetSmallestEraseSize();
 
                 if (flashapp->erase_address & (smallest_erase - 1)) {
                     sprintf(flashapp->tab.name, "** Address not aligned to smallest erase size! **");
-                    program_status = FLASHAPP_STATUS_NOT_ALIGNED;
+                    comm->program_status = FLASHAPP_STATUS_NOT_ALIGNED;
                     state_set(FLASHAPP_ERROR);
                     break;
                 }
@@ -432,7 +429,7 @@ static void flashapp_run(flashapp_t *flashapp)
 
                 sprintf(flashapp->tab.name, "4. Erasing %ld bytes...", flashapp->erase_bytes_left);
                 printf("Erasing %ld bytes at 0x%08lx\n", flashapp->erase_bytes_left, flashapp->erase_address);
-                flashapp->progress_max = program_erase_bytes;
+                flashapp->progress_max = comm->program_erase_bytes;
                 flashapp->progress_value = 0;
             }
             state_inc();
@@ -441,7 +438,7 @@ static void flashapp_run(flashapp_t *flashapp)
         }
         break;
     case FLASHAPP_ERASE:
-        if (program_erase_bytes == 0) {
+        if (comm->program_erase_bytes == 0) {
             OSPI_NOR_WriteEnable();
             OSPI_ChipErase();
             state_inc();
@@ -456,10 +453,10 @@ static void flashapp_run(flashapp_t *flashapp)
     case FLASHAPP_PROGRAM_NEXT:
         sprintf(flashapp->tab.name, "5. Programming...");
         flashapp->progress_value = 0;
-        flashapp->progress_max = program_size;
-        flashapp->current_program_address = program_address;
-        flashapp->program_bytes_left = program_size;
-        flashapp->program_buf = flash_buffer;
+        flashapp->progress_max = comm->program_size;
+        flashapp->current_program_address = comm->program_address;
+        flashapp->program_bytes_left = comm->program_size;
+        flashapp->program_buf = comm->work_buffer;
         state_inc();
         break;
     case FLASHAPP_PROGRAM:
@@ -471,7 +468,7 @@ static void flashapp_run(flashapp_t *flashapp)
             flashapp->current_program_address += bytes_to_write;
             flashapp->program_buf += bytes_to_write;
             flashapp->program_bytes_left -= bytes_to_write;
-            flashapp->progress_value = program_size - flashapp->program_bytes_left;
+            flashapp->progress_value = comm->program_size - flashapp->program_bytes_left;
         } else {
             state_inc();
         }
@@ -484,13 +481,13 @@ static void flashapp_run(flashapp_t *flashapp)
     case FLASHAPP_CHECK_HASH_FLASH:
         // Calculate sha256 hash of the FLASH.
         sha256_to_string(program_calculated_sha256,
-                         (const BYTE*) (0x90000000 + program_address),
-                         program_size);
+                         (const BYTE*) (0x90000000 + comm->program_address),
+                         comm->program_size);
 
-        if (strncmp((char *)program_calculated_sha256, (char *)program_expected_sha256, 64) != 0) {
+        if (strncmp((char *)program_calculated_sha256, (char *)comm->program_expected_sha256, 64) != 0) {
             // Hashes don't match in FLASH, programming failed.
             sprintf(flashapp->tab.name, "*** Hash mismatch in FLASH ***");
-            program_status = FLASHAPP_STATUS_BAD_HAS_FLASH;
+            comm->program_status = FLASHAPP_STATUS_BAD_HAS_FLASH;
             state_set(FLASHAPP_ERROR);
         } else {
             sprintf(flashapp->tab.name, "7. Hash OK in FLASH.");
@@ -523,18 +520,18 @@ void flashapp_main(void)
     lcd_set_buffers(framebuffer1, framebuffer1);
 
     while (true) {
-        if (program_chunk_count == 1) {
+        if (comm->program_chunk_count == 1) {
             sprintf(flashapp.tab.status, "Game and Watch Flash App");
         } else {
             sprintf(flashapp.tab.status, "Game and Watch Flash App (%ld/%ld)",
-                    program_chunk_idx, program_chunk_count);
+                    comm->program_chunk_idx, comm->program_chunk_count);
         }
 
         // Run multiple times to skip rendering when programming
         for (int i = 0; i < 128; i++) {
             wdog_refresh();
             flashapp_run(&flashapp);
-            if (flashapp_state != FLASHAPP_PROGRAM) {
+            if (comm->flashapp_state != FLASHAPP_PROGRAM) {
                 break;
             }
         }
