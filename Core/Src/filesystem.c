@@ -72,20 +72,20 @@ static int littlefs_api_read(const struct lfs_config *c, lfs_block_t block,
 static int littlefs_api_prog(const struct lfs_config *c, lfs_block_t block,
         lfs_off_t off, const void *buffer, lfs_size_t size) {
     bool toggle_dcache = is_dcache_enabled();
-    uint32_t address = ((unsigned char *)c->context - &__EXTFLASH_BASE__) + (block * c->block_size) + off;
-    assert((address & 0xFF) == 0);
-
+    uint32_t address = (uint32_t)c->context + (block * c->block_size) + off;
     
     if(toggle_dcache){
-        SCB_InvalidateDCache();
+        SCB_CleanDCache_by_Addr(address, size);
+        SCB_InvalidateDCache_by_Addr(address, size);
         SCB_DisableDCache();
     }
 
     OSPI_DisableMemoryMappedMode();
-    OSPI_Program(address, buffer, size);
+    OSPI_Program(address - (uint32_t)&__EXTFLASH_BASE__, buffer, size);
     OSPI_EnableMemoryMappedMode();
 
     if(toggle_dcache){
+        SCB_InvalidateDCache_by_Addr(address, size);
         SCB_EnableDCache();
     }
 
@@ -94,20 +94,21 @@ static int littlefs_api_prog(const struct lfs_config *c, lfs_block_t block,
 
 static int littlefs_api_erase(const struct lfs_config *c, lfs_block_t block) {
     bool toggle_dcache = is_dcache_enabled();
-    uint32_t address = ((unsigned char *)c->context - &__EXTFLASH_BASE__) + (block * c->block_size);
-
+    uint32_t address = (uint32_t)c->context + (block * c->block_size);
     assert((address & (4*1024 - 1)) == 0);
 
     if(toggle_dcache){
-        SCB_InvalidateDCache();
+        SCB_CleanDCache_by_Addr(address, c->block_size);
+        SCB_InvalidateDCache_by_Addr(address, c->block_size);
         SCB_DisableDCache();
     }
 
     OSPI_DisableMemoryMappedMode();
-    OSPI_EraseSync(address, c->block_size);
+    OSPI_EraseSync(address - (uint32_t)&__EXTFLASH_BASE__, c->block_size);
     OSPI_EnableMemoryMappedMode();
 
     if(toggle_dcache){
+        SCB_InvalidateDCache_by_Addr(address, c->block_size);
         SCB_EnableDCache();
     }
 
