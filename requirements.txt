@@ -4,3 +4,4 @@ tqdm
 xxhash
 zopflipy
 pyelftools
+pyocd

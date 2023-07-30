@@ -119,16 +119,23 @@ def write_block(address:int, erase_size):
     target.write32(variables["program_start"].address, 1)      # start programming
     target.resume()
 
+
 def read_logbuf():
     return bytes(target.read_memory_block8(*variables["logbuf"])[:read_int("log_idx")]).decode()
+
+
+def reset_state():
+    target.write32(variables["flashapp_state"].address, 0)
+
 
 def start_flashapp():
     target.reset_and_halt()
     target.write32(variables["boot_magic"].address, 0xf1a5f1a5)
-    target.write32(variables["flashapp_state"].address, 0)  # Just to make sure it's cleared
+    reset_state()
     target.write32(variables["program_chunk_idx"].address, 1)
     target.write32(variables["program_chunk_count"].address, 100)
     target.resume()
+
 
 def wait_for_idle(timeout=10):
     t_deadline = time() + 10
@@ -154,7 +161,9 @@ def main():
         block_size = read_int("lfs_cfg_block_size")
         block_count = read_int("lfs_cfg_block_count")
 
-        breakpoint()
+        while True:
+            wait_for_idle()
+            breakpoint()
 
 
 if __name__ == "__main__":
