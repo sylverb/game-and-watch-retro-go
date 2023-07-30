@@ -734,7 +734,6 @@ $(BUILD_DIR):
 
 OPENOCD ?= openocd
 ADAPTER ?= stlink
-FLASH_MULTI ?= scripts/flash_multi.sh
 FLASHTEST ?= scripts/flashapp.sh --test
 
 # Starts openocd and attaches to the target. To be used with 'flash_intflash_nc' and 'gdb'
@@ -806,7 +805,7 @@ flash_intflash_nc: $(BUILD_DIR)/$(TARGET)_intflash.bin
 .PHONY: flash_intflash_nc
 
 flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin
-	$(FLASH_MULTI) $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
+	$(PYTHON3) filemanager.py flash $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
 .PHONY: flash_extflash
 
 flash_test: flash_intflash

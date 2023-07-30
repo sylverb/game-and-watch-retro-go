@@ -494,16 +494,7 @@ static void flashapp_run(flashapp_t *flashapp)
             state_set(FLASHAPP_ERROR);
         } else {
             sprintf(flashapp->tab.name, "7. Hash OK in FLASH.");
-
-            if (program_chunk_idx != program_chunk_count) {
-                // More chunks will be programmed, skip the init state.
-                program_chunk_idx++;
-                state_set(FLASHAPP_IDLE);
-            } else {
-                sprintf(flashapp->tab.name, "Programming done!");
-                program_status = FLASHAPP_STATUS_DONE;
-                state_set(FLASHAPP_FINAL);
-            }
+            state_set(FLASHAPP_IDLE);
         }
         break;
     case FLASHAPP_TEST_NEXT:

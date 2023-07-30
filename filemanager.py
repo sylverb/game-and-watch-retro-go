@@ -1,5 +1,6 @@
 import argparse
 import hashlib
+from pathlib import Path
 from time import sleep, time
 
 from collections import namedtuple
@@ -8,7 +9,10 @@ from pyocd.core.helpers import ConnectHelper
 from littlefs import LittleFS, LittleFSError
 
 
-_EMPTY_HASH_HEXDIGEST = hashlib.sha256(b"").hexdigest()
+def sha256(data):
+    return hashlib.sha256(data).hexdigest().encode() + b"\x00"  # Flashapp works with Hex strings
+
+_EMPTY_HASH_HEXDIGEST = sha256(b"")
 Variable = namedtuple("Variable", ['address', 'size'])
 
 # fmt: off
@@ -42,40 +46,64 @@ variables["lfs_cfg_read_size"]    = Variable(variables["lfs_cfg"].address + 20, 
 variables["lfs_cfg_prog_size"]    = Variable(variables["lfs_cfg"].address + 24, 4)
 variables["lfs_cfg_block_size"]   = Variable(variables["lfs_cfg"].address + 28, 4)
 variables["lfs_cfg_block_count"]  = Variable(variables["lfs_cfg"].address + 32, 4)
-# TODO: too lazy to add the other attributes
+# TODO: too lazy to add the other lfs_config attributes
 
 # alias the transfer buffer
 variables["flash_buffer"] = variables["framebuffer2"]
 
 _flashapp_state_enum_to_str = {
-    0x00000000: "FLASHAPP_INIT",
-    0x00000001: "FLASHAPP_IDLE",
-    0x00000002: "FLASHAPP_START",
-    0x00000003: "FLASHAPP_CHECK_HASH_RAM_NEXT",
-    0x00000004: "FLASHAPP_CHECK_HASH_RAM",
-    0x00000005: "FLASHAPP_ERASE_NEXT",
-    0x00000006: "FLASHAPP_ERASE",
-    0x00000007: "FLASHAPP_PROGRAM_NEXT",
-    0x00000008: "FLASHAPP_PROGRAM",
-    0x00000009: "FLASHAPP_CHECK_HASH_FLASH_NEXT",
-    0x0000000a: "FLASHAPP_CHECK_HASH_FLASH",
-    0x0000000b: "FLASHAPP_TEST_NEXT",
-    0x0000000c: "FLASHAPP_TEST",
-    0x0000000d: "FLASHAPP_FINAL",
-    0x0000000e: "FLASHAPP_ERROR",
+    0x00000000: "INIT",
+    0x00000001: "IDLE",
+    0x00000002: "START",
+    0x00000003: "CHECK_HASH_RAM_NEXT",
+    0x00000004: "CHECK_HASH_RAM",
+    0x00000005: "ERASE_NEXT",
+    0x00000006: "ERASE",
+    0x00000007: "PROGRAM_NEXT",
+    0x00000008: "PROGRAM",
+    0x00000009: "CHECK_HASH_FLASH_NEXT",
+    0x0000000a: "CHECK_HASH_FLASH",
+    0x0000000b: "TEST_NEXT",
+    0x0000000c: "TEST",
+    0x0000000d: "FINAL",
+    0x0000000e: "ERROR",
 }
+_flashapp_state_str_to_enum = {v: k for k, v in _flashapp_state_enum_to_str.items()}
+
+_flashapp_status_enum_to_str  = {
+    0xbad00001: "BAD_HASH_RAM",
+    0xbad00002: "BAD_HAS_FLASH",
+    0xbad00003: "NOT_ALIGNED",
+    0xcafe0000: "IDLE",
+    0xcafe0001: "DONE",
+    0xcafe0002: "BUSY",
+}
+_flashapp_status_str_to_enum = {v: k for k, v in _flashapp_status_enum_to_str.items()}
+
 # fmt: on
+
 
 class TimeoutError(Exception):
     """Some operation timed out."""
 
 
-def read_int(key, signed=False):
+class DataError(Exception):
+    """Some data was not as expected."""
+
+
+class StateError(Exception):
+    """On-device flashapp is in the ERROR state."""
+
+
+def chunk_bytes(data, chunk_size):
+    return [data[i:i+chunk_size] for i in range(0, len(data), chunk_size)]
+
+def read_int(key: str, signed: bool = False)-> int:
     return int.from_bytes(target.read_memory_block8(*variables[key]), byteorder='little', signed=signed)
 
 
-def read_flashapp_state() -> str:
-    return _flashapp_state_enum_to_str.get(read_int("flashapp_state"), "UNKNOWN")
+def read_flashapp_status() -> str:
+    return _flashapp_status_enum_to_str.get(read_int("program_status"), "UNKNOWN")
 
 
 def disable_debug():
@@ -84,69 +112,173 @@ def disable_debug():
     target.write32(0x5C001004, 0x00000000)
     target.resume()
 
-def erase_block(address:int, erase_size):
-    """
-    address; offset into flash, NOT 0x900XXXXX
 
-    1. Write data to ``flash_buffer``.
-    2. Write the size of data to `program_size`
-    3.
+def write_chunk_idx(idx: int) -> None:
+    target.write32(variables["program_chunk_idx"].address, idx)
+
+
+def write_chunk_count(count: int) -> None:
+    target.write32(variables["program_chunk_count"].address, count)
+
+def write_state(state: str) -> None:
+    target.write32(variables["flashapp_state"].address, _flashapp_state_str_to_enum[state])
+
+
+def extflash_erase(offset: int, size: int) -> None:
+    """Erase a range of data on extflash.
+
+    On-device flashapp will round up to nearest minimum erase size.
+    ``program_chunk_idx`` must externally be set.
+
+    Parameters
+    ----------
+    offset: int
+        Offset into extflash to erase.
+    size: int
+        Number of bytes to erase.
     """
+    validate_extflash_offset(offset)
+    if size <= 0:
+        raise ValueError(f"Size must be >0; 0 erases the entire chip.")
+
     target.halt()
-    target.write32(variables["program_address"].address, address)
+    target.write32(variables["program_address"].address, offset)
     target.write32(variables["program_erase"].address, 1)       # Perform an erase at `program_address`
     target.write32(variables["program_size"].address, 0)
-    target.write32(variables["program_erase_bytes"].address, erase_size)    # an erase of this size
-
-    target.write32(variables["program_chunk_idx"].address, 1)  # TODO; maybe do something better with this
+    target.write32(variables["program_erase_bytes"].address, size)    # Note: a 0 value erases the whole chip
 
     target.write_memory_block8(variables["program_expected_sha256"].address, _EMPTY_HASH_HEXDIGEST)
 
     target.write32(variables["program_start"].address, 1)       # move the flashapp state from IDLE to executing.
     target.resume()
 
-def write_block(address:int, erase_size):
-    """
-    address: 0x900XXXXX
 
-    1. Write data to ``flash_buffer``.
-    2. Write the size of data to `program_size`
-    3.
+def extflash_read_bytes(offset: int, size: int) -> bytes:
+    """Read data from extflash.
+
+    Parameters
+    ----------
+    offset: int
+        Offset into extflash to read.
+    size: int
+        Number of bytes to read.
     """
+    validate_extflash_offset(offset)
+    return bytes(target.read_memory_block8(0x9000_0000 + offset, size))
+
+
+def extflash_write_bytes(offset:int, data: bytes, erase=True) -> None:
+    """Write data to extflash.
+
+    ``program_chunk_idx`` must externally be set.
+
+    Parameters
+    ----------
+    offset: int
+        Offset into extflash to write.
+    size: int
+        Number of bytes to write.
+    erase: bool
+        Erases flash prior to write.
+        Defaults to ``True``.
+    """
+    validate_extflash_offset(offset)
+    if not data:
+        return
+
     target.halt()
-    target.write32(variables["program_erase"].address, 1)
-    target.write32(variables["program_size"].address, address)
-    target.write32(variables["program_start"].address, 1)      # start programming
+    target.write32(variables["program_address"].address, offset)
+    target.write32(variables["program_size"].address, len(data))
+
+    if erase:
+        target.write32(variables["program_erase"].address, 1)       # Perform an erase at `program_address`
+        target.write32(variables["program_erase_bytes"].address, len(data))
+
+    target.write_memory_block8(variables["program_expected_sha256"].address, sha256(data))
+    target.write32(variables["program_start"].address, 1)
+    target.write_memory_block8(variables["flash_buffer"].address, data)
     target.resume()
+    wait_for_program_start_0()
 
 
 def read_logbuf():
     return bytes(target.read_memory_block8(*variables["logbuf"])[:read_int("log_idx")]).decode()
 
 
-def reset_state():
-    target.write32(variables["flashapp_state"].address, 0)
+#def reset_state_to_idle():
+#    target.write32(variables["flashapp_state"].address, _flashapp_str_to_state_enum["IDLE"])
 
 
 def start_flashapp():
     target.reset_and_halt()
-    target.write32(variables["boot_magic"].address, 0xf1a5f1a5)
-    reset_state()
-    target.write32(variables["program_chunk_idx"].address, 1)
-    target.write32(variables["program_chunk_count"].address, 100)
+    target.write32(variables["flashapp_state"].address, _flashapp_state_str_to_enum["INIT"])
+    target.write32(variables["boot_magic"].address, 0xf1a5f1a5)  # Tell bootloader to boot into flashapp
+    target.write32(variables["program_status"].address, 0)
+    target.write32(variables["program_chunk_idx"].address, 1)  # Can be overwritten later
+    target.write32(variables["program_chunk_count"].address, 100)  # Can be overwritten later
     target.resume()
 
 
-def wait_for_idle(timeout=10):
+def wait_for_program_start_0(timeout=10):
     t_deadline = time() + 10
-    while read_flashapp_state() != "FLASHAPP_IDLE":
+    while read_int("program_start"):
         if time() > t_deadline:
             raise TimeoutError
-        sleep(0.25)
+        sleep(0.1)
+
+def wait_for(status, timeout=10):
+    """Block until the on-device flashapp is in the IDLE state."""
+    t_deadline = time() + 10
+    while True:
+        state = read_flashapp_status()
+        if state == status:
+            break
+        if time() > t_deadline:
+            raise TimeoutError
+        sleep(0.1)
+
+
+def validate_extflash_offset(val):
+    if val >= 0x9000_0000:
+        raise ValueError(f"Provided extflash offset 0x{val:08X}, did you mean 0x{(val - 0x9000_0000):08X} ?")
+    if val % 4096 != 0:
+        raise ValueError(f"Extflash offset must be a multiple of 4096.")
+
+
+def flash(args, block_size, block_count):
+    validate_extflash_offset(args.address)
+    data = args.file.read_bytes()
+    #chunk_size = variables["flash_buffer"].size & ~(block_size - 1)
+    chunk_size = 832 << 10
+    chunks = chunk_bytes(data, chunk_size)
+    write_chunk_count(len(chunks));
+    for i, chunk in enumerate(chunks):
+        print(f"Writing idx {i + 1}")
+        write_chunk_idx(i + 1)
+        extflash_write_bytes(args.address + (i * chunk_size), chunk)
+        wait_for("IDLE")
+    write_state("FINAL")
+    sleep(5)
+
 
 def main():
+    commands = {}
+
     parser = argparse.ArgumentParser()
-    #parser.add_argument("action", choices=["ls"])
+    subparsers = parser.add_subparsers(dest="command")
+
+    def add_command(handler):
+        """Add a subcommand, like "flash"."""
+        subparser = subparsers.add_parser(handler.__name__)
+        commands[handler.__name__] = handler
+        return subparser
+
+    subparser = add_command(flash)
+    subparser.add_argument("file", type=Path,
+           help="binary file to flash")
+    subparser.add_argument("address", type=lambda x: int(x,0),
+           help="Offset into external flash")
+
     args = parser.parse_args()
 
     with ConnectHelper.session_with_chosen_probe() as session:
@@ -156,15 +288,24 @@ def main():
         target = board.target
 
         start_flashapp()
-        wait_for_idle()
+        wait_for("IDLE")
 
         block_size = read_int("lfs_cfg_block_size")
         block_count = read_int("lfs_cfg_block_count")
+        #breakpoint()
 
-        while True:
-            wait_for_idle()
-            breakpoint()
+        if block_size==0 or block_count==0:
+            raise DataError
 
+        try:
+            commands[args.command](args, block_size, block_count)
+        except KeyError:
+            print(f"Unknown command \"{args.command}\"")
+            parser.print_help()
+            exit(1)
+
+        # disable_debug()
+        target.reset()
 
 if __name__ == "__main__":
     main()
