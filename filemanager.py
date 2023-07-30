@@ -1,5 +1,6 @@
 import argparse
 import hashlib
+import logging
 from pathlib import Path
 from time import sleep, time
 
@@ -83,6 +84,10 @@ _flashapp_status_str_to_enum = {v: k for k, v in _flashapp_status_enum_to_str.it
 # fmt: on
 
 
+##############
+# Exceptions #
+##############
+
 class TimeoutError(Exception):
     """Some operation timed out."""
 
@@ -94,6 +99,34 @@ class DataError(Exception):
 class StateError(Exception):
     """On-device flashapp is in the ERROR state."""
 
+
+############
+# LittleFS #
+############
+
+
+class LfsDriverContext:
+    def __init__(self, offset) -> None:
+        validate_extflash_offset(offset)
+        self.cache = {}
+        self.offset = offset
+
+    def read(self, cfg: 'LFSConfig', block: int, off: int, size: int) -> bytes:
+        logging.getLogger(__name__).debug('LFS Read : Block: %d, Offset: %d, Size=%d' % (block, off, size))
+        return extflash_read(self.offset + (block * cfg.block_size), size)
+
+    def prog(self, cfg: 'LFSConfig', block: int, off: int, data: bytes) -> int:
+        logging.getLogger(__name__).debug('LFS Prog : Block: %d, Offset: %d, Data=%r' % (block, off, data))
+        extflash_write(self.offset + (block * cfg.block_size), data, erase=False)
+        return 0
+
+    def erase(self, cfg: 'LFSConfig', block: int) -> int:
+        logging.getLogger(__name__).debug('LFS Erase: Block: %d' % block)
+        extflash_erase(self.offset + (block * cfg.block_size), cfg.block_size)
+        return 0
+
+    def sync(self, cfg: 'LFSConfig') -> int:
+        return 0
 
 def chunk_bytes(data, chunk_size):
     return [data[i:i+chunk_size] for i in range(0, len(data), chunk_size)]
@@ -153,7 +186,7 @@ def extflash_erase(offset: int, size: int) -> None:
     target.resume()
 
 
-def extflash_read_bytes(offset: int, size: int) -> bytes:
+def extflash_read(offset: int, size: int) -> bytes:
     """Read data from extflash.
 
     Parameters
@@ -167,7 +200,7 @@ def extflash_read_bytes(offset: int, size: int) -> bytes:
     return bytes(target.read_memory_block8(0x9000_0000 + offset, size))
 
 
-def extflash_write_bytes(offset:int, data: bytes, erase=True) -> None:
+def extflash_write(offset:int, data: bytes, erase=True) -> None:
     """Write data to extflash.
 
     ``program_chunk_idx`` must externally be set.
@@ -255,7 +288,7 @@ def flash(args, block_size, block_count):
     for i, chunk in enumerate(chunks):
         print(f"Writing idx {i + 1}")
         write_chunk_idx(i + 1)
-        extflash_write_bytes(args.address + (i * chunk_size), chunk)
+        extflash_write(args.address + (i * chunk_size), chunk)
         wait_for("IDLE")
     write_state("FINAL")
     sleep(5)
@@ -290,12 +323,15 @@ def main():
         start_flashapp()
         wait_for("IDLE")
 
+        filesystem_offset = read_int("lfs_cfg_context") - 0x9000_0000
         block_size = read_int("lfs_cfg_block_size")
         block_count = read_int("lfs_cfg_block_count")
-        #breakpoint()
 
         if block_size==0 or block_count==0:
             raise DataError
+
+        lfs_context = LfsDriverContext(filesystem_offset)
+        fs = LittleFS(lfs_context, block_size=block_size, block_count=block_count)
 
         try:
             commands[args.command](args, block_size, block_count)
