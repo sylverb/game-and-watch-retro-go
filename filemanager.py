@@ -108,7 +108,6 @@ class StateError(Exception):
 class LfsDriverContext:
     def __init__(self, offset) -> None:
         validate_extflash_offset(offset)
-        self.cache = {}
         self.offset = offset
 
     def read(self, cfg: 'LFSConfig', block: int, off: int, size: int) -> bytes:
