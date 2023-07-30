@@ -156,7 +156,7 @@ def write_state(state: str) -> None:
     target.write32(variables["flashapp_state"].address, _flashapp_state_str_to_enum[state])
 
 
-def extflash_erase(offset: int, size: int) -> None:
+def extflash_erase(offset: int, size: int, whole_chip:bool = False) -> None:
     """Erase a range of data on extflash.
 
     On-device flashapp will round up to nearest minimum erase size.
@@ -168,21 +168,30 @@ def extflash_erase(offset: int, size: int) -> None:
         Offset into extflash to erase.
     size: int
         Number of bytes to erase.
+    whole_chip: bool
+        If ``True``, ``size`` is ignored and the entire chip is erased.
+        Defaults to ``False``.
     """
     validate_extflash_offset(offset)
-    if size <= 0:
+    if size <= 0 and not whole_chip:
         raise ValueError(f"Size must be >0; 0 erases the entire chip.")
 
     target.halt()
     target.write32(variables["program_address"].address, offset)
     target.write32(variables["program_erase"].address, 1)       # Perform an erase at `program_address`
     target.write32(variables["program_size"].address, 0)
-    target.write32(variables["program_erase_bytes"].address, size)    # Note: a 0 value erases the whole chip
+
+    if whole_chip:
+        target.write32(variables["program_erase_bytes"].address, 0)    # Note: a 0 value erases the whole chip
+    else:
+        target.write32(variables["program_erase_bytes"].address, size)    # Note: a 0 value erases the whole chip
 
     target.write_memory_block8(variables["program_expected_sha256"].address, _EMPTY_HASH_HEXDIGEST)
 
     target.write32(variables["program_start"].address, 1)       # move the flashapp state from IDLE to executing.
     target.resume()
+    wait_for_program_start_0()
+    wait_for("IDLE")
 
 
 def extflash_read(offset: int, size: int) -> bytes:
@@ -231,6 +240,7 @@ def extflash_write(offset:int, data: bytes, erase=True) -> None:
     target.write_memory_block8(variables["flash_buffer"].address, data)
     target.resume()
     wait_for_program_start_0()
+    wait_for("IDLE")
 
 
 def read_logbuf():
@@ -277,7 +287,8 @@ def validate_extflash_offset(val):
         raise ValueError(f"Extflash offset must be a multiple of 4096.")
 
 
-def flash(args, block_size, block_count):
+def flash(args, fs, block_size, block_count):
+    """Flash a binary to the external flash."""
     validate_extflash_offset(args.address)
     data = args.file.read_bytes()
     #chunk_size = variables["flash_buffer"].size & ~(block_size - 1)
@@ -288,9 +299,13 @@ def flash(args, block_size, block_count):
         print(f"Writing idx {i + 1}")
         write_chunk_idx(i + 1)
         extflash_write(args.address + (i * chunk_size), chunk)
-        wait_for("IDLE")
     write_state("FINAL")
-    sleep(5)
+
+
+def erase(args, fs, block_size, block_count):
+    """Erase the entire external flash."""
+    extflash_erase(0, 0, whole_chip=True)
+    wait_for("IDLE")
 
 
 def main():
@@ -310,6 +325,8 @@ def main():
            help="binary file to flash")
     subparser.add_argument("address", type=lambda x: int(x,0),
            help="Offset into external flash")
+
+    subparser = add_command(erase)
 
     args = parser.parse_args()
 
@@ -333,7 +350,7 @@ def main():
         fs = LittleFS(lfs_context, block_size=block_size, block_count=block_count)
 
         try:
-            commands[args.command](args, block_size, block_count)
+            commands[args.command](args, fs, block_size, block_count)
         except KeyError:
             print(f"Unknown command \"{args.command}\"")
             parser.print_help()
