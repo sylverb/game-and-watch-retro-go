@@ -55,9 +55,6 @@ static inline bool is_dcache_enabled() {
     return (SCB->CCR & SCB_CCR_DC_Msk) != 0;
 }
 
-// Pointer to the data "on disk"
-static uint8_t *fs_partition;
-
 lfs_t lfs = {0};
 
 static uint8_t read_buffer[LFS_CACHE_SIZE] = {0};
@@ -67,7 +64,7 @@ static uint8_t lookahead_buffer[LFS_LOOKAHEAD_SIZE] __attribute__((aligned(4))) 
 
 static int littlefs_api_read(const struct lfs_config *c, lfs_block_t block,
         lfs_off_t off, void *buffer, lfs_size_t size) {
-    unsigned char *address = fs_partition + (block * c->block_size) + off;
+    unsigned char *address = (unsigned char *)c->context + (block * c->block_size) + off;
     memcpy(buffer, address, size);
     return 0;
 }
@@ -75,7 +72,7 @@ static int littlefs_api_read(const struct lfs_config *c, lfs_block_t block,
 static int littlefs_api_prog(const struct lfs_config *c, lfs_block_t block,
         lfs_off_t off, const void *buffer, lfs_size_t size) {
     bool toggle_dcache = is_dcache_enabled();
-    uint32_t address = (fs_partition - &__EXTFLASH_BASE__) + (block * c->block_size) + off;
+    uint32_t address = ((unsigned char *)c->context - &__EXTFLASH_BASE__) + (block * c->block_size) + off;
     assert((address & 0xFF) == 0);
 
     
@@ -97,7 +94,7 @@ static int littlefs_api_prog(const struct lfs_config *c, lfs_block_t block,
 
 static int littlefs_api_erase(const struct lfs_config *c, lfs_block_t block) {
     bool toggle_dcache = is_dcache_enabled();
-    uint32_t address = (fs_partition - &__EXTFLASH_BASE__) + (block * c->block_size);
+    uint32_t address = ((unsigned char *)c->context - &__EXTFLASH_BASE__) + (block * c->block_size);
 
     assert((address & (4*1024 - 1)) == 0);
 
@@ -236,7 +233,7 @@ static void release_file_handle(fs_file_t *file){
  * Initialize and mount the filesystem. Format the filesystem if unmountable (and then reattempt mount).
  */
 void fs_init(void){
-    fs_partition = (unsigned char *)&__FILESYSTEM_START__;
+    lfs_cfg.context = &__FILESYSTEM_START__;
     lfs_cfg.block_size = OSPI_GetSmallestEraseSize();
     lfs_cfg.block_count = (&__FILESYSTEM_END__ - &__FILESYSTEM_START__) / lfs_cfg.block_size;
 
