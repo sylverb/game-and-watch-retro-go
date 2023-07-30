@@ -67,6 +67,8 @@ typedef enum {
 } flashapp_state_t;
 
 typedef enum {
+    FLASHAPP_BOOTING = 0,
+
     FLASHAPP_STATUS_BAD_HASH_RAM    = 0xbad00001,
     FLASHAPP_STATUS_BAD_HAS_FLASH   = 0xbad00002,
     FLASHAPP_STATUS_NOT_ALIGNED     = 0xbad00003,
@@ -88,7 +90,7 @@ typedef struct {
 } flashapp_t;
 
 struct flashapp_comm {  // Values are read or written by the debugger
-                        // only add attributes at the end (before work_buffer)
+                        // only add attributes at the end (before work_buffers)
                         // so that addresses don't change.
     // FlashApp state-machine state
     uint32_t flashapp_state;
@@ -119,10 +121,14 @@ struct flashapp_comm {  // Values are read or written by the debugger
     uint32_t program_chunk_count;
 
     // The expected sha256 of the loaded binary
-    uint8_t program_expected_sha256[65];
+    uint8_t program_expected_sha256[32];
+
+    unsigned char *buffer_host_should_write_to;  // May be NULL if both buffers are occupied.
 
     // Give a lot of room for future communication variables
-    unsigned char work_buffer[786432] __attribute__((aligned(4096)));
+    unsigned char work_buffer_1[256 << 10] __attribute__((aligned(4096)));
+    unsigned char work_buffer_2[256 << 10];
+    unsigned char work_buffer_3[256 << 10];
 };
 
 // framebuffer1 is used as an actual framebuffer.
@@ -280,13 +286,13 @@ static void test_flash(flashapp_t *flashapp)
     OSPI_EnableMemoryMappedMode();
     assert(validate_erased(address, size));
 
-    generate_random((uint32_t *) comm->work_buffer, rand_size, 0x12345678);
+    generate_random((uint32_t *) comm->work_buffer_1, rand_size, 0x12345678);
 
     // Write and verify 512kB random data
     address = 0;
     size = rand_size;
     OSPI_DisableMemoryMappedMode();
-    OSPI_Program(address, &comm->work_buffer[address], size);
+    OSPI_Program(address, &comm->work_buffer_1[address], size);
     OSPI_EnableMemoryMappedMode();
 
     // Erase parts of the flash and verify that the non erased data is still intact
@@ -299,7 +305,7 @@ static void test_flash(flashapp_t *flashapp)
         sprintf(flashapp->tab.name, "Erase test %d start=%08lx end=%08lx", i, start, end);
 
         // Check that data is ok first
-        assert(memcmp(&flash_ptr[start], &comm->work_buffer[start], size) == 0);
+        assert(memcmp(&flash_ptr[start], &comm->work_buffer_1[start], size) == 0);
 
         // Erase
         OSPI_DisableMemoryMappedMode();
@@ -310,7 +316,7 @@ static void test_flash(flashapp_t *flashapp)
         assert(validate_erased(start, size));
 
         // Check that the rest of the data is still there
-        assert(memcmp(&flash_ptr[start + size], &comm->work_buffer[start + size], rand_size - end) == 0);
+        assert(memcmp(&flash_ptr[start + size], &comm->work_buffer_1[start + size], rand_size - end) == 0);
 
         lcd_swap();
         lcd_wait_for_vblank();
@@ -343,14 +349,13 @@ static void state_inc(void)
 
 static void flashapp_run(flashapp_t *flashapp)
 {
-    uint8_t program_calculated_sha256[65];
+    uint8_t program_calculated_sha256[32];
 
     switch (comm->flashapp_state) {
     case FLASHAPP_INIT:
         // Clear variables shared with the host
         memset(comm, 0, sizeof(*comm));
         comm->program_chunk_count = 1;
-        memset(program_calculated_sha256, 0, sizeof(program_calculated_sha256));
 
         flashapp->progress_value = 0;
         flashapp->progress_max = 0;
@@ -390,9 +395,9 @@ static void flashapp_run(flashapp_t *flashapp)
         break;
     case FLASHAPP_CHECK_HASH_RAM:
         // Calculate sha256 hash of the RAM first
-        sha256_to_string(program_calculated_sha256, (const BYTE*) comm->work_buffer, comm->program_size);
+        sha256(program_calculated_sha256, (const BYTE*) comm->work_buffer_1, comm->program_size);
 
-        if (strncmp((char *)program_calculated_sha256, (char *)comm->program_expected_sha256, 64) != 0) {
+        if (memcmp((const void *)program_calculated_sha256, (const void *)comm->program_expected_sha256, 32) != 0) {
             // Hashes don't match even in RAM, openocd loading failed.
             sprintf(flashapp->tab.name, "*** Hash mismatch in RAM ***");
             comm->program_status = FLASHAPP_STATUS_BAD_HASH_RAM;
@@ -456,7 +461,7 @@ static void flashapp_run(flashapp_t *flashapp)
         flashapp->progress_max = comm->program_size;
         flashapp->current_program_address = comm->program_address;
         flashapp->program_bytes_left = comm->program_size;
-        flashapp->program_buf = comm->work_buffer;
+        flashapp->program_buf = comm->work_buffer_1;
         state_inc();
         break;
     case FLASHAPP_PROGRAM:
@@ -480,11 +485,9 @@ static void flashapp_run(flashapp_t *flashapp)
         break;
     case FLASHAPP_CHECK_HASH_FLASH:
         // Calculate sha256 hash of the FLASH.
-        sha256_to_string(program_calculated_sha256,
-                         (const BYTE*) (0x90000000 + comm->program_address),
-                         comm->program_size);
+        sha256(program_calculated_sha256, (const BYTE*) (0x90000000 + comm->program_address), comm->program_size);
 
-        if (strncmp((char *)program_calculated_sha256, (char *)comm->program_expected_sha256, 64) != 0) {
+        if (memcmp((char *)program_calculated_sha256, (char *)comm->program_expected_sha256, 32) != 0) {
             // Hashes don't match in FLASH, programming failed.
             sprintf(flashapp->tab.name, "*** Hash mismatch in FLASH ***");
             comm->program_status = FLASHAPP_STATUS_BAD_HAS_FLASH;
