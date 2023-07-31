@@ -13,6 +13,9 @@ from collections import namedtuple
 from pyocd.core.helpers import ConnectHelper
 from littlefs import LittleFS, LittleFSError
 
+t_wait = 0
+sleep_duration = 0.05
+
 
 def sha256(data):
     return hashlib.sha256(data).digest()
@@ -166,8 +169,10 @@ class LfsDriverContext:
     def sync(self, cfg: 'LFSConfig') -> int:
         return 0
 
+
 def chunk_bytes(data, chunk_size):
     return [data[i:i+chunk_size] for i in range(0, len(data), chunk_size)]
+
 
 def read_int(key: Union[str, Variable], signed: bool = False)-> int:
     if isinstance(key, str):
@@ -217,7 +222,7 @@ def extflash_erase(offset: int, size: int, whole_chip:bool = False) -> None:
     if size <= 0 and not whole_chip:
         raise ValueError(f"Size must be >0; 0 erases the entire chip.")
 
-    context = find_available_context()
+    context = get_context()
     wait_for("IDLE")
     target.halt()
 
@@ -252,20 +257,6 @@ def extflash_read(offset: int, size: int) -> bytes:
     return bytes(target.read_memory_block8(0x9000_0000 + offset, size))
 
 
-def find_available_context():
-    while True:
-        for context in contexts:
-            if not read_int(context["ready"]):
-                return context
-        sleep(0.1)
-
-def wait_for_all_contexts_complete():
-    for context in contexts:
-        while read_int(context["ready"]):
-            sleep(0.1)
-    wait_for("IDLE")
-
-
 def extflash_write(offset:int, data: bytes, erase=True, blocking=False, decompressed_size=0, decompressed_hash=None) -> None:
     """Write data to extflash.
 
@@ -288,7 +279,7 @@ def extflash_write(offset:int, data: bytes, erase=True, blocking=False, decompre
     if not data:
         return
 
-    context = find_available_context()
+    context = get_context()
 
     if blocking:
         wait_for("IDLE")
@@ -333,8 +324,32 @@ def start_flashapp():
     wait_for("IDLE")
 
 
+def get_context():
+    global t_wait
+    t_start = time()
+    while True:
+        for context in contexts:
+            if not read_int(context["ready"]):
+                t_wait += (time() - t_start)
+                return context
+        sleep(sleep_duration)
+
+
+def wait_for_all_contexts_complete():
+    global t_wait
+    t_start = time()
+    for context in contexts:
+        while read_int(context["ready"]):
+            sleep(sleep_duration)
+    t_wait += (time() - t_start)
+    wait_for("IDLE")
+
+
+
 def wait_for(status: str, timeout=10):
     """Block until the on-device status is matched."""
+    global t_wait
+    t_start = time()
     t_deadline = time() + 10
     error_mask = 0xFFFF_0000
 
@@ -347,7 +362,9 @@ def wait_for(status: str, timeout=10):
             raise DataError(status_str)
         if time() > t_deadline:
             raise TimeoutError
-        sleep(0.1)
+        sleep(sleep_duration)
+
+    t_wait += (time() - t_start)
 
 
 def validate_extflash_offset(val):
@@ -443,6 +460,8 @@ def main():
 
         # disable_debug()
         target.reset()
+
+    print(f"Time waiting: {t_wait:.3f}s.")
 
 if __name__ == "__main__":
     main()
