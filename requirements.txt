@@ -5,3 +5,4 @@ xxhash
 zopflipy
 pyelftools
 pyocd
+littlefs-python
