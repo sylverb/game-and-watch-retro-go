@@ -234,7 +234,7 @@ def write_state(state: str) -> None:
     target.write32(comm["flashapp_state"].address, _flashapp_state_str_to_enum[state])
 
 
-def extflash_erase(offset: int, size: int, whole_chip:bool = False) -> None:
+def extflash_erase(offset: int, size: int, whole_chip:bool = False, **kwargs) -> None:
     """Erase a range of data on extflash.
 
     On-device flashapp will round up to nearest minimum erase size.
@@ -272,7 +272,7 @@ def extflash_erase(offset: int, size: int, whole_chip:bool = False) -> None:
     target.write32(context["ready"].address, 1)
 
     target.resume()
-    wait_for_all_contexts_complete()
+    wait_for_all_contexts_complete(**kwargs)
 
 
 def extflash_read(offset: int, size: int) -> bytes:
@@ -292,6 +292,8 @@ def extflash_read(offset: int, size: int) -> bytes:
 def extflash_write(offset:int, data: bytes, erase=True, blocking=False, decompressed_size=0, decompressed_hash=None) -> None:
     """Write data to extflash.
 
+    Limited to RAM constraints (i.e. <256KB writes).
+
     ``program_chunk_idx`` must externally be set.
 
     Parameters
@@ -310,6 +312,8 @@ def extflash_write(offset:int, data: bytes, erase=True, blocking=False, decompre
     validate_extflash_offset(offset)
     if not data:
         return
+    if len(data) > (256 << 10):
+        raise ValueError(f"Too large of data for a single write.")
 
     context = get_context()
 
@@ -356,25 +360,32 @@ def start_flashapp():
     wait_for("IDLE")
 
 
-def get_context():
+def get_context(timeout=10):
     global t_wait
     t_start = time()
+    t_deadline = time() + timeout
     while True:
         for context in contexts:
             if not read_int(context["ready"]):
                 t_wait += (time() - t_start)
                 return context
+            if time() > t_deadline:
+                raise TimeoutError
+
         sleep(sleep_duration)
 
 
-def wait_for_all_contexts_complete():
+def wait_for_all_contexts_complete(timeout=10):
     global t_wait
     t_start = time()
+    t_deadline = time() + timeout
     for context in contexts:
         while read_int(context["ready"]):
+            if time() > t_deadline:
+                raise TimeoutError
             sleep(sleep_duration)
     t_wait += (time() - t_start)
-    wait_for("IDLE")
+    wait_for("IDLE", timeout = t_deadline - time())
 
 
 
@@ -382,7 +393,7 @@ def wait_for(status: str, timeout=10):
     """Block until the on-device status is matched."""
     global t_wait
     t_start = time()
-    t_deadline = time() + 10
+    t_deadline = time() + timeout
     error_mask = 0xFFFF_0000
 
     while True:
@@ -438,8 +449,8 @@ def flash(args, fs, block_size, block_count):
 
 def erase(args, fs, block_size, block_count):
     """Erase the entire external flash."""
-    extflash_erase(0, 0, whole_chip=True)
-    wait_for("IDLE")
+    # Just setting an artibrarily long timeout
+    extflash_erase(0, 0, whole_chip=True, timeout=10_000)
 
 
 def ls(args, fs, block_size, block_count):
