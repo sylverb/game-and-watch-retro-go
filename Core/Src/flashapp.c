@@ -289,10 +289,6 @@ static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
             n_decomp_bytes = lzma_inflate(comm->decompress_buffer, sizeof(comm->decompress_buffer),
                                           context->buffer, context->size);
             assert(n_decomp_bytes == context->decompressed_size);
-
-            // TODO: remove
-            sha256(program_calculated_sha256, (const BYTE*) comm->decompress_buffer, context->decompressed_size);
-            assert(0 == memcmp(program_calculated_sha256, context->expected_sha256_decompressed, 32));
         }
         state_inc();
         break;
