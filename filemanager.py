@@ -13,12 +13,18 @@ from collections import namedtuple
 from pyocd.core.helpers import ConnectHelper
 from littlefs import LittleFS, LittleFSError
 
+
+logging.getLogger('pyocd').setLevel(logging.ERROR)
+
+
+# Variable to aid in profiling
 t_wait = 0
 sleep_duration = 0.05
 
 
 def sha256(data):
     return hashlib.sha256(data).digest()
+
 
 _EMPTY_HASH_DIGEST = sha256(b"")
 Variable = namedtuple("Variable", ['address', 'size'])
@@ -421,6 +427,12 @@ def erase(args, fs, block_size, block_count):
     wait_for("IDLE")
 
 
+def ls(args, fs, block_size, block_count):
+    folders = fs.listdir(args.path)
+    for folder in folders:
+        print(folder)
+
+
 def main():
     commands = {}
 
@@ -440,6 +452,10 @@ def main():
            help="Offset into external flash")
 
     subparser = add_command(erase)
+
+    subparser = add_command(ls)
+    subparser.add_argument('path', nargs='?', type=str, default='')
+
 
     args = parser.parse_args()
 
@@ -473,7 +489,7 @@ def main():
         # disable_debug()
         target.reset()
 
-    print(f"Time waiting: {t_wait:.3f}s.")
+    # print(f"Time waiting: {t_wait:.3f}s.")
 
 if __name__ == "__main__":
     main()
