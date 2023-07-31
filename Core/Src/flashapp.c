@@ -59,11 +59,8 @@ typedef enum {
     FLASHAPP_CHECK_HASH_FLASH_NEXT  = 0x09,
     FLASHAPP_CHECK_HASH_FLASH       = 0x0A,
 
-    FLASHAPP_TEST_NEXT              = 0x0B,
-    FLASHAPP_TEST                   = 0x0C,
-
-    FLASHAPP_FINAL                  = 0x0D,
-    FLASHAPP_ERROR                  = 0x0E,
+    FLASHAPP_FINAL                  = 0x0B,
+    FLASHAPP_ERROR                  = 0x0C,
 } flashapp_state_t;
 
 typedef enum {
@@ -89,30 +86,37 @@ typedef struct {
     uint32_t progress_value;
 } flashapp_t;
 
+struct work_context {
+    // This work context is ready for the on-device flashapp to process.
+    uint32_t ready;
+
+    // Number of bytes to program in the flash
+    uint32_t size;
+
+    // Where to program in the flash
+    // offset into flash, not an absolute address 0x9XXX_XXXX
+    uint32_t address;
+
+    // Whether or not an erase should be performed
+    uint32_t erase;
+
+    // Number of bytes to be erased from program_address
+    int32_t erase_bytes;
+
+    // The expected sha256 of the loaded binary
+    uint8_t expected_sha256[32];
+
+    unsigned char buffer[256 << 10];
+};
+
 struct flashapp_comm {  // Values are read or written by the debugger
                         // only add attributes at the end (before work_buffers)
                         // so that addresses don't change.
     // FlashApp state-machine state
     uint32_t flashapp_state;
 
-    // Set to non-zero to start programming
-    uint32_t program_start;
-
     // Status register
     uint32_t program_status;
-
-    // Number of bytes to program in the flash
-    uint32_t program_size;
-
-    // Where to program in the flash
-    // offset into flash, not an absolute address 0x9XXX_XXXX
-    uint32_t program_address;
-
-    // Control if chip should be erased or not
-    uint32_t program_erase;
-
-    // Number of bytes to be erased from program_address
-    int32_t program_erase_bytes;
 
     // Current chunk index
     uint32_t program_chunk_idx;
@@ -120,20 +124,14 @@ struct flashapp_comm {  // Values are read or written by the debugger
     // Number of chunks
     uint32_t program_chunk_count;
 
-    // The expected sha256 of the loaded binary
-    uint8_t program_expected_sha256[32];
+    struct work_context contexts[2];
 
-    unsigned char *buffer_host_should_write_to;  // May be NULL if both buffers are occupied.
-
-    // Give a lot of room for future communication variables
-    unsigned char work_buffer_1[256 << 10] __attribute__((aligned(4096)));
-    unsigned char work_buffer_2[256 << 10];
-    unsigned char work_buffer_3[256 << 10];
+    unsigned char decompress_buffer[256 << 10];
 };
 
 // framebuffer1 is used as an actual framebuffer.
 // framebuffer2 and onwards is used as a buffer for the flash.
-static struct flashapp_comm *comm = (struct flashapp_comm *)framebuffer2;
+static volatile struct flashapp_comm *comm = (struct flashapp_comm *)framebuffer2;
 
 // TODO: Expose properly
 int odroid_overlay_draw_text_line(uint16_t x_pos,
@@ -201,140 +199,6 @@ static void redraw(flashapp_t *flashapp)
 }
 
 
-static bool validate_erased(uint32_t address, uint32_t size)
-{
-    assert((size & 0b11) == 0);
-    assert((address & 0b11) == 0);
-
-    uint32_t *flash_ptr_u32 = (uint32_t *)(0x90000000 + address);
-
-    for (uint32_t i = 0; i < size / 4; i++) {
-        if (flash_ptr_u32[i] != 0xffffffff) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-static uint32_t xorshift32(uint32_t *state)
-{
-    uint32_t x = *state;
-    x ^= x << 13;
-    x ^= x >> 17;
-    x ^= x << 5;
-    return *state = x;
-}
-
-static void generate_random(uint32_t *buf, uint32_t size, uint32_t seed)
-{
-    for (int i = 0; i < size / 4; i++) {
-        buf[i] = xorshift32(&seed);
-    }
-}
-
-const uint32_t tests[][2] = {
-    //     start,        end
-    {   0 * 1024,   4 * 1024 }, //        1 *  4k
-    {  32 * 1024,  64 * 1024 }, //        1 * 32k
-    {  64 * 1024, 128 * 1024 }, //        1 * 64k
-    { 252 * 1024, 260 * 1024 }, //   8k = 2 *  4k
-    { 384 * 1024, 508 * 1024 }, // 124k = 64k + 32k + 7 * 4k
-};
-
-// We copy data to emulators ram as it's not used at this point.
-#define MAX_COPY_LENGTH 128*1024
-static uint32_t test_read(uint32_t addr, uint32_t len)
-{
-    const uint8_t *flash_ptr = (const uint8_t *) 0x90000000;
-    uint32_t t0;
-    uint32_t t1;
-
-    t0 = HAL_GetTick();
-    while (len != 0) {
-        uint32_t chunk_len = (len > MAX_COPY_LENGTH) ? MAX_COPY_LENGTH : len;
-        memcpy(&__RAM_EMU_START__, flash_ptr, chunk_len);
-        flash_ptr += chunk_len;
-        len -= chunk_len;
-    }
-    t1 = HAL_GetTick();
-
-    return t1 - t0;
-}
-
-static void test_flash(flashapp_t *flashapp)
-{
-    const uint8_t *flash_ptr = (const uint8_t *) 0x90000000;
-    uint32_t address;
-    uint32_t size;
-    uint32_t start;
-    uint32_t end;
-
-    const uint32_t rand_size = 512 * 1024;
-
-    sprintf(flashapp->tab.status, "Game and Watch Flash App TEST");
-    sprintf(flashapp->tab.name, "Erase and program..");
-    lcd_swap();
-    lcd_wait_for_vblank();
-    redraw(flashapp);
-
-    // Erase 512kB at 0
-    address = 0;
-    size = rand_size;
-    OSPI_DisableMemoryMappedMode();
-    OSPI_EraseSync(address, size);
-    OSPI_EnableMemoryMappedMode();
-    assert(validate_erased(address, size));
-
-    generate_random((uint32_t *) comm->work_buffer_1, rand_size, 0x12345678);
-
-    // Write and verify 512kB random data
-    address = 0;
-    size = rand_size;
-    OSPI_DisableMemoryMappedMode();
-    OSPI_Program(address, &comm->work_buffer_1[address], size);
-    OSPI_EnableMemoryMappedMode();
-
-    // Erase parts of the flash and verify that the non erased data is still intact
-    for (int i = 0; i < ARRAY_SIZE(tests); i++) {
-        start = tests[i][0];
-        end = tests[i][1];
-        size = end - start;
-
-        DBG("Erase test %d start=%08lx end=%08lx\n", i, start, end);
-        sprintf(flashapp->tab.name, "Erase test %d start=%08lx end=%08lx", i, start, end);
-
-        // Check that data is ok first
-        assert(memcmp(&flash_ptr[start], &comm->work_buffer_1[start], size) == 0);
-
-        // Erase
-        OSPI_DisableMemoryMappedMode();
-        OSPI_EraseSync(start, size);
-        OSPI_EnableMemoryMappedMode();
-
-        // Check that erased is actually erased
-        assert(validate_erased(start, size));
-
-        // Check that the rest of the data is still there
-        assert(memcmp(&flash_ptr[start + size], &comm->work_buffer_1[start + size], rand_size - end) == 0);
-
-        lcd_swap();
-        lcd_wait_for_vblank();
-        redraw(flashapp);
-    }
-
-    DBG("[OK] Erase ok\n");
-    sprintf(flashapp->tab.name, "Flash diag test OK");
-    redraw(flashapp);
-
-    // Do a read test of the first 1MB
-    uint32_t read_ms = test_read(0, 1024 * 1024);
-    sprintf(flashapp->tab.name, "All OK. Flash read: %ld.%02ld MB/s", 1024 / read_ms, (100 * 1024 / read_ms) % 100);
-    lcd_swap();
-    lcd_wait_for_vblank();
-    redraw(flashapp);
-}
-
 static void state_set(flashapp_state_t state_next)
 {
     printf("State: %ld -> %d\n", comm->flashapp_state, state_next);
@@ -347,8 +211,9 @@ static void state_inc(void)
     state_set(comm->flashapp_state + 1);
 }
 
-static void flashapp_run(flashapp_t *flashapp)
+static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
 {
+    struct work_context *context = *context_in;
     uint8_t program_calculated_sha256[32];
 
     switch (comm->flashapp_state) {
@@ -370,34 +235,34 @@ static void flashapp_run(flashapp_t *flashapp)
         flashapp->progress_value = 0;
         flashapp->progress_max = 0;
 
-        // program_start is set by the flash script
-        switch (comm->program_start) {
-            case 1: // Normal flash operation
-                comm->program_start = 0;
+        // Attempt to find a ready context
+        for(uint8_t i=0; i < 2; i++){
+            context = &comm->contexts[i];
+            if(context->ready){
+                //printf("Context->ready address: %p; value: %d\n", &context->ready, context->ready);
+                *context_in = context;
                 state_inc();
                 break;
-            case 2: // Test flash
-                comm->program_start = 0;
-                state_set(FLASHAPP_TEST_NEXT);
-                break;
-            default:
-                break;
+            }
         }
 
         break;
     case FLASHAPP_START:
+        assert(context);
         comm->program_status = FLASHAPP_STATUS_BUSY;
         state_inc();
         break;
     case FLASHAPP_CHECK_HASH_RAM_NEXT:
-        sprintf(flashapp->tab.name, "2. Checking hash in RAM (%ld bytes)", comm->program_size);
+        assert(context);
+        sprintf(flashapp->tab.name, "2. Checking hash in RAM (%ld bytes)", context->size);
         state_inc();
         break;
     case FLASHAPP_CHECK_HASH_RAM:
         // Calculate sha256 hash of the RAM first
-        sha256(program_calculated_sha256, (const BYTE*) comm->work_buffer_1, comm->program_size);
+        assert(context);
+        sha256(program_calculated_sha256, (const BYTE*) context->buffer, context->size);
 
-        if (memcmp((const void *)program_calculated_sha256, (const void *)comm->program_expected_sha256, 32) != 0) {
+        if (memcmp((const void *)program_calculated_sha256, (const void *)context->expected_sha256, 32) != 0) {
             // Hashes don't match even in RAM, openocd loading failed.
             sprintf(flashapp->tab.name, "*** Hash mismatch in RAM ***");
             comm->program_status = FLASHAPP_STATUS_BAD_HASH_RAM;
@@ -411,12 +276,12 @@ static void flashapp_run(flashapp_t *flashapp)
     case FLASHAPP_ERASE_NEXT:
         OSPI_DisableMemoryMappedMode();
 
-        if (comm->program_erase) {
-            if (comm->program_erase_bytes == 0) {
+        if (context->erase) {
+            if (context->erase_bytes == 0) {
                 sprintf(flashapp->tab.name, "4. Performing Chip Erase (takes time)");
             } else {
-                flashapp->erase_address = comm->program_address;
-                flashapp->erase_bytes_left = comm->program_erase_bytes;
+                flashapp->erase_address = context->address;
+                flashapp->erase_bytes_left = context->erase_bytes;
 
                 uint32_t smallest_erase = OSPI_GetSmallestEraseSize();
 
@@ -434,7 +299,7 @@ static void flashapp_run(flashapp_t *flashapp)
 
                 sprintf(flashapp->tab.name, "4. Erasing %ld bytes...", flashapp->erase_bytes_left);
                 printf("Erasing %ld bytes at 0x%08lx\n", flashapp->erase_bytes_left, flashapp->erase_address);
-                flashapp->progress_max = comm->program_erase_bytes;
+                flashapp->progress_max = context->erase_bytes;
                 flashapp->progress_value = 0;
             }
             state_inc();
@@ -443,7 +308,7 @@ static void flashapp_run(flashapp_t *flashapp)
         }
         break;
     case FLASHAPP_ERASE:
-        if (comm->program_erase_bytes == 0) {
+        if (context->erase_bytes == 0) {
             OSPI_NOR_WriteEnable();
             OSPI_ChipErase();
             state_inc();
@@ -458,10 +323,10 @@ static void flashapp_run(flashapp_t *flashapp)
     case FLASHAPP_PROGRAM_NEXT:
         sprintf(flashapp->tab.name, "5. Programming...");
         flashapp->progress_value = 0;
-        flashapp->progress_max = comm->program_size;
-        flashapp->current_program_address = comm->program_address;
-        flashapp->program_bytes_left = comm->program_size;
-        flashapp->program_buf = comm->work_buffer_1;
+        flashapp->progress_max = context->size;
+        flashapp->current_program_address = context->address;
+        flashapp->program_bytes_left = context->size;
+        flashapp->program_buf = context->buffer;
         state_inc();
         break;
     case FLASHAPP_PROGRAM:
@@ -473,7 +338,7 @@ static void flashapp_run(flashapp_t *flashapp)
             flashapp->current_program_address += bytes_to_write;
             flashapp->program_buf += bytes_to_write;
             flashapp->program_bytes_left -= bytes_to_write;
-            flashapp->progress_value = comm->program_size - flashapp->program_bytes_left;
+            flashapp->progress_value = context->size - flashapp->program_bytes_left;
         } else {
             state_inc();
         }
@@ -485,23 +350,19 @@ static void flashapp_run(flashapp_t *flashapp)
         break;
     case FLASHAPP_CHECK_HASH_FLASH:
         // Calculate sha256 hash of the FLASH.
-        sha256(program_calculated_sha256, (const BYTE*) (0x90000000 + comm->program_address), comm->program_size);
+        sha256(program_calculated_sha256, (const BYTE*) (0x90000000 + context->address), context->size);
 
-        if (memcmp((char *)program_calculated_sha256, (char *)comm->program_expected_sha256, 32) != 0) {
+        if (memcmp((char *)program_calculated_sha256, (char *)context->expected_sha256, 32) != 0) {
             // Hashes don't match in FLASH, programming failed.
             sprintf(flashapp->tab.name, "*** Hash mismatch in FLASH ***");
             comm->program_status = FLASHAPP_STATUS_BAD_HAS_FLASH;
             state_set(FLASHAPP_ERROR);
         } else {
             sprintf(flashapp->tab.name, "7. Hash OK in FLASH.");
+            memset(context, 0, sizeof(*context));
             state_set(FLASHAPP_IDLE);
         }
         break;
-    case FLASHAPP_TEST_NEXT:
-        test_flash(flashapp);
-        state_inc();
-        break;
-    case FLASHAPP_TEST:
     case FLASHAPP_FINAL:
     case FLASHAPP_ERROR:
         // Stay in state until reset.
@@ -512,6 +373,8 @@ static void flashapp_run(flashapp_t *flashapp)
 
 void flashapp_main(void)
 {
+    struct work_context *context;
+
     flashapp_t flashapp = {};
     flashapp.tab.img_header = &logo_flash;
     flashapp.tab.img_logo = &logo_gnw;
@@ -533,7 +396,7 @@ void flashapp_main(void)
         // Run multiple times to skip rendering when programming
         for (int i = 0; i < 128; i++) {
             wdog_refresh();
-            flashapp_run(&flashapp);
+            flashapp_run(&flashapp, &context);
             if (comm->flashapp_state != FLASHAPP_PROGRAM) {
                 break;
             }

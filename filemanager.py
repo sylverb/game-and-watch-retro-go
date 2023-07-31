@@ -3,6 +3,7 @@ import hashlib
 import logging
 from pathlib import Path
 from time import sleep, time
+from typing import Union
 
 from collections import namedtuple
 
@@ -30,20 +31,21 @@ comm = {
 # Communication Variables
 comm["flashapp_comm"] = comm["framebuffer2"]
 
-comm["flashapp_state"]                 = Variable(comm["flashapp_comm"].address + 0,  4)
-comm["program_start"]                  = Variable(comm["flashapp_comm"].address + 4,  4)
-comm["program_status"]                 = Variable(comm["flashapp_comm"].address + 8,  4)
-comm["program_size"]                   = Variable(comm["flashapp_comm"].address + 12, 4)
-comm["program_address"]                = Variable(comm["flashapp_comm"].address + 16, 4)
-comm["program_erase"]                  = Variable(comm["flashapp_comm"].address + 20, 4)
-comm["program_erase_bytes"]            = Variable(comm["flashapp_comm"].address + 24, 4)
-comm["program_chunk_idx"]              = Variable(comm["flashapp_comm"].address + 28, 4)
-comm["program_chunk_count"]            = Variable(comm["flashapp_comm"].address + 32, 4)
-comm["program_expected_sha256"]        = Variable(comm["flashapp_comm"].address + 36, 32)
-comm["buffer_host_should_write_to"]    = Variable(comm["flashapp_comm"].address + 68, 4)
-comm["work_buffer_1"]                  = Variable(comm["flashapp_comm"].address + 4096, 256 << 10)
-comm["work_buffer_2"]                  = Variable(comm["work_buffer_1"].address + comm["work_buffer_1"].size, 256 << 10)
-comm["work_buffer_3"]                  = Variable(comm["work_buffer_2"].address + comm["work_buffer_2"].size, 256 << 10)
+comm["flashapp_state"]           = last_variable = Variable(comm["flashapp_comm"].address, 4)
+comm["program_status"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
+comm["program_chunk_idx"]        = last_variable = Variable(last_variable.address + last_variable.size, 4)
+comm["program_chunk_count"]      = last_variable = Variable(last_variable.address + last_variable.size, 4)
+
+contexts = []
+for i in range(2):
+    contexts.append({})
+    contexts[-1]["ready"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[-1]["size"]            = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[-1]["address"]         = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[-1]["erase"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[-1]["erase_bytes"]     = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[-1]["expected_sha256"] = last_variable = Variable(last_variable.address + last_variable.size, 32)
+    contexts[-1]["buffer"]          = last_variable = Variable(last_variable.address + last_variable.size, 256 << 10)
 
 # littlefs config struct elements
 comm["lfs_cfg_context"]      = Variable(comm["lfs_cfg"].address + 0,  4)
@@ -70,10 +72,8 @@ _flashapp_state_enum_to_str = {
     0x00000008: "PROGRAM",
     0x00000009: "CHECK_HASH_FLASH_NEXT",
     0x0000000a: "CHECK_HASH_FLASH",
-    0x0000000b: "TEST_NEXT",
-    0x0000000c: "TEST",
-    0x0000000d: "FINAL",
-    0x0000000e: "ERROR",
+    0x0000000b: "FINAL",
+    0x0000000c: "ERROR",
 }
 _flashapp_state_str_to_enum = {v: k for k, v in _flashapp_state_enum_to_str.items()}
 
@@ -121,7 +121,7 @@ class LfsDriverContext:
 
     def prog(self, cfg: 'LFSConfig', block: int, off: int, data: bytes) -> int:
         logging.getLogger(__name__).debug('LFS Prog : Block: %d, Offset: %d, Data=%r' % (block, off, data))
-        extflash_write(self.offset + (block * cfg.block_size), data, erase=False)
+        extflash_write(self.offset + (block * cfg.block_size), data, erase=False, blocking=True)
         return 0
 
     def erase(self, cfg: 'LFSConfig', block: int) -> int:
@@ -135,8 +135,14 @@ class LfsDriverContext:
 def chunk_bytes(data, chunk_size):
     return [data[i:i+chunk_size] for i in range(0, len(data), chunk_size)]
 
-def read_int(key: str, signed: bool = False)-> int:
-    return int.from_bytes(target.read_memory_block8(*comm[key]), byteorder='little', signed=signed)
+def read_int(key: Union[str, Variable], signed: bool = False)-> int:
+    if isinstance(key, str):
+        args = comm[key]
+    elif isinstance(key, Variable):
+        args = key
+    else:
+        raise ValueError
+    return int.from_bytes(target.read_memory_block8(*args), byteorder='little', signed=signed)
 
 
 def disable_debug():
@@ -177,22 +183,25 @@ def extflash_erase(offset: int, size: int, whole_chip:bool = False) -> None:
     if size <= 0 and not whole_chip:
         raise ValueError(f"Size must be >0; 0 erases the entire chip.")
 
+    context = find_available_context()
+    wait_for("IDLE")
     target.halt()
-    target.write32(comm["program_address"].address, offset)
-    target.write32(comm["program_erase"].address, 1)       # Perform an erase at `program_address`
-    target.write32(comm["program_size"].address, 0)
+
+    target.write32(context["address"].address, offset)
+    target.write32(context["erase"].address, 1)       # Perform an erase at `program_address`
+    target.write32(context["size"].address, 0)
 
     if whole_chip:
-        target.write32(comm["program_erase_bytes"].address, 0)    # Note: a 0 value erases the whole chip
+        target.write32(context["erase_bytes"].address, 0)    # Note: a 0 value erases the whole chip
     else:
-        target.write32(comm["program_erase_bytes"].address, size)
+        target.write32(context["erase_bytes"].address, size)
 
-    target.write_memory_block8(comm["program_expected_sha256"].address, _EMPTY_HASH_DIGEST)
+    target.write_memory_block8(context["expected_sha256"].address, _EMPTY_HASH_DIGEST)
 
-    target.write32(comm["program_start"].address, 1)       # move the flashapp state from IDLE to executing.
+    target.write32(context["ready"].address, 1)
+
     target.resume()
-    wait_for_program_start_0()
-    wait_for("IDLE")
+    wait_for_all_contexts_complete()
 
 
 def extflash_read(offset: int, size: int) -> bytes:
@@ -209,7 +218,21 @@ def extflash_read(offset: int, size: int) -> bytes:
     return bytes(target.read_memory_block8(0x9000_0000 + offset, size))
 
 
-def extflash_write(offset:int, data: bytes, erase=True) -> None:
+def find_available_context():
+    while True:
+        for context in contexts:
+            if not read_int(context["ready"]):
+                return context
+        sleep(0.1)
+
+def wait_for_all_contexts_complete():
+    for context in contexts:
+        while not read_int(context["ready"]):
+            sleep(0.1)
+    wait_for("IDLE")
+
+
+def extflash_write(offset:int, data: bytes, erase=True, blocking=False) -> None:
     """Write data to extflash.
 
     ``program_chunk_idx`` must externally be set.
@@ -228,21 +251,28 @@ def extflash_write(offset:int, data: bytes, erase=True) -> None:
     if not data:
         return
 
-    target.halt()
-    target.write32(comm["program_address"].address, offset)
-    target.write32(comm["program_size"].address, len(data))
+    context = find_available_context()
+
+    if blocking:
+        wait_for("IDLE")
+        target.halt()
+
+    target.write32(context["address"].address, offset)
+    target.write32(context["size"].address, len(data))
 
     if erase:
-        target.write32(comm["program_erase"].address, 1)       # Perform an erase at `program_address`
-        target.write32(comm["program_erase_bytes"].address, len(data))
+        target.write32(context["erase"].address, 1)       # Perform an erase at `program_address`
+        target.write32(context["erase_bytes"].address, len(data))
 
-    target.write_memory_block8(comm["program_expected_sha256"].address, sha256(data))
-    target.write_memory_block8(comm["work_buffer_1"].address, data)
+    target.write_memory_block8(context["expected_sha256"].address, sha256(data))
+    target.write_memory_block8(context["buffer"].address, data)
 
-    target.write32(comm["program_start"].address, 1)
-    target.resume()
-    wait_for_program_start_0()
-    wait_for("IDLE")
+    print("Writing Ready!")
+    target.write32(context["ready"].address, 1)
+
+    if blocking:
+        target.resume()
+        wait_for_all_contexts_complete()
 
 
 def read_logbuf():
@@ -258,14 +288,6 @@ def start_flashapp():
     target.write32(comm["program_chunk_count"].address, 100)  # Can be overwritten later
     target.resume()
     wait_for("IDLE")
-
-
-def wait_for_program_start_0(timeout=10):
-    t_deadline = time() + 10
-    while read_int("program_start"):
-        if time() > t_deadline:
-            raise TimeoutError
-        sleep(0.1)
 
 
 def wait_for(status: str, timeout=10):
@@ -296,7 +318,7 @@ def flash(args, fs, block_size, block_count):
     """Flash a binary to the external flash."""
     validate_extflash_offset(args.address)
     data = args.file.read_bytes()
-    chunk_size = comm["work_buffer_1"].size
+    chunk_size = contexts[0]["buffer"].size  # Assumes all contexts have same size buffer
     chunks = chunk_bytes(data, chunk_size)
     write_chunk_count(len(chunks));
     for i, chunk in enumerate(chunks):
@@ -353,11 +375,13 @@ def main():
         fs = LittleFS(lfs_context, block_size=block_size, block_count=block_count)
 
         try:
-            commands[args.command](args, fs, block_size, block_count)
+            f = commands[args.command]
         except KeyError:
             print(f"Unknown command \"{args.command}\"")
             parser.print_help()
             exit(1)
+
+        f(args, fs, block_size, block_count)
 
         # disable_debug()
         target.reset()
