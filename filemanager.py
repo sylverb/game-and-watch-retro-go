@@ -1,9 +1,12 @@
 import argparse
 import hashlib
 import logging
+import lzma
 from pathlib import Path
 from time import sleep, time
 from typing import Union
+from concurrent.futures import ThreadPoolExecutor
+from tqdm import tqdm
 
 from collections import namedtuple
 
@@ -39,13 +42,15 @@ comm["program_chunk_count"]      = last_variable = Variable(last_variable.addres
 contexts = []
 for i in range(2):
     contexts.append({})
-    contexts[-1]["ready"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[-1]["size"]            = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[-1]["address"]         = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[-1]["erase"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[-1]["erase_bytes"]     = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[-1]["expected_sha256"] = last_variable = Variable(last_variable.address + last_variable.size, 32)
-    contexts[-1]["buffer"]          = last_variable = Variable(last_variable.address + last_variable.size, 256 << 10)
+    contexts[-1]["ready"]             = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[-1]["size"]              = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[-1]["address"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[-1]["erase"]             = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[-1]["erase_bytes"]       = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[-1]["decompressed_size"] = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[-1]["expected_sha256"]   = last_variable = Variable(last_variable.address + last_variable.size, 32)
+    contexts[-1]["expected_sha256_decompressed"]   = last_variable = Variable(last_variable.address + last_variable.size, 32)
+    contexts[-1]["buffer"]            = last_variable = Variable(last_variable.address + last_variable.size, 256 << 10)
 
 # littlefs config struct elements
 comm["lfs_cfg_context"]      = Variable(comm["lfs_cfg"].address + 0,  4)
@@ -106,6 +111,24 @@ class DataError(Exception):
 class StateError(Exception):
     """On-device flashapp is in the ERROR state."""
 
+
+###############
+# Compression #
+###############
+def compress_lzma(data):
+    compressed_data = lzma.compress(
+        data,
+        format=lzma.FORMAT_ALONE,
+        filters=[
+            {
+                "id": lzma.FILTER_LZMA1,
+                "preset": 6,
+                "dict_size": 16 * 1024,
+            }
+        ],
+    )
+
+    return compressed_data[13:]
 
 ############
 # LittleFS #
@@ -227,12 +250,12 @@ def find_available_context():
 
 def wait_for_all_contexts_complete():
     for context in contexts:
-        while not read_int(context["ready"]):
+        while read_int(context["ready"]):
             sleep(0.1)
     wait_for("IDLE")
 
 
-def extflash_write(offset:int, data: bytes, erase=True, blocking=False) -> None:
+def extflash_write(offset:int, data: bytes, erase=True, blocking=False, decompressed_size=0, decompressed_hash=None) -> None:
     """Write data to extflash.
 
     ``program_chunk_idx`` must externally be set.
@@ -246,6 +269,9 @@ def extflash_write(offset:int, data: bytes, erase=True, blocking=False) -> None:
     erase: bool
         Erases flash prior to write.
         Defaults to ``True``.
+    compressed: int
+        Size of decompressed data.
+        0 if data has not been previously LZMA compressed.
     """
     validate_extflash_offset(offset)
     if not data:
@@ -262,12 +288,18 @@ def extflash_write(offset:int, data: bytes, erase=True, blocking=False) -> None:
 
     if erase:
         target.write32(context["erase"].address, 1)       # Perform an erase at `program_address`
-        target.write32(context["erase_bytes"].address, len(data))
 
+        if decompressed_size:
+            target.write32(context["erase_bytes"].address, decompressed_size)
+        else:
+            target.write32(context["erase_bytes"].address, len(data))
+
+    target.write32(context["decompressed_size"].address, decompressed_size)
     target.write_memory_block8(context["expected_sha256"].address, sha256(data))
+    if decompressed_hash:
+        target.write_memory_block8(context["expected_sha256_decompressed"].address, decompressed_hash)
     target.write_memory_block8(context["buffer"].address, data)
 
-    print("Writing Ready!")
     target.write32(context["ready"].address, 1)
 
     if blocking:
@@ -320,11 +352,25 @@ def flash(args, fs, block_size, block_count):
     data = args.file.read_bytes()
     chunk_size = contexts[0]["buffer"].size  # Assumes all contexts have same size buffer
     chunks = chunk_bytes(data, chunk_size)
+
     write_chunk_count(len(chunks));
-    for i, chunk in enumerate(chunks):
-        print(f"Writing idx {i + 1}")
+
+    with ThreadPoolExecutor() as executor:
+        compressed_chunks = list(executor.map(compress_lzma, chunks))
+
+    for i, (chunk, compressed_chunk) in tqdm(enumerate(zip(chunks, compressed_chunks)), total=len(chunks)):
+        if len(compressed_chunk) < len(chunk):
+            decompressed_size = len(chunk)
+            decompressed_hash = sha256(chunk)
+            chunk = compressed_chunk
+        else:
+            decompressed_size = 0
+            decompressed_hash = None
         write_chunk_idx(i + 1)
-        extflash_write(args.address + (i * chunk_size), chunk)
+        extflash_write(args.address + (i * chunk_size), chunk,
+                       decompressed_size=decompressed_size,
+                       decompressed_hash=decompressed_hash,
+                       )
     write_state("FINAL")
 
 

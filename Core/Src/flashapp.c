@@ -16,6 +16,7 @@
 #include "gw_linker.h"
 #include "main.h"
 #include "rg_emulators.h"
+#include "lzma.h"
 
 #include "utils.h"
 #include "sha256.h"
@@ -103,8 +104,14 @@ struct work_context {
     // Number of bytes to be erased from program_address
     int32_t erase_bytes;
 
+    // 0 if the data has not been compressed
+    uint32_t decompressed_size;
+
     // The expected sha256 of the loaded binary
     uint8_t expected_sha256[32];
+
+    // The expected sha256 hash of the decompressed data (if originally compressed)
+    uint8_t expected_sha256_decompressed[32];
 
     unsigned char buffer[256 << 10];
 };
@@ -323,10 +330,28 @@ static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
     case FLASHAPP_PROGRAM_NEXT:
         sprintf(flashapp->tab.name, "5. Programming...");
         flashapp->progress_value = 0;
-        flashapp->progress_max = context->size;
         flashapp->current_program_address = context->address;
-        flashapp->program_bytes_left = context->size;
-        flashapp->program_buf = context->buffer;
+
+        // Decompress the data
+        if(context->decompressed_size){
+            printf("DECOMPRESSING\n");
+            uint32_t n_decomp_bytes;
+            n_decomp_bytes = lzma_inflate(comm->decompress_buffer, sizeof(comm->decompress_buffer),
+                                          context->buffer, context->size);
+            assert(n_decomp_bytes == context->decompressed_size);
+
+            sha256(program_calculated_sha256, (const BYTE*) comm->decompress_buffer, context->decompressed_size);
+            assert(0 == memcmp(program_calculated_sha256, context->expected_sha256_decompressed, 32));
+
+            flashapp->progress_max = context->decompressed_size;
+            flashapp->program_bytes_left = context->decompressed_size;
+            flashapp->program_buf = comm->decompress_buffer;
+        }
+        else{
+            flashapp->progress_max = context->size;
+            flashapp->program_bytes_left = context->size;
+            flashapp->program_buf = context->buffer;
+        }
         state_inc();
         break;
     case FLASHAPP_PROGRAM:
@@ -338,7 +363,7 @@ static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
             flashapp->current_program_address += bytes_to_write;
             flashapp->program_buf += bytes_to_write;
             flashapp->program_bytes_left -= bytes_to_write;
-            flashapp->progress_value = context->size - flashapp->program_bytes_left;
+            flashapp->progress_value = flashapp->progress_max - flashapp->program_bytes_left;
         } else {
             state_inc();
         }
@@ -348,11 +373,14 @@ static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
         OSPI_EnableMemoryMappedMode();
         state_inc();
         break;
-    case FLASHAPP_CHECK_HASH_FLASH:
+    case FLASHAPP_CHECK_HASH_FLASH:{
         // Calculate sha256 hash of the FLASH.
-        sha256(program_calculated_sha256, (const BYTE*) (0x90000000 + context->address), context->size);
+        sha256(program_calculated_sha256,
+                (const BYTE*) (0x90000000 + context->address),
+                context->decompressed_size ? context->decompressed_size : context->size);
+        unsigned char *expected_sha256 = context->decompressed_size ? context->expected_sha256_decompressed : context->expected_sha256;
 
-        if (memcmp((char *)program_calculated_sha256, (char *)context->expected_sha256, 32) != 0) {
+        if (memcmp((char *)program_calculated_sha256, (char *)expected_sha256, 32) != 0) {
             // Hashes don't match in FLASH, programming failed.
             sprintf(flashapp->tab.name, "*** Hash mismatch in FLASH ***");
             comm->program_status = FLASHAPP_STATUS_BAD_HAS_FLASH;
@@ -363,6 +391,7 @@ static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
             state_set(FLASHAPP_IDLE);
         }
         break;
+                                   }
     case FLASHAPP_FINAL:
     case FLASHAPP_ERROR:
         // Stay in state until reset.
