@@ -165,18 +165,33 @@ class LfsDriverContext:
     def __init__(self, offset) -> None:
         validate_extflash_offset(offset)
         self.offset = offset
+        self.cache = {}
 
     def read(self, cfg: 'LFSConfig', block: int, off: int, size: int) -> bytes:
         logging.getLogger(__name__).debug('LFS Read : Block: %d, Offset: %d, Size=%d' % (block, off, size))
-        return extflash_read(self.offset + (block * cfg.block_size) + off, size)
+        try:
+            return bytes(self.cache[block][off:off+size])
+        except KeyError:
+            pass
+        self.cache[block] = bytearray(extflash_read(self.offset + (block * cfg.block_size), size))
+        return bytes(self.cache[block][off:off+size])
 
     def prog(self, cfg: 'LFSConfig', block: int, off: int, data: bytes) -> int:
         logging.getLogger(__name__).debug('LFS Prog : Block: %d, Offset: %d, Data=%r' % (block, off, data))
+
+        # Update the local block if it has previosly been read
+        try:
+            barray = self.cache[block]
+            barray[off:off + len(data)] = data
+        except KeyError:
+            pass
+
         extflash_write(self.offset + (block * cfg.block_size) + off, data, erase=False, blocking=True)
         return 0
 
     def erase(self, cfg: 'LFSConfig', block: int) -> int:
         logging.getLogger(__name__).debug('LFS Erase: Block: %d' % block)
+        self.cache.pop(block, None)  # Remove the block from the cache
         extflash_erase(self.offset + (block * cfg.block_size), cfg.block_size)
         return 0
 
