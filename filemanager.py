@@ -39,18 +39,28 @@ comm["program_status"]           = last_variable = Variable(last_variable.addres
 comm["program_chunk_idx"]        = last_variable = Variable(last_variable.address + last_variable.size, 4)
 comm["program_chunk_count"]      = last_variable = Variable(last_variable.address + last_variable.size, 4)
 
-contexts = []
+contexts = [{} for i in range(2)]
 for i in range(2):
-    contexts.append({})
-    contexts[-1]["ready"]             = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[-1]["size"]              = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[-1]["address"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[-1]["erase"]             = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[-1]["erase_bytes"]       = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[-1]["decompressed_size"] = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[-1]["expected_sha256"]   = last_variable = Variable(last_variable.address + last_variable.size, 32)
-    contexts[-1]["expected_sha256_decompressed"]   = last_variable = Variable(last_variable.address + last_variable.size, 32)
-    contexts[-1]["buffer"]            = last_variable = Variable(last_variable.address + last_variable.size, 256 << 10)
+    contexts[i]["size"]              = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[i]["address"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[i]["erase"]             = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[i]["erase_bytes"]       = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[i]["decompressed_size"] = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    contexts[i]["expected_sha256"]   = last_variable = Variable(last_variable.address + last_variable.size, 32)
+    contexts[i]["expected_sha256_decompressed"]   = last_variable = Variable(last_variable.address + last_variable.size, 32)
+
+    # Don't ever directly use this, just here for alignment purposes
+    contexts[i]["__buffer_ptr"]        = last_variable = Variable(last_variable.address + last_variable.size, 4)
+
+    contexts[i]["ready"]             = last_variable = Variable(last_variable.address + last_variable.size, 4)
+
+for i in range(2):
+    contexts[i]["buffer"]            = last_variable = Variable(last_variable.address + last_variable.size, 256 << 10)
+
+comm["active_context_index"] = last_variable = Variable(last_variable.address + last_variable.size, 4)
+context_size = sum(x.size for x in contexts[i].values())
+comm["active_context"] = last_variable = Variable(last_variable.address + last_variable.size, context_size)
+comm["decompress_buffer"] = last_variable = Variable(last_variable.address + last_variable.size, 256 << 10)
 
 # littlefs config struct elements
 comm["lfs_cfg_context"]      = Variable(comm["lfs_cfg"].address + 0,  4)
@@ -372,7 +382,8 @@ def flash(args, fs, block_size, block_count):
                        decompressed_size=decompressed_size,
                        decompressed_hash=decompressed_hash,
                        )
-    write_state("FINAL")
+    wait_for_all_contexts_complete()
+    wait_for("IDLE")
 
 
 def erase(args, fs, block_size, block_count):

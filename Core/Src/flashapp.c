@@ -89,9 +89,6 @@ typedef struct {
 } flashapp_t;
 
 struct work_context {
-    // This work context is ready for the on-device flashapp to process.
-    uint32_t ready;
-
     // Number of bytes to program in the flash
     uint32_t size;
 
@@ -114,7 +111,11 @@ struct work_context {
     // The expected sha256 hash of the decompressed data (if originally compressed)
     uint8_t expected_sha256_decompressed[32];
 
-    unsigned char buffer[256 << 10];
+    unsigned char *buffer;
+
+    // This work context is ready for the on-device flashapp to process.
+    // Put this last so a memset sets it last.
+    uint32_t ready;
 };
 
 struct flashapp_comm {  // Values are read or written by the debugger
@@ -133,6 +134,12 @@ struct flashapp_comm {  // Values are read or written by the debugger
     uint32_t program_chunk_count;
 
     struct work_context contexts[2];
+
+    unsigned char buffer[2][256 << 10];
+
+    uint32_t active_context_index;
+
+    struct work_context active_context;
 
     unsigned char decompress_buffer[256 << 10];
 };
@@ -219,9 +226,9 @@ static void state_inc(void)
     state_set(comm->flashapp_state + 1);
 }
 
-static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
+static void flashapp_run(flashapp_t *flashapp)
 {
-    struct work_context *context = *context_in;
+    struct work_context *context = &comm->active_context;
     uint8_t program_calculated_sha256[32];
 
     switch (comm->flashapp_state) {
@@ -245,10 +252,10 @@ static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
 
         // Attempt to find a ready context
         for(uint8_t i=0; i < 2; i++){
-            context = &comm->contexts[i];
-            if(context->ready){
-                //printf("Context->ready address: %p; value: %d\n", &context->ready, context->ready);
-                *context_in = context;
+            if(comm->contexts[i].ready){
+                comm->active_context_index = i;
+                memcpy(context, &comm->contexts[i], sizeof(struct work_context));
+                context->buffer = comm->buffer[i];
                 state_inc();
                 break;
             }
@@ -256,18 +263,15 @@ static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
 
         break;
     case FLASHAPP_START:
-        assert(context);
         comm->program_status = FLASHAPP_STATUS_BUSY;
         state_inc();
         break;
     case FLASHAPP_CHECK_HASH_RAM_NEXT:
-        assert(context);
         sprintf(flashapp->tab.name, "2. Checking hash in RAM (%ld bytes)", context->size);
         state_inc();
         break;
     case FLASHAPP_CHECK_HASH_RAM:
         // Calculate sha256 hash of the RAM first
-        assert(context);
         sha256(program_calculated_sha256, (const BYTE*) context->buffer, context->size);
 
         if (memcmp((const void *)program_calculated_sha256, (const void *)context->expected_sha256, 32) != 0) {
@@ -282,15 +286,34 @@ static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
         }
         break;
     case FLASHAPP_DECOMPRESSING:
-        // Decompress the data
+        // Decompress the data; nothing after this state should reference decompression.
         if(context->decompressed_size){
-            printf("DECOMPRESSING\n");
             uint32_t n_decomp_bytes;
             n_decomp_bytes = lzma_inflate(comm->decompress_buffer, sizeof(comm->decompress_buffer),
                                           context->buffer, context->size);
             assert(n_decomp_bytes == context->decompressed_size);
+
+            context->size = context->decompressed_size;
+            context->decompressed_size = 0;
+            context->buffer = comm->decompress_buffer;
+            memcpy(context->expected_sha256, context->expected_sha256_decompressed, 32);
+
+            // We can now early release the context
+            memset(&comm->contexts[comm->active_context_index], 0, sizeof(struct work_context));
+
+            state_set(FLASHAPP_CHECK_HASH_RAM_NEXT);
         }
-        state_inc();
+        else{
+            if(context->buffer != comm->decompress_buffer){
+                //The data came in NOT compressed
+                memcpy(comm->decompress_buffer, context->buffer, 256 << 10);
+                context->buffer = comm->decompress_buffer;
+
+                // We can now early release the context
+                memset(&comm->contexts[comm->active_context_index], 0, sizeof(struct work_context));
+            }
+            state_inc();
+        }
         break;
     case FLASHAPP_ERASE_NEXT:
         OSPI_DisableMemoryMappedMode();
@@ -344,16 +367,10 @@ static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
         flashapp->progress_value = 0;
         flashapp->current_program_address = context->address;
 
-        if(context->decompressed_size){
-            flashapp->progress_max = context->decompressed_size;
-            flashapp->program_bytes_left = context->decompressed_size;
-            flashapp->program_buf = comm->decompress_buffer;
-        }
-        else{
-            flashapp->progress_max = context->size;
-            flashapp->program_bytes_left = context->size;
-            flashapp->program_buf = context->buffer;
-        }
+        flashapp->progress_max = context->size;
+        flashapp->program_bytes_left = context->size;
+        flashapp->program_buf = context->buffer;
+
         state_inc();
         break;
     case FLASHAPP_PROGRAM:
@@ -377,19 +394,15 @@ static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
         break;
     case FLASHAPP_CHECK_HASH_FLASH:{
         // Calculate sha256 hash of the FLASH.
-        sha256(program_calculated_sha256,
-                (const BYTE*) (0x90000000 + context->address),
-                context->decompressed_size ? context->decompressed_size : context->size);
-        unsigned char *expected_sha256 = context->decompressed_size ? context->expected_sha256_decompressed : context->expected_sha256;
+        sha256(program_calculated_sha256, (const BYTE*) (0x90000000 + context->address), context->size);
 
-        if (memcmp((char *)program_calculated_sha256, (char *)expected_sha256, 32) != 0) {
+        if (memcmp((char *)program_calculated_sha256, (char *)context->expected_sha256, 32) != 0) {
             // Hashes don't match in FLASH, programming failed.
             sprintf(flashapp->tab.name, "*** Hash mismatch in FLASH ***");
             comm->program_status = FLASHAPP_STATUS_BAD_HAS_FLASH;
             state_set(FLASHAPP_ERROR);
         } else {
             sprintf(flashapp->tab.name, "7. Hash OK in FLASH.");
-            memset(context, 0, sizeof(*context));
             state_set(FLASHAPP_IDLE);
         }
         break;
@@ -404,8 +417,6 @@ static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
 
 void flashapp_main(void)
 {
-    struct work_context *context;
-
     flashapp_t flashapp = {};
     flashapp.tab.img_header = &logo_flash;
     flashapp.tab.img_logo = &logo_gnw;
@@ -427,7 +438,7 @@ void flashapp_main(void)
         // Run multiple times to skip rendering when programming
         for (int i = 0; i < 128; i++) {
             wdog_refresh();
-            flashapp_run(&flashapp, &context);
+            flashapp_run(&flashapp);
             if (comm->flashapp_state != FLASHAPP_PROGRAM) {
                 break;
             }
