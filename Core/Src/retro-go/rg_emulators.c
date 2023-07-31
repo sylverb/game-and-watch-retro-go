@@ -379,6 +379,16 @@ static bool show_cheat_dialog()
 }
 #endif
 
+static void parse_rom_path(retro_emulator_file_t *file, char *path, size_t size, int slot){
+    snprintf(path,
+                size,
+                "savestate/%s/%s/%d",
+                file->system->extension,
+                file->name,
+                slot
+                );
+}
+
 bool emulator_show_file_menu(retro_emulator_file_t *file)
 {
     CHOSEN_FILE = file;
@@ -388,7 +398,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     // bool has_sram = odroid_sdcard_get_filesize(sram_path) > 0;
     // bool is_fav = favorite_find(file) != NULL;
 
-    bool has_save = 1;
+    bool has_save = 0;
     bool has_sram = 0;
     bool force_redraw = false;
 
@@ -401,6 +411,10 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     }
 
 #endif
+    char path[FS_MAX_PATH_SIZE];
+    parse_rom_path(file, path, sizeof(path), 0);
+
+    has_save = fs_exists(path);
 
     odroid_dialog_choice_t choices[] = {
         {0, curr_lang->s_Resume_game, "", has_save && (file->save_address != 0), NULL},
@@ -408,7 +422,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
         ODROID_DIALOG_CHOICE_SEPARATOR,
         //{3, is_fav ? s_Del_favorite : s_Add_favorite, "", 1, NULL},
 		//ODROID_DIALOG_CHOICE_SEPARATOR,
-        {2, curr_lang->s_Delete_save, "", (has_save || has_sram) && (file->save_address != 0), NULL},
+        {2, curr_lang->s_Delete_save, "", (has_save || has_sram), NULL},
 #if CHEAT_CODES == 1
         ODROID_DIALOG_CHOICE_SEPARATOR,
         cheat_choice,
@@ -446,7 +460,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     }
     else if (sel == 2) {
         if (odroid_overlay_confirm(curr_lang->s_Confiem_del_save, false) == 1) {
-            store_erase(file->save_address, file->save_size);
+            fs_delete(path);
         }
     }
     else if (sel == 3) {

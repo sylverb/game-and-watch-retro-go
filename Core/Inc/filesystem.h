@@ -22,6 +22,7 @@ void fs_init(void);
 
 fs_file_t *fs_open(const char *path, bool write_mode, bool use_compression);
 int fs_write(fs_file_t *file, unsigned char *data, size_t size);
+int fs_delete(const char *path);
 int fs_read(fs_file_t *file, unsigned char *buffer, size_t size);
 int fs_seek(fs_file_t *file, lfs_soff_t off, int whence);
 void fs_close(fs_file_t *file);

@@ -307,6 +307,10 @@ error:
     return NULL;
 }
 
+int fs_delete(const char *path){
+    return lfs_remove(&lfs,path);
+}
+
 int fs_write(fs_file_t *file, unsigned char *data, size_t size){
     // TODO: do we want to put delete-oldest-savestate-logic in here?
     if(!file_is_using_compression(file))
