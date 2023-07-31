@@ -4,7 +4,7 @@ import logging
 import lzma
 from pathlib import Path
 from time import sleep, time
-from typing import Union
+from typing import Union, List
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 
@@ -144,6 +144,14 @@ def compress_lzma(data):
 
     return compressed_data[13:]
 
+
+def compress_chunks(chunks: List[bytes], max_workers=2):
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(compress_lzma, chunk) for chunk in chunks]
+        for future in futures:
+            yield future.result()
+
+
 ############
 # LittleFS #
 ############
@@ -170,6 +178,9 @@ class LfsDriverContext:
         return 0
 
 
+###########
+# OpenOCD #
+###########
 def chunk_bytes(data, chunk_size):
     return [data[i:i+chunk_size] for i in range(0, len(data), chunk_size)]
 
@@ -374,6 +385,10 @@ def validate_extflash_offset(val):
         raise ValueError(f"Extflash offset must be a multiple of 4096.")
 
 
+################
+# CLI Commands #
+################
+
 def flash(args, fs, block_size, block_count):
     """Flash a binary to the external flash."""
     validate_extflash_offset(args.address)
@@ -383,10 +398,7 @@ def flash(args, fs, block_size, block_count):
 
     write_chunk_count(len(chunks));
 
-    with ThreadPoolExecutor() as executor:
-        compressed_chunks = list(executor.map(compress_lzma, chunks))
-
-    for i, (chunk, compressed_chunk) in tqdm(enumerate(zip(chunks, compressed_chunks)), total=len(chunks)):
+    for i, (chunk, compressed_chunk) in tqdm(enumerate(zip(chunks, compress_chunks(chunks))), total=len(chunks)):
         if len(compressed_chunk) < len(chunk):
             decompressed_size = len(chunk)
             decompressed_hash = sha256(chunk)
