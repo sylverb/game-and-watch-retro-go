@@ -44,6 +44,8 @@ static const int font_width = 8; //odroid_overlay_get_font_width();
 #define PROGRESS_WIDTH    (4 * (PROGRESS_X_OFFSET * 2))
 #define PROGRESS_HEIGHT   (2 * LIST_LINE_HEIGHT)
 
+#define PERFORM_HASH_CHECK 1
+
 // TODO: Make this nicer
 extern OSPI_HandleTypeDef hospi1;
 
@@ -272,6 +274,7 @@ static void flashapp_run(flashapp_t *flashapp)
         break;
     case FLASHAPP_CHECK_HASH_RAM:
         // Calculate sha256 hash of the RAM first
+#if PERFORM_HASH_CHECK
         sha256(program_calculated_sha256, (const BYTE*) context->buffer, context->size);
 
         if (memcmp((const void *)program_calculated_sha256, (const void *)context->expected_sha256, 32) != 0) {
@@ -284,6 +287,9 @@ static void flashapp_run(flashapp_t *flashapp)
             sprintf(flashapp->tab.name, "3. Hash OK in RAM");
             state_inc();
         }
+#else
+        state_inc();
+#endif
         break;
     case FLASHAPP_DECOMPRESSING:
         // Decompress the data; nothing after this state should reference decompression.
@@ -392,7 +398,8 @@ static void flashapp_run(flashapp_t *flashapp)
         OSPI_EnableMemoryMappedMode();
         state_inc();
         break;
-    case FLASHAPP_CHECK_HASH_FLASH:{
+    case FLASHAPP_CHECK_HASH_FLASH:
+#if PERFORM_HASH_CHECK
         // Calculate sha256 hash of the FLASH.
         sha256(program_calculated_sha256, (const BYTE*) (0x90000000 + context->address), context->size);
 
@@ -401,12 +408,12 @@ static void flashapp_run(flashapp_t *flashapp)
             sprintf(flashapp->tab.name, "*** Hash mismatch in FLASH ***");
             comm->program_status = FLASHAPP_STATUS_BAD_HAS_FLASH;
             state_set(FLASHAPP_ERROR);
-        } else {
-            sprintf(flashapp->tab.name, "7. Hash OK in FLASH.");
-            state_set(FLASHAPP_IDLE);
+            break;
         }
+#endif
+        sprintf(flashapp->tab.name, "7. Hash OK in FLASH.");
+        state_set(FLASHAPP_IDLE);
         break;
-                                   }
     case FLASHAPP_FINAL:
     case FLASHAPP_ERROR:
         // Stay in state until reset.
@@ -439,9 +446,6 @@ void flashapp_main(void)
         for (int i = 0; i < 128; i++) {
             wdog_refresh();
             flashapp_run(&flashapp);
-            if (comm->flashapp_state != FLASHAPP_PROGRAM) {
-                break;
-            }
         }
 
         lcd_sync();
