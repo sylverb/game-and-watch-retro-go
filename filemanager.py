@@ -71,14 +71,15 @@ _flashapp_state_enum_to_str = {
     0x00000002: "START",
     0x00000003: "CHECK_HASH_RAM_NEXT",
     0x00000004: "CHECK_HASH_RAM",
-    0x00000005: "ERASE_NEXT",
-    0x00000006: "ERASE",
-    0x00000007: "PROGRAM_NEXT",
-    0x00000008: "PROGRAM",
-    0x00000009: "CHECK_HASH_FLASH_NEXT",
-    0x0000000a: "CHECK_HASH_FLASH",
-    0x0000000b: "FINAL",
-    0x0000000c: "ERROR",
+    0x00000005: "DECOMPRESSING",
+    0x00000006: "ERASE_NEXT",
+    0x00000007: "ERASE",
+    0x00000008: "PROGRAM_NEXT",
+    0x00000009: "PROGRAM",
+    0x0000000a: "CHECK_HASH_FLASH_NEXT",
+    0x0000000b: "CHECK_HASH_FLASH",
+    0x0000000c: "FINAL",
+    0x0000000d: "ERROR",
 }
 _flashapp_state_str_to_enum = {v: k for k, v in _flashapp_state_enum_to_str.items()}
 

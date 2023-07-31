@@ -53,15 +53,16 @@ typedef enum {
     FLASHAPP_START                  = 0x02,
     FLASHAPP_CHECK_HASH_RAM_NEXT    = 0x03,
     FLASHAPP_CHECK_HASH_RAM         = 0x04,
-    FLASHAPP_ERASE_NEXT             = 0x05,
-    FLASHAPP_ERASE                  = 0x06,
-    FLASHAPP_PROGRAM_NEXT           = 0x07,
-    FLASHAPP_PROGRAM                = 0x08,
-    FLASHAPP_CHECK_HASH_FLASH_NEXT  = 0x09,
-    FLASHAPP_CHECK_HASH_FLASH       = 0x0A,
+    FLASHAPP_DECOMPRESSING          = 0x05,
+    FLASHAPP_ERASE_NEXT             = 0x06,
+    FLASHAPP_ERASE                  = 0x07,
+    FLASHAPP_PROGRAM_NEXT           = 0x08,
+    FLASHAPP_PROGRAM                = 0x09,
+    FLASHAPP_CHECK_HASH_FLASH_NEXT  = 0x0A,
+    FLASHAPP_CHECK_HASH_FLASH       = 0x0B,
 
-    FLASHAPP_FINAL                  = 0x0B,
-    FLASHAPP_ERROR                  = 0x0C,
+    FLASHAPP_FINAL                  = 0x0C,
+    FLASHAPP_ERROR                  = 0x0D,
 } flashapp_state_t;
 
 typedef enum {
@@ -280,6 +281,21 @@ static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
             state_inc();
         }
         break;
+    case FLASHAPP_DECOMPRESSING:
+        // Decompress the data
+        if(context->decompressed_size){
+            printf("DECOMPRESSING\n");
+            uint32_t n_decomp_bytes;
+            n_decomp_bytes = lzma_inflate(comm->decompress_buffer, sizeof(comm->decompress_buffer),
+                                          context->buffer, context->size);
+            assert(n_decomp_bytes == context->decompressed_size);
+
+            // TODO: remove
+            sha256(program_calculated_sha256, (const BYTE*) comm->decompress_buffer, context->decompressed_size);
+            assert(0 == memcmp(program_calculated_sha256, context->expected_sha256_decompressed, 32));
+        }
+        state_inc();
+        break;
     case FLASHAPP_ERASE_NEXT:
         OSPI_DisableMemoryMappedMode();
 
@@ -332,17 +348,7 @@ static void flashapp_run(flashapp_t *flashapp, struct work_context **context_in)
         flashapp->progress_value = 0;
         flashapp->current_program_address = context->address;
 
-        // Decompress the data
         if(context->decompressed_size){
-            printf("DECOMPRESSING\n");
-            uint32_t n_decomp_bytes;
-            n_decomp_bytes = lzma_inflate(comm->decompress_buffer, sizeof(comm->decompress_buffer),
-                                          context->buffer, context->size);
-            assert(n_decomp_bytes == context->decompressed_size);
-
-            sha256(program_calculated_sha256, (const BYTE*) comm->decompress_buffer, context->decompressed_size);
-            assert(0 == memcmp(program_calculated_sha256, context->expected_sha256_decompressed, 32));
-
             flashapp->progress_max = context->decompressed_size;
             flashapp->program_bytes_left = context->decompressed_size;
             flashapp->program_buf = comm->decompress_buffer;
