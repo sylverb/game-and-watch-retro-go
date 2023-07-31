@@ -168,11 +168,11 @@ class LfsDriverContext:
 
     def read(self, cfg: 'LFSConfig', block: int, off: int, size: int) -> bytes:
         logging.getLogger(__name__).debug('LFS Read : Block: %d, Offset: %d, Size=%d' % (block, off, size))
-        return extflash_read(self.offset + (block * cfg.block_size), size)
+        return extflash_read(self.offset + (block * cfg.block_size) + off, size)
 
     def prog(self, cfg: 'LFSConfig', block: int, off: int, data: bytes) -> int:
         logging.getLogger(__name__).debug('LFS Prog : Block: %d, Offset: %d, Data=%r' % (block, off, data))
-        extflash_write(self.offset + (block * cfg.block_size), data, erase=False, blocking=True)
+        extflash_write(self.offset + (block * cfg.block_size) + off, data, erase=False, blocking=True)
         return 0
 
     def erase(self, cfg: 'LFSConfig', block: int) -> int:
