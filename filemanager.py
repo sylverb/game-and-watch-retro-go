@@ -7,7 +7,7 @@ from time import sleep, time
 from typing import Union, List
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
-from datetime import datetime
+from datetime import datetime, timezone
 
 from collections import namedtuple
 
@@ -46,6 +46,7 @@ comm["flashapp_comm"] = comm["framebuffer2"]
 
 comm["flashapp_state"]           = last_variable = Variable(comm["flashapp_comm"].address, 4)
 comm["program_status"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
+comm["utc_timestamp"]            = last_variable = Variable(last_variable.address + last_variable.size, 4)
 comm["program_chunk_idx"]        = last_variable = Variable(last_variable.address + last_variable.size, 4)
 comm["program_chunk_count"]      = last_variable = Variable(last_variable.address + last_variable.size, 4)
 
@@ -358,6 +359,10 @@ def start_flashapp():
     target.resume()
     wait_for("IDLE")
 
+    # Set game-and-watch RTC
+    utc_timestamp = int(round(datetime.now().replace(tzinfo=timezone.utc).timestamp()))
+    target.write32(comm["utc_timestamp"].address, utc_timestamp)
+
 
 def get_context(timeout=10):
     global t_wait
@@ -464,11 +469,11 @@ def ls(args, fs, block_size, block_count):
         fullpath = f"{args.path}/{element.name}"
         try:
             time_val = int.from_bytes(fs.getattr(fullpath, "t"), byteorder='little')
-            dt = datetime.utcfromtimestamp(time_val)
+            time_str = datetime.fromtimestamp(time_val, timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         except LittleFSError:
-            dt = " " * 19
+            time_str = " " * 19
 
-        print(f"{element.size:7}B {typ} {dt} {element.name}")
+        print(f"{element.size:7}B {typ} {time_str} {element.name}")
 
 
 def main():

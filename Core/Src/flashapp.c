@@ -129,6 +129,9 @@ struct flashapp_comm {  // Values are read or written by the debugger
     // Status register
     uint32_t program_status;
 
+    // Host-setable timestamp; if 0, RTC is not updated.
+    uint32_t utc_timestamp;
+
     // Current chunk index
     uint32_t program_chunk_idx;
 
@@ -251,6 +254,12 @@ static void flashapp_run(flashapp_t *flashapp)
         comm->program_status = FLASHAPP_STATUS_IDLE;
         flashapp->progress_value = 0;
         flashapp->progress_max = 0;
+
+        if(comm->utc_timestamp){
+            // Set time
+            GW_SetUnixTime(comm->utc_timestamp);
+            comm->utc_timestamp = 0;
+        }
 
         // Attempt to find a ready context
         for(uint8_t i=0; i < 2; i++){

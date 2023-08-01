@@ -288,7 +288,22 @@ time_t GW_GetUnixTime(void) {
     timestamp = mktime(&timeStruct);
 
     return timestamp;
+}
 
+void GW_SetUnixTime(uint32_t time){
+    struct tm *timeStruct;
+    const int64_t time_64 = time;
+    timeStruct = gmtime(&time_64);
+
+    GW_SetCurrentYear(timeStruct->tm_year - 100);
+    GW_SetCurrentMonth(timeStruct->tm_mon + 1);
+    GW_SetCurrentDay(timeStruct->tm_mday);
+
+    GW_SetCurrentHour(timeStruct->tm_hour);
+    GW_SetCurrentMinute(timeStruct->tm_min);
+    GW_SetCurrentSecond(timeStruct->tm_sec);
+
+    GW_SetCurrentWeekday(timeStruct->tm_wday ? timeStruct->tm_wday : 7);
 }
 
 bool weekday_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat) { 
