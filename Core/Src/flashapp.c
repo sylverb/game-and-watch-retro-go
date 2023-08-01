@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+
 #include <odroid_system.h>
 #include <assert.h>
 #include <stdarg.h>
@@ -370,7 +373,7 @@ static void flashapp_run(flashapp_t *flashapp)
             OSPI_ChipErase();
             state_inc();
         } else {
-            if (OSPI_Erase(&flashapp->erase_address, &flashapp->erase_bytes_left)) {
+            if (OSPI_Erase(&flashapp->erase_address, &flashapp->erase_bytes_left, true)) {
                 flashapp->progress_max = 0;
                 state_inc();
             }
@@ -463,3 +466,5 @@ void flashapp_main(void)
         redraw(&flashapp);
     }
 }
+
+#pragma GCC diagnostic pop

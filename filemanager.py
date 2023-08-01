@@ -540,7 +540,5 @@ def main():
 
         target.reset()
 
-    # print(f"Time waiting: {t_wait:.3f}s.")
-
 if __name__ == "__main__":
     main()

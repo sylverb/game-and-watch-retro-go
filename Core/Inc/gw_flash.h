@@ -15,7 +15,7 @@ void OSPI_ChipErase(void);
 // Sets *address and *size to values that should be passed to
 // OSPI_Erase in the next iteration.
 // Returns true when done.
-bool OSPI_Erase(uint32_t *address, uint32_t *size);
+bool OSPI_Erase(uint32_t *address, uint32_t *size, bool blocking);
 
 // Erases the area synchronously. Will block until it's done.
 void OSPI_EraseSync(uint32_t address, uint32_t size);

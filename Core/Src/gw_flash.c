@@ -467,6 +467,12 @@ static void OSPI_WriteBytes(const flash_cmd_t *cmd,
     }
 }
 
+static uint8_t get_status(uint8_t mask){
+    uint8_t status;
+    OSPI_ReadBytes(CMD(RDSR), 0, &status, 1);
+    return status & mask;
+}
+
 static void wait_for_status(uint8_t mask, uint8_t value, uint32_t timeout)
 {
     uint8_t status;
@@ -474,18 +480,14 @@ static void wait_for_status(uint8_t mask, uint8_t value, uint32_t timeout)
     uint32_t t0 = HAL_GetTick();
 
     do {
-        OSPI_ReadBytes(CMD(RDSR), 0, &status, 1);
+        status = get_status(mask);
         wdog_refresh();
 
-#if 0
-        printf("Status: %02X\n", status);
-        HAL_Delay(500);
-#endif
         if ((timeout > 0) && (HAL_GetTick() > t0 + timeout)) {
             assert(!"Status poll timeout!");
             break;
         }
-    } while ((status & mask) != value);
+    } while (status != value);
 }
 
 void OSPI_EnableMemoryMappedMode(void)
@@ -540,18 +542,16 @@ void OSPI_DisableMemoryMappedMode(void)
 static void _OSPI_Erase(const flash_cmd_t *cmd, uint32_t address)
 {
     OSPI_WriteBytes(cmd, address, NULL, 0);
-
-    // Wait for Write In Progress Bit to become zero
-    wait_for_status(STATUS_WIP_Msk, 0, 0);
 }
 
 void OSPI_ChipErase(void)
 {
     DBG("CE\n");
     _OSPI_Erase(CMD(CE), 0); // Chip Erase
+    wait_for_status(STATUS_WIP_Msk, 0, 0);
 }
 
-bool OSPI_Erase(uint32_t *address, uint32_t *size)
+bool OSPI_Erase(uint32_t *address, uint32_t *size, bool blocking)
 {
     // Performs one erase command per call with the largest size possible.
     // Sets *address and *size to values that should be passed to
@@ -560,6 +560,21 @@ bool OSPI_Erase(uint32_t *address, uint32_t *size)
 
     assert(address != NULL);
     assert(size != NULL);
+
+    if(blocking){
+        // wait until a previous command is no longer in progress
+        wait_for_status(STATUS_WIP_Msk, 0, 0);
+    }
+    else{
+        uint8_t status;
+        if(get_status(STATUS_WIP_Msk)){
+            // A write is in progress, no action to be performed right now
+            return false;
+        }
+    }
+
+    if(*size == 0)
+        return true;
 
     uint32_t req_address = *address;
     uint32_t req_size = *size;
@@ -591,6 +606,9 @@ bool OSPI_Erase(uint32_t *address, uint32_t *size)
 
             OSPI_NOR_WriteEnable();
             _OSPI_Erase(erase_cmd[i], req_address);
+            if(blocking){
+                wait_for_status(STATUS_WIP_Msk, 0, 0);
+            }
 
             return (*size == 0);
         }
@@ -608,7 +626,7 @@ void OSPI_EraseSync(uint32_t address, uint32_t size)
     bool ret;
 
     do {
-        ret = OSPI_Erase(&address, &size);
+        ret = OSPI_Erase(&address, &size, true);
     } while (ret == false);
 }
 
