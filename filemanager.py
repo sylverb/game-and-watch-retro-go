@@ -476,6 +476,8 @@ def main():
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command")
+    parser.add_argument("--no-disable-debug", action="store_true",
+                        help="Don't disable the debug hw block after flashing.")
 
     def add_command(handler):
         """Add a subcommand, like "flash"."""
@@ -524,7 +526,9 @@ def main():
 
         f(args, fs, block_size, block_count)
 
-        #disable_debug()
+        if not args.no_disable_debug:
+            disable_debug()
+
         target.reset()
 
     # print(f"Time waiting: {t_wait:.3f}s.")
