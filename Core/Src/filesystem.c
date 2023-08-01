@@ -27,6 +27,7 @@ typedef struct{
     uint8_t buffer[LFS_CACHE_SIZE];
     struct lfs_attr file_attrs[LFS_NUM_ATTRS];
     struct lfs_file_config config;
+    uint32_t open_time;
 } fs_file_handle_t;
 
 static fs_file_handle_t file_handles[MAX_OPEN_FILES];
@@ -290,10 +291,10 @@ fs_file_t *fs_open(const char *path, bool write_mode, bool use_compression){
     fs_file_handle->config.attr_count = LFS_NUM_ATTRS;
 
     // Add time attribute; may be useful for deleting oldest savestates to make room for new ones.
-    uint32_t current_time = GW_GetUnixTime();
+    fs_file_handle->open_time = GW_GetUnixTime();
     fs_file_handle->file_attrs[0].type = 't';  // 't' for "time"
-    fs_file_handle->file_attrs[0].size = 4;
-    fs_file_handle->file_attrs[0].buffer = &current_time;
+    fs_file_handle->file_attrs[0].buffer = &fs_file_handle->open_time;
+    fs_file_handle->file_attrs[0].size = sizeof(fs_file_handle->open_time);
 
     // TODO: add error handling; maybe delete oldest file(s) to make room
     res = lfs_file_opencfg(&lfs, &fs_file_handle->file, path, flags, &fs_file_handle->config);

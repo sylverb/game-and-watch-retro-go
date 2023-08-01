@@ -7,6 +7,7 @@ from time import sleep, time
 from typing import Union, List
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
+from datetime import datetime
 
 from collections import namedtuple
 
@@ -218,9 +219,7 @@ def read_int(key: Union[str, Variable], signed: bool = False)-> int:
 
 def disable_debug():
     """Disables the Debug block, reducing battery consumption."""
-    target.halt()
     target.write32(0x5C001004, 0x00000000)
-    target.resume()
 
 
 def write_chunk_idx(idx: int) -> None:
@@ -454,9 +453,22 @@ def erase(args, fs, block_size, block_count):
 
 
 def ls(args, fs, block_size, block_count):
-    folders = fs.listdir(args.path)
-    for folder in folders:
-        print(folder)
+    for element in fs.scandir(args.path):
+        if element.type == 1:
+            typ = "FILE"
+        elif element.type == 2:
+            typ = "DIR "
+        else:
+            typ = "UKWN"
+
+        fullpath = f"{args.path}/{element.name}"
+        try:
+            time_val = int.from_bytes(fs.getattr(fullpath, "t"), byteorder='little')
+            dt = datetime.utcfromtimestamp(time_val)
+        except LittleFSError:
+            dt = " " * 19
+
+        print(f"{element.size:7}B {typ} {dt} {element.name}")
 
 
 def main():
@@ -512,7 +524,7 @@ def main():
 
         f(args, fs, block_size, block_count)
 
-        # disable_debug()
+        #disable_debug()
         target.reset()
 
     # print(f"Time waiting: {t_wait:.3f}s.")
