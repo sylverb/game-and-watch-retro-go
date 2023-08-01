@@ -804,7 +804,7 @@ flash_intflash_nc: $(BUILD_DIR)/$(TARGET)_intflash.bin
 	echo "program $< $(INTFLASH_ADDRESS) verify reset" | nc -c localhost 4444
 .PHONY: flash_intflash_nc
 
-flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin
+flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin pyocd_check_pack
 	$(PYTHON3) filemanager.py flash $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
 .PHONY: flash_extflash
 
@@ -1005,6 +1005,17 @@ clean:
 distclean: clean
 	$(V)$(ECHO) [ RM ] $(SDK_DIR)
 	$(V)rm -rf $(SDK_DIR)
+
+#########
+# pyOCD #
+#########
+pyocd_install_pack:
+	pyocd pack --install STM32H7B0VBTx
+
+pyocd_check_pack:
+	@if [ $(shell pyocd pack find STM32H7B0VBTx --no-header | grep -c "STM32H7B0VBTx") -eq 0 ]; then \
+		$(MAKE) pyocd_install_pack; \
+	fi
 
 #######################################
 # dependencies
