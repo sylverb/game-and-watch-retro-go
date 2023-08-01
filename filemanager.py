@@ -15,7 +15,7 @@ from pyocd.core.helpers import ConnectHelper
 from littlefs import LittleFS, LittleFSError
 
 
-logging.getLogger('pyocd').setLevel(logging.ERROR)
+logging.getLogger('pyocd').setLevel(logging.WARNING)
 
 
 # Variable to aid in profiling
@@ -503,8 +503,12 @@ def main():
 
 
     args = parser.parse_args()
+    options = {
+        "frequency": 5_000_000,
+        "target_override": "STM32H7B0VBTx",
+    }
 
-    with ConnectHelper.session_with_chosen_probe() as session:
+    with ConnectHelper.session_with_chosen_probe(options=options) as session:
         global target
         board = session.board
         assert board is not None
