@@ -1,8 +1,7 @@
 lz4
 pillow
 tqdm
-xxhash
-zopflipy
 pyelftools
 pyocd
-littlefs-python
+#littlefs-python
+git+https://github.com/BrianPugh/littlefs-python.git@develop#egg=littlefs-python
