@@ -91,6 +91,7 @@ typedef struct {
     uint8_t* program_buf;
     uint32_t progress_max;
     uint32_t progress_value;
+    uint32_t context_counter;
 } flashapp_t;
 
 struct work_context {
@@ -252,6 +253,7 @@ static void flashapp_run(flashapp_t *flashapp)
         break;
     case FLASHAPP_IDLE:
         sprintf(flashapp->tab.name, "1. Waiting for data");
+        OSPI_EnableMemoryMappedMode();
 
         // Notify that we are ready to start
         comm->program_status = FLASHAPP_STATUS_IDLE;
@@ -264,9 +266,10 @@ static void flashapp_run(flashapp_t *flashapp)
             comm->utc_timestamp = 0;
         }
 
-        // Attempt to find a ready context
+        // Attempt to find the next ready context in queue
         for(uint8_t i=0; i < 2; i++){
-            if(comm->contexts[i].ready){
+            if(comm->contexts[i].ready == flashapp->context_counter){
+                flashapp->context_counter++;
                 comm->active_context_index = i;
                 memcpy(context, &comm->contexts[i], sizeof(struct work_context));
                 context->buffer = comm->buffer[i];
@@ -440,6 +443,7 @@ static void flashapp_run(flashapp_t *flashapp)
 void flashapp_main(void)
 {
     flashapp_t flashapp = {};
+    flashapp.context_counter = 1;
     flashapp.tab.img_header = &logo_flash;
     flashapp.tab.img_logo = &logo_gnw;
 

@@ -5,7 +5,7 @@ import lzma
 import readline
 from pathlib import Path
 from time import sleep, time
-from typing import Union, List
+from typing import Union, List, Optional
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 from datetime import datetime, timezone
@@ -19,9 +19,11 @@ from littlefs import LittleFS, LittleFSError
 logging.getLogger('pyocd').setLevel(logging.WARNING)
 
 
+context_counter = 1
+sleep_duration = 0.05
+
 # Variable to aid in profiling
 t_wait = 0
-sleep_duration = 0.05
 
 
 def sha256(data):
@@ -176,6 +178,7 @@ class LfsDriverContext:
             return bytes(self.cache[block][off:off+size])
         except KeyError:
             pass
+        wait_for_all_contexts_complete()  # if a prog/erase is being performed, chip is not in memory-mapped-mode
         self.cache[block] = bytearray(extflash_read(self.offset + (block * cfg.block_size), size))
         return bytes(self.cache[block][off:off+size])
 
@@ -189,12 +192,20 @@ class LfsDriverContext:
         except KeyError:
             pass
 
-        extflash_write(self.offset + (block * cfg.block_size) + off, data, erase=False, blocking=True)
+        decompressed_hash = sha256(data)
+        compressed_data = compress_lzma(data)
+
+        extflash_write(self.offset + (block * cfg.block_size) + off,
+                       compressed_data,
+                       erase=False,
+                       decompressed_size=len(data),
+                       decompressed_hash=decompressed_hash,
+                       )
         return 0
 
     def erase(self, cfg: 'LFSConfig', block: int) -> int:
         logging.getLogger(__name__).debug('LFS Erase: Block: %d' % block)
-        self.cache.pop(block, None)  # Remove the block from the cache
+        self.cache[block] = bytearray([0xFF]*cfg.block_size)
         extflash_erase(self.offset + (block * cfg.block_size), cfg.block_size)
         return 0
 
@@ -270,13 +281,12 @@ def extflash_erase(offset: int, size: int, whole_chip:bool = False, **kwargs) ->
         If ``True``, ``size`` is ignored and the entire chip is erased.
         Defaults to ``False``.
     """
+    global context_counter
     validate_extflash_offset(offset)
     if size <= 0 and not whole_chip:
         raise ValueError(f"Size must be >0; 0 erases the entire chip.")
 
     context = get_context()
-    wait_for("IDLE")
-    target.halt()
 
     target.write32(context["address"].address, offset)
     target.write32(context["erase"].address, 1)       # Perform an erase at `program_address`
@@ -289,9 +299,9 @@ def extflash_erase(offset: int, size: int, whole_chip:bool = False, **kwargs) ->
 
     target.write_memory_block8(context["expected_sha256"].address, _EMPTY_HASH_DIGEST)
 
-    target.write32(context["ready"].address, 1)
+    target.write32(context["ready"].address, context_counter)
+    context_counter += 1
 
-    target.resume()
     wait_for_all_contexts_complete(**kwargs)
 
 
@@ -309,7 +319,13 @@ def extflash_read(offset: int, size: int) -> bytes:
     return bytes(target.read_memory_block8(0x9000_0000 + offset, size))
 
 
-def extflash_write(offset:int, data: bytes, erase=True, blocking=False, decompressed_size=0, decompressed_hash=None) -> None:
+def extflash_write(offset:int,
+                   data: bytes,
+                   erase: bool = True,
+                   blocking: bool = False,
+                   decompressed_size: int = 0,
+                   decompressed_hash: Optional[bytes]=None
+                   ) -> None:
     """Write data to extflash.
 
     Limited to RAM constraints (i.e. <256KB writes).
@@ -325,10 +341,13 @@ def extflash_write(offset:int, data: bytes, erase=True, blocking=False, decompre
     erase: bool
         Erases flash prior to write.
         Defaults to ``True``.
-    compressed: int
+    decompressed_size: int
         Size of decompressed data.
         0 if data has not been previously LZMA compressed.
+    decompressed_hash: bytes
+        SHA256 hash of the decompressed data
     """
+    global context_counter
     validate_extflash_offset(offset)
     if not data:
         return
@@ -358,7 +377,8 @@ def extflash_write(offset:int, data: bytes, erase=True, blocking=False, decompre
         target.write_memory_block8(context["expected_sha256_decompressed"].address, decompressed_hash)
     target.write_memory_block8(context["buffer"].address, data)
 
-    target.write32(context["ready"].address, 1)
+    target.write32(context["ready"].address, context_counter)
+    context_counter += 1
 
     if blocking:
         target.resume()
@@ -603,6 +623,7 @@ def push(args, fs, block_size, block_count):
                 f.write(data)
 
             fs.setattr(gnw_path.as_posix(), 't', timestamp_now_bytes())
+    wait_for_all_contexts_complete()
 
 
 def format(args, fs, block_size, block_count):
