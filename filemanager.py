@@ -2,6 +2,7 @@ import argparse
 import hashlib
 import logging
 import lzma
+import readline
 from pathlib import Path
 from time import sleep, time
 from typing import Union, List
@@ -457,23 +458,43 @@ def erase(args, fs, block_size, block_count):
     extflash_erase(0, 0, whole_chip=True, timeout=10_000)
 
 
+def _ls(fs, path):
+    try:
+        for element in fs.scandir(path):
+            if element.type == 1:
+                typ = "FILE"
+            elif element.type == 2:
+                typ = "DIR "
+            else:
+                typ = "UKWN"
+
+            fullpath = f"{path}/{element.name}"
+            try:
+                time_val = int.from_bytes(fs.getattr(fullpath, "t"), byteorder='little')
+                time_str = datetime.fromtimestamp(time_val, timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            except LittleFSError:
+                time_str = " " * 19
+
+            print(f"{element.size:7}B {typ} {time_str} {element.name}")
+    except LittleFSError as e:
+        if e.code != -2:
+            raise
+        print(f"ls {path}: No such directory")
+
+
 def ls(args, fs, block_size, block_count):
-    for element in fs.scandir(args.path):
-        if element.type == 1:
-            typ = "FILE"
-        elif element.type == 2:
-            typ = "DIR "
-        else:
-            typ = "UKWN"
+    if not args.interactive:
+        _ls(fs, args.path)
+        return
 
-        fullpath = f"{args.path}/{element.name}"
+    print("Interactive mode. Press Ctrl-D to exit.")
+    while True:
         try:
-            time_val = int.from_bytes(fs.getattr(fullpath, "t"), byteorder='little')
-            time_str = datetime.fromtimestamp(time_val, timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        except LittleFSError:
-            time_str = " " * 19
+            path = input(">>> ")
+        except EOFError:
+            return
+        _ls(fs, path)
 
-        print(f"{element.size:7}B {typ} {time_str} {element.name}")
 
 
 def main():
@@ -500,6 +521,7 @@ def main():
 
     subparser = add_command(ls)
     subparser.add_argument('path', nargs='?', type=str, default='')
+    subparser.add_argument('--interactive', '-i', action="store_true")
 
 
     args = parser.parse_args()
@@ -533,12 +555,13 @@ def main():
             parser.print_help()
             exit(1)
 
-        f(args, fs, block_size, block_count)
+        try:
+            f(args, fs, block_size, block_count)
+        finally:
+            if not args.no_disable_debug:
+                disable_debug()
 
-        if not args.no_disable_debug:
-            disable_debug()
-
-        target.reset()
+            target.reset()
 
 if __name__ == "__main__":
     main()
