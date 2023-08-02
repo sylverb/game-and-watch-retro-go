@@ -496,6 +496,48 @@ def ls(args, fs, block_size, block_count):
         _ls(fs, path)
 
 
+def pull(args, fs, block_size, block_count):
+    try:
+        stat = fs.stat(args.path)
+    except LittleFSError as e:
+        if e.code != -2:
+            raise
+        print(f"{args.path}: No such file or directory")
+        return
+
+    if stat.type == 1:  # file
+        with fs.open(args.path, 'rb') as f:
+            data = f.read()
+        if args.output.is_dir():
+            args.output = args.output / Path(args.path).name
+        args.output.write_bytes(data)
+    elif stat.type == 2:  # dir
+        if args.output.is_file():
+            raise ValueError(f"Cannot backup directory \"{args.path}\" to file \"{args.output}\"")
+
+        strip_root = not args.output.exists()
+        for root, _, files in fs.walk(args.path):
+            root = Path(root.lstrip("/"))
+            for file in files:
+                full_src_path = root / file
+
+                if strip_root:
+                    full_dst_path = args.output / Path(*full_src_path.parts[1:])
+                else:
+                    full_dst_path = args.output / full_src_path
+
+                full_dst_path.parent.mkdir(exist_ok=True, parents=True)
+
+                if args.verbose:
+                    print(f"{full_src_path}  ->  {full_dst_path}")
+
+                with fs.open(full_src_path.as_posix(), 'rb') as f:
+                    data = f.read()
+
+                full_dst_path.write_bytes(data)
+    else:
+        raise NotImplementedError(f"Unknown type: {stat.type}")
+
 
 def main():
     commands = {}
@@ -504,6 +546,7 @@ def main():
     subparsers = parser.add_subparsers(dest="command")
     parser.add_argument("--no-disable-debug", action="store_true",
                         help="Don't disable the debug hw block after flashing.")
+    parser.add_argument("--verbose", action="store_true")
 
     def add_command(handler):
         """Add a subcommand, like "flash"."""
@@ -523,6 +566,11 @@ def main():
     subparser.add_argument('path', nargs='?', type=str, default='')
     subparser.add_argument('--interactive', '-i', action="store_true")
 
+    subparser = add_command(pull)
+    subparser.add_argument("path", type=str,
+            help="Game-and-watch file or folder to copy to computer.")
+    subparser.add_argument("output", type=Path,
+            help="Local path to copy data to.")
 
     args = parser.parse_args()
     options = {
