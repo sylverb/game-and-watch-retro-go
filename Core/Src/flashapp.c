@@ -270,6 +270,29 @@ static void flashapp_run(flashapp_t *flashapp)
                 comm->active_context_index = i;
                 memcpy(context, &comm->contexts[i], sizeof(struct work_context));
                 context->buffer = comm->buffer[i];
+
+                if(context->erase){
+                    flashapp->erase_address = context->address;
+                    flashapp->erase_bytes_left = context->erase_bytes;
+
+                    uint32_t smallest_erase = OSPI_GetSmallestEraseSize();
+
+                    if (flashapp->erase_address & (smallest_erase - 1)) {
+                        sprintf(flashapp->tab.name, "** Address not aligned to smallest erase size! **");
+                        comm->program_status = FLASHAPP_STATUS_NOT_ALIGNED;
+                        state_set(FLASHAPP_ERROR);
+                        break;
+                    }
+
+                    // Round size up to nearest erase size if needed ?
+                    if ((flashapp->erase_bytes_left & (smallest_erase - 1)) != 0) {
+                        flashapp->erase_bytes_left += smallest_erase - (flashapp->erase_bytes_left & (smallest_erase - 1));
+                    }
+
+                    // Start a non-blocking flash erase to run in the background
+                    OSPI_DisableMemoryMappedMode();
+                    OSPI_Erase(&flashapp->erase_address, &flashapp->erase_bytes_left, false);
+                }
                 state_inc();
                 break;
             }
@@ -334,33 +357,13 @@ static void flashapp_run(flashapp_t *flashapp)
         }
         break;
     case FLASHAPP_ERASE_NEXT:
-        OSPI_DisableMemoryMappedMode();
-
         if (context->erase) {
             if (context->erase_bytes == 0) {
                 sprintf(flashapp->tab.name, "4. Performing Chip Erase (takes time)");
-            } else {
-                flashapp->erase_address = context->address;
-                flashapp->erase_bytes_left = context->erase_bytes;
-
-                uint32_t smallest_erase = OSPI_GetSmallestEraseSize();
-
-                if (flashapp->erase_address & (smallest_erase - 1)) {
-                    sprintf(flashapp->tab.name, "** Address not aligned to smallest erase size! **");
-                    comm->program_status = FLASHAPP_STATUS_NOT_ALIGNED;
-                    state_set(FLASHAPP_ERROR);
-                    break;
-                }
-
-                // Round size up to nearest erase size if needed ?
-                if ((flashapp->erase_bytes_left & (smallest_erase - 1)) != 0) {
-                    flashapp->erase_bytes_left += smallest_erase - (flashapp->erase_bytes_left & (smallest_erase - 1));
-                }
-
+            }
+            else {
                 sprintf(flashapp->tab.name, "4. Erasing %ld bytes...", flashapp->erase_bytes_left);
-                printf("Erasing %ld bytes at 0x%08lx\n", flashapp->erase_bytes_left, flashapp->erase_address);
-                flashapp->progress_max = context->erase_bytes;
-                flashapp->progress_value = 0;
+                printf("Erasing %ld bytes at 0x%08lx\n", context->erase_bytes, flashapp->erase_address);
             }
             state_inc();
         } else {
@@ -368,16 +371,15 @@ static void flashapp_run(flashapp_t *flashapp)
         }
         break;
     case FLASHAPP_ERASE:
+        OSPI_DisableMemoryMappedMode();
         if (context->erase_bytes == 0) {
             OSPI_NOR_WriteEnable();
             OSPI_ChipErase();
             state_inc();
         } else {
             if (OSPI_Erase(&flashapp->erase_address, &flashapp->erase_bytes_left, true)) {
-                flashapp->progress_max = 0;
                 state_inc();
             }
-            flashapp->progress_value = flashapp->progress_max - flashapp->erase_bytes_left;
         }
         break;
     case FLASHAPP_PROGRAM_NEXT:

@@ -496,7 +496,9 @@ void OSPI_EnableMemoryMappedMode(void)
     OSPI_RegularCmdTypeDef ospi_cmd;
     const flash_cmd_t *cmd = CMD(READ);
 
-    assert(flash.mem_mapped_enabled == false);
+    if(flash.mem_mapped_enabled){
+        return;
+    }
 
     set_ospi_cmd(&ospi_cmd, cmd, 0, NULL, 0);
 
@@ -526,11 +528,10 @@ void OSPI_EnableMemoryMappedMode(void)
 
 void OSPI_DisableMemoryMappedMode(void)
 {
-    assert(flash.mem_mapped_enabled == true);
-
-    HAL_OSPI_Abort(flash.hospi);
-
-    flash.mem_mapped_enabled = false;
+    if(flash.mem_mapped_enabled){
+        HAL_OSPI_Abort(flash.hospi);
+        flash.mem_mapped_enabled = false;
+    }
 
     // This will *ONLY* work if you absolutely don't
     // look at the memory mapped address.
@@ -565,12 +566,9 @@ bool OSPI_Erase(uint32_t *address, uint32_t *size, bool blocking)
         // wait until a previous command is no longer in progress
         wait_for_status(STATUS_WIP_Msk, 0, 0);
     }
-    else{
-        uint8_t status;
-        if(get_status(STATUS_WIP_Msk)){
-            // A write is in progress, no action to be performed right now
-            return false;
-        }
+    else if(get_status(STATUS_WIP_Msk)){
+        // A write is in progress, no action to be performed right now
+        return false;
     }
 
     if(*size == 0)
