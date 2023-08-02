@@ -813,10 +813,7 @@ flash_test: flash_intflash
 .PHONY: flash_test
 
 # Programs both the external and internal flash.
-flash: CheckTools CheckDirtySubmodules
-	$(V)$(MAKE) flash_intflash
-	$(V)$(MAKE) flash_extflash
-	$(V)$(RESET_DBGMCU_CMD)
+flash: CheckTools CheckDirtySubmodules flash_intflash flash_extflash reset_dbgmcu
 .PHONY: flash
 
 monitor:
@@ -1011,11 +1008,13 @@ distclean: clean
 #########
 pyocd_install_pack:
 	pyocd pack --install STM32H7B0VBTx
+.PHONY: pyocd_install_pack
 
 pyocd_check_pack:
-	@if [ $(shell pyocd pack find STM32H7B0VBTx --no-header | grep -c "STM32H7B0VBTx") -eq 0 ]; then \
+	@if [ $(shell pyocd pack find STM32H7B0VBTx --no-header 2>/dev/null | grep -c "True") -eq 0 ]; then \
 		$(MAKE) pyocd_install_pack; \
 	fi
+.PHONY: pyocd_check_pack
 
 #######################################
 # dependencies

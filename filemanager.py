@@ -3,6 +3,7 @@ import hashlib
 import logging
 import lzma
 import readline
+import usb
 from pathlib import Path
 from time import sleep, time
 from typing import Union, List, Optional
@@ -696,38 +697,42 @@ def main():
         "target_override": "STM32H7B0VBTx",
     }
 
-    with ConnectHelper.session_with_chosen_probe(options=options) as session:
-        global target
-        board = session.board
-        assert board is not None
-        target = board.target
+    try:
+        with ConnectHelper.session_with_chosen_probe(options=options) as session:
+            global target
+            board = session.board
+            assert board is not None
+            target = board.target
 
-        start_flashapp()
+            start_flashapp()
 
-        filesystem_offset = read_int("lfs_cfg_context") - 0x9000_0000
-        block_size = read_int("lfs_cfg_block_size")
-        block_count = read_int("lfs_cfg_block_count")
+            filesystem_offset = read_int("lfs_cfg_context") - 0x9000_0000
+            block_size = read_int("lfs_cfg_block_size")
+            block_count = read_int("lfs_cfg_block_count")
 
-        if block_size==0 or block_count==0:
-            raise DataError
+            if block_size==0 or block_count==0:
+                raise DataError
 
-        lfs_context = LfsDriverContext(filesystem_offset)
-        fs = LittleFS(lfs_context, block_size=block_size, block_count=block_count)
+            lfs_context = LfsDriverContext(filesystem_offset)
+            fs = LittleFS(lfs_context, block_size=block_size, block_count=block_count)
 
-        try:
-            f = commands[args.command]
-        except KeyError:
-            print(f"Unknown command \"{args.command}\"")
-            parser.print_help()
-            exit(1)
+            try:
+                f = commands[args.command]
+            except KeyError:
+                print(f"Unknown command \"{args.command}\"")
+                parser.print_help()
+                exit(1)
 
-        try:
-            f(args, fs, block_size, block_count)
-        finally:
-            if not args.no_disable_debug:
-                disable_debug()
+            try:
+                f(args, fs, block_size, block_count)
+            finally:
+                if not args.no_disable_debug:
+                    disable_debug()
 
-            target.reset()
+                target.reset()
+    except usb.core.USBError as e:
+        new_message = str(e) + "\n\n\nTry unplugging and replugging in your adapter.\n\n"
+        raise type(e)(new_message)
 
 
 if __name__ == "__main__":
