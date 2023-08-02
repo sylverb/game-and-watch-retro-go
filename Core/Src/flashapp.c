@@ -394,6 +394,7 @@ static void flashapp_run(flashapp_t *flashapp)
         state_inc();
         break;
     case FLASHAPP_PROGRAM:
+        OSPI_DisableMemoryMappedMode();
         if (flashapp->program_bytes_left > 0) {
             uint32_t dest_page = flashapp->current_program_address / 256;
             uint32_t bytes_to_write = flashapp->program_bytes_left > 256 ? 256 : flashapp->program_bytes_left;

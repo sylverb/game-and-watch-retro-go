@@ -202,6 +202,14 @@ class LfsDriverContext:
         return 0
 
 
+def timestamp_now() -> int:
+    return int(round(datetime.now().replace(tzinfo=timezone.utc).timestamp()))
+
+
+def timestamp_now_bytes() -> bytes:
+    return timestamp_now().to_bytes(4, "little")
+
+
 ###########
 # OpenOCD #
 ###########
@@ -361,8 +369,7 @@ def start_flashapp():
     wait_for("IDLE")
 
     # Set game-and-watch RTC
-    utc_timestamp = int(round(datetime.now().replace(tzinfo=timezone.utc).timestamp()))
-    target.write32(comm["utc_timestamp"].address, utc_timestamp)
+    target.write32(comm["utc_timestamp"].address, timestamp_now())
 
 
 def get_context(timeout=10):
@@ -498,33 +505,33 @@ def ls(args, fs, block_size, block_count):
 
 def pull(args, fs, block_size, block_count):
     try:
-        stat = fs.stat(args.path)
+        stat = fs.stat(args.gnw_path.as_posix())
     except LittleFSError as e:
         if e.code != -2:
             raise
-        print(f"{args.path}: No such file or directory")
+        print(f"{args.gnw_path.as_posix()}: No such file or directory")
         return
 
     if stat.type == 1:  # file
-        with fs.open(args.path, 'rb') as f:
+        with fs.open(args.gnw_path.as_posix(), 'rb') as f:
             data = f.read()
-        if args.output.is_dir():
-            args.output = args.output / Path(args.path).name
-        args.output.write_bytes(data)
+        if args.local_path.is_dir():
+            args.local_path = args.local_path / args.gnw_path.name
+        args.local_path.write_bytes(data)
     elif stat.type == 2:  # dir
-        if args.output.is_file():
-            raise ValueError(f"Cannot backup directory \"{args.path}\" to file \"{args.output}\"")
+        if args.local_path.is_file():
+            raise ValueError(f"Cannot backup directory \"{args.gnw_path.as_posix()}\" to file \"{args.local_path}\"")
 
-        strip_root = not args.output.exists()
-        for root, _, files in fs.walk(args.path):
+        strip_root = not args.local_path.exists()
+        for root, _, files in fs.walk(args.gnw_path.as_posix()):
             root = Path(root.lstrip("/"))
             for file in files:
                 full_src_path = root / file
 
                 if strip_root:
-                    full_dst_path = args.output / Path(*full_src_path.parts[1:])
+                    full_dst_path = args.local_path / Path(*full_src_path.parts[1:])
                 else:
-                    full_dst_path = args.output / full_src_path
+                    full_dst_path = args.local_path / full_src_path
 
                 full_dst_path.parent.mkdir(exist_ok=True, parents=True)
 
@@ -537,6 +544,26 @@ def pull(args, fs, block_size, block_count):
                 full_dst_path.write_bytes(data)
     else:
         raise NotImplementedError(f"Unknown type: {stat.type}")
+
+
+def push(args, fs, block_size, block_count):
+    if not args.local_path.exists():
+        raise ValueError(f"Local \"{args.local_path}\" does not exist.")
+
+    if args.local_path.is_file():
+        data = args.local_path.read_bytes()
+
+        if args.verbose:
+            print(f"{args.local_path}  ->  {args.gnw_path.as_posix()}")
+
+        fs.makedirs(args.gnw_path.parent.as_posix(), exist_ok=True)
+        with fs.open(args.gnw_path.as_posix(), "wb") as f:
+            f.write(data)
+
+        fs.setattr(args.gnw_path.as_posix(), 't', timestamp_now_bytes())
+    else:
+        # TODO: timestamp
+        raise NotImplementedError
 
 
 def main():
@@ -567,12 +594,19 @@ def main():
     subparser.add_argument('--interactive', '-i', action="store_true")
 
     subparser = add_command(pull)
-    subparser.add_argument("path", type=str,
+    subparser.add_argument("gnw_path", type=Path,
             help="Game-and-watch file or folder to copy to computer.")
-    subparser.add_argument("output", type=Path,
-            help="Local path to copy data to.")
+    subparser.add_argument("local_path", type=Path,
+            help="Local file or folder to copy data to.")
+
+    subparser = add_command(push)
+    subparser.add_argument("gnw_path", type=Path,
+            help="Game-and-watch file or folder to write to.")
+    subparser.add_argument("local_path", type=Path,
+            help="Local file or folder to copy data from.")
 
     args = parser.parse_args()
+
     options = {
         "frequency": 5_000_000,
         "target_override": "STM32H7B0VBTx",
@@ -610,6 +644,7 @@ def main():
                 disable_debug()
 
             target.reset()
+
 
 if __name__ == "__main__":
     main()
