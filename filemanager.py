@@ -224,6 +224,21 @@ def is_existing_gnw_dir(fs, path: Union[str, Path]):
         raise
     return stat.type == 2
 
+
+def gnw_sha256(fs, path: Union[str, Path]):
+    if isinstance(path, Path):
+        path = path.as_posix()
+
+    try:
+        with fs.open(path, "rb") as f:
+            data = f.read()
+    except FileNotFoundError:
+        return bytes(32)
+
+    return sha256(data)
+
+
+
 def timestamp_now() -> int:
     return int(round(datetime.now().replace(tzinfo=timezone.utc).timestamp()))
 
@@ -595,10 +610,11 @@ def push(args, fs, block_size, block_count):
         if args.verbose:
             print(f"{args.local_path}  ->  {gnw_path.as_posix()}")
 
-        fs.makedirs(gnw_path.parent.as_posix(), exist_ok=True)
+        if sha256(data) != gnw_sha256(fs, gnw_path):
+            fs.makedirs(gnw_path.parent.as_posix(), exist_ok=True)
 
-        with fs.open(gnw_path.as_posix(), "wb") as f:
-            f.write(data)
+            with fs.open(gnw_path.as_posix(), "wb") as f:
+                f.write(data)
 
         fs.setattr(gnw_path.as_posix(), 't', timestamp_now_bytes())
     else:
@@ -617,10 +633,11 @@ def push(args, fs, block_size, block_count):
             if args.verbose:
                 print(f"{file}  ->  {gnw_path.as_posix()}")
 
-            fs.makedirs(gnw_path.parent.as_posix(), exist_ok=True)
+            if sha256(data) != gnw_sha256(fs, gnw_path):
+                fs.makedirs(gnw_path.parent.as_posix(), exist_ok=True)
 
-            with fs.open(gnw_path.as_posix(), "wb") as f:
-                f.write(data)
+                with fs.open(gnw_path.as_posix(), "wb") as f:
+                    f.write(data)
 
             fs.setattr(gnw_path.as_posix(), 't', timestamp_now_bytes())
     wait_for_all_contexts_complete()
