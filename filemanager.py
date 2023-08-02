@@ -201,6 +201,17 @@ class LfsDriverContext:
     def sync(self, cfg: 'LFSConfig') -> int:
         return 0
 
+def is_existing_gnw_dir(fs, path: Union[str, Path]):
+    if isinstance(path, Path):
+        path = path.as_posix()
+
+    try:
+        stat = fs.stat(path)
+    except LittleFSError as e:
+        if e.code == -2:  # LFS_ERR_NOENT
+            return False
+        raise
+    return stat.type == 2
 
 def timestamp_now() -> int:
     return int(round(datetime.now().replace(tzinfo=timezone.utc).timestamp()))
@@ -550,20 +561,53 @@ def push(args, fs, block_size, block_count):
     if not args.local_path.exists():
         raise ValueError(f"Local \"{args.local_path}\" does not exist.")
 
+    gnw_path_is_dir = is_existing_gnw_dir(fs, args.gnw_path)
+
     if args.local_path.is_file():
         data = args.local_path.read_bytes()
 
-        if args.verbose:
-            print(f"{args.local_path}  ->  {args.gnw_path.as_posix()}")
+        # TODO: need to stat `args.gnw_path` to see if it's a directory
+        if gnw_path_is_dir:
+            gnw_path = args.gnw_path / args.local_path.name
+        else:
+            gnw_path = args.gnw_path
 
-        fs.makedirs(args.gnw_path.parent.as_posix(), exist_ok=True)
-        with fs.open(args.gnw_path.as_posix(), "wb") as f:
+        if args.verbose:
+            print(f"{args.local_path}  ->  {gnw_path.as_posix()}")
+
+        fs.makedirs(gnw_path.parent.as_posix(), exist_ok=True)
+
+        with fs.open(gnw_path.as_posix(), "wb") as f:
             f.write(data)
 
-        fs.setattr(args.gnw_path.as_posix(), 't', timestamp_now_bytes())
+        fs.setattr(gnw_path.as_posix(), 't', timestamp_now_bytes())
     else:
-        # TODO: timestamp
-        raise NotImplementedError
+        # for now, assuming the gnw path is a folder that may exist
+        for file in args.local_path.rglob("*"):
+            if file.is_dir():
+                continue
+            local_path = file.relative_to(args.local_path.parent)
+            data = local_path.read_bytes()
+
+            if not gnw_path_is_dir:
+                gnw_path = args.gnw_path / Path(*local_path.parts[1:])
+            else:
+                gnw_path = args.gnw_path / local_path
+
+            if args.verbose:
+                print(f"{file}  ->  {gnw_path.as_posix()}")
+
+            fs.makedirs(gnw_path.parent.as_posix(), exist_ok=True)
+
+            with fs.open(gnw_path.as_posix(), "wb") as f:
+                f.write(data)
+
+            fs.setattr(gnw_path.as_posix(), 't', timestamp_now_bytes())
+
+
+def format(args, fs, block_size, block_count):
+    # TODO: add a confirmation prompt and a --force option
+    fs.format()
 
 
 def main():
@@ -604,6 +648,8 @@ def main():
             help="Game-and-watch file or folder to write to.")
     subparser.add_argument("local_path", type=Path,
             help="Local file or folder to copy data from.")
+
+    subparser = add_command(format)
 
     args = parser.parse_args()
 
