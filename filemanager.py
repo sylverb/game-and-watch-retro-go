@@ -665,6 +665,9 @@ def rm(*, args, fs, **kwargs):
         raise NotImplementedError(f"Unknown type: {stat.type}")
 
 
+def mkdir(*, args, fs, **kwargs):
+    fs.makedirs(args.path.as_posix(), exist_ok=True)
+
 
 def shell(*, args, parser, **kwargs):
     print("Interactive shell. Press Ctrl-D to exit.")
@@ -736,6 +739,9 @@ def main():
             help="Local file or folder to copy data from.")
 
     subparser = add_command(rm)
+    subparser.add_argument('path', type=Path)
+
+    subparser = add_command(mkdir)
     subparser.add_argument('path', type=Path)
 
     subparser = add_command(format)
