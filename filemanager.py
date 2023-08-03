@@ -839,10 +839,10 @@ def main():
                 target.reset()
     except usb.core.USBError as e:
         new_message = str(e) + "\n\n\nTry unplugging and replugging in your adapter.\n\n"
-        raise type(e)(new_message)
+        raise type(e)(new_message) from e
     except ProbeError as e:
         new_message = str(e) + "\n\n\nIs your Game & Watch on?\n\n"
-        raise type(e)(new_message)
+        raise type(e)(new_message) from e
 
 
 if __name__ == "__main__":
