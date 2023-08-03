@@ -4,6 +4,8 @@ import logging
 import lzma
 import readline
 import usb
+import shlex
+from copy import copy
 from pathlib import Path
 from time import sleep, time
 from typing import Union, List, Optional
@@ -480,7 +482,7 @@ def validate_extflash_offset(val):
 # CLI Commands #
 ################
 
-def flash(args, fs, block_size, block_count):
+def flash(*, args, **kwargs):
     """Flash a binary to the external flash."""
     validate_extflash_offset(args.address)
     data = args.file.read_bytes()
@@ -506,7 +508,7 @@ def flash(args, fs, block_size, block_count):
     wait_for("IDLE")
 
 
-def erase(args, fs, block_size, block_count):
+def erase(**kwargs):
     """Erase the entire external flash."""
     # Just setting an artibrarily long timeout
     extflash_erase(0, 0, whole_chip=True, timeout=10_000)
@@ -536,21 +538,11 @@ def _ls(fs, path):
         print(f"ls {path}: No such directory")
 
 
-def ls(args, fs, block_size, block_count):
-    if not args.interactive:
-        _ls(fs, args.path)
-        return
-
-    print("Interactive mode. Press Ctrl-D to exit.")
-    while True:
-        try:
-            path = input(">>> ")
-        except EOFError:
-            return
-        _ls(fs, path)
+def ls(*, args, fs, **kwargs):
+    _ls(fs, args.path)
 
 
-def pull(args, fs, block_size, block_count):
+def pull(*, args, fs, **kwargs):
     try:
         stat = fs.stat(args.gnw_path.as_posix())
     except LittleFSError as e:
@@ -593,7 +585,7 @@ def pull(args, fs, block_size, block_count):
         raise NotImplementedError(f"Unknown type: {stat.type}")
 
 
-def push(args, fs, block_size, block_count):
+def push(*, args, fs, **kwargs):
     if not args.local_path.exists():
         raise ValueError(f"Local \"{args.local_path}\" does not exist.")
 
@@ -644,12 +636,33 @@ def push(args, fs, block_size, block_count):
     wait_for_all_contexts_complete()
 
 
-def format(args, fs, block_size, block_count):
+def format(*, args, fs, **kwargs):
     # TODO: add a confirmation prompt and a --force option
     fs.format()
 
 
+def shell(*, args, parser, **kwargs):
+    print("Interactive shell. Press Ctrl-D to exit.")
+
+    while True:
+        try:
+            user_input = input(">>> ")
+        except EOFError:
+            return
+        if not user_input:
+            continue
+
+        parsed = parser.parse_args(shlex.split(user_input), copy(args))
+        if parsed.command == "shell":
+            print("Cannot nest shells.")
+            continue
+
+        f = commands[parsed.command]
+        f(args=parsed, parser=parser, **kwargs)
+
+
 def main():
+    global commands
     commands = {}
 
     parser = argparse.ArgumentParser()
@@ -674,7 +687,6 @@ def main():
 
     subparser = add_command(ls)
     subparser.add_argument('path', nargs='?', type=str, default='')
-    subparser.add_argument('--interactive', '-i', action="store_true")
 
     subparser = add_command(pull)
     subparser.add_argument("gnw_path", type=Path,
@@ -689,6 +701,8 @@ def main():
             help="Local file or folder to copy data from.")
 
     subparser = add_command(format)
+
+    subparser = add_command(shell)
 
     args = parser.parse_args()
 
@@ -724,7 +738,7 @@ def main():
                 exit(1)
 
             try:
-                f(args, fs, block_size, block_count)
+                f(args=args, fs=fs, block_size=block_size, block_count=block_count, parser=parser)
             finally:
                 if not args.no_disable_debug:
                     disable_debug()
