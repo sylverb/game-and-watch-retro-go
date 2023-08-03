@@ -3,6 +3,7 @@ import hashlib
 import logging
 import lzma
 import readline
+from pyocd.core.exceptions import ProbeError
 import usb
 import shlex
 from copy import copy
@@ -539,7 +540,7 @@ def _ls(fs, path):
 
 
 def ls(*, args, fs, **kwargs):
-    _ls(fs, args.path)
+    _ls(fs, args.path.as_posix())
 
 
 def pull(*, args, fs, **kwargs):
@@ -641,31 +642,65 @@ def format(*, args, fs, **kwargs):
     fs.format()
 
 
+def rm(*, args, fs, **kwargs):
+    try:
+        stat = fs.stat(args.path.as_posix())
+    except LittleFSError as e:
+        if e.code != -2:
+            raise
+        print(f"{args.path.as_posix()}: No such file or directory")
+        return
+
+    if stat.type == 1:  # file
+        fs.remove(args.path.as_posix())
+    elif stat.type == 2:  # dir
+        for root, dirs, files in reversed(list(fs.walk(args.path.as_posix()))):
+            root = Path(root)
+            for typ in (files, dirs):
+                for name in typ:
+                    full_path = root / name
+                    fs.remove(full_path.as_posix())
+        fs.remove(args.path.as_posix())
+    else:
+        raise NotImplementedError(f"Unknown type: {stat.type}")
+
+
+
 def shell(*, args, parser, **kwargs):
     print("Interactive shell. Press Ctrl-D to exit.")
 
     while True:
         try:
-            user_input = input(">>> ")
+            user_input = input("gnw$ ")
         except EOFError:
             return
         if not user_input:
             continue
 
-        parsed = parser.parse_args(shlex.split(user_input), copy(args))
+        split_user_input = shlex.split(user_input)
+        if split_user_input[0] not in commands:
+            print(f"Invalid command: {split_user_input[0]}")
+            continue
+
+        parsed = parser.parse_args(split_user_input, copy(args))
+
         if parsed.command == "shell":
             print("Cannot nest shells.")
             continue
 
         f = commands[parsed.command]
-        f(args=parsed, parser=parser, **kwargs)
+        try:
+            f(args=parsed, parser=parser, **kwargs)
+        except Exception as e:
+            print(e)
+            continue
 
 
 def main():
     global commands
     commands = {}
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog="filemanager")
     subparsers = parser.add_subparsers(dest="command")
     parser.add_argument("--no-disable-debug", action="store_true",
                         help="Don't disable the debug hw block after flashing.")
@@ -686,7 +721,7 @@ def main():
     subparser = add_command(erase)
 
     subparser = add_command(ls)
-    subparser.add_argument('path', nargs='?', type=str, default='')
+    subparser.add_argument('path', nargs='?', type=Path, default='')
 
     subparser = add_command(pull)
     subparser.add_argument("gnw_path", type=Path,
@@ -699,6 +734,9 @@ def main():
             help="Game-and-watch file or folder to write to.")
     subparser.add_argument("local_path", type=Path,
             help="Local file or folder to copy data from.")
+
+    subparser = add_command(rm)
+    subparser.add_argument('path', type=Path)
 
     subparser = add_command(format)
 
@@ -746,6 +784,9 @@ def main():
                 target.reset()
     except usb.core.USBError as e:
         new_message = str(e) + "\n\n\nTry unplugging and replugging in your adapter.\n\n"
+        raise type(e)(new_message)
+    except ProbeError as e:
+        new_message = str(e) + "\n\n\nIs your Game & Watch on?\n\n"
         raise type(e)(new_message)
 
 
