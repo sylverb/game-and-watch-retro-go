@@ -668,6 +668,9 @@ def rm(*, args, fs, **kwargs):
 def mkdir(*, args, fs, **kwargs):
     fs.makedirs(args.path.as_posix(), exist_ok=True)
 
+def mv(*, args, fs, **kwargs):
+    fs.rename(args.src.as_posix(), args.dst.as_posix())
+
 
 def shell(*, args, parser, **kwargs):
     print("Interactive shell. Press Ctrl-D to exit.")
@@ -743,6 +746,10 @@ def main():
 
     subparser = add_command(mkdir)
     subparser.add_argument('path', type=Path)
+
+    subparser = add_command(mv)
+    subparser.add_argument('src', type=Path)
+    subparser.add_argument('dst', type=Path)
 
     subparser = add_command(format)
 
