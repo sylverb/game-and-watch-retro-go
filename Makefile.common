@@ -805,7 +805,8 @@ flash_intflash_nc: $(BUILD_DIR)/$(TARGET)_intflash.bin
 .PHONY: flash_intflash_nc
 
 flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin pyocd_check_pack
-	$(PYTHON3) filemanager.py flash $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
+	$(PYTHON3) filemanager.py --intflash-address=$(INTFLASH_ADDRESS) flash $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
+	# filemanager internally disables the DBGMCU block on exit.
 .PHONY: flash_extflash
 
 flash_test: flash_intflash
@@ -813,7 +814,7 @@ flash_test: flash_intflash
 .PHONY: flash_test
 
 # Programs both the external and internal flash.
-flash: CheckTools CheckDirtySubmodules flash_intflash flash_extflash reset_dbgmcu
+flash: CheckTools CheckDirtySubmodules flash_intflash flash_extflash
 .PHONY: flash
 
 monitor:

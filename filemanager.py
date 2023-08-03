@@ -258,11 +258,13 @@ def chunk_bytes(data, chunk_size):
     return [data[i:i+chunk_size] for i in range(0, len(data), chunk_size)]
 
 
-def read_int(key: Union[str, Variable], signed: bool = False)-> int:
+def read_int(key: Union[int, str, Variable], signed: bool = False)-> int:
     if isinstance(key, str):
         args = comm[key]
     elif isinstance(key, Variable):
         args = key
+    elif isinstance(key, int):
+        args = (key, 4)
     else:
         raise ValueError
     return int.from_bytes(target.read_memory_block8(*args), byteorder='little', signed=signed)
@@ -408,8 +410,12 @@ def read_logbuf():
     return bytes(target.read_memory_block8(*comm["logbuf"])[:read_int("log_idx")]).decode()
 
 
-def start_flashapp():
+def start_flashapp(intflash_address):
     target.reset_and_halt()
+
+    target.write_core_register('msp', read_int(intflash_address))
+    target.write_core_register('pc', read_int(intflash_address + 4))
+
     target.write32(comm["flashapp_state"].address, _flashapp_state_str_to_enum["INIT"])
     target.write32(comm["boot_magic"].address, 0xf1a5f1a5)  # Tell bootloader to boot into flashapp
     target.write32(comm["program_status"].address, 0)
@@ -722,6 +728,16 @@ def main():
                         help="Don't disable the debug hw block after flashing.")
     parser.add_argument("--verbose", action="store_true")
 
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--intflash-bank", type=int, default=1, choices=(1, 2),
+                        help="Retro Go internal flash bank")
+    valid_intflash_bank_1_addresses = set(range(0x0800_0000, (0x0800_0000 + (256 << 10)), 4))
+    valid_intflash_bank_2_addresses = set(range(0x0810_0000, (0x0810_0000 + (256 << 10)), 4))
+    group.add_argument("--intflash-address",
+                       type=lambda x: int(x,0),
+                       choices=(*valid_intflash_bank_1_addresses, *valid_intflash_bank_2_addresses),
+                       help="Retro Go internal flash address.")
+
     def add_command(handler):
         """Add a subcommand, like "flash"."""
         subparser = subparsers.add_parser(handler.__name__)
@@ -773,6 +789,16 @@ def main():
     parser.set_defaults(command='shell')
     args = parser.parse_args()
 
+    if args.intflash_address is None:
+        args.intflash_address = 0x0800_0000 if args.intflash_bank == 1 else 0x0810_0000
+
+    if args.intflash_address in valid_intflash_bank_1_addresses:
+        args.intflash_bank = 1
+    elif args.intflash_address in valid_intflash_bank_2_addresses:
+        args.intflash_bank = 2
+    else:
+        raise NotImplementedError
+
     options = {
         "frequency": 5_000_000,
         "target_override": "STM32H7B0VBTx",
@@ -785,7 +811,7 @@ def main():
             assert board is not None
             target = board.target
 
-            start_flashapp()
+            start_flashapp(args.intflash_address)
 
             filesystem_offset = read_int("lfs_cfg_context") - 0x9000_0000
             block_size = read_int("lfs_cfg_block_size")
