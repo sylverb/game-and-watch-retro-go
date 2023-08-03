@@ -684,26 +684,36 @@ def shell(*, args, parser, **kwargs):
             continue
 
         split_user_input = shlex.split(user_input)
-        if split_user_input[0] not in commands:
+
+        command = split_user_input[0]
+        if command == "help":
+            parser.print_help()
+            continue
+        if command not in commands:
             print(f"Invalid command: {split_user_input[0]}")
             continue
+        if "--help" in split_user_input:
+            subparsers.choices[command].print_help()
+            continue
 
-        parsed = parser.parse_args(split_user_input, copy(args))
+        try:
+            parsed = parser.parse_args(split_user_input, copy(args))
+        except SystemExit as e:
+            continue
 
         if parsed.command == "shell":
             print("Cannot nest shells.")
             continue
 
-        f = commands[parsed.command]
         try:
-            f(args=parsed, parser=parser, **kwargs)
+            commands[parsed.command](args=parsed, parser=parser, **kwargs)
         except Exception as e:
             print(e)
             continue
 
 
 def main():
-    global commands
+    global commands, subparsers
     commands = {}
 
     parser = argparse.ArgumentParser(prog="filemanager")
@@ -727,7 +737,8 @@ def main():
     subparser = add_command(erase)
 
     subparser = add_command(ls)
-    subparser.add_argument('path', nargs='?', type=Path, default='')
+    subparser.add_argument('path', nargs='?', type=Path, default='',
+            help="Directory to list the contents of. Defaults to root.")
 
     subparser = add_command(pull)
     subparser.add_argument("gnw_path", type=Path,
@@ -742,19 +753,24 @@ def main():
             help="Local file or folder to copy data from.")
 
     subparser = add_command(rm)
-    subparser.add_argument('path', type=Path)
+    subparser.add_argument('path', type=Path,
+            help="File or folder to delete.")
 
     subparser = add_command(mkdir)
-    subparser.add_argument('path', type=Path)
+    subparser.add_argument('path', type=Path,
+            help="Directory to create.")
 
     subparser = add_command(mv)
-    subparser.add_argument('src', type=Path)
-    subparser.add_argument('dst', type=Path)
+    subparser.add_argument('src', type=Path,
+            help="Source file or directory.")
+    subparser.add_argument('dst', type=Path,
+            help="Destination file or directory.")
 
     subparser = add_command(format)
 
     subparser = add_command(shell)
 
+    parser.set_defaults(command='shell')
     args = parser.parse_args()
 
     options = {
