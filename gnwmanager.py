@@ -601,45 +601,22 @@ def pull(*, args, fs, **kwargs):
 
 
 def push(*, args, fs, **kwargs):
-    if not args.local_path.exists():
-        raise ValueError(f"Local \"{args.local_path}\" does not exist.")
-
     gnw_path_is_dir = is_existing_gnw_dir(fs, args.gnw_path)
 
-    if args.local_path.is_file():
-        data = args.local_path.read_bytes()
+    for local_path in args.local_paths:
+        if not local_path.exists():
+            raise ValueError(f"Local \"{local_path}\" does not exist.")
 
-        # TODO: need to stat `args.gnw_path` to see if it's a directory
-        if gnw_path_is_dir:
-            gnw_path = args.gnw_path / args.local_path.name
-        else:
-            gnw_path = args.gnw_path
-
-        if args.verbose:
-            print(f"{args.local_path}  ->  {gnw_path.as_posix()}")
-
-        if sha256(data) != gnw_sha256(fs, gnw_path):
-            fs.makedirs(gnw_path.parent.as_posix(), exist_ok=True)
-
-            with fs.open(gnw_path.as_posix(), "wb") as f:
-                f.write(data)
-
-        fs.setattr(gnw_path.as_posix(), 't', timestamp_now_bytes())
-    else:
-        # for now, assuming the gnw path is a folder that may exist
-        for file in args.local_path.rglob("*"):
-            if file.is_dir():
-                continue
-            local_path = file.relative_to(args.local_path.parent)
+        if local_path.is_file():
             data = local_path.read_bytes()
 
-            if not gnw_path_is_dir:
-                gnw_path = args.gnw_path / Path(*local_path.parts[1:])
+            if gnw_path_is_dir:
+                gnw_path = args.gnw_path / local_path.name
             else:
-                gnw_path = args.gnw_path / local_path
+                gnw_path = args.gnw_path
 
             if args.verbose:
-                print(f"{file}  ->  {gnw_path.as_posix()}")
+                print(f"{local_path}  ->  {gnw_path.as_posix()}")
 
             if sha256(data) != gnw_sha256(fs, gnw_path):
                 fs.makedirs(gnw_path.parent.as_posix(), exist_ok=True)
@@ -648,6 +625,28 @@ def push(*, args, fs, **kwargs):
                     f.write(data)
 
             fs.setattr(gnw_path.as_posix(), 't', timestamp_now_bytes())
+        else:
+            for file in local_path.rglob("*"):
+                if file.is_dir():
+                    continue
+                data = file.read_bytes()
+
+                subpath = file.relative_to(local_path.parent)
+                if not gnw_path_is_dir:
+                    gnw_path = args.gnw_path / Path(*subpath.parts[1:])
+                else:
+                    gnw_path = args.gnw_path / subpath
+
+                if args.verbose:
+                    print(f"{file}  ->  {gnw_path.as_posix()}")
+
+                if sha256(data) != gnw_sha256(fs, gnw_path):
+                    fs.makedirs(gnw_path.parent.as_posix(), exist_ok=True)
+
+                    with fs.open(gnw_path.as_posix(), "wb") as f:
+                        f.write(data)
+
+                fs.setattr(gnw_path.as_posix(), 't', timestamp_now_bytes())
     wait_for_all_contexts_complete()
 
 
@@ -798,7 +797,7 @@ def main():
     subparser = add_command(push)
     subparser.add_argument("gnw_path", type=Path,
             help="Game-and-watch file or folder to write to.")
-    subparser.add_argument("local_path", type=Path,
+    subparser.add_argument("local_paths", nargs='+', type=Path,
             help="Local file or folder to copy data from.")
 
     subparser = add_command(rm)
@@ -873,40 +872,45 @@ def main():
             assert board is not None
             target = board.target
 
-            for i, args in enumerate(parsed_args):
-                if args.intflash_address is None:
-                    args.intflash_address = 0x0800_0000 if args.intflash_bank == 1 else 0x0810_0000
+            try:
+                for i, args in enumerate(parsed_args):
+                    if args.intflash_address is None:
+                        args.intflash_address = 0x0800_0000 if args.intflash_bank == 1 else 0x0810_0000
 
-                if args.intflash_address in valid_intflash_bank_1_addresses:
-                    args.intflash_bank = 1
-                elif args.intflash_address in valid_intflash_bank_2_addresses:
-                    args.intflash_bank = 2
-                else:
-                    raise NotImplementedError
+                    if args.intflash_address in valid_intflash_bank_1_addresses:
+                        args.intflash_bank = 1
+                    elif args.intflash_address in valid_intflash_bank_2_addresses:
+                        args.intflash_bank = 2
+                    else:
+                        raise NotImplementedError
 
-                if i == 0:
-                    start_flashapp(args.intflash_address)
+                    if i == 0:
+                        start_flashapp(args.intflash_address)
 
-                    filesystem_offset = read_int("lfs_cfg_context") - 0x9000_0000
-                    block_size = read_int("lfs_cfg_block_size")
-                    block_count = read_int("lfs_cfg_block_count")
+                        filesystem_offset = read_int("lfs_cfg_context") - 0x9000_0000
+                        block_size = read_int("lfs_cfg_block_size")
+                        block_count = read_int("lfs_cfg_block_count")
 
-                    if block_size==0 or block_count==0:
-                        raise DataError
+                        if block_size==0 or block_count==0:
+                            raise DataError
 
-                    lfs_context = LfsDriverContext(filesystem_offset)
-                    fs = LittleFS(lfs_context, block_size=block_size, block_count=block_count)
+                        lfs_context = LfsDriverContext(filesystem_offset)
+                        fs = LittleFS(lfs_context, block_size=block_size, block_count=block_count)
 
-                f = commands[args.command]
-                try:
-                    f(args=args, fs=fs, block_size=block_size, block_count=block_count, parser=parser)
-                finally:
-                    if not args.no_disable_debug:
-                        disable_debug()
+                    commands[args.command](
+                        args=args,
+                        fs=fs,
+                        block_size=block_size,
+                        block_count=block_count,
+                        parser=parser,
+                    )
+            finally:
+                if not args.no_disable_debug:
+                    disable_debug()
 
-                    target.reset_and_halt()
-                    set_msp_pc(args.intflash_address)
-                    target.resume()
+                target.reset_and_halt()
+                set_msp_pc(args.intflash_address)
+                target.resume()
     except usb.core.USBError as e:
         new_message = str(e) + "\n\n\nTry unplugging and replugging in your adapter.\n\n"
         raise type(e)(new_message) from e

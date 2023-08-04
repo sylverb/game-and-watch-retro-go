@@ -45,3 +45,4 @@ venv
 *.bin
 .gdbinit
 screenshot.png
+/backup

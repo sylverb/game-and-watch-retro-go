@@ -837,13 +837,17 @@ flash-monitor: flash
 flash_all: flash
 
 # Transfers save files from the device to the host machine
-flash_saves_backup: $(BUILD_DIR)/$(TARGET).elf
-	$(V)./scripts/saves_backup.sh $<
+flash_saves_backup:
+	mkdir -p backup
+	rm -rf backup/savestate
+	@$(PYTHON3) gnwmanager.py --intflash-address=$(INTFLASH_ADDRESS) pull savestate backup/savestate
+	@echo "Backup to \"backup/\" complete."
 .PHONY: flash_saves_backup
 
 # Transfers save files from the host machine to the device
-flash_saves_restore: $(BUILD_DIR)/$(TARGET).elf
-	$(V)./scripts/saves_restore.sh $<
+flash_saves_restore:
+	@$(PYTHON3) gnwmanager.py --intflash-address=$(INTFLASH_ADDRESS) mkdir savestate -- push savestate backup/savestate/*
+	@echo "Restore from \"backup/\" complete."
 .PHONY: flash_saves_restore
 
 size: $(BUILD_DIR)/$(TARGET).elf
