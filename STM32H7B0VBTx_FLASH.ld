@@ -630,7 +630,7 @@ SECTIONS
   {
     . = ALIGN(4);
     __flash_end__ = .;
-  }
+  } >FLASH
 
   /* put *fast access* MSX read only stuff on the second bank */
   .flash2 :
