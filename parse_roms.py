@@ -1459,13 +1459,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--flash-size",
         "-s",
-        type=int,
+        type=lambda x: int(x,0),
         default=1024 * 1024,
         help="Size of external SPI flash in bytes.",
     )
     parser.add_argument(
         "--filesystem-size",
-        type=int,
+        type=lambda x: int(x,0),
         default=1 << 20,
         help="Size of filesystem in bytes.",
     )

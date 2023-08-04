@@ -74,7 +74,6 @@ __AHBRAM_LENGTH__   = 128K;
 __FLASH_LENGTH__    = DEFINED(__FLASH_LENGTH__) ? __FLASH_LENGTH__ : 128k;
 __FLASH2_LENGTH__   = 256K; /* bank2 */
 
-__EXTFLASH_TOTAL_LENGTH__ = DEFINED(__EXTFLASH_TOTAL_LENGTH__) ? __EXTFLASH_TOTAL_LENGTH__ : 1024K;
 __EXTFLASH_OFFSET__ = DEFINED(__EXTFLASH_OFFSET__) ? __EXTFLASH_OFFSET__ : 0;
 __EXTFLASH_BASE__ = 0x90000000;  /* Beginning of addressable extflash addresses */
 __EXTFLASH_START__ = __EXTFLASH_BASE__ + __EXTFLASH_OFFSET__;  /* Beginning of where we're going to store emulator and rom data */
@@ -117,7 +116,7 @@ INCLUDE build/filesystem.ld
  *            |                                  |
  *            +----------------------------------+  __EXTFLASH_END__ __FILESYSTEM_END__
  */
-__EXTFLASH_LENGTH__ = __EXTFLASH_TOTAL_LENGTH__ - (__CACHEFLASH_LENGTH__ + __FILESYSTEM_LENGTH__);
+__EXTFLASH_LENGTH__ = __EXTFLASH_TOTAL_LENGTH__ - __CACHEFLASH_LENGTH__;
 __EXTFLASH_END__ = __EXTFLASH_START__ + __EXTFLASH_LENGTH__;
 __CACHEFLASH_START__ = __EXTFLASH_END__;
 __CACHEFLASH_END__   = __CACHEFLASH_START__ + __CACHEFLASH_LENGTH__;

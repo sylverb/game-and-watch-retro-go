@@ -107,6 +107,7 @@ EXTFLASH_SIZE_MB ?= 1
 BIG_BANK ?= 1
 
 EXTFLASH_SIZE ?= $(shell echo "$$(( $(EXTFLASH_SIZE_MB) * 1024 * 1024 ))")
+EXTFLASH_END = $(shell echo $$(($(EXTFLASH_OFFSET) + $(EXTFLASH_SIZE))))
 
 EXTFLASH_FORCE_SPI ?= 0
 
@@ -118,9 +119,37 @@ FILESYSTEM_SIZE := $(shell \
 				   else \
 				   	   echo $$FILESYSTEM_SIZE; \
 				   fi)
-FILESYSTEM_OFFSET ?= $$(($(EXTFLASH_SIZE) - $(FILESYSTEM_SIZE)))
-# TODO: Calculate __EXTFLASH_LENGTH__ here so we can determine what needs to be subtracted from __EXTFLASH_TOTAL_LENGTH__
+FILESYSTEM_OFFSET ?= $(shell echo $$(($(EXTFLASH_SIZE) - $(FILESYSTEM_SIZE))))
+FILESYSTEM_END = $(shell echo $$(($(FILESYSTEM_OFFSET) + $(FILESYSTEM_SIZE))))
 
+# Check to see if the filesystem is within specified extflash
+FILESYSTEM_START_IN_EXTFLASH_RANGE := $(shell \
+	if [ $(FILESYSTEM_OFFSET) -ge $(EXTFLASH_OFFSET) \
+		     -a $(FILESYSTEM_OFFSET) -lt $(EXTFLASH_END) ]; then \
+        echo "1"; \
+    else \
+        echo "0"; \
+    fi)
+
+FILESYSTEM_END_IN_EXTFLASH_RANGE := $(shell \
+	if [ $(FILESYSTEM_END) -gt $(EXTFLASH_OFFSET) \
+		     -a $(FILESYSTEM_END) -le $(EXTFLASH_END) ]; then \
+        echo "1"; \
+    else \
+        echo "0"; \
+    fi)
+
+ifneq ($(FILESYSTEM_START_IN_EXTFLASH_RANGE), $(FILESYSTEM_END_IN_EXTFLASH_RANGE))
+$(error Filesystem partition must be completely inside, or outside of EXTFLASH_SIZE.)
+endif
+FILESYSTEM_IN_EXTFLASH_RANGE = $(FILESYSTEM_START_IN_EXTFLASH_RANGE)
+
+# If the filesystem is external, we don't need to include it in size computation.
+ifeq ($(FILESYSTEM_IN_EXTFLASH_RANGE),0)
+EXTFLASH_TOTAL_LENGTH := $(EXTFLASH_SIZE)
+else ifeq ($(FILESYSTEM_START_IN_EXTFLASH_RANGE),1)
+EXTFLASH_TOTAL_LENGTH := $(shell echo $$(($(EXTFLASH_SIZE) - $(FILESYSTEM_SIZE))))
+endif
 
 # Set to 0 to remove state saving support (uses less space)
 STATE_SAVING ?= 1
@@ -513,7 +542,7 @@ CFLAGS += -fstack-usage -Wstack-usage=20480
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
 LDFLAGS += -Wl,--defsym=__EXTFLASH_OFFSET__=$(EXTFLASH_OFFSET)
-LDFLAGS += -Wl,--defsym=__EXTFLASH_TOTAL_LENGTH__=$(EXTFLASH_SIZE)
+LDFLAGS += -Wl,--defsym=__EXTFLASH_TOTAL_LENGTH__=$(EXTFLASH_TOTAL_LENGTH)
 LDFLAGS += -Wl,--defsym=ENABLE_SCREENSHOT=$(ENABLE_SCREENSHOT)
 LDFLAGS += -Wl,--defsym=__FILESYSTEM_OFFSET__=$(FILESYSTEM_OFFSET)
 
