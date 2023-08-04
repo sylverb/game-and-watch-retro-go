@@ -128,8 +128,7 @@ ifeq ($(STATE_SAVING),0)
 	SAVE_PARAM := --no-save
 endif
 
-# Screenshot support allocates 150kB of external flash. Disabled by default.
-ENABLE_SCREENSHOT ?= 0
+ENABLE_SCREENSHOT ?= 1
 # Set to 1 to add game genie support
 CHEAT_CODES ?= 0
 ifeq ($(GAME_GENIE),1)
@@ -916,7 +915,7 @@ help:
 	@echo "  RU_RU               - Set to 1 to include or exclude some other language"
 	@echo "  COVERFLOW           - Set to 1 include cover art with rom (default=0)"
 	@echo "  JPG_QUALITY         - Set convert cover art image jpg quality (default = 90)"
-	@echo "  ENABLE_SCREENSHOT   - Set to 1 to enable screenshot support (default disabled if extflash is 1MB)"
+	@echo "  ENABLE_SCREENSHOT   - Set to 1 to enable screenshot support (default enabled)"
 	@echo "  GNW_TARGET          - Game & Watch target, Valid values {mario,zelda} (default=mario)"
 	@echo "  GAME_GENIE          - Set to 1 to enable game genie support (deprecated, use CHEAT_CODES instead)"
 	@echo "  CHEAT_CODES         - Set to 1 to enable cheat codes support (default=0)"
