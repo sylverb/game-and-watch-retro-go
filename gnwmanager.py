@@ -2,7 +2,9 @@ import argparse
 import hashlib
 import logging
 import lzma
+import tamp
 import readline
+import struct
 import sys
 from pyocd.core.exceptions import ProbeError
 import usb
@@ -14,6 +16,7 @@ from typing import Union, List, Optional
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 from datetime import datetime, timezone
+from PIL import Image
 
 from collections import namedtuple
 
@@ -723,6 +726,26 @@ def shell(*, args, parser, **kwargs):
             continue
 
 
+def screenshot(*, args, fs, **kwargs):
+    with fs.open("SCREENSHOT", "rb") as f:
+        tamp_compressed_data = f.read()
+    data = tamp.decompress(tamp_compressed_data)
+    # Convert raw RGB565 pixel data to PNG
+    img = Image.new("RGB", (320, 240))
+    pixels = img.load()
+    index = 0
+    for y in range(240):
+        for x in range(320):
+            color, = struct.unpack('<H', data[index:index+2])
+            red =   int(((color & 0b1111100000000000) >> 11) / 31.0 * 255.0)
+            green = int(((color & 0b0000011111100000) >>  5) / 63.0 * 255.0)
+            blue =  int(((color & 0b0000000000011111)      ) / 31.0 * 255.0)
+            pixels[x, y] = (red, green, blue)
+            index += 2
+
+    img.save(args.output)
+
+
 def main():
     global commands, subparsers
     commands = {}
@@ -793,6 +816,10 @@ def main():
             help="Destination file or directory.")
 
     subparser = add_command(format)
+
+    subparser = add_command(screenshot)
+    subparser.add_argument('output', nargs='?', type=Path, default=Path("screenshot.png"),
+            help="Destination file or directory.")
 
     subparser = add_command(shell)
 

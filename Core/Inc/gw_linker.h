@@ -30,8 +30,6 @@ extern uint8_t __configflash_start__;
 extern uint8_t __configflash_end__;
 extern uint8_t __cacheflash_start__;
 extern uint8_t __cacheflash_end__;
-extern uint8_t __fbflash_start__;
-extern uint8_t __fbflash_end__;
 
 
 // If this is not an array the compiler might put in a memory_chk with dest_size 1...

@@ -44,3 +44,4 @@ venv
 .vscode/*
 *.bin
 .gdbinit
+screenshot.png

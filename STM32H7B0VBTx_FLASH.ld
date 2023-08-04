@@ -89,7 +89,6 @@ __RAM_EMU_END__     = __RAM_EMU_START__ + __RAM_EMU_LENGTH__;
 INCLUDE build/cacheflash.ld
 INCLUDE build/filesystem.ld
 __CONFIGFLASH_LENGTH__ = 4096;
-__FBFLASH_LENGTH__ = ENABLE_SCREENSHOT ? ((320 * 240 * 2 + 4095) / 4096) * 4096 : 0;
 
 /****
  * External Flash Layout
@@ -118,24 +117,18 @@ __FBFLASH_LENGTH__ = ENABLE_SCREENSHOT ? ((320 * 240 * 2 + 4095) / 4096) * 4096 
  *            |    Store changable persistent    |
  *            |      retro-go configurations     |
  *            |                                  |
- *            +----------------------------------+  __CONFIGFLASH_END__ __FBFLASH_START__
- *            |                                  |
- *            | Framebuffer / Screenshot storage |
- *            |                                  |
- *            +----------------------------------+  __FBFLASH_END__  __FILESYSTEM_START__
+ *            +----------------------------------+  __CONFIGFLASH_END__ __FILESYSTEM_START__
  *            |                                  |
  *            |            Filesystem            |
  *            |                                  |
  *            +----------------------------------+  __EXTFLASH_END__ __FILESYSTEM_END__
  */
-__EXTFLASH_LENGTH__ = __EXTFLASH_TOTAL_LENGTH__ - (__CACHEFLASH_LENGTH__ + __CONFIGFLASH_LENGTH__ + __FBFLASH_LENGTH__ + __FILESYSTEM_LENGTH__);
+__EXTFLASH_LENGTH__ = __EXTFLASH_TOTAL_LENGTH__ - (__CACHEFLASH_LENGTH__ + __CONFIGFLASH_LENGTH__ + __FILESYSTEM_LENGTH__);
 __EXTFLASH_END__ = __EXTFLASH_START__ + __EXTFLASH_LENGTH__;
 __CACHEFLASH_START__ = __EXTFLASH_END__;
 __CACHEFLASH_END__   = __CACHEFLASH_START__ + __CACHEFLASH_LENGTH__;
 __CONFIGFLASH_START__ = __CACHEFLASH_END__;
 __CONFIGFLASH_END__   = __CONFIGFLASH_START__ + __CONFIGFLASH_LENGTH__;
-__FBFLASH_START__ = __CONFIGFLASH_END__;
-__FBFLASH_END__   = __FBFLASH_START__ + __FBFLASH_LENGTH__;
 
 __FILESYSTEM_START__ = __EXTFLASH_BASE__ + __FILESYSTEM_OFFSET__;
 __FILESYSTEM_END__ = __FILESYSTEM_START__ + __FILESYSTEM_LENGTH__;
@@ -161,7 +154,6 @@ MEMORY
   EXTFLASH   (xr ) : ORIGIN = __EXTFLASH_START__,  LENGTH = __EXTFLASH_LENGTH__
   CACHEFLASH (xr ) : ORIGIN = __CACHEFLASH_START__,  LENGTH = __CACHEFLASH_LENGTH__
   CONFIGFLASH(xr ) : ORIGIN = __CONFIGFLASH_START__, LENGTH = __CONFIGFLASH_LENGTH__
-  FBFLASH (xr ) : ORIGIN = __FBFLASH_START__, LENGTH = __FBFLASH_LENGTH__
   FILESYSTEM (xr ) : ORIGIN = __FILESYSTEM_START__, LENGTH = __FILESYSTEM_LENGTH__
 }
 
@@ -535,14 +527,6 @@ SECTIONS
     *(.configflash)
     __configflash_end__ = .;
   } > CONFIGFLASH
-
-  ._fbflash (NOLOAD):
-  {
-    . = ALIGN(4K);
-    __fbflash_start__ = .;
-    *(.fbflash)
-    __fbflash_end__ = .;
-  } > FBFLASH
 
   ._filesystem (NOLOAD):
   {
