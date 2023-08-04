@@ -3,6 +3,7 @@ import hashlib
 import logging
 import lzma
 import readline
+import sys
 from pyocd.core.exceptions import ProbeError
 import usb
 import shlex
@@ -410,11 +411,15 @@ def read_logbuf():
     return bytes(target.read_memory_block8(*comm["logbuf"])[:read_int("log_idx")]).decode()
 
 
+def set_msp_pc(intflash_address):
+    target.write_core_register('msp', read_int(intflash_address))
+    target.write_core_register('pc', read_int(intflash_address + 4))
+
+
 def start_flashapp(intflash_address):
     target.reset_and_halt()
 
-    target.write_core_register('msp', read_int(intflash_address))
-    target.write_core_register('pc', read_int(intflash_address + 4))
+    set_msp_pc(intflash_address)
 
     target.write32(comm["flashapp_state"].address, _flashapp_state_str_to_enum["INIT"])
     target.write32(comm["boot_magic"].address, 0xf1a5f1a5)  # Tell bootloader to boot into flashapp
@@ -722,7 +727,7 @@ def main():
     global commands, subparsers
     commands = {}
 
-    parser = argparse.ArgumentParser(prog="filemanager")
+    parser = argparse.ArgumentParser(prog="filemanager", description="Multiple commands may be given in a single session, delimited be \"--\"")
     subparsers = parser.add_subparsers(dest="command")
     parser.add_argument("--no-disable-debug", action="store_true",
                         help="Don't disable the debug hw block after flashing.")
@@ -787,17 +792,30 @@ def main():
     subparser = add_command(shell)
 
     parser.set_defaults(command='shell')
-    args = parser.parse_args()
 
-    if args.intflash_address is None:
-        args.intflash_address = 0x0800_0000 if args.intflash_bank == 1 else 0x0810_0000
+    # Separate commands and their arguments based on '--'
+    sys_args = sys.argv[1:]
+    global_args = []
+    for i, arg in enumerate(sys_args):
+        if arg in commands:
+            sys_args = sys_args[i:]
+            break
+        else:
+            global_args.append(arg)
 
-    if args.intflash_address in valid_intflash_bank_1_addresses:
-        args.intflash_bank = 1
-    elif args.intflash_address in valid_intflash_bank_2_addresses:
-        args.intflash_bank = 2
-    else:
-        raise NotImplementedError
+    commands_args = []
+    current_command_args = []
+    for arg in sys_args:
+        if arg == '--':
+            commands_args.append(current_command_args)
+            current_command_args = []
+        else:
+            current_command_args.append(arg)
+    commands_args.append(current_command_args)
+
+    parsed_args = []
+    for command_args in commands_args:
+        parsed_args.append(parser.parse_args(global_args + command_args))
 
     options = {
         "frequency": 5_000_000,
@@ -811,32 +829,40 @@ def main():
             assert board is not None
             target = board.target
 
-            start_flashapp(args.intflash_address)
+            for i, args in enumerate(parsed_args):
+                if args.intflash_address is None:
+                    args.intflash_address = 0x0800_0000 if args.intflash_bank == 1 else 0x0810_0000
 
-            filesystem_offset = read_int("lfs_cfg_context") - 0x9000_0000
-            block_size = read_int("lfs_cfg_block_size")
-            block_count = read_int("lfs_cfg_block_count")
+                if args.intflash_address in valid_intflash_bank_1_addresses:
+                    args.intflash_bank = 1
+                elif args.intflash_address in valid_intflash_bank_2_addresses:
+                    args.intflash_bank = 2
+                else:
+                    raise NotImplementedError
 
-            if block_size==0 or block_count==0:
-                raise DataError
+                if i == 0:
+                    start_flashapp(args.intflash_address)
 
-            lfs_context = LfsDriverContext(filesystem_offset)
-            fs = LittleFS(lfs_context, block_size=block_size, block_count=block_count)
+                    filesystem_offset = read_int("lfs_cfg_context") - 0x9000_0000
+                    block_size = read_int("lfs_cfg_block_size")
+                    block_count = read_int("lfs_cfg_block_count")
 
-            try:
+                    if block_size==0 or block_count==0:
+                        raise DataError
+
+                    lfs_context = LfsDriverContext(filesystem_offset)
+                    fs = LittleFS(lfs_context, block_size=block_size, block_count=block_count)
+
                 f = commands[args.command]
-            except KeyError:
-                print(f"Unknown command \"{args.command}\"")
-                parser.print_help()
-                exit(1)
+                try:
+                    f(args=args, fs=fs, block_size=block_size, block_count=block_count, parser=parser)
+                finally:
+                    if not args.no_disable_debug:
+                        disable_debug()
 
-            try:
-                f(args=args, fs=fs, block_size=block_size, block_count=block_count, parser=parser)
-            finally:
-                if not args.no_disable_debug:
-                    disable_debug()
-
-                target.reset()
+                    target.reset_and_halt()
+                    set_msp_pc(args.intflash_address)
+                    target.resume()
     except usb.core.USBError as e:
         new_message = str(e) + "\n\n\nTry unplugging and replugging in your adapter.\n\n"
         raise type(e)(new_message) from e
