@@ -738,7 +738,6 @@ def main():
     valid_intflash_bank_2_addresses = set(range(0x0810_0000, (0x0810_0000 + (256 << 10)), 4))
     group.add_argument("--intflash-address",
                        type=lambda x: int(x,0),
-                       choices=(*valid_intflash_bank_1_addresses, *valid_intflash_bank_2_addresses),
                        help="Retro Go internal flash address.")
 
     parser = argparse.ArgumentParser(
@@ -757,9 +756,9 @@ def main():
 
     subparser = add_command(flash)
     subparser.add_argument("file", type=Path,
-           help="binary file to flash")
+            help="binary file to flash")
     subparser.add_argument("address", type=lambda x: int(x,0),
-           help="Offset into external flash")
+            help="Offset into external flash")
 
     subparser = add_command(erase)
 
@@ -821,7 +820,19 @@ def main():
 
     parsed_args = []
     for command_args in commands_args:
-        parsed_args.append(parser.parse_args(command_args + global_args))
+        current_args = parser.parse_args(command_args + global_args)
+
+        if current_args.intflash_address is None:
+            current_args.intflash_address = 0x0800_0000 if current_args.intflash_bank == 1 else 0x0810_0000
+
+        if current_args.intflash_address in valid_intflash_bank_1_addresses:
+            current_args.intflash_bank = 1
+        elif current_args.intflash_address in valid_intflash_bank_2_addresses:
+            current_args.intflash_bank = 2
+        else:
+            raise NotImplementedError
+
+        parsed_args.append(current_args)
 
     options = {
         "frequency": 5_000_000,
