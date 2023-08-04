@@ -118,7 +118,8 @@ FILESYSTEM_SIZE := $(shell \
 				   else \
 				   	   echo $$FILESYSTEM_SIZE; \
 				   fi)
-# TODO: FILESYSTEM_OFFSET; default to sticking it at the end of the EXTFLASH
+FILESYSTEM_OFFSET ?= $$(($(EXTFLASH_SIZE) - $(FILESYSTEM_SIZE)))
+# TODO: Calculate __EXTFLASH_LENGTH__ here so we can determine what needs to be subtracted from __EXTFLASH_TOTAL_LENGTH__
 
 
 # Set to 0 to remove state saving support (uses less space)
@@ -515,6 +516,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 LDFLAGS += -Wl,--defsym=__EXTFLASH_OFFSET__=$(EXTFLASH_OFFSET)
 LDFLAGS += -Wl,--defsym=__EXTFLASH_TOTAL_LENGTH__=$(EXTFLASH_SIZE)
 LDFLAGS += -Wl,--defsym=ENABLE_SCREENSHOT=$(ENABLE_SCREENSHOT)
+LDFLAGS += -Wl,--defsym=__FILESYSTEM_OFFSET__=$(FILESYSTEM_OFFSET)
 
 LDFLAGS += -Wl,--defsym=__INTFLASH__=$(INTFLASH_ADDRESS)
 
@@ -889,7 +891,9 @@ help:
 	@echo "  EXTFLASH_FORCE_SPI  - Forces the use of legacy SPI mode for the external flash driver"
 	@echo "  EXTFLASH_SIZE_MB    - Sets the external flash size in megabytes"
 	@echo "  EXTFLASH_SIZE       - Sets the external flash size in bytes (has precedence over EXTFLASH_SIZE_MB)"
-	@echo "  FILESYSTEM_SIZE     - Sets the filesystem flash size in bytes
+	@echo "  FILESYSTEM_SIZE     - Sets the filesystem flash size in bytes.
+	@echo "  FILESYSTEM_OFFSET   - Places the filesystem at a specified offset in the external flash. "
+	@echo "                        Defaults to placing the filesystem at the end of flash."
 	@echo "  LARGE_FLASH         - Sets the external flash size to 16MB  (deprecated)"
 	@echo "  EXTFLASH_OFFSET     - Places the data at an offset in the external flash (useful for dual boot)"
 	@echo "  INTFLASH_BANK       - Sets the internal flash bank. Valid values {1,2} (default=1)."
