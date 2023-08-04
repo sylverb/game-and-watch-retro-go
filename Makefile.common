@@ -796,7 +796,7 @@ start:  # Start code located at INTFLASH_ADDRESS
 
 # Programs the internal flash using a new OpenOCD instance
 flash_intflash: $(BUILD_DIR)/$(TARGET)_intflash.bin
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "program $< $(INTFLASH_ADDRESS) verify reset exit"
+	@$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "program $< $(INTFLASH_ADDRESS) verify reset exit"
 .PHONY: flash_intflash
 
 # Flashes using an existing openocd instance
@@ -805,8 +805,7 @@ flash_intflash_nc: $(BUILD_DIR)/$(TARGET)_intflash.bin
 .PHONY: flash_intflash_nc
 
 flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin pyocd_check_pack
-	$(PYTHON3) gnwmanager.py --intflash-address=$(INTFLASH_ADDRESS) flash $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
-	# gnwmanager internally disables the DBGMCU block on exit.
+	@$(PYTHON3) gnwmanager.py --intflash-address=$(INTFLASH_ADDRESS) flash $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
 .PHONY: flash_extflash
 
 flash_test: flash_intflash
@@ -814,7 +813,12 @@ flash_test: flash_intflash
 .PHONY: flash_test
 
 # Programs both the external and internal flash.
-flash: CheckTools CheckDirtySubmodules flash_intflash flash_extflash
+flash: CheckTools CheckDirtySubmodules
+	$(V)$(MAKE) flash_intflash
+	@if [ "$(INTFLASH_ADDRESS)" != "0x08000000" ]; then \
+		echo "\n\nPower on your Game & Watch, then press any key to continue..."; read -n1 -r key; \
+    fi
+	$(V)$(MAKE) flash_extflash
 .PHONY: flash
 
 monitor:
