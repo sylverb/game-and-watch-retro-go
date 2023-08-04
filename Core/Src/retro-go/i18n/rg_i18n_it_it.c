@@ -175,6 +175,7 @@ const lang_t lang_it_it LANG_DATA = {
     .s_Add_favorite = "Aggiungi ai preferiti",
     .s_Delete_save = "Elimina il salvataggio",
     .s_Confiem_del_save = "Eliminare il salvataggio?",
+    .s_Free_space_alert = "Not enough free space for a new save, please delete some.",
 #if CHEAT_CODES == 1
     .s_Cheat_Codes = "Codici Cheat",
     .s_Cheat_Codes_Title = "Codici Cheat",

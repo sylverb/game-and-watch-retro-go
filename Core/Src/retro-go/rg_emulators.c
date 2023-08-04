@@ -36,6 +36,9 @@ static int emulators_count = 0;
 const unsigned int intflash_magic_sign = 0xABAB;
 const unsigned int extflash_magic_sign __attribute__((section(".extflash_emu_data"))) = intflash_magic_sign;
 
+// Minimum amount of free blocks in filesystem to ensure correct behavior
+#define MIN_FREE_FS_BLOCKS 30
+
 static retro_emulator_file_t *CHOSEN_FILE = NULL;
 
 retro_emulator_t *file_to_emu(retro_emulator_file_t *file) {
@@ -398,9 +401,11 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     // bool has_sram = odroid_sdcard_get_filesize(sram_path) > 0;
     // bool is_fav = favorite_find(file) != NULL;
 
+    char path[FS_MAX_PATH_SIZE];
     bool has_save = 0;
     bool has_sram = 0;
     bool force_redraw = false;
+    uint32_t free_blocks = fs_free_blocks();
 
 #if CHEAT_CODES == 1
     odroid_dialog_choice_t last = ODROID_DIALOG_CHOICE_LAST;
@@ -411,7 +416,6 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     }
 
 #endif
-    char path[FS_MAX_PATH_SIZE];
     parse_rom_path(file, path, sizeof(path), 0);
 
     has_save = fs_exists(path);
@@ -455,8 +459,16 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
         emulator_start(file, true, false, 0);
     }
     if (sel == 1) { // New game
-        gui_save_current_tab();
-        emulator_start(file, false, false, 0);
+        // To ensure efficient filesystem behavior, we make sure that there
+        // is already a savestate file for this game or that there is enough
+        // free space for a new save state
+        if ((has_save) || (free_blocks >= MIN_FREE_FS_BLOCKS)) {
+            gui_save_current_tab();
+            emulator_start(file, false, false, 0);
+        } else {
+            // Inform that there is not enough free blocks for a new save
+            odroid_overlay_alert(curr_lang->s_Free_space_alert);
+        }
     }
     else if (sel == 2) {
         if (odroid_overlay_confirm(curr_lang->s_Confiem_del_save, false) == 1) {

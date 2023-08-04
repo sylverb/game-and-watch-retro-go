@@ -177,6 +177,7 @@ const lang_t lang_de_de LANG_DATA = {
     .s_Add_favorite = "Favorit hinzufügen",
     .s_Delete_save = "Spielstand löschen",
     .s_Confiem_del_save = "Spielstand wirklich löschen?",
+    .s_Free_space_alert = "Not enough free space for a new save, please delete some.",
 #if CHEAT_CODES == 1
     .s_Cheat_Codes = "Cheat Codes",
     .s_Cheat_Codes_Title = "Cheat Options",

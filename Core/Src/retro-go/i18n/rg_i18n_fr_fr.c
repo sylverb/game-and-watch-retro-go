@@ -174,6 +174,7 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_Add_favorite = "Ajouter aux favoris",
     .s_Delete_save = "Supprimer la sauvegarde",
     .s_Confiem_del_save = "Supprimer la sauvegarde ?",
+    .s_Free_space_alert = "Pas assez d'espace pour une nouvelle sauvegarde, merci d'en supprimer.",
 #if CHEAT_CODES == 1
     .s_Cheat_Codes = "Codes de triche",
     .s_Cheat_Codes_Title = "Options de triche",

@@ -27,6 +27,7 @@ int fs_read(fs_file_t *file, unsigned char *buffer, size_t size);
 int fs_seek(fs_file_t *file, lfs_soff_t off, int whence);
 void fs_close(fs_file_t *file);
 bool fs_exists(const char *path);
+uint32_t fs_free_blocks();
 
 #ifdef __cplusplus
 }
