@@ -19,9 +19,6 @@ LARGE_FLASH ?= 0
 # setting EXTFLASH_OFFSET. Useful if the first 1MB are to be preserved.
 EXTFLASH_OFFSET ?= 0
 
-FILESYSTEM_SIZE ?= 1048576
-# TODO: FILESYSTEM_OFFSET; default to sticking it at the end of the EXTFLASH
-
 # Configure Game & Watch target device mario|zelda
 ifneq ($(findstring flash,$(MAKECMDGOALS)),flash)
 	GNW_TARGET ?= mario
@@ -112,6 +109,17 @@ BIG_BANK ?= 1
 EXTFLASH_SIZE ?= $(shell echo "$$(( $(EXTFLASH_SIZE_MB) * 1024 * 1024 ))")
 
 EXTFLASH_FORCE_SPI ?= 0
+
+# Heuristic: if not set; 10% of your extflash should be good for filesystem.
+# Rounded down to the nearest 4096.
+FILESYSTEM_SIZE := $(shell \
+				   if [ -z "$$FILESYSTEM_SIZE" ]; then \
+				       echo $$(($(EXTFLASH_SIZE) / 10 / 4096 * 4096)); \
+				   else \
+				   	   echo $$FILESYSTEM_SIZE; \
+				   fi)
+# TODO: FILESYSTEM_OFFSET; default to sticking it at the end of the EXTFLASH
+
 
 # Set to 0 to remove state saving support (uses less space)
 STATE_SAVING ?= 1
