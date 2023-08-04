@@ -145,12 +145,18 @@ static const persistent_config_t persistent_config_default = {
 #endif
 };
 
-__attribute__((section (".configflash"))) __attribute__((aligned(4096))) persistent_config_t persistent_config_flash;
 persistent_config_t persistent_config_ram;
 
 void odroid_settings_init()
 {
-    memcpy(&persistent_config_ram, &persistent_config_flash, sizeof(persistent_config_t));
+    if(fs_exists("CONFIG")){
+        fs_file_t *file = fs_open("CONFIG", FS_READ, FS_COMPRESS);
+        fs_read(file, &persistent_config_ram, sizeof(persistent_config_t));
+        fs_close(file);
+    }
+    else{
+        memset(&persistent_config_ram, 0, sizeof(persistent_config_t));
+    }
 
     if (persistent_config_ram.magic != CONFIG_MAGIC) {
         printf("Config: Magic mismatch. Expected 0x%08x, got 0x%08lx\n", CONFIG_MAGIC, persistent_config_ram.magic);
@@ -165,16 +171,17 @@ void odroid_settings_init()
     }
 
     // Calculate crc32 of the whole struct with the crc32 value set to 0
+    uint32_t loaded_crc32 = persistent_config_ram.crc32;
     persistent_config_ram.crc32 = 0;
     persistent_config_ram.crc32 = crc32_le(0, (unsigned char *) &persistent_config_ram, sizeof(persistent_config_t));
 
-    if (persistent_config_ram.crc32 != persistent_config_flash.crc32) {
-        printf("Config: CRC32 mismatch. Expected 0x%08lx, got 0x%08lx\n", persistent_config_ram.crc32, persistent_config_flash.crc32);
+    if (persistent_config_ram.crc32 != loaded_crc32) {
+        printf("Config: CRC32 mismatch. Expected 0x%08lx, got 0x%08lx\n", persistent_config_ram.crc32, loaded_crc32);
         odroid_settings_reset();
         return;
     }
     //set colors;
-    curr_colors = (colors_t *)(&gui_colors[persistent_config_flash.colors]);
+    curr_colors = (colors_t *)(&gui_colors[persistent_config_ram.colors]);
     //set font
     curr_font = odroid_settings_font_get();
     //set lang
@@ -187,7 +194,9 @@ void odroid_settings_commit()
     persistent_config_ram.crc32 = 0;
     persistent_config_ram.crc32 = crc32_le(0, (unsigned char *) &persistent_config_ram, sizeof(persistent_config_t));
 
-    store_save((const uint8_t *) &persistent_config_flash, (const uint8_t *) &persistent_config_ram, sizeof(persistent_config_t));
+    fs_file_t *file = fs_open("CONFIG", FS_WRITE, FS_COMPRESS);
+    fs_write(file, &persistent_config_ram, sizeof(persistent_config_t));
+    fs_close(file);
 }
 
 void odroid_settings_reset()
@@ -200,7 +209,7 @@ void odroid_settings_reset()
 #endif
     memcpy(&persistent_config_ram, &persistent_config_default, sizeof(persistent_config_t));
 
-    // odroid_settings_commit();
+    odroid_settings_commit();
 }
 
 char* odroid_settings_string_get(const char *key, const char *default_value)

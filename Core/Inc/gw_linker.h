@@ -26,8 +26,6 @@ extern uint32_t __ram_exec_end__;
 extern uint32_t _sitcram_hot;
 extern uint32_t __itcram_hot_start__;
 extern uint32_t __itcram_hot_end__;
-extern uint8_t __configflash_start__;
-extern uint8_t __configflash_end__;
 extern uint8_t __cacheflash_start__;
 extern uint8_t __cacheflash_end__;
 

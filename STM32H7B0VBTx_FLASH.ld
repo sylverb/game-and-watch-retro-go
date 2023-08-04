@@ -88,7 +88,6 @@ __RAM_EMU_END__     = __RAM_EMU_START__ + __RAM_EMU_LENGTH__;
 
 INCLUDE build/cacheflash.ld
 INCLUDE build/filesystem.ld
-__CONFIGFLASH_LENGTH__ = 4096;
 
 /****
  * External Flash Layout
@@ -112,23 +111,16 @@ __CONFIGFLASH_LENGTH__ = 4096;
  *            |          Reserved space          |
  *            |    to decompress Roms not        |
  *            |         fitting in RAM           |
- *            +----------------------------------+  __CACHEFLASH_END__ __CONFIGFLASH_START__
- *            |                                  |
- *            |    Store changable persistent    |
- *            |      retro-go configurations     |
- *            |                                  |
- *            +----------------------------------+  __CONFIGFLASH_END__ __FILESYSTEM_START__
+ *            +----------------------------------+  __CACHEFLASH_END__ __FILESYSTEM_START__
  *            |                                  |
  *            |            Filesystem            |
  *            |                                  |
  *            +----------------------------------+  __EXTFLASH_END__ __FILESYSTEM_END__
  */
-__EXTFLASH_LENGTH__ = __EXTFLASH_TOTAL_LENGTH__ - (__CACHEFLASH_LENGTH__ + __CONFIGFLASH_LENGTH__ + __FILESYSTEM_LENGTH__);
+__EXTFLASH_LENGTH__ = __EXTFLASH_TOTAL_LENGTH__ - (__CACHEFLASH_LENGTH__ + __FILESYSTEM_LENGTH__);
 __EXTFLASH_END__ = __EXTFLASH_START__ + __EXTFLASH_LENGTH__;
 __CACHEFLASH_START__ = __EXTFLASH_END__;
 __CACHEFLASH_END__   = __CACHEFLASH_START__ + __CACHEFLASH_LENGTH__;
-__CONFIGFLASH_START__ = __CACHEFLASH_END__;
-__CONFIGFLASH_END__   = __CONFIGFLASH_START__ + __CONFIGFLASH_LENGTH__;
 
 __FILESYSTEM_START__ = __EXTFLASH_BASE__ + __FILESYSTEM_OFFSET__;
 __FILESYSTEM_END__ = __FILESYSTEM_START__ + __FILESYSTEM_LENGTH__;
@@ -153,7 +145,6 @@ MEMORY
   FLASH2   (xr ) : ORIGIN = 0x08100000,          LENGTH = __FLASH2_LENGTH__
   EXTFLASH   (xr ) : ORIGIN = __EXTFLASH_START__,  LENGTH = __EXTFLASH_LENGTH__
   CACHEFLASH (xr ) : ORIGIN = __CACHEFLASH_START__,  LENGTH = __CACHEFLASH_LENGTH__
-  CONFIGFLASH(xr ) : ORIGIN = __CONFIGFLASH_START__, LENGTH = __CONFIGFLASH_LENGTH__
   FILESYSTEM (xr ) : ORIGIN = __FILESYSTEM_START__, LENGTH = __FILESYSTEM_LENGTH__
 }
 
@@ -519,14 +510,6 @@ SECTIONS
     *(.cacheflash)
     __cacheflash_end__ = .;
   } > CACHEFLASH
-
-  ._configflash (NOLOAD):
-  {
-    . = ALIGN(4K);
-    __configflash_start__ = .;
-    *(.configflash)
-    __configflash_end__ = .;
-  } > CONFIGFLASH
 
   ._filesystem (NOLOAD):
   {
