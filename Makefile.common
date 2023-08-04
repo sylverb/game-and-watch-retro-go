@@ -734,7 +734,6 @@ $(BUILD_DIR):
 
 OPENOCD ?= openocd
 ADAPTER ?= stlink
-FLASHTEST ?= scripts/flashapp.sh --test
 
 # Starts openocd and attaches to the target. To be used with 'flash_intflash_nc' and 'gdb'
 openocd:
@@ -807,10 +806,6 @@ flash_intflash_nc: $(BUILD_DIR)/$(TARGET)_intflash.bin
 flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin pyocd_check_pack
 	@$(PYTHON3) gnwmanager.py --intflash-address=$(INTFLASH_ADDRESS) flash $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
 .PHONY: flash_extflash
-
-flash_test: flash_intflash
-	$(FLASHTEST)
-.PHONY: flash_test
 
 # Programs both the external and internal flash.
 flash: CheckTools CheckDirtySubmodules
@@ -963,7 +958,6 @@ help:
 	@echo "  flash_extflash    - Only programs the external flash"
 	@echo "  flash_intflash    - Only programs the internal flash"
 	@echo "  flash_intflash_nc - Only programs the internal flash and uses an existing openocd server"
-	@echo "  flash_test        - Runs a flash test. Will overwrite data on the external flash!"
 	@echo "  gdb               - Starts gdb and attaches to openocd"
 	@echo "  gdb_intflash      - Runs flash_intflash_nc, then starts gdb and attaches to openocd"
 	@echo "  openocd           - Starts openocd with appropriate config"
