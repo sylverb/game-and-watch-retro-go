@@ -727,13 +727,11 @@ def main():
     global commands, subparsers
     commands = {}
 
-    parser = argparse.ArgumentParser(prog="filemanager", description="Multiple commands may be given in a single session, delimited be \"--\"")
-    subparsers = parser.add_subparsers(dest="command")
-    parser.add_argument("--no-disable-debug", action="store_true",
+    global_parser = argparse.ArgumentParser(add_help=False)
+    global_parser.add_argument('--verbose', action='store_true')
+    global_parser.add_argument("--no-disable-debug", action="store_true",
                         help="Don't disable the debug hw block after flashing.")
-    parser.add_argument("--verbose", action="store_true")
-
-    group = parser.add_mutually_exclusive_group()
+    group = global_parser.add_mutually_exclusive_group()
     group.add_argument("--intflash-bank", type=int, default=1, choices=(1, 2),
                         help="Retro Go internal flash bank")
     valid_intflash_bank_1_addresses = set(range(0x0800_0000, (0x0800_0000 + (256 << 10)), 4))
@@ -743,9 +741,17 @@ def main():
                        choices=(*valid_intflash_bank_1_addresses, *valid_intflash_bank_2_addresses),
                        help="Retro Go internal flash address.")
 
+    parser = argparse.ArgumentParser(
+        prog="filemanager",
+        parents=[global_parser],
+        description="Multiple commands may be given in a single session, delimited be \"--\"",
+    )
+    subparsers = parser.add_subparsers(dest="command")
+
+
     def add_command(handler):
         """Add a subcommand, like "flash"."""
-        subparser = subparsers.add_parser(handler.__name__)
+        subparser = subparsers.add_parser(handler.__name__, parents=[global_parser])
         commands[handler.__name__] = handler
         return subparser
 
@@ -815,7 +821,7 @@ def main():
 
     parsed_args = []
     for command_args in commands_args:
-        parsed_args.append(parser.parse_args(global_args + command_args))
+        parsed_args.append(parser.parse_args(command_args + global_args))
 
     options = {
         "frequency": 5_000_000,
