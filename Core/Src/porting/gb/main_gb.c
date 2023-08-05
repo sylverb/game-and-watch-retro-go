@@ -537,6 +537,8 @@ rg_app_desc_t * init(uint8_t load_state, int8_t save_slot)
     update1.buffer = gb_framebuffer;
     update2.buffer = gb_framebuffer;
 
+    sound_init();
+
     //saveSRAM = odroid_settings_app_int32_get(NVS_KEY_SAVE_SRAM, 0);
     saveSRAM = false;
 
