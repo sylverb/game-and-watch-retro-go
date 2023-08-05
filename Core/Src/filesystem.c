@@ -428,6 +428,10 @@ bool fs_exists(const char *path){
     return lfs_stat(&lfs, path, &info) == LFS_ERR_OK;
 }
 
+bool fs_info(const char *path, struct lfs_info *info){
+    return lfs_stat(&lfs, path, info) == LFS_ERR_OK;
+}
+
 
 uint32_t fs_free_blocks() {
     return (uint32_t)lfs_cfg.block_count - (uint32_t)lfs_fs_size(&lfs);

@@ -18,6 +18,7 @@
 #include "rg_rtc.h"
 #include "rg_i18n.h"
 #include "bitmaps.h"
+#include "filesystem.h"
 
 #if 0
 #define KEY_SELECTED_TAB "SelectedTab"
@@ -703,7 +704,21 @@ void boot2_menu() {
         uint8_t apps_count = 0;
 
         // TODO Use littlefs `ls`
-        
+        char* filepath = "/bank2/smw.bin";
+        if (fs_exists(filepath)) {
+            printf("File exists in FS: %s\n", filepath);
+            struct lfs_info stat;
+            if (fs_info(filepath, &stat)) {
+                printf("File size FS: %d\n", stat.size);
+                memcpy(apps[apps_count].name, "FS_SMW", 16);    // FIXME file name
+                apps[apps_count].address = 0;   // FIXME file offset ??? addr + app.address;
+                apps[apps_count].size = stat.size;
+                apps[apps_count].checksum = 0;// FIXME from file header ??? app.checksum;
+                apps_count++;
+            }
+        }
+
+        /*
         const uint16_t sectors_count = (16 * 1024 * 1024) / 4096;   // FIXME use flash capacity
         const uint8_t repeat = 1;   // FIXME ((256 * 1024 * 1024) / 4096) / sectors_count;
         for (uint8_t i=0; i < repeat; i++) {
@@ -720,7 +735,7 @@ void boot2_menu() {
                 }
             }
             // TODO refresh watchdog ???
-        }
+        }*/
 
         odroid_dialog_choice_t appsinfo[] = {
             // 1 line per app (max 6 apps) + close + end-of-list
@@ -735,7 +750,10 @@ void boot2_menu() {
         };
 
         for (int i=0; i<apps_count; i++) {
-            uint32_t crc = crc32_le(0, (unsigned char *) apps[i].address, apps[i].size);
+            uint32_t crc;
+            if (apps[i].address != 0) {
+                crc = crc32_le(0, (unsigned char *) apps[i].address, apps[i].size);
+            }
             // FIXME do not display invalid apps?
             appsinfo[i] = (odroid_dialog_choice_t){i+1, ((crc == apps[i].checksum) ? "OK" : "KO"), apps[i].name, 1, NULL};
         }
@@ -766,6 +784,19 @@ void boot2_menu() {
                     HAL_NVIC_SystemReset();
                 //}
                 */
+
+               // TODO turn screen off before loading into framebuffer
+
+               if (apps[sel-1].address == 0) {
+                    // TODO Read file into buffer --> TODO read in chunks ???
+                    printf("Reading file in FS: buffer=0x%08x size=%d\n", &framebuffer1, apps[sel-1].size);
+                    fs_file_t *file;
+                    file = fs_open(filepath, FS_READ, FS_RAW);
+                    fs_read(file, &framebuffer1, apps[sel-1].size);
+                    fs_close(file);
+                    apps[sel-1].address = &framebuffer1;
+                    apps[sel-1].checksum = crc32_le(0, &framebuffer1, apps[sel-1].size);
+               }
 
                 
                 // Program intflash bank2
