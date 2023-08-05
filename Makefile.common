@@ -541,6 +541,7 @@ LDFLAGS += -Wl,--defsym=__EXTFLASH_OFFSET__=$(EXTFLASH_OFFSET)
 LDFLAGS += -Wl,--defsym=__EXTFLASH_TOTAL_LENGTH__=$(EXTFLASH_TOTAL_LENGTH)
 LDFLAGS += -Wl,--defsym=ENABLE_SCREENSHOT=$(ENABLE_SCREENSHOT)
 LDFLAGS += -Wl,--defsym=__FILESYSTEM_OFFSET__=$(FILESYSTEM_OFFSET)
+LDFLAGS += -Wl,--defsym=__FILESYSTEM_LENGTH__=$(FILESYSTEM_SIZE)
 
 LDFLAGS += -Wl,--defsym=__INTFLASH__=$(INTFLASH_ADDRESS)
 
@@ -619,7 +620,6 @@ $(BUILD_DIR)/roms.a: $(BUILD_DIR)/rom_files.txt parse_roms.py
 	$(V)$(ECHO) [ PYTHON3 ] $(notdir $<)
 	$(V)$(PYTHON3) parse_roms.py \
 		--flash-size=$(EXTFLASH_SIZE) \
-		--filesystem-size=$(FILESYSTEM_SIZE) \
 		$(SAVE_PARAM) \
 		$(COMPRESS_PARAM) \
 		$(CODEPAGE_PARAM) \
