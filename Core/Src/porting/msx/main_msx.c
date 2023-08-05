@@ -1739,6 +1739,17 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 
     if (load_state) {
         odroid_system_emu_load_state(save_slot);
+        // Make sure we have correct disk inserted after loading state
+        if (msx_game_type == MSX_GAME_DISK) {
+            char game_name[PROP_MAXPATH];
+            retro_emulator_file_t *disk_file = NULL;
+            const rom_system_t *msx_system = rom_manager_system(&rom_mgr, "MSX");
+            disk_file = (retro_emulator_file_t *)rom_get_ext_file_at_index(msx_system,MSX_DISK_EXTENSION,selected_disk_index);
+            sprintf(game_name,"%s.%s",disk_file->name,disk_file->ext);
+            emulatorSuspend();
+            insertDiskette(properties, 0, game_name, NULL, -1);
+            emulatorResume();
+        }
     }
 
     while (1) {
