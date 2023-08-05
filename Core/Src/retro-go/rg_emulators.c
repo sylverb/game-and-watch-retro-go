@@ -421,7 +421,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     has_save = fs_exists(path);
 
     odroid_dialog_choice_t choices[] = {
-        {0, curr_lang->s_Resume_game, "", has_save && (file->save_address != 0), NULL},
+        {0, curr_lang->s_Resume_game, "", has_save, NULL},
         {1, curr_lang->s_New_game, "", 1, NULL},
         ODROID_DIALOG_CHOICE_SEPARATOR,
         //{3, is_fav ? s_Del_favorite : s_Add_favorite, "", 1, NULL},
@@ -438,19 +438,6 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     if (CHOSEN_FILE->cheat_count == 0)
         choices[4] = last;
 #endif
-
-    //Del Some item
-    if (file->save_address == 0)
-    {
-        choices[0] = choices[1];
-#if CHEAT_CODES == 1
-        choices[1] = choices[2];
-        choices[2] = choices[3];
-        choices[3] = choices[6];
-#else
-        choices[1] = choices[4];
-#endif
-    }
 
     int sel = odroid_overlay_dialog(file->name, choices, has_save ? 0 : 1);
 

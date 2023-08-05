@@ -33,8 +33,6 @@ typedef struct {
     //max 64kb image file data
     uint16_t img_size;
 	#endif
-    const uint8_t *save_address;
-    uint32_t save_size;
     //size_t crc_offset;
     //uint32_t checksum;
     //bool missing_cover;

@@ -37,8 +37,6 @@ ROM_ENTRY_TEMPLATE = """\t{{
 \t\t.img_address = {img_entry},
 \t\t.img_size = {img_size},
 \t\t#endif
-\t\t.save_address = {save_entry},
-\t\t.save_size = {save_size},
 \t\t.system = &{system},
 \t\t.region = {region},
 \t\t.mapper = {mapper},
@@ -271,9 +269,7 @@ class ROM:
         self.romdef = romdefs[self.filename]
         self.romdef.setdefault('name', self.filename)
         self.romdef.setdefault('publish', '1')
-        self.romdef.setdefault('enable_save', '0')
         self.publish = (self.romdef['publish'] == '1')
-        self.enable_save = (self.romdef['enable_save'] == '1') or args.save
         self.system_name = system_name
         self.name = self.romdef['name']
         print("Found rom " + self.filename +" will display name as: " + self.romdef['name'])
@@ -534,11 +530,6 @@ class ROMParser:
         rom_files = [r for r in rom_files if r.name.lower().endswith(extension)]
         rom_files.sort()
         found_roms = [ROM(system_name, rom_file, ext, romdefs) for rom_file in rom_files]
-        for rom in found_roms:
-            suffix = "_no_save"
-            if rom.name.endswith(suffix) :
-                rom.name = rom.name[:-len(suffix)]
-                rom.enable_save = False
 
         return found_roms
 
@@ -575,8 +566,6 @@ class ROMParser:
                 rom_entry=rom.symbol,
                 img_size=rom.img_size,
                 img_entry=rom.img_symbol if rom.img_size else "NULL",
-                save_entry=(save_prefix + str(i)) if rom.enable_save else "NULL",
-                save_size=("sizeof(" + save_prefix + str(i) + ")") if rom.enable_save else "0",
                 region=region,
                 extension=rom.ext,
                 system=system,
@@ -697,9 +686,6 @@ class ROMParser:
         )
         template = "extern const uint8_t {name}[];\n"
         return template.format(name=rom.img_symbol)
-
-    def generate_save_entry(self, name: str, save_size: int) -> str:
-        return f'uint8_t {name}[{save_size}]  __attribute__((section (".saveflash"))) __attribute__((aligned(4096)));\n'
 
     def generate_cheat_entry(self, name: str, num: int, cheat_codes_and_descs: []) -> str:
         str = ""
@@ -912,22 +898,10 @@ class ROMParser:
                 roms += self.find_roms(system_name, folder, e + "." + compress, romdefs)
             return roms
 
-        def find_cdk_disks():
-            disks = self.find_roms(system_name, folder, "cdk", romdefs)
-            for disk in disks:
-                suffix = "_no_save"
-                if disk.name.endswith(suffix) :
-                    disk.name = disk.name[:-len(suffix)]
-                    disk.enable_save = False
-            return disks
-
         def contains_rom_by_name(rom, roms):
-            for r in roms:
-                if r.name == rom.name:
-                    return True
-            return False
+            return any(r.name == rom.name for r in roms)
 
-        cdk_disks = find_cdk_disks()
+        cdk_disks = self.find_roms(system_name, folder, "cdk", romdefs)
 
         disks_raw = [r for r in roms_raw if not contains_rom_by_name(r, cdk_disks)]
         disks_raw = [r for r in disks_raw if r.ext == "dsk"]
@@ -942,7 +916,7 @@ class ROMParser:
                     r,
                     compress)
             # Re-generate the cdk disks list
-            cdk_disks = find_cdk_disks()
+            cdk_disks = self.find_roms(system_name, folder, "cdk", romdefs)
         #remove .dsk from list
         roms_raw = [r for r in roms_raw if not contains_rom_by_name(r, cdk_disks)]
         #add .cdk disks to list
@@ -999,7 +973,7 @@ class ROMParser:
 
         if img_max > 18600:
             print(f"Error: {system_name} Cover art image [width:{cover_width} height: {cover_height}] will overflow!")
-            exit(-1)        
+            exit(-1)
 
         with open(file, "w", encoding = args.codepage) as f:
             f.write(SYSTEM_PROTO_TEMPLATE.format(name=variable_name))
@@ -1010,13 +984,6 @@ class ROMParser:
 
                 # Aligned
                 aligned_size = 4 * 1024
-                if rom.enable_save:
-                    rom_save_size = (
-                        (save_size + aligned_size - 1) // (aligned_size)
-                    ) * aligned_size
-                    total_save_size += rom_save_size
-                    if system_save_size < rom_save_size:
-                        system_save_size = rom_save_size
                 total_rom_size += rom.size
                 if (args.coverflow != 0) :
                     total_img_size += rom.img_size
@@ -1027,8 +994,6 @@ class ROMParser:
                         f.write(self.generate_img_object_file(rom, cover_width, cover_height))
                     except NoArtworkError:
                         pass
-                if rom.enable_save:
-                    f.write(self.generate_save_entry(save_prefix + str(i), save_size))
 
                 cheat_codes_and_descs = rom.get_cheat_codes();
                 if cheat_codes_prefix:
@@ -1500,7 +1465,6 @@ if __name__ == "__main__":
         "--no-compress_gb_speed", dest="compress_gb_speed", action="store_false"
     )
     parser.set_defaults(compress_gb_speed=False)
-    parser.add_argument("--no-save", dest="save", action="store_false")
     parser.add_argument(
         "--verbose",
         action="store_true",

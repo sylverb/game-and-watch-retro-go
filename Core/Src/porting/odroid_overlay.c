@@ -1131,13 +1131,13 @@ int odroid_overlay_game_menu(odroid_dialog_choice_t *extra_options)
     choices[index].id = 10;
     choices[index].label = curr_lang->s_Save_Cont;
     choices[index].value = "";
-    choices[index].enabled = (ACTIVE_FILE->save_address != 0);
+    choices[index].enabled = true;
     choices[index].update_cb = NULL;
     index++;
     choices[index].id = 20;
     choices[index].label = curr_lang->s_Save_Quit;
     choices[index].value = "";
-    choices[index].enabled = (ACTIVE_FILE->save_address != 0);
+    choices[index].enabled = true;
     choices[index].update_cb = NULL;
     index++;
     choices[index].id = 0x0F0F0F0E;
@@ -1198,8 +1198,8 @@ int odroid_overlay_game_menu(odroid_dialog_choice_t *extra_options)
 #else
     odroid_dialog_choice_t choices[] = {
         // {0, "Continue", "",  1, NULL},
-        {10, curr_lang->s_Save_Cont, "", (ACTIVE_FILE->save_address != 0), NULL},
-        {20, curr_lang->s_Save_Quit, "", (ACTIVE_FILE->save_address != 0), NULL},
+        {10, curr_lang->s_Save_Cont, "", 1, NULL},
+        {20, curr_lang->s_Save_Quit, "", 1, NULL},
         ODROID_DIALOG_CHOICE_SEPARATOR,
         {30, curr_lang->s_Reload, "", 1, NULL},
         {40, curr_lang->s_Options, "", 1, NULL},
@@ -1211,14 +1211,6 @@ int odroid_overlay_game_menu(odroid_dialog_choice_t *extra_options)
         ODROID_DIALOG_CHOICE_LAST,
     };
 #endif
-    //Del Some item
-    if (ACTIVE_FILE->save_address == 0)
-    {
-        for (int i = 0; i < 7; i++)
-        {
-            choices[i] = choices[i + 3];
-        }
-    }
 
     // Collect stats before freezing emulation with wait_all_keys_released()
     runtime_stats_t stats = odroid_system_get_stats();

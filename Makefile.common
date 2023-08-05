@@ -153,12 +153,6 @@ else ifeq ($(FILESYSTEM_START_IN_EXTFLASH_RANGE),1)
 EXTFLASH_TOTAL_LENGTH := $(shell echo $$(($(EXTFLASH_SIZE) - $(FILESYSTEM_SIZE))))
 endif
 
-# Set to 0 to remove state saving support (uses less space)
-STATE_SAVING ?= 1
-ifeq ($(STATE_SAVING),0)
-	SAVE_PARAM := --no-save
-endif
-
 ENABLE_SCREENSHOT ?= 1
 # Set to 1 to add game genie support
 CHEAT_CODES ?= 0
@@ -480,7 +474,6 @@ C_DEFS +=  \
 -DMINIZ_NO_ZLIB_APIS \
 -DDEBUG_RG_ALLOC \
 -DLFS_NO_MALLOC \
--DSTATE_SAVING=$(STATE_SAVING) \
 -DENABLE_SCREENSHOT=$(ENABLE_SCREENSHOT) \
 -DGNW_TARGET_MARIO=$(GNW_TARGET_MARIO) \
 -DGNW_TARGET_ZELDA=$(GNW_TARGET_ZELDA) \
@@ -938,7 +931,6 @@ help:
 	@echo "  BIG_BANK            - Use internal flash bank as undocumented 256k.(default=1, set 0 to 128k)."
 	@echo "                        It's required patched OPENOCD to work"
 	@echo "  COMPRESS            - Configures ROM compression, Valid values {0,lzma} (default=lzma)."
-	@echo "  STATE_SAVING        - Set to 0 to disable state saving (default=1)"
 	@echo "  RESET_DBGMCU        - Configures if DBGMCU should be reset after flashing."
 	@echo "                        Set to 0 to disable power saving (default=1)"
 	@echo "  CODEPAGE            - Sets codepage to configures default display language.(default=1252)"
@@ -973,7 +965,6 @@ help:
 	@echo "  INTFLASH_BANK=$(INTFLASH_BANK)"
 	@echo "  BIG_BANK=$(BIG_BANK)"
 	@echo "  COMPRESS=$(COMPRESS)"
-	@echo "  STATE_SAVING=$(STATE_SAVING)"
 	@echo "  RESET_DBGMCU=$(RESET_DBGMCU)"
 	@echo "  ENABLE_SCREENSHOT=$(ENABLE_SCREENSHOT)"
 	@echo "  GNW_TARGET=$(GNW_TARGET)"
