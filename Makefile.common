@@ -102,6 +102,8 @@ INTFLASH_BANK = 1
 endif
 endif
 
+GNWMANAGER = $(PYTHON3) gnwmanager.py --intflash-address=$(INTFLASH_ADDRESS)
+
 # Configure external flash size in MB (Megabytes)
 EXTFLASH_SIZE_MB ?= 1
 BIG_BANK ?= 1
@@ -842,7 +844,7 @@ flash_intflash_nc: $(BUILD_DIR)/$(TARGET)_intflash.bin
 .PHONY: flash_intflash_nc
 
 flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin pyocd_check_pack
-	@$(PYTHON3) gnwmanager.py --intflash-address=$(INTFLASH_ADDRESS) flash $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
+	@$(GNWMANAGER) flash $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
 .PHONY: flash_extflash
 
 # Programs both the external and internal flash.
@@ -869,13 +871,13 @@ flash_all: flash
 flash_saves_backup:
 	mkdir -p backup
 	rm -rf backup/savestate
-	@$(PYTHON3) gnwmanager.py --intflash-address=$(INTFLASH_ADDRESS) pull savestate backup/savestate
+	@$(GNWMANAGER) pull savestate backup/savestate
 	@echo "Backup to \"backup/\" complete."
 .PHONY: flash_saves_backup
 
 # Transfers save files from the host machine to the device
 flash_saves_restore:
-	@$(PYTHON3) gnwmanager.py --intflash-address=$(INTFLASH_ADDRESS) mkdir savestate -- push savestate backup/savestate/*
+	@$(GNWMANAGER) mkdir savestate -- push savestate backup/savestate/*
 	@echo "Restore from \"backup/\" complete."
 .PHONY: flash_saves_restore
 
@@ -905,15 +907,15 @@ dump_logs: $(BUILD_DIR)/$(TARGET).elf
 .PHONY: dump_logs
 
 dump_screenshot:
-	$(V)./tools/screenshot.py
+	@$(GNWMANAGER) screenshot
 .PHONY: dump_screenshot
 
 docker_build:
-	$(V)docker build -f Dockerfile --tag kbeckmann/retro-go-builder .
+	$(V)docker build -f Dockerfile --platform linux/amd64 --tag kbeckmann/retro-go-builder .
 .PHONY: docker_build
 
 docker:
-	$(V)docker run --rm -it --privileged --user $(shell id -u):$(shell id -g) -v $(PWD):/opt/workdir -v /dev/bus/usb:/dev/bus/usb kbeckmann/retro-go-builder
+	$(V)docker run --rm -it --privileged --user $(shell id -u):$(shell id -g) --platform linux/amd64 -v $(PWD):/opt/workdir -v /dev/bus/usb:/dev/bus/usb kbeckmann/retro-go-builder
 .PHONY: docker
 
 help:

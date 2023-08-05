@@ -726,8 +726,12 @@ def shell(*, args, parser, **kwargs):
 
 
 def screenshot(*, args, fs, **kwargs):
-    with fs.open("SCREENSHOT", "rb") as f:
-        tamp_compressed_data = f.read()
+    try:
+        with fs.open("SCREENSHOT", "rb") as f:
+            tamp_compressed_data = f.read()
+    except FileNotFoundError:
+        print("No screenshot found on device.")
+        sys.exit(1)
     data = tamp.decompress(tamp_compressed_data)
     # Convert raw RGB565 pixel data to PNG
     img = Image.new("RGB", (320, 240))
@@ -763,7 +767,7 @@ def main():
                        help="Retro Go internal flash address.")
 
     parser = argparse.ArgumentParser(
-        prog="filemanager",
+        prog="gnwmanager",
         parents=[global_parser],
         description="Multiple commands may be given in a single session, delimited be \"--\"",
     )
