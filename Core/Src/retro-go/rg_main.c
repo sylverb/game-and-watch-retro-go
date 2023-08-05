@@ -411,6 +411,9 @@ void retro_loop()
 
             if ((last_key == ODROID_INPUT_START) || (last_key == ODROID_INPUT_X))
             {
+                // TODO Add menu to list bank2 folder + copy to intflash bank2 + boot from bank2 ?
+                // TODO or copy to RAM (framebuffer) and boot from RAM ???
+                
                 odroid_dialog_choice_t choices[] = {
                     {9, curr_lang->s_Version, GIT_HASH, 1, NULL},
                     {9, curr_lang->s_Author, "ducalex", 1, NULL},
@@ -423,6 +426,7 @@ void retro_loop()
                     ODROID_DIALOG_CHOICE_SEPARATOR,
                     {1, curr_lang->s_Lang, curr_lang->s_LangAuthor, 1, NULL},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
+                    {3, "Manage bank2", "", 1, NULL},  // FIXME i18n
                     {2, curr_lang->s_Debug_menu, "", 1, NULL},
                     {1, curr_lang->s_Reset_settings, "", 1, NULL},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
@@ -505,6 +509,8 @@ void retro_loop()
                     default:
                         break;
                     }
+                } else if (sel == 3) {
+                    boot2_menu();
                 }
 
                 gui_redraw();
@@ -664,6 +670,124 @@ void retro_loop()
 
         gui_redraw();
         HAL_Delay(20);
+    }
+}
+
+void boot2_menu() {
+    odroid_dialog_choice_t bank2info[] = {
+        // FIXME i18n
+        {1, "Boot", "", 1, NULL},
+        {2, "List apps", "", 1, NULL},
+        {0, "Close", "", 1, NULL},
+        ODROID_DIALOG_CHOICE_LAST
+    };
+
+    int sel = odroid_overlay_dialog("Manage bank2", bank2info, 0);  // FIXME i18n
+    switch (sel) {
+    case 1:
+        // Boot intflash bank2
+        boot_magic_set(BOOT_MAGIC_BANK2);
+        HAL_NVIC_SystemReset();
+        break;
+    case 2:
+        // TODO read jedec_id (needed???) + call OSPI_GetFlashCapacity()
+        // Takes ~100ms to read the first byte of all sectors in a 256MB chip (~10ms for a 16MB chip)
+        typedef struct {
+            const char name[16];
+            const uint8_t *address;
+            uint32_t size;
+            uint32_t checksum;
+        } boot2_app_t;
+
+        boot2_app_t apps[6];
+        uint8_t apps_count = 0;
+
+        // TODO Use littlefs `ls`
+        
+        const uint16_t sectors_count = (16 * 1024 * 1024) / 4096;   // FIXME use flash capacity
+        const uint8_t repeat = 1;   // FIXME ((256 * 1024 * 1024) / 4096) / sectors_count;
+        for (uint8_t i=0; i < repeat; i++) {
+            for (uint16_t sector = 0; sector < sectors_count; sector++) {
+                uint32_t addr = 0x90000000 + sector * 4096; // TODO extflash base constant
+                uint32_t value = *((uint32_t*) addr);
+                if (value == 0x544f4f42) {  // "BOOT"
+                    boot2_app_t app = *((boot2_app_t*) (addr+4));
+                    memcpy(apps[apps_count].name, app.name, 16);
+                    apps[apps_count].address = addr + app.address;
+                    apps[apps_count].size = app.size;
+                    apps[apps_count].checksum = app.checksum;
+                    apps_count++;
+                }
+            }
+            // TODO refresh watchdog ???
+        }
+
+        odroid_dialog_choice_t appsinfo[] = {
+            // 1 line per app (max 6 apps) + close + end-of-list
+            ODROID_DIALOG_CHOICE_LAST,
+            ODROID_DIALOG_CHOICE_LAST,
+            ODROID_DIALOG_CHOICE_LAST,
+            ODROID_DIALOG_CHOICE_LAST,
+            ODROID_DIALOG_CHOICE_LAST,
+            ODROID_DIALOG_CHOICE_LAST,
+            ODROID_DIALOG_CHOICE_LAST,
+            ODROID_DIALOG_CHOICE_LAST
+        };
+
+        for (int i=0; i<apps_count; i++) {
+            uint32_t crc = crc32_le(0, (unsigned char *) apps[i].address, apps[i].size);
+            // FIXME do not display invalid apps?
+            appsinfo[i] = (odroid_dialog_choice_t){i+1, ((crc == apps[i].checksum) ? "OK" : "KO"), apps[i].name, 1, NULL};
+        }
+        appsinfo[apps_count] = (odroid_dialog_choice_t){0, "Close", "", 1, NULL};   // FIXME i18n
+
+        int sel = odroid_overlay_dialog("Apps", appsinfo, 0);   // FIXME i18n
+
+        switch (sel) {
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+            if (sel <= apps_count) {
+                /*
+                // FIXME Load into RAM + Boot from RAM !!!
+                __disable_irq();
+                uint32_t ram_addr = 0x24000000; // FIXME 0x240e0000;
+                memcpy((uint8_t*) ram_addr, apps[sel-1].address, apps[sel-1].size);   // FIXME Always copy 128K ???
+                
+                // TODO compute checksum + breakpoint only if mismatch
+                //uint32_t crc = crc32_le(0, (unsigned char *) ram_addr, 127852);
+                //if (crc != 0x8da7dd6b) {
+                //    __asm("bkpt 1");
+                //} else {
+                    boot_magic_set(BOOT_MAGIC_RAM);
+                    HAL_NVIC_SystemReset();
+                //}
+                */
+
+                
+                // Program intflash bank2
+                flash_program((uint8_t*) 0x08100000, apps[sel-1].address, apps[sel-1].size);   // TODO bank2 base constant
+                // TODO verify checksum !!!
+                printf("Verifying CRC checksum...\n");
+                uint32_t crc = crc32_le(0, (unsigned char *) 0x08100000, apps[sel-1].size);
+                if (crc != apps[sel-1].checksum) {
+                    printf("Failed to program intflash bank2: checksum mismatch. expected=0x%08x actual=0x%08x\n", apps[sel-1].checksum, crc);
+                    Error_Handler();
+                } else {
+                    // Boot intflash bank2
+                    boot_magic_set(BOOT_MAGIC_BANK2);
+                    HAL_NVIC_SystemReset();
+                }
+
+            }
+            break;
+        }
+        break;
+    default:
+        break;
     }
 }
 

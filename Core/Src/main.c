@@ -277,6 +277,294 @@ void store_save(const uint8_t *flash_ptr, const uint8_t *data, size_t size)
   OSPI_EnableMemoryMappedMode();
 }
 
+// TODO These should all run from RAM !!! (including HAL code !!!)
+
+void flash_erase(const uint8_t *flash_ptr, uint32_t size)
+{
+  // Only allow addresses in the areas meant for erasing and writing.
+  assert(
+    //((flash_ptr >= &__SAVEFLASH_START__)   && ((flash_ptr + size) <= &__SAVEFLASH_END__)) ||
+    //((flash_ptr >= &__configflash_start__) && ((flash_ptr + size) <= &__configflash_end__)) ||
+    //((flash_ptr >= &__fbflash_start__) && ((flash_ptr + size) <= &__fbflash_end__))
+    ((flash_ptr >= 0x08100000) && ((flash_ptr + size) <= 0x0813ffff))
+  );
+
+  // Convert mem mapped pointer to flash address
+  uint32_t save_address = flash_ptr - 0x08100000; //FIXME &__EXTFLASH_BASE__;&__EXTFLASH_BASE__;
+
+  // Only allow 8kB aligned pointers
+  assert((save_address & (8*1024 - 1)) == 0);
+
+  // Round size up to nearest 8K
+  if ((size & 0x1fff) != 0) {
+    size += 0x2000 - (size & 0x1fff);
+  }
+
+//  OSPI_DisableMemoryMappedMode();
+//  OSPI_EraseSync(save_address, size);
+//  OSPI_EnableMemoryMappedMode();
+
+  HAL_FLASH_Unlock();
+  //FIXME ??? __HAL_FLASH_CLEAR_FLAG(...);
+  FLASH_EraseInitTypeDef EraseInitStruct;
+
+  EraseInitStruct.TypeErase   = FLASH_TYPEERASE_SECTORS;
+  EraseInitStruct.Banks       = FLASH_BANK_2;
+  EraseInitStruct.Sector      = (save_address / FLASH_SECTOR_SIZE);
+  EraseInitStruct.NbSectors   = (size / FLASH_SECTOR_SIZE);
+
+  /* Note: If an erase operation in Flash memory also concerns data in the data or instruction cache,
+     you have to make sure that these data are rewritten before they are accessed during code
+     execution. If this cannot be done safely, it is recommended to flush the caches by setting the
+     DCRST and ICRST bits in the FLASH_CR register. */
+  uint32_t PageError;
+  if (HAL_FLASHEx_Erase(&EraseInitStruct, &PageError) != HAL_OK)
+  {
+    /*
+      Error occurred while page erase.
+      User can add here some code to deal with this error.
+      PageError will contain the faulty page and then to know the code error on this page,
+      user can call function 'HAL_FLASH_GetError()'
+    */
+    // TODO BSOD !!!
+      printf("erase failed: %d %d %d\n", EraseInitStruct.Banks, EraseInitStruct.Sector, EraseInitStruct.NbSectors);
+      Error_Handler();
+  }
+
+  HAL_FLASH_Lock();
+}
+
+
+#define FLASH_END_BANK2 0x08103ffff
+#define IS_FLASH_PROGRAM_ADDRESS_BANK2(ADDRESS) (((ADDRESS) >= FLASH_BANK2_BASE ) && ((ADDRESS) <= FLASH_END_BANK2))
+
+// FIXME Can be simplfied !!!
+/**
+  * @brief  Program flash word at a specified address
+  * @param  TypeProgram Indicate the way to program at a specified address.
+  *         This parameter can be a value of @ref FLASH_Type_Program
+  * @param  FlashAddress specifies the address to be programmed.
+  * @param  DataAddress specifies the address of data to be programmed
+  *
+  * @retval HAL_StatusTypeDef HAL Status
+  */
+HAL_StatusTypeDef HAL_FLASH_Program_Patched(uint32_t TypeProgram, uint32_t FlashAddress, uint32_t DataAddress)
+{
+  printf("HAL_FLASH_Program_Patched\n");
+  HAL_StatusTypeDef status;
+  // FIXME volatile ???
+  __IO uint32_t *dest_addr = (__IO uint32_t *)FlashAddress;
+  __IO uint32_t *src_addr = (__IO uint32_t*)DataAddress;
+  uint32_t bank;
+  uint8_t row_index = FLASH_NB_32BITWORD_IN_FLASHWORD;
+
+  /* Check the parameters */
+  assert_param(IS_FLASH_TYPEPROGRAM(TypeProgram));
+  assert_param(IS_FLASH_PROGRAM_ADDRESS(FlashAddress));
+
+  /* Process Locked */
+  __HAL_LOCK(&pFlash);
+
+#if defined (FLASH_OPTCR_PG_OTP)
+  if((IS_FLASH_PROGRAM_ADDRESS_BANK1(FlashAddress)) || (IS_FLASH_PROGRAM_ADDRESS_OTP(FlashAddress)))
+#else
+  if(IS_FLASH_PROGRAM_ADDRESS_BANK1(FlashAddress))
+#endif /* FLASH_OPTCR_PG_OTP */
+  {
+    bank = FLASH_BANK_1;
+  }
+#if defined (DUAL_BANK)
+  else if(IS_FLASH_PROGRAM_ADDRESS_BANK2(FlashAddress))
+  {
+    bank = FLASH_BANK_2;
+  }
+#endif /* DUAL_BANK */
+  else
+  {
+    return HAL_ERROR;
+  }
+
+  /* Reset error code */
+  pFlash.ErrorCode = HAL_FLASH_ERROR_NONE;
+
+  /* Wait for last operation to be completed */
+  status = FLASH_WaitForLastOperation((uint32_t)/*FLASH_TIMEOUT_VALUE*/50000U, bank);
+
+  if(status == HAL_OK)
+  {
+#if defined (DUAL_BANK)
+    if(bank == FLASH_BANK_1)
+    {
+#if defined (FLASH_OPTCR_PG_OTP)
+      if (TypeProgram == FLASH_TYPEPROGRAM_OTPWORD)
+      {
+        /* Set OTP_PG bit */
+        SET_BIT(FLASH->OPTCR, FLASH_OPTCR_PG_OTP);
+      }
+      else
+#endif /* FLASH_OPTCR_PG_OTP */
+      {
+        /* Set PG bit */
+        SET_BIT(FLASH->CR1, FLASH_CR_PG);
+      }
+    }
+    else
+    {
+      /* Set PG bit */
+      SET_BIT(FLASH->CR2, FLASH_CR_PG);
+    }
+#else /* Single Bank */
+#if defined (FLASH_OPTCR_PG_OTP)
+      if (TypeProgram == FLASH_TYPEPROGRAM_OTPWORD)
+      {
+        /* Set OTP_PG bit */
+        SET_BIT(FLASH->OPTCR, FLASH_OPTCR_PG_OTP);
+      }
+      else
+#endif /* FLASH_OPTCR_PG_OTP */
+      {
+        /* Set PG bit */
+        SET_BIT(FLASH->CR1, FLASH_CR_PG);
+      }
+#endif /* DUAL_BANK */
+
+    __ISB();
+    __DSB();
+
+#if defined (FLASH_OPTCR_PG_OTP)
+    if (TypeProgram == FLASH_TYPEPROGRAM_OTPWORD)
+    {
+      /* Program an OTP word (16 bits) */
+      *(__IO uint16_t *)FlashAddress = *(__IO uint16_t*)DataAddress;
+    }
+    else
+#endif /* FLASH_OPTCR_PG_OTP */
+    {
+      /* Program the flash word */
+      printf("HAL_FLASH_Program_Patched: programming 0x%08x from 0x%08x\n", dest_addr, src_addr);
+      __DMB();
+      do
+      {
+        *(volatile uint32_t*) dest_addr = *src_addr;
+        dest_addr++;
+        src_addr++;
+        row_index--;
+     } while (row_index != 0U);
+      __DMB();
+      printf("HAL_FLASH_Program_Patched: DONE programming word\n");
+    }
+
+    __ISB();
+    __DSB();
+
+    /* Wait for last operation to be completed */
+    status = FLASH_WaitForLastOperation((uint32_t)/*FLASH_TIMEOUT_VALUE*/50000U, bank);
+
+#if defined (DUAL_BANK)
+#if defined (FLASH_OPTCR_PG_OTP)
+    if (TypeProgram == FLASH_TYPEPROGRAM_OTPWORD)
+    {
+      /* If the program operation is completed, disable the OTP_PG */
+      CLEAR_BIT(FLASH->OPTCR, FLASH_OPTCR_PG_OTP);
+    }
+    else
+#endif /* FLASH_OPTCR_PG_OTP */
+    {
+      if(bank == FLASH_BANK_1)
+      {
+        /* If the program operation is completed, disable the PG */
+        CLEAR_BIT(FLASH->CR1, FLASH_CR_PG);
+      }
+      else
+      {
+        /* If the program operation is completed, disable the PG */
+        CLEAR_BIT(FLASH->CR2, FLASH_CR_PG);
+      }
+    }
+#else /* Single Bank */
+#if defined (FLASH_OPTCR_PG_OTP)
+    if (TypeProgram == FLASH_TYPEPROGRAM_OTPWORD)
+    {
+      /* If the program operation is completed, disable the OTP_PG */
+      CLEAR_BIT(FLASH->OPTCR, FLASH_OPTCR_PG_OTP);
+    }
+    else
+#endif /* FLASH_OPTCR_PG_OTP */
+    {
+      /* If the program operation is completed, disable the PG */
+      CLEAR_BIT(FLASH->CR1, FLASH_CR_PG);
+    }
+#endif /* DUAL_BANK */
+  }
+
+  /* Process Unlocked */
+  __HAL_UNLOCK(&pFlash);
+
+  printf("HAL_FLASH_Program_Patched: status=%d\n", status);
+
+  return status;
+}
+
+void flash_program(const uint8_t *flash_ptr, const uint8_t *data, size_t size)
+{
+  // Temporary solution to make things work with flash with 256K erase pages
+#ifdef DISABLE_STORE
+  return;
+#endif
+
+  // Convert mem mapped pointer to flash address
+  uint32_t save_address = flash_ptr ;//FIXME - 0x08100000; //FIXME &__EXTFLASH_BASE__;
+
+  // Only allow 8kB aligned pointers
+  assert((save_address & (8*1024 - 1)) == 0);
+
+  printf("flash_svae comparing: %p %p %d\n", flash_ptr, data, size);
+  int diff = memcmp((void*)flash_ptr, data, size);
+  if (diff == 0) {
+    return;
+  }
+
+  printf("flash_svae erasing: %p %d\n", flash_ptr, size);
+  flash_erase(flash_ptr, size);
+  printf("flash_svae ERASED\n");
+
+//  OSPI_DisableMemoryMappedMode();
+//  OSPI_Program(save_address, data, size);
+//  OSPI_EnableMemoryMappedMode();
+
+  HAL_FLASH_Unlock();
+  //FIXME ??? __HAL_FLASH_CLEAR_FLAG(...);
+  printf("flash_svae UNLOCKED\n");
+
+  // TODO size should be a multiple of 16 bytes (flash words are 16 bytes long!!!)
+
+  uint32_t addr = save_address;
+  printf("flash_svae addr=0x%08x save_address=0x%08x size=%d\n", addr, save_address, size);
+  while (addr < save_address + size)
+  {
+    uint32_t retval = HAL_FLASH_Program_Patched(FLASH_TYPEPROGRAM_FLASHWORD, addr, data);
+    if (retval == HAL_OK)
+    {
+      // TODO programming routine writes 4 32-bit words for a single flash word
+      addr = addr + 16;  /* increment to next word*/
+      data = data + 16;  /* increment to next word*/
+    }
+    else
+    {
+      /* Error occurred while writing data in Flash memory.
+          User can add here some code to deal with this error */
+      // TODO BSOD
+      printf("program (patched) failed: 0x%08lX 0x%08lX %d\n", addr, data, retval);
+      Error_Handler();
+    }
+    wdog_refresh();
+  }
+  printf("flash_svae PROGRAMMED\n");
+
+  HAL_FLASH_Lock();
+  printf("flash_svae LOCKED\n");
+}
+
 void boot_magic_set(uint32_t magic)
 {
   boot_magic = magic;
@@ -371,6 +659,13 @@ void wdog_refresh()
   }
 }
 
+static void  __attribute__((naked)) start_app(void (* const pc)(void), uint32_t sp) {
+    __asm("           \n\
+          msr msp, r1 /* load r1 into MSP */\n\
+          bx r0       /* branch to the address at r0 */\n\
+    ");
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -413,6 +708,29 @@ int main(void)
     break;
   case BOOT_MAGIC_FLASHAPP:
     boot_mode = BOOT_MODE_FLASHAPP;
+    break;
+  // TODO boot from bank2 ? boot from RAM ???
+  case BOOT_MAGIC_BANK2:
+    boot_magic_set(BOOT_MAGIC_RESET);
+    uint32_t sp = *((uint32_t *)0x08100000); // Bank2 SP @ offset 0x00
+    uint32_t pc = *((uint32_t *)0x08100004); // Bank2 PC @ offset 0x04
+    // FIXME SHould also relocate vectors table?!!! --> done in SystemInit called at the beginning of ResetHandler !!!
+    start_app((void (* const)(void)) pc, (uint32_t) sp);
+    break;
+  case BOOT_MAGIC_RAM:
+    boot_magic_set(BOOT_MAGIC_RESET);
+    // TODO compute checksum + breakpoint only if mismatch
+    uint32_t ram_addr = 0x24000000; // FIXME 0x240e0000;
+    //uint32_t crc = crc32_le(0, (unsigned char *) ram_addr, 127852);
+    //if (crc != 0x8da7dd6b) {
+    //    __asm("bkpt 2");
+    //} else {
+      uint32_t ramsp = *((uint32_t *)ram_addr); // Bank2 SP @ offset 0x00
+      uint32_t rampc = *((uint32_t *)(ram_addr+4)); // Bank2 PC @ offset 0x04
+      // FIXME SHould also relocate vectors table?!!! --> done in SystemInit called at the beginning of ResetHandler !!!
+      //__asm("bkpt 2");
+      start_app((void (* const)(void)) rampc, (uint32_t) ramsp);
+    //}
     break;
   default:
     if ((boot_magic & BOOT_MAGIC_BSOD_MASK) == BOOT_MAGIC_BSOD) {

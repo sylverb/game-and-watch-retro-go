@@ -160,6 +160,9 @@
    ===  you can define the HSE value in your toolchain compiler preprocessor. */
 
 /* ########################### System Configuration ######################### */
+
+// Flash config override
+#define DUAL_BANK 1
 /**
   * @brief This is the HAL system configuration section
   */
