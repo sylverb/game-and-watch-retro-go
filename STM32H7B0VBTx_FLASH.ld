@@ -86,7 +86,6 @@ __RAM_EMU_START__   = __RAM_CORE_START__ + __RAM_CORE_LENGTH__;
 __RAM_EMU_END__     = __RAM_EMU_START__ + __RAM_EMU_LENGTH__;
 
 INCLUDE build/cacheflash.ld
-INCLUDE build/filesystem.ld
 
 /****
  * External Flash Layout
@@ -114,7 +113,7 @@ INCLUDE build/filesystem.ld
  *            |                                  |
  *            |            Filesystem            |
  *            |                                  |
- *            +----------------------------------+  __EXTFLASH_END__ __FILESYSTEM_END__
+ *            +----------------------------------+  __FILESYSTEM_END__ __EXTFLASH_END__
  */
 __EXTFLASH_LENGTH__ = __EXTFLASH_TOTAL_LENGTH__ - __CACHEFLASH_LENGTH__;
 __EXTFLASH_END__ = __EXTFLASH_START__ + __EXTFLASH_LENGTH__;

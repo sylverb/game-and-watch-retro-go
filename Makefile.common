@@ -178,6 +178,7 @@ else
 endif
 
 PYTHON3 ?= /usr/bin/env python3
+PYOCD ?= pyocd
 
 #######################################
 # paths
@@ -540,6 +541,7 @@ LDFLAGS += -Wl,--defsym=__EXTFLASH_OFFSET__=$(EXTFLASH_OFFSET)
 LDFLAGS += -Wl,--defsym=__EXTFLASH_TOTAL_LENGTH__=$(EXTFLASH_TOTAL_LENGTH)
 LDFLAGS += -Wl,--defsym=ENABLE_SCREENSHOT=$(ENABLE_SCREENSHOT)
 LDFLAGS += -Wl,--defsym=__FILESYSTEM_OFFSET__=$(FILESYSTEM_OFFSET)
+LDFLAGS += -Wl,--defsym=__FILESYSTEM_LENGTH__=$(FILESYSTEM_SIZE)
 
 LDFLAGS += -Wl,--defsym=__INTFLASH__=$(INTFLASH_ADDRESS)
 
@@ -618,7 +620,6 @@ $(BUILD_DIR)/roms.a: $(BUILD_DIR)/rom_files.txt parse_roms.py
 	$(V)$(ECHO) [ PYTHON3 ] $(notdir $<)
 	$(V)$(PYTHON3) parse_roms.py \
 		--flash-size=$(EXTFLASH_SIZE) \
-		--filesystem-size=$(FILESYSTEM_SIZE) \
 		$(SAVE_PARAM) \
 		$(COMPRESS_PARAM) \
 		$(CODEPAGE_PARAM) \
@@ -1046,7 +1047,7 @@ distclean: clean
 # pyOCD #
 #########
 pyocd_install_pack:
-	pyocd pack --install STM32H7B0VBTx
+	$(PYOCD) pack --install STM32H7B0VBTx
 .PHONY: pyocd_install_pack
 
 pyocd_check_pack:
