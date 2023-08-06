@@ -432,6 +432,24 @@ bool fs_info(const char *path, struct lfs_info *info){
     return lfs_stat(&lfs, path, info) == LFS_ERR_OK;
 }
 
+bool fs_dir_open(const char *path, lfs_dir_t *dir){
+    bool err = lfs_dir_open(&lfs, dir, path);
+    printf("fs_dir_open: %d\n", err);
+    return err >= 0;
+}
+
+bool fs_dir_read(lfs_dir_t *dir, struct lfs_info *info){
+    bool err = lfs_dir_read(&lfs, dir, info);
+    printf("fs_dir_read: %d\n", err);
+    return err > 0;
+}
+
+bool fs_dir_close(lfs_dir_t *dir){
+    bool err = lfs_dir_close(&lfs, dir);
+    printf("fs_dir_close: %d\n", err);
+    return err >= 0;
+}
+
 
 uint32_t fs_free_blocks() {
     return (uint32_t)lfs_cfg.block_count - (uint32_t)lfs_fs_size(&lfs);

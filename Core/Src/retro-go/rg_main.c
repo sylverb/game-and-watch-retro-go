@@ -703,39 +703,27 @@ void boot2_menu() {
         boot2_app_t apps[6];
         uint8_t apps_count = 0;
 
-        // TODO Use littlefs `ls`
-        char* filepath = "/bank2/smw.bin";
-        if (fs_exists(filepath)) {
-            printf("File exists in FS: %s\n", filepath);
-            struct lfs_info stat;
-            if (fs_info(filepath, &stat)) {
-                printf("File size FS: %d\n", stat.size);
-                memcpy(apps[apps_count].name, "FS_SMW", 16);    // FIXME file name
+        // TODO Filesystem should be big enough to hold 128/256 KB intflash images:
+        // make (...) FILESYSTEM_SIZE=... flash
+        // TODO intflash .bin files should be added to filesystem with:
+        // gnwmanager.py push /bank2/my_intflash.bin /path/to/my_intflash.bin
+
+        // List files in /bank2 directory
+        printf("Looking for regular files in FS dir /bank2...\n");
+        lfs_dir_t dir;
+        fs_dir_open("/bank2", &dir);
+        struct lfs_info info;
+        while(fs_dir_read(&dir, &info)) {
+            if (info.type == LFS_TYPE_REG) {
+                printf("Regular file in FS dir /bank2: %d\n", info.size);
+                memcpy(apps[apps_count].name, info.name, 16);
                 apps[apps_count].address = 0;   // FIXME file offset ??? addr + app.address;
-                apps[apps_count].size = stat.size;
+                apps[apps_count].size = info.size;
                 apps[apps_count].checksum = 0;// FIXME from file header ??? app.checksum;
                 apps_count++;
             }
         }
-
-        /*
-        const uint16_t sectors_count = (16 * 1024 * 1024) / 4096;   // FIXME use flash capacity
-        const uint8_t repeat = 1;   // FIXME ((256 * 1024 * 1024) / 4096) / sectors_count;
-        for (uint8_t i=0; i < repeat; i++) {
-            for (uint16_t sector = 0; sector < sectors_count; sector++) {
-                uint32_t addr = 0x90000000 + sector * 4096; // TODO extflash base constant
-                uint32_t value = *((uint32_t*) addr);
-                if (value == 0x544f4f42) {  // "BOOT"
-                    boot2_app_t app = *((boot2_app_t*) (addr+4));
-                    memcpy(apps[apps_count].name, app.name, 16);
-                    apps[apps_count].address = addr + app.address;
-                    apps[apps_count].size = app.size;
-                    apps[apps_count].checksum = app.checksum;
-                    apps_count++;
-                }
-            }
-            // TODO refresh watchdog ???
-        }*/
+        fs_dir_close(&dir);
 
         odroid_dialog_choice_t appsinfo[] = {
             // 1 line per app (max 6 apps) + close + end-of-list
@@ -785,23 +773,27 @@ void boot2_menu() {
                 //}
                 */
 
-               // TODO turn screen off before loading into framebuffer
+                // Turn screen off before loading into framebuffer
+                lcd_backlight_off();
 
-               if (apps[sel-1].address == 0) {
+                // App in filesystem
+                if (apps[sel-1].address == 0) {
                     // TODO Read file into buffer --> TODO read in chunks ???
-                    printf("Reading file in FS: buffer=0x%08x size=%d\n", &framebuffer1, apps[sel-1].size);
+                    char filepath[32];
+                    snprintf(filepath, sizeof(filepath), "/bank2/%s", apps[sel-1].name);
+                    printf("Reading file in FS: filepath=%s buffer=0x%08x size=%d\n", filepath, &framebuffer1, apps[sel-1].size);
                     fs_file_t *file;
                     file = fs_open(filepath, FS_READ, FS_RAW);
                     fs_read(file, &framebuffer1, apps[sel-1].size);
                     fs_close(file);
                     apps[sel-1].address = &framebuffer1;
                     apps[sel-1].checksum = crc32_le(0, &framebuffer1, apps[sel-1].size);
-               }
+                }
 
                 
                 // Program intflash bank2
                 flash_program((uint8_t*) 0x08100000, apps[sel-1].address, apps[sel-1].size);   // TODO bank2 base constant
-                // TODO verify checksum !!!
+                // Verify checksum of freshly-flashed bank2
                 printf("Verifying CRC checksum...\n");
                 uint32_t crc = crc32_le(0, (unsigned char *) 0x08100000, apps[sel-1].size);
                 if (crc != apps[sel-1].checksum) {
