@@ -711,7 +711,7 @@ void boot2_menu() {
         // List files in /bank2 directory
         printf("Looking for regular files in FS dir /bank2...\n");
         lfs_dir_t dir;
-        fs_dir_open("/bank2", &dir);
+        fs_dir_open("/bank2", &dir);    // FIXME Handle missing directory
         struct lfs_info info;
         while(fs_dir_read(&dir, &info)) {
             if (info.type == LFS_TYPE_REG) {
@@ -791,6 +791,7 @@ void boot2_menu() {
                 }
 
                 
+                /*
                 // Program intflash bank2
                 flash_program((uint8_t*) 0x08100000, apps[sel-1].address, apps[sel-1].size);   // TODO bank2 base constant
                 // Verify checksum of freshly-flashed bank2
@@ -804,6 +805,19 @@ void boot2_menu() {
                     boot_magic_set(BOOT_MAGIC_BANK2);
                     HAL_NVIC_SystemReset();
                 }
+                */
+
+                //uint32_t ram_addr = 0x24000000; // FIXME 0x240e0000;
+                //memcpy((uint8_t*) ram_addr, apps[sel-1].address, apps[sel-1].size);   // FIXME Always copy 128K ???
+                
+                // TODO compute checksum + breakpoint only if mismatch
+                //uint32_t crc = crc32_le(0, (unsigned char *) ram_addr, 127852);
+                //if (crc != 0x8da7dd6b) {
+                //    __asm("bkpt 1");
+                //} else {
+                    boot_magic_set(BOOT_MAGIC_RAM);
+                    HAL_NVIC_SystemReset();
+                //}
 
             }
             break;
