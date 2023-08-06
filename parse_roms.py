@@ -137,8 +137,6 @@ COMPRESSIONS = CompressionRegistry()
 @COMPRESSIONS
 def compress_lzma(data, level=None):
     if level == DONT_COMPRESS:
-        if args.compress_gb_speed:
-            raise NotImplementedError
         # This currently assumes this will only be applied to GB Bank 0
         return data
     import lzma
@@ -705,7 +703,7 @@ class ROMParser:
 
         return str
 
-    def _compress_rom(self, variable_name, rom, compress_gb_speed=False, compress=None):
+    def _compress_rom(self, variable_name, rom, compress=None):
         """This will create a compressed rom file next to the original rom."""
         global sms_reserved_flash_size
         if not (rom.publish):
@@ -796,51 +794,7 @@ class ROMParser:
             BANK_SIZE = 16384
             banks = [data[i : i + BANK_SIZE] for i in range(0, len(data), BANK_SIZE)]
             compressed_banks = [compress(bank) for bank in banks]
-
-            # For ROM having continous bank switching we can use 'partial' compression
-            # a mix of comcompressed and uncompress
-            # compress empty banks and the bigger compress ratio
-            compress_its = [True] * len(banks)
-            compress_its[0] = False  # keep bank0 uncompressed
-
-            # START : ALTERNATIVE COMPRESSION STRATEGY
-            if compress_gb_speed:
-                # the larger banks only are compressed.
-                # It shoul fit exactly in the cache reducing the SWAP cache feequency to 0.
-                # any empty bank is compressed (=98bytes). considered never used by MBC.
-
-                # Ths is the cache size used as a compression credit
-                # TODO : can we the value from the linker ?
-                compression_credit = 26
-                compress_size = [len(bank) for bank in compressed_banks[1:]]
-
-                # to keep empty banks compressed (size=98)
-                compress_size = [i for i in compress_size if i > 98]
-
-                ordered_size = sorted(compress_size)
-
-                if compression_credit > len(ordered_size):
-                    compression_credit = len(ordered_size) - 1
-
-                compress_threshold = ordered_size[int(compression_credit)]
-
-                for i, bank in enumerate(compressed_banks):
-                    if len(bank) >= compress_threshold:
-                        # Don't compress banks with poor compression
-                        compress_its[i] = False
-            # END : ALTERNATIVE COMPRESSION STRATEGY
-
-            # Reassemble all banks back into one file
-            output_banks = []
-            for bank, compressed_bank, compress_it in zip(
-                banks, compressed_banks, compress_its
-            ):
-                if compress_it:
-                    output_banks.append(compressed_bank)
-                else:
-                    output_banks.append(compress(bank, level=DONT_COMPRESS))
-            output_data = b"".join(output_banks)
-
+            output_data = b"".join(compressed_banks)
             output_file.write_bytes(output_data)
 
     def _convert_dsk(self, variable_name, dsk, compress):
@@ -868,7 +822,6 @@ class ROMParser:
         cheat_codes_prefix: str,
         current_id: int,
         compress: str = None,
-        compress_gb_speed: bool = False,
     ) -> int:
         import json;
         script_path = Path(__file__).parent
@@ -933,7 +886,6 @@ class ROMParser:
                 self._compress_rom(
                     variable_name,
                     r,
-                    compress_gb_speed=compress_gb_speed,
                     compress=compress,
                 )
             # Re-generate the compressed rom list
@@ -1080,7 +1032,6 @@ class ROMParser:
             None,
             current_id,
             args.compress,
-            args.compress_gb_speed,
         )
         total_save_size += save_size
         total_rom_size += rom_size
@@ -1446,22 +1397,11 @@ if __name__ == "__main__":
         help="Compression method. Defaults to no compression.",
     )
     parser.add_argument(
-        "--compress_gb_speed",
-        dest="compress_gb_speed",
-        action="store_true",
-        help="Apply only selective compression to gameboy banks. Only apply "
-        "if bank decompression during switching is too slow.",
-    )
-    parser.add_argument(
         "--nofrendo",
         type=int,
         default=0,
         help="force nofrendo nes emulator instead of fceumm",
     )
-    parser.add_argument(
-        "--no-compress_gb_speed", dest="compress_gb_speed", action="store_false"
-    )
-    parser.set_defaults(compress_gb_speed=False)
     parser.add_argument(
         "--verbose",
         action="store_true",
