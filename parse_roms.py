@@ -106,17 +106,8 @@ following signature:
 
 Positional argument:
     data : bytes
-
-Optional argument:
-    level : ``None`` for default value,  depends on compression algorithm.
-            Can be the special ``DONT_COMPRESS`` sentinel value, in which the
-            returned uncompressed data is properly framed to be handled by the
-            decompressor.
-
-And return compressed bytes.
+Returns compressed bytes.
 """
-
-DONT_COMPRESS = object()
 
 
 class CompressionRegistry(dict):
@@ -135,10 +126,7 @@ COMPRESSIONS = CompressionRegistry()
 
 
 @COMPRESSIONS
-def compress_lzma(data, level=None):
-    if level == DONT_COMPRESS:
-        # This currently assumes this will only be applied to GB Bank 0
-        return data
+def compress_lzma(data):
     import lzma
 
     compressed_data = lzma.compress(
