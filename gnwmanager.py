@@ -60,9 +60,13 @@ comm["program_status"]           = last_variable = Variable(last_variable.addres
 comm["utc_timestamp"]            = last_variable = Variable(last_variable.address + last_variable.size, 4)
 comm["program_chunk_idx"]        = last_variable = Variable(last_variable.address + last_variable.size, 4)
 comm["program_chunk_count"]      = last_variable = Variable(last_variable.address + last_variable.size, 4)
+comm["active_context_index"]     = last_variable = Variable(last_variable.address + last_variable.size, 4)
+
 
 contexts = [{} for i in range(2)]
 for i in range(2):
+    struct_start = comm["flashapp_comm"].address + ((i+1)*4096)
+    contexts[i]["ready"]             = last_variable = Variable(struct_start, 4)
     contexts[i]["size"]              = last_variable = Variable(last_variable.address + last_variable.size, 4)
     contexts[i]["address"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
     contexts[i]["erase"]             = last_variable = Variable(last_variable.address + last_variable.size, 4)
@@ -74,14 +78,12 @@ for i in range(2):
     # Don't ever directly use this, just here for alignment purposes
     contexts[i]["__buffer_ptr"]        = last_variable = Variable(last_variable.address + last_variable.size, 4)
 
-    contexts[i]["ready"]             = last_variable = Variable(last_variable.address + last_variable.size, 4)
+struct_start = comm["flashapp_comm"].address + (3*4096)
+comm["active_context"] = last_variable = Variable(struct_start, 4096)
 
 for i in range(2):
     contexts[i]["buffer"]            = last_variable = Variable(last_variable.address + last_variable.size, 256 << 10)
 
-comm["active_context_index"] = last_variable = Variable(last_variable.address + last_variable.size, 4)
-context_size = sum(x.size for x in contexts[i].values())
-comm["active_context"] = last_variable = Variable(last_variable.address + last_variable.size, context_size)
 comm["decompress_buffer"] = last_variable = Variable(last_variable.address + last_variable.size, 256 << 10)
 
 # littlefs config struct elements

@@ -95,60 +95,77 @@ typedef struct {
 } flashapp_t;
 
 struct work_context {
-    // Number of bytes to program in the flash
-    uint32_t size;
+    union{
+        struct{
+            // This work context is ready for the on-device flashapp to process.
+            uint32_t ready;
 
-    // Where to program in the flash
-    // offset into flash, not an absolute address 0x9XXX_XXXX
-    uint32_t address;
+            // Number of bytes to program in the flash
+            uint32_t size;
 
-    // Whether or not an erase should be performed
-    uint32_t erase;
+            // Where to program in the flash
+            // offset into flash, not an absolute address 0x9XXX_XXXX
+            uint32_t address;
 
-    // Number of bytes to be erased from program_address
-    int32_t erase_bytes;
+            // Whether or not an erase should be performed
+            uint32_t erase;
 
-    // 0 if the data has not been compressed
-    uint32_t decompressed_size;
+            // Number of bytes to be erased from program_address
+            int32_t erase_bytes;
 
-    // The expected sha256 of the loaded binary
-    uint8_t expected_sha256[32];
+            // 0 if the data has not been compressed
+            uint32_t decompressed_size;
 
-    // The expected sha256 hash of the decompressed data (if originally compressed)
-    uint8_t expected_sha256_decompressed[32];
+            // The expected sha256 of the loaded binary
+            uint8_t expected_sha256[32];
 
-    unsigned char *buffer;
+            // The expected sha256 hash of the decompressed data (if originally compressed)
+            uint8_t expected_sha256_decompressed[32];
 
-    // This work context is ready for the on-device flashapp to process.
-    // Put this last so a memset sets it last.
-    uint32_t ready;
+            unsigned char *buffer;
+        };
+        struct{
+            // Force spacing, allowing for backward-compatible additional variables
+            char padding[4096];
+        };
+    };
 };
 
 struct flashapp_comm {  // Values are read or written by the debugger
                         // only add attributes at the end (before work_buffers)
                         // so that addresses don't change.
-    // FlashApp state-machine state
-    uint32_t flashapp_state;
+    union {
+        struct{
+            // FlashApp state-machine state
+            uint32_t flashapp_state;
 
-    // Status register
-    uint32_t program_status;
+            // Status register
+            uint32_t program_status;
 
-    // Host-setable timestamp; if 0, RTC is not updated.
-    uint32_t utc_timestamp;
+            // Host-setable timestamp; if 0, RTC is not updated.
+            uint32_t utc_timestamp;
 
-    // Current chunk index
-    uint32_t program_chunk_idx;
+            // Current chunk index
+            uint32_t program_chunk_idx;
 
-    // Number of chunks
-    uint32_t program_chunk_count;
+            // Number of chunks
+            uint32_t program_chunk_count;
+
+            uint32_t active_context_index;
+
+            /* You may add additional variables here and addresses will remain backwards compatible*/
+        };
+        struct {
+            // Force spacing, allowing for backward-compatible additional variables
+            char padding[4096];
+        };
+    };
 
     struct work_context contexts[2];
 
-    unsigned char buffer[2][256 << 10];
-
-    uint32_t active_context_index;
-
     struct work_context active_context;
+
+    unsigned char buffer[2][256 << 10];
 
     unsigned char decompress_buffer[256 << 10];
 };
