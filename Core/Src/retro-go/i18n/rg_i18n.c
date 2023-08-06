@@ -68,6 +68,8 @@
 #endif
 
 #include "fonts/font_cp1252_Serif.h"
+
+#if !SINGLE_FONT
 #include "fonts/font_cp1252_Serif_Bold.h"
 #include "fonts/font_cp1252_Serif_CJK.h"
 #include "fonts/font_cp1252_Sans_serif.h"
@@ -76,6 +78,7 @@
 #include "fonts/font_cp1252_Unbalanced.h"
 #include "fonts/font_cp1252_rock12.h"
 #include "fonts/font_cp1252_haeberli12.h"
+#endif
 
 #if INCLUDED_JA_JP == 1
 #include "fonts/font_cp932_ja_jp.h"
@@ -91,17 +94,27 @@
 #endif
 #if INCLUDED_RU_RU == 1
 #include "fonts/font_cp1251_Serif.h"
+#if !SINGLE_FONT
 #include "fonts/font_cp1251_Serif_Bold.h"
 #include "fonts/font_cp1251_Sans_serif.h"
 #include "fonts/font_cp1251_Sans_serif_Bold.h"
 #include "fonts/font_cp1251_Greybeard.h"
 #endif
+#endif
 
+#if SINGLE_FONT
+const char *gui_fonts[9] = {
+    font_cp1252_Serif, font_cp1252_Serif, font_cp1252_Serif,
+    font_cp1252_Serif, font_cp1252_Serif, font_cp1252_Serif,
+    font_cp1252_Serif, font_cp1252_Serif, font_cp1252_Serif,
+    };
+#else
 const char *gui_fonts[9] = {
     font_cp1252_Serif,    font_cp1252_Serif_Bold,    font_cp1252_Serif_CJK,
     font_cp1252_Sans_serif,    font_cp1252_Sans_serif_Bold,    font_cp1252_Greybeard,
     font_cp1252_Unbalanced,    font_cp1252_rock12,    font_cp1252_haeberli12,
     };
+#endif
 
 
 #if INCLUDED_JA_JP == 1
@@ -133,42 +146,60 @@ const char *zh_tw_fonts[9] = {
     };
 #endif
 #if INCLUDED_RU_RU == 1
+#if SINGLE_FONT
+const char *cp1251_fonts[9] = {
+    font_cp1251_Serif, font_cp1251_Serif, font_cp1251_Serif,
+    font_cp1251_Serif, font_cp1251_Serif, font_cp1251_Serif,
+    font_cp1251_Serif, font_cp1251_Serif, font_cp1251_Serif,
+    };
+#else
 const char *cp1251_fonts[9] = {
     font_cp1251_Serif,    font_cp1251_Serif_Bold,    font_cp1251_Serif,
     font_cp1251_Sans_serif,    font_cp1251_Sans_serif_Bold,    font_cp1251_Greybeard,
     font_cp1251_Serif_Bold,    font_cp1251_Serif_Bold,    font_cp1251_Serif_Bold,
     };
 #endif
+#endif
 
 
 #include "rg_i18n_en_us.c"
+
 #if INCLUDED_ES_ES == 1
 #include "rg_i18n_es_es.c"
 #endif
+
 #if INCLUDED_PT_PT == 1
 #include "rg_i18n_pt_pt.c"
 #endif
+
 #if INCLUDED_FR_FR == 1
 #include "rg_i18n_fr_fr.c"
 #endif
+
 #if INCLUDED_IT_IT == 1
 #include "rg_i18n_it_it.c"
 #endif
+
 #if INCLUDED_DE_DE == 1
 #include "rg_i18n_de_de.c"
 #endif
+
 #if INCLUDED_ZH_CN == 1
 #include "rg_i18n_zh_cn.c"
 #endif
+
 #if INCLUDED_ZH_TW == 1
 #include "rg_i18n_zh_tw.c"
 #endif
+
 #if INCLUDED_KO_KR == 1
 #include "rg_i18n_ko_kr.c"
 #endif
+
 #if INCLUDED_JA_JP == 1
 #include "rg_i18n_ja_jp.c"
 #endif
+
 #if INCLUDED_RU_RU == 1
 #include "rg_i18n_ru_ru.c"
 #endif
@@ -179,62 +210,42 @@ uint8_t curr_font = 0;
 
 const int gui_font_count = FONT_COUNT;
 
-const lang_t *gui_lang[11] = {
+const lang_t *gui_lang[] = {
     &lang_en_us,
 #if INCLUDED_ES_ES == 1
     &lang_es_es,
-#else
-    NULL,
 #endif
 #if INCLUDED_PT_PT == 1
     &lang_pt_pt,
-#else
-    NULL,
 #endif
 #if INCLUDED_FR_FR == 1
     &lang_fr_fr,
-#else
-    NULL,
 #endif
 #if INCLUDED_IT_IT == 1
     &lang_it_it,
-#else
-    NULL,
 #endif
 #if INCLUDED_DE_DE == 1
     &lang_de_de,
-#else
-    NULL,
 #endif
 #if INCLUDED_RU_RU == 1
     &lang_ru_ru,
-#else
-    NULL,
 #endif
 #if INCLUDED_ZH_CN == 1
     &lang_zh_cn,
-#else
-    NULL,
 #endif
 #if INCLUDED_ZH_TW == 1
     &lang_zh_tw,
-#else
-    NULL,
 #endif
 #if INCLUDED_KO_KR == 1
     &lang_ko_kr,
-#else
-    NULL,
 #endif
 #if INCLUDED_JA_JP == 1
     &lang_ja_jp,
-#else
-    NULL,
 #endif
 };
 
 lang_t *curr_lang = &lang_en_us;
-const int gui_lang_count = 11;
+const int gui_lang_count = sizeof(gui_lang) / sizeof(*gui_lang);
 
 int i18n_get_text_height()
 {

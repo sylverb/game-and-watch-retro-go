@@ -331,6 +331,10 @@ int8_t odroid_settings_get_prior_lang(uint8_t cur)
 int8_t odroid_settings_lang_get()
 {
     int lang = persistent_config_ram.lang;
+    if(lang >= gui_lang_count){
+        // This can happen if a language is set, then the device is reflashed with fewer languages.
+        lang = 0;
+    }
     return odroid_settings_get_prior_lang(lang + 1);
 }
 
