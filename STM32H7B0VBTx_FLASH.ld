@@ -566,6 +566,9 @@ SECTIONS
     . = ALIGN(4);
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
+    _intflash_logo_start = .;
+    *(.intflash_logo)
+    _intflash_logo_end = .;
     . = ALIGN(4);
   } >FLASH
 

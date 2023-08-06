@@ -5,7 +5,7 @@
 #define BIG_BANK 1
 #endif
 #if BIG_BANK == 1
-#define LOGO_DATA
+#define LOGO_DATA __attribute__((section(".intflash_logo")))
 #else
 #define LOGO_DATA __attribute__((section(".extflash_logo")))
 #endif
