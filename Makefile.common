@@ -844,7 +844,8 @@ flash_intflash_nc: $(BUILD_DIR)/$(TARGET)_intflash.bin
 .PHONY: flash_intflash_nc
 
 flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin pyocd_check_pack
-	@$(GNWMANAGER) flash $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
+	@$(GNWMANAGER) flash $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET) --progress-file=$(BUILD_DIR)/gnwmanager-flash-progress \
+		|| (echo "Game & Watch connection interrupt; re-run flash command to resume.\n" && exit 1)
 .PHONY: flash_extflash
 
 # Programs both the external and internal flash.

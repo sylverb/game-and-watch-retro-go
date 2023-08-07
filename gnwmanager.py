@@ -51,52 +51,55 @@ comm = {
     "logbuf":                  Variable(0x2000_000c, 4096),
     "lfs_cfg":                 Variable(0x2000_1010, 4),
 }
-
-# Communication Variables
-comm["flashapp_comm"] = comm["framebuffer2"]
-
-comm["flashapp_state"]           = last_variable = Variable(comm["flashapp_comm"].address, 4)
-comm["program_status"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
-comm["utc_timestamp"]            = last_variable = Variable(last_variable.address + last_variable.size, 4)
-comm["program_chunk_idx"]        = last_variable = Variable(last_variable.address + last_variable.size, 4)
-comm["program_chunk_count"]      = last_variable = Variable(last_variable.address + last_variable.size, 4)
-comm["active_context_index"]     = last_variable = Variable(last_variable.address + last_variable.size, 4)
-
-
 contexts = [{} for i in range(2)]
-for i in range(2):
-    struct_start = comm["flashapp_comm"].address + ((i+1)*4096)
-    contexts[i]["ready"]             = last_variable = Variable(struct_start, 4)
-    contexts[i]["size"]              = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[i]["address"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[i]["erase"]             = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[i]["erase_bytes"]       = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[i]["decompressed_size"] = last_variable = Variable(last_variable.address + last_variable.size, 4)
-    contexts[i]["expected_sha256"]   = last_variable = Variable(last_variable.address + last_variable.size, 32)
-    contexts[i]["expected_sha256_decompressed"]   = last_variable = Variable(last_variable.address + last_variable.size, 32)
 
-    # Don't ever directly use this, just here for alignment purposes
-    contexts[i]["__buffer_ptr"]        = last_variable = Variable(last_variable.address + last_variable.size, 4)
+def _populate_comm():
+    # Communication Variables; put in a function to prevent variable leakage.
+    comm["flashapp_comm"] = comm["framebuffer2"]
 
-struct_start = comm["flashapp_comm"].address + (3*4096)
-comm["active_context"] = last_variable = Variable(struct_start, 4096)
+    comm["flashapp_state"]           = last_variable = Variable(comm["flashapp_comm"].address, 4)
+    comm["program_status"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    comm["utc_timestamp"]            = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    comm["program_chunk_idx"]        = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    comm["program_chunk_count"]      = last_variable = Variable(last_variable.address + last_variable.size, 4)
+    comm["active_context_index"]     = last_variable = Variable(last_variable.address + last_variable.size, 4)
 
-for i in range(2):
-    contexts[i]["buffer"]            = last_variable = Variable(last_variable.address + last_variable.size, 256 << 10)
 
-comm["decompress_buffer"] = last_variable = Variable(last_variable.address + last_variable.size, 256 << 10)
+    for i in range(2):
+        struct_start = comm["flashapp_comm"].address + ((i+1)*4096)
+        contexts[i]["ready"]             = last_variable = Variable(struct_start, 4)
+        contexts[i]["size"]              = last_variable = Variable(last_variable.address + last_variable.size, 4)
+        contexts[i]["address"]           = last_variable = Variable(last_variable.address + last_variable.size, 4)
+        contexts[i]["erase"]             = last_variable = Variable(last_variable.address + last_variable.size, 4)
+        contexts[i]["erase_bytes"]       = last_variable = Variable(last_variable.address + last_variable.size, 4)
+        contexts[i]["decompressed_size"] = last_variable = Variable(last_variable.address + last_variable.size, 4)
+        contexts[i]["expected_sha256"]   = last_variable = Variable(last_variable.address + last_variable.size, 32)
+        contexts[i]["expected_sha256_decompressed"]   = last_variable = Variable(last_variable.address + last_variable.size, 32)
 
-# littlefs config struct elements
-comm["lfs_cfg_context"]      = Variable(comm["lfs_cfg"].address + 0,  4)
-comm["lfs_cfg_read"]         = Variable(comm["lfs_cfg"].address + 4,  4)
-comm["lfs_cfg_prog"]         = Variable(comm["lfs_cfg"].address + 8,  4)
-comm["lfs_cfg_erase"]        = Variable(comm["lfs_cfg"].address + 12, 4)
-comm["lfs_cfg_sync"]         = Variable(comm["lfs_cfg"].address + 16, 4)
-comm["lfs_cfg_read_size"]    = Variable(comm["lfs_cfg"].address + 20, 4)
-comm["lfs_cfg_prog_size"]    = Variable(comm["lfs_cfg"].address + 24, 4)
-comm["lfs_cfg_block_size"]   = Variable(comm["lfs_cfg"].address + 28, 4)
-comm["lfs_cfg_block_count"]  = Variable(comm["lfs_cfg"].address + 32, 4)
-# TODO: too lazy to add the other lfs_config attributes
+        # Don't ever directly use this, just here for alignment purposes
+        contexts[i]["__buffer_ptr"]        = last_variable = Variable(last_variable.address + last_variable.size, 4)
+
+    struct_start = comm["flashapp_comm"].address + (3*4096)
+    comm["active_context"] = last_variable = Variable(struct_start, 4096)
+
+    for i in range(2):
+        contexts[i]["buffer"]            = last_variable = Variable(last_variable.address + last_variable.size, 256 << 10)
+
+    comm["decompress_buffer"] = last_variable = Variable(last_variable.address + last_variable.size, 256 << 10)
+
+    # littlefs config struct elements
+    comm["lfs_cfg_context"]      = Variable(comm["lfs_cfg"].address + 0,  4)
+    comm["lfs_cfg_read"]         = Variable(comm["lfs_cfg"].address + 4,  4)
+    comm["lfs_cfg_prog"]         = Variable(comm["lfs_cfg"].address + 8,  4)
+    comm["lfs_cfg_erase"]        = Variable(comm["lfs_cfg"].address + 12, 4)
+    comm["lfs_cfg_sync"]         = Variable(comm["lfs_cfg"].address + 16, 4)
+    comm["lfs_cfg_read_size"]    = Variable(comm["lfs_cfg"].address + 20, 4)
+    comm["lfs_cfg_prog_size"]    = Variable(comm["lfs_cfg"].address + 24, 4)
+    comm["lfs_cfg_block_size"]   = Variable(comm["lfs_cfg"].address + 28, 4)
+    comm["lfs_cfg_block_count"]  = Variable(comm["lfs_cfg"].address + 32, 4)
+    # TODO: too lazy to add the other lfs_config attributes
+
+_populate_comm()
 
 
 _flashapp_state_enum_to_str = {
@@ -498,31 +501,72 @@ def validate_extflash_offset(val):
 ################
 # CLI Commands #
 ################
-
 def flash(*, args, **kwargs):
-    """Flash a binary to the external flash."""
+    """Flash a binary to the external flash.
+
+    Progress file format:
+     * line 1: sha256 hash of extflash binary.
+     * line 2: Number of chunks successfully flashed.
+    """
     validate_extflash_offset(args.address)
+
     data = args.file.read_bytes()
+    data_time = args.file.stat().st_mtime
+    data_time = datetime.fromtimestamp(data_time).strftime('%Y-%m-%d %H:%M:%S:%f')
+
     chunk_size = contexts[0]["buffer"].size  # Assumes all contexts have same size buffer
     chunks = chunk_bytes(data, chunk_size)
+    total_n_chunks = len(chunks)
 
-    write_chunk_count(len(chunks));
+    previous_chunks_already_flashed = 0
+    # Attempt to resume a previous session.
+    if args.progress_file and args.progress_file.exists():
+        progress_file_time, progress_file_chunks_already_flashed = args.progress_file.read_text().split("\n")
+        progress_file_chunks_already_flashed = int(progress_file_chunks_already_flashed)
+        if progress_file_time == data_time:
+            previous_chunks_already_flashed = progress_file_chunks_already_flashed
+            print(f"Resuming previous session at {previous_chunks_already_flashed}/{total_n_chunks}")
 
-    for i, (chunk, compressed_chunk) in tqdm(enumerate(zip(chunks, compress_chunks(chunks))), total=len(chunks)):
-        if len(compressed_chunk) < len(chunk):
-            decompressed_size = len(chunk)
-            decompressed_hash = sha256(chunk)
-            chunk = compressed_chunk
-        else:
-            decompressed_size = 0
-            decompressed_hash = None
-        write_chunk_idx(i + 1)
-        extflash_write(args.address + (i * chunk_size), chunk,
-                       decompressed_size=decompressed_size,
-                       decompressed_hash=decompressed_hash,
-                       )
-    wait_for_all_contexts_complete()
-    wait_for("IDLE")
+    # https://github.com/tqdm/tqdm/issues/1264
+    chunks = chunks[previous_chunks_already_flashed:]
+    compressed_chunks = compress_chunks(chunks)
+
+    write_chunk_count(total_n_chunks);
+
+    base_address = args.address + (previous_chunks_already_flashed * chunk_size)
+    with tqdm(initial=previous_chunks_already_flashed, total=total_n_chunks) as pbar:
+        for i, (chunk, compressed_chunk) in enumerate(zip(chunks, compress_chunks(chunks))):
+            chunk_1_idx = previous_chunks_already_flashed + i + 1
+            pbar.update(1)
+            if len(compressed_chunk) < len(chunk):
+                decompressed_size = len(chunk)
+                decompressed_hash = sha256(chunk)
+                chunk = compressed_chunk
+            else:
+                decompressed_size = 0
+                decompressed_hash = None
+            write_chunk_idx(chunk_1_idx)
+            extflash_write(base_address + (i * chunk_size), chunk,
+                           decompressed_size=decompressed_size,
+                           decompressed_hash=decompressed_hash,
+                           )
+
+            # Save current progress to a file incase progress is interrupted.
+            if args.progress_file:
+                # Up to 3 chunks may have been sent to device that may have NOT been written to disk.
+                # This is the most conservative estimate of what has been written to disk.
+                chunks_already_flashed = max(
+                    previous_chunks_already_flashed,
+                    chunk_1_idx - 3
+                )
+                args.progress_file.parent.mkdir(exist_ok=True, parents=True)
+                args.progress_file.write_text(f"{data_time}\n{chunks_already_flashed}")
+
+        wait_for_all_contexts_complete()
+        wait_for("IDLE")
+
+    if args.progress_file and args.progress_file.exists():
+        args.progress_file.unlink()
 
 
 def erase(**kwargs):
@@ -784,9 +828,11 @@ def main():
 
     subparser = add_command(flash)
     subparser.add_argument("file", type=Path,
-            help="binary file to flash")
+            help="Binary file to flash.")
     subparser.add_argument("address", type=lambda x: int(x,0),
             help="Offset into external flash")
+    subparser.add_argument("--progress-file", type=Path,
+            help="Save/Load progress from a file; allows resuming a interrupted flash operation.")
 
     subparser = add_command(erase)
 
