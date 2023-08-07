@@ -3,6 +3,5 @@ pillow
 tqdm
 pyelftools
 pyocd
-#littlefs-python
-git+https://github.com/BrianPugh/littlefs-python.git@develop#egg=littlefs-python
+littlefs-python>=0.6.0
 tamp
