@@ -62,11 +62,11 @@ static void applications_load()
     // Count files in /apps directory
     printf("Counting regular files in FS dir %s...\n", APPS_FOLDER);
     if (fs_exists(APPS_FOLDER)) {
-        lfs_dir_t dir;
+        fs_dir_t dir;
         fs_dir_open(APPS_FOLDER, &dir);
-        struct lfs_info info;
+        fs_info_t info;
         while(fs_dir_read(&dir, &info)) {
-            if (info.type == LFS_TYPE_REG) {
+            if (info.type == FS_TYPE_REG) {
                 printf("Regular file in FS dir %s: %d\n", APPS_FOLDER, info.size);
                 applications_count++;
             }
@@ -81,7 +81,7 @@ static void applications_load()
         fs_dir_open(APPS_FOLDER, &dir);
         int pos = 0;
         while (fs_dir_read(&dir, &info)) {
-            if (info.type == LFS_TYPE_REG) {
+            if (info.type == FS_TYPE_REG) {
                 printf("Regular file in FS dir %s: %d\n", APPS_FOLDER, info.size);
 
                 application_t *application = &applications[pos];
