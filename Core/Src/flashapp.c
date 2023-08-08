@@ -174,14 +174,6 @@ struct flashapp_comm {  // Values are read or written by the debugger
 // framebuffer2 and onwards is used as a buffer for the flash.
 static volatile struct flashapp_comm *comm = (struct flashapp_comm *)framebuffer2;
 
-// TODO: Expose properly
-int odroid_overlay_draw_text_line(uint16_t x_pos,
-                                  uint16_t y_pos,
-                                  uint16_t width,
-                                  const char *text,
-                                  uint16_t color,
-                                  uint16_t color_bg);
-
 static void draw_text_line_centered(uint16_t y_pos,
                                     const char *text,
                                     uint16_t color,
@@ -199,7 +191,7 @@ static void draw_progress(flashapp_t *flashapp)
 
     odroid_overlay_draw_fill_rect(0, LIST_Y_OFFSET, LIST_WIDTH, LIST_HEIGHT, curr_colors->bg_c);
 
-    odroid_overlay_draw_text_line(8, LIST_Y_OFFSET + LIST_LINE_HEIGHT, strlen(flashapp->tab.status) * font_width, flashapp->tab.status, curr_colors->sel_c, curr_colors->bg_c);
+    draw_text_line_centered(LIST_Y_OFFSET + LIST_LINE_HEIGHT, flashapp->tab.status, curr_colors->sel_c, curr_colors->bg_c);
 
     draw_text_line_centered(LIST_Y_OFFSET + 5 * LIST_LINE_HEIGHT, flashapp->tab.name, curr_colors->sel_c, curr_colors->bg_c);
 
@@ -230,10 +222,6 @@ static void redraw(flashapp_t *flashapp)
     // Re-use header, status and footer from the retro-go code
     gui_draw_header(&flashapp->tab);
     gui_draw_status(&flashapp->tab);
-
-    // Empty logo
-    //odroid_overlay_draw_fill_rect(0, ODROID_SCREEN_HEIGHT - IMAGE_BANNER_HEIGHT - 15,
-    //                              IMAGE_BANNER_WIDTH, IMAGE_BANNER_HEIGHT, curr_colors->main_c);
 
     draw_progress(flashapp);
     lcd_swap();
@@ -269,7 +257,6 @@ static void flashapp_run(flashapp_t *flashapp)
         state_inc();
         break;
     case FLASHAPP_IDLE:
-        sprintf(flashapp->tab.name, "1. Waiting for data");
         OSPI_EnableMemoryMappedMode();
 
         // Notify that we are ready to start
@@ -317,14 +304,17 @@ static void flashapp_run(flashapp_t *flashapp)
                 break;
             }
         }
+        if(comm->flashapp_state == FLASHAPP_IDLE)
+            sprintf(flashapp->tab.name, "Waiting for command...");
 
         break;
     case FLASHAPP_START:
+        sprintf(flashapp->tab.name, "Processing...", context->size);
         comm->program_status = FLASHAPP_STATUS_BUSY;
         state_inc();
         break;
     case FLASHAPP_CHECK_HASH_RAM_NEXT:
-        sprintf(flashapp->tab.name, "2. Checking hash in RAM (%ld bytes)", context->size);
+        sprintf(flashapp->tab.name, "Checking hash in RAM (%ld bytes)", context->size);
         state_inc();
         break;
     case FLASHAPP_CHECK_HASH_RAM:
@@ -339,7 +329,7 @@ static void flashapp_run(flashapp_t *flashapp)
             state_set(FLASHAPP_ERROR);
             break;
         } else {
-            sprintf(flashapp->tab.name, "3. Hash OK in RAM");
+            sprintf(flashapp->tab.name, "Hash OK in RAM");
             state_inc();
         }
 #else
@@ -379,10 +369,10 @@ static void flashapp_run(flashapp_t *flashapp)
     case FLASHAPP_ERASE_NEXT:
         if (context->erase) {
             if (context->erase_bytes == 0) {
-                sprintf(flashapp->tab.name, "4. Performing Chip Erase (takes time)");
+                sprintf(flashapp->tab.name, "Performing Chip Erase (takes time)");
             }
             else {
-                sprintf(flashapp->tab.name, "4. Erasing %ld bytes...", flashapp->erase_bytes_left);
+                sprintf(flashapp->tab.name, "Erasing %ld bytes...", flashapp->erase_bytes_left);
                 printf("Erasing %ld bytes at 0x%08lx\n", context->erase_bytes, flashapp->erase_address);
             }
             state_inc();
@@ -403,7 +393,7 @@ static void flashapp_run(flashapp_t *flashapp)
         }
         break;
     case FLASHAPP_PROGRAM_NEXT:
-        sprintf(flashapp->tab.name, "5. Programming...");
+        sprintf(flashapp->tab.name, "Programming...");
         flashapp->progress_value = 0;
         flashapp->current_program_address = context->address;
 
@@ -429,7 +419,7 @@ static void flashapp_run(flashapp_t *flashapp)
         }
         break;
     case FLASHAPP_CHECK_HASH_FLASH_NEXT:
-        sprintf(flashapp->tab.name, "6. Checking hash in FLASH");
+        sprintf(flashapp->tab.name, "Checking hash in FLASH");
         OSPI_EnableMemoryMappedMode();
         state_inc();
         break;
@@ -446,7 +436,7 @@ static void flashapp_run(flashapp_t *flashapp)
             break;
         }
 #endif
-        sprintf(flashapp->tab.name, "7. Hash OK in FLASH.");
+        sprintf(flashapp->tab.name, "Hash OK in FLASH.");
         state_set(FLASHAPP_IDLE);
         break;
     case FLASHAPP_FINAL:
@@ -472,14 +462,14 @@ void flashapp_main(void)
 
     while (true) {
         if (comm->program_chunk_count == 1) {
-            sprintf(flashapp.tab.status, "Game and Watch Flash App");
+            sprintf(flashapp.tab.status, "G&W FlashApp: Awaiting Data");
         } else {
-            sprintf(flashapp.tab.status, "Game and Watch Flash App (%ld/%ld)",
+            sprintf(flashapp.tab.status, "G&W FlashApp: Received (%ld/%ld)",
                     comm->program_chunk_idx, comm->program_chunk_count);
         }
 
         // Run multiple times to skip rendering when programming
-        for (int i = 0; i < 128; i++) {
+        for (int i = 0; i < 16; i++) {
             wdog_refresh();
             flashapp_run(&flashapp);
         }
