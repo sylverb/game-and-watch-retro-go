@@ -790,7 +790,9 @@ erase_intflash_2:
 .PHONY: erase_intflash_2
 
 erase_extflash:
+	@echo "Erasing External Flash..."
 	@$(GNWMANAGER) erase
+	@echo "Erasing External Complete!"
 .PHONY: erase_extflash
 
 format:
