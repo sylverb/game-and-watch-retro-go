@@ -9,6 +9,7 @@
 #include "appid.h"
 #include "main.h"
 #include "rg_emulators.h"
+#include "rg_applications.h"
 #include "gui.h"
 #include "githash.h"
 #include "main.h"
@@ -995,6 +996,8 @@ void app_main(uint8_t boot_mode)
 #endif
 
     // favorites_init();
+
+    applications_init();
 
     // Start the previously running emulator directly if it's a valid pointer.
     // If the user holds down the TIME button during startup,start the retro-go

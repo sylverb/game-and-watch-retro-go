@@ -292,6 +292,7 @@ Core/Src/porting/gw_alloc.c \
 Core/Src/retro-go/rg_main.c \
 Core/Src/retro-go/rg_rtc.c \
 Core/Src/retro-go/rg_emulators.c \
+Core/Src/retro-go/rg_applications.c \
 Core/Src/retro-go/rom_manager.c \
 Core/Src/porting/odroid_settings.c \
 Core/Src/retro-go/i18n/rg_i18n.c \
