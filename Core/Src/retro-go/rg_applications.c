@@ -40,8 +40,8 @@ static void event_handler(gui_event_t event, tab_t *tab)
         char* filepath = file->name;
         printf("Loading application file from FS to RAM: filepath=%s buffer=0x%08x size=%d\n", filepath, &framebuffer1, file->size);
         fs_file_t *fd;
-        fd = fs_open(filepath, FS_READ, FS_RAW);
-        fs_read(fd, &framebuffer1, file->size);
+        fd = fs_open(filepath, FS_READ, FS_COMPRESS);
+        fs_read(fd, &framebuffer1, /*file->size*/ sizeof(framebuffer1) + sizeof(framebuffer2)); // Max uncompressed filesize is 307200B
         fs_close(fd);
         
         // Reset and boot application in RAM
@@ -59,14 +59,14 @@ static void applications_load()
         free(applications);
     }
     
-    // Count files in /bank2 directory
-    printf("Counting regular files in FS dir /bank2...\n");
+    // Count files in /apps directory
+    printf("Counting regular files in FS dir /apps...\n");
     lfs_dir_t dir;
-    fs_dir_open("/bank2", &dir);    // FIXME Handle missing directory
+    fs_dir_open("/apps", &dir);    // FIXME Handle missing directory
     struct lfs_info info;
     while(fs_dir_read(&dir, &info)) {
         if (info.type == LFS_TYPE_REG) {
-            printf("Regular file in FS dir /bank2: %d\n", info.size);
+            printf("Regular file in FS dir /apps: %d\n", info.size);
             applications_count++;
         }
     }
@@ -75,18 +75,18 @@ static void applications_load()
     applications = calloc(applications_count + 1, sizeof(application_t));
     gui_resize_list(apps_tab, applications_count);
 
-    // List files in /bank2 directory
-    printf("Looking for regular files in FS dir /bank2...\n");
-    fs_dir_open("/bank2", &dir);    // FIXME Handle missing directory
+    // List files in /apps directory
+    printf("Looking for regular files in FS dir /apps...\n");
+    fs_dir_open("/apps", &dir);    // FIXME Handle missing directory
     int pos = 0;
     while (fs_dir_read(&dir, &info)) {
         if (info.type == LFS_TYPE_REG) {
-            printf("Regular file in FS dir /bank2: %d\n", info.size);
+            printf("Regular file in FS dir /apps: %d\n", info.size);
 
             application_t *application = &applications[pos];
 
             memcpy(application->name, info.name, 16);
-            snprintf(application->path, sizeof(application->path), "/bank2/%s", application->name);
+            snprintf(application->path, sizeof(application->path), "/apps/%s", application->name);
             retro_emulator_file_t* file = &application->file;
             memset(file, 0, sizeof(retro_emulator_file_t));
             file->name = application->path;
