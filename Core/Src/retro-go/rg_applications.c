@@ -60,43 +60,45 @@ static void applications_load()
     }
     
     // Count files in /apps directory
-    printf("Counting regular files in FS dir /apps...\n");
-    lfs_dir_t dir;
-    fs_dir_open("/apps", &dir);    // FIXME Handle missing directory
-    struct lfs_info info;
-    while(fs_dir_read(&dir, &info)) {
-        if (info.type == LFS_TYPE_REG) {
-            printf("Regular file in FS dir /apps: %d\n", info.size);
-            applications_count++;
+    printf("Counting regular files in FS dir %s...\n", APPS_FOLDER);
+    if (fs_exists(APPS_FOLDER)) {
+        lfs_dir_t dir;
+        fs_dir_open(APPS_FOLDER, &dir);
+        struct lfs_info info;
+        while(fs_dir_read(&dir, &info)) {
+            if (info.type == LFS_TYPE_REG) {
+                printf("Regular file in FS dir %s: %d\n", APPS_FOLDER, info.size);
+                applications_count++;
+            }
         }
-    }
-    fs_dir_close(&dir);
+        fs_dir_close(&dir);
 
-    applications = calloc(applications_count + 1, sizeof(application_t));
-    gui_resize_list(apps_tab, applications_count);
+        applications = calloc(applications_count + 1, sizeof(application_t));
+        gui_resize_list(apps_tab, applications_count);
 
-    // List files in /apps directory
-    printf("Looking for regular files in FS dir /apps...\n");
-    fs_dir_open("/apps", &dir);    // FIXME Handle missing directory
-    int pos = 0;
-    while (fs_dir_read(&dir, &info)) {
-        if (info.type == LFS_TYPE_REG) {
-            printf("Regular file in FS dir /apps: %d\n", info.size);
+        // List files in /apps directory
+        printf("Looking for regular files in FS dir %s...\n", APPS_FOLDER);
+        fs_dir_open(APPS_FOLDER, &dir);
+        int pos = 0;
+        while (fs_dir_read(&dir, &info)) {
+            if (info.type == LFS_TYPE_REG) {
+                printf("Regular file in FS dir %s: %d\n", APPS_FOLDER, info.size);
 
-            application_t *application = &applications[pos];
+                application_t *application = &applications[pos];
 
-            memcpy(application->name, info.name, 16);
-            snprintf(application->path, sizeof(application->path), "/apps/%s", application->name);
-            retro_emulator_file_t* file = &application->file;
-            memset(file, 0, sizeof(retro_emulator_file_t));
-            file->name = application->path;
-            file->size = info.size;
-            apps_tab->listbox.items[pos].text = application->name;
-            apps_tab->listbox.items[pos].arg = &application->file;
-            pos++;
+                memcpy(application->name, info.name, 16);
+                snprintf(application->path, sizeof(application->path), "%s/%s", APPS_FOLDER, application->name);
+                retro_emulator_file_t* file = &application->file;
+                memset(file, 0, sizeof(retro_emulator_file_t));
+                file->name = application->path;
+                file->size = info.size;
+                apps_tab->listbox.items[pos].text = application->name;
+                apps_tab->listbox.items[pos].arg = &application->file;
+                pos++;
+            }
         }
+        fs_dir_close(&dir);
     }
-    fs_dir_close(&dir);
 
     if (applications_count > 0)
     {

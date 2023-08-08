@@ -1,5 +1,8 @@
 #include "rg_emulators.h"
 
+
+#define APPS_FOLDER "/apps"
+
 typedef struct {
     char name[64];
     char path[168];
