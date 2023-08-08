@@ -45,7 +45,7 @@ static void event_handler(gui_event_t event, tab_t *tab)
         fs_close(fd);
         
         // Reset and boot application in RAM
-        boot_magic_set(BOOT_MAGIC_RAM);
+        boot_magic_set(BOOT_MAGIC_BOOT2RAM);
         HAL_NVIC_SystemReset();
     }
 }

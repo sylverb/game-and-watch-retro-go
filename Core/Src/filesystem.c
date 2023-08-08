@@ -428,10 +428,6 @@ bool fs_exists(const char *path){
     return lfs_stat(&lfs, path, &info) == LFS_ERR_OK;
 }
 
-bool fs_info(const char *path, struct lfs_info *info){
-    return lfs_stat(&lfs, path, info) == LFS_ERR_OK;
-}
-
 bool fs_dir_open(const char *path, lfs_dir_t *dir){
     bool err = lfs_dir_open(&lfs, dir, path);
     printf("fs_dir_open: %d\n", err);

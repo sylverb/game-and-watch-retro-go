@@ -106,7 +106,6 @@ void BSOD(BSOD_t fault, uint32_t pc, uint32_t lr) __attribute__((noreturn));
 
 void store_erase(const uint8_t *flash_ptr, uint32_t size);
 void store_save(const uint8_t *flash_ptr, const uint8_t *data, size_t size);
-void flash_program(const uint8_t *flash_ptr, const uint8_t *data, size_t size);
 void boot_magic_set(uint32_t magic);
 void oc_level_set(uint32_t level);
 uint32_t oc_level_get();
@@ -166,8 +165,7 @@ int odroid_overlay_draw_text_line(uint16_t x_pos, uint16_t y_pos, uint16_t width
 #define BOOT_MAGIC_WATCHDOG 0xd066cafe
 #define BOOT_MAGIC_BSOD     0xbad00000
 #define BOOT_MAGIC_FLASHAPP 0xf1a5f1a5
-#define BOOT_MAGIC_BANK2    0xb001b222
-#define BOOT_MAGIC_RAM      0xb001b001
+#define BOOT_MAGIC_BOOT2RAM 0xb007b007
 
 #define BOOT_MAGIC_BSOD_MASK 0xffff0000
 

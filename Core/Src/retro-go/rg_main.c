@@ -19,7 +19,6 @@
 #include "rg_rtc.h"
 #include "rg_i18n.h"
 #include "bitmaps.h"
-#include "filesystem.h"
 
 #if 0
 #define KEY_SELECTED_TAB "SelectedTab"
@@ -413,9 +412,6 @@ void retro_loop()
 
             if ((last_key == ODROID_INPUT_START) || (last_key == ODROID_INPUT_X))
             {
-                // TODO Add menu to list bank2 folder + copy to intflash bank2 + boot from bank2 ?
-                // TODO or copy to RAM (framebuffer) and boot from RAM ???
-                
                 odroid_dialog_choice_t choices[] = {
                     {9, curr_lang->s_Version, GIT_HASH, 1, NULL},
                     {9, curr_lang->s_Author, "ducalex", 1, NULL},
@@ -428,7 +424,6 @@ void retro_loop()
                     ODROID_DIALOG_CHOICE_SEPARATOR,
                     {1, curr_lang->s_Lang, curr_lang->s_LangAuthor, 1, NULL},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
-                    {3, "Manage bank2", "", 1, NULL},  // FIXME i18n
                     {2, curr_lang->s_Debug_menu, "", 1, NULL},
                     {1, curr_lang->s_Reset_settings, "", 1, NULL},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
@@ -511,8 +506,6 @@ void retro_loop()
                     default:
                         break;
                     }
-                } else if (sel == 3) {
-                    boot2_menu();
                 }
 
                 gui_redraw();
@@ -672,160 +665,6 @@ void retro_loop()
 
         gui_redraw();
         HAL_Delay(20);
-    }
-}
-
-void boot2_menu() {
-    odroid_dialog_choice_t bank2info[] = {
-        // FIXME i18n
-        {1, "Boot", "", 1, NULL},
-        {2, "List apps", "", 1, NULL},
-        {0, "Close", "", 1, NULL},
-        ODROID_DIALOG_CHOICE_LAST
-    };
-
-    int sel = odroid_overlay_dialog("Manage bank2", bank2info, 0);  // FIXME i18n
-    switch (sel) {
-    case 1:
-        // Boot intflash bank2
-        boot_magic_set(BOOT_MAGIC_BANK2);
-        HAL_NVIC_SystemReset();
-        break;
-    case 2:
-        // TODO read jedec_id (needed???) + call OSPI_GetFlashCapacity()
-        // Takes ~100ms to read the first byte of all sectors in a 256MB chip (~10ms for a 16MB chip)
-        typedef struct {
-            const char name[16];
-            const uint8_t *address;
-            uint32_t size;
-            uint32_t checksum;
-        } boot2_app_t;
-
-        boot2_app_t apps[6];
-        uint8_t apps_count = 0;
-
-        // TODO Filesystem should be big enough to hold 128/256 KB intflash images:
-        // make (...) FILESYSTEM_SIZE=... flash
-        // TODO intflash .bin files should be added to filesystem with:
-        // gnwmanager.py push /bank2/my_intflash.bin /path/to/my_intflash.bin
-
-        // List files in /bank2 directory
-        printf("Looking for regular files in FS dir /bank2...\n");
-        lfs_dir_t dir;
-        fs_dir_open("/bank2", &dir);    // FIXME Handle missing directory
-        struct lfs_info info;
-        while(fs_dir_read(&dir, &info)) {
-            if (info.type == LFS_TYPE_REG) {
-                printf("Regular file in FS dir /bank2: %d\n", info.size);
-                memcpy(apps[apps_count].name, info.name, 16);
-                apps[apps_count].address = 0;   // FIXME file offset ??? addr + app.address;
-                apps[apps_count].size = info.size;
-                apps[apps_count].checksum = 0;// FIXME from file header ??? app.checksum;
-                apps_count++;
-            }
-        }
-        fs_dir_close(&dir);
-
-        odroid_dialog_choice_t appsinfo[] = {
-            // 1 line per app (max 6 apps) + close + end-of-list
-            ODROID_DIALOG_CHOICE_LAST,
-            ODROID_DIALOG_CHOICE_LAST,
-            ODROID_DIALOG_CHOICE_LAST,
-            ODROID_DIALOG_CHOICE_LAST,
-            ODROID_DIALOG_CHOICE_LAST,
-            ODROID_DIALOG_CHOICE_LAST,
-            ODROID_DIALOG_CHOICE_LAST,
-            ODROID_DIALOG_CHOICE_LAST
-        };
-
-        for (int i=0; i<apps_count; i++) {
-            uint32_t crc;
-            if (apps[i].address != 0) {
-                crc = crc32_le(0, (unsigned char *) apps[i].address, apps[i].size);
-            }
-            // FIXME do not display invalid apps?
-            appsinfo[i] = (odroid_dialog_choice_t){i+1, ((crc == apps[i].checksum) ? "OK" : "KO"), apps[i].name, 1, NULL};
-        }
-        appsinfo[apps_count] = (odroid_dialog_choice_t){0, "Close", "", 1, NULL};   // FIXME i18n
-
-        int sel = odroid_overlay_dialog("Apps", appsinfo, 0);   // FIXME i18n
-
-        switch (sel) {
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-            if (sel <= apps_count) {
-                /*
-                // FIXME Load into RAM + Boot from RAM !!!
-                __disable_irq();
-                uint32_t ram_addr = 0x24000000; // FIXME 0x240e0000;
-                memcpy((uint8_t*) ram_addr, apps[sel-1].address, apps[sel-1].size);   // FIXME Always copy 128K ???
-                
-                // TODO compute checksum + breakpoint only if mismatch
-                //uint32_t crc = crc32_le(0, (unsigned char *) ram_addr, 127852);
-                //if (crc != 0x8da7dd6b) {
-                //    __asm("bkpt 1");
-                //} else {
-                    boot_magic_set(BOOT_MAGIC_RAM);
-                    HAL_NVIC_SystemReset();
-                //}
-                */
-
-                // Turn screen off before loading into framebuffer
-                lcd_backlight_off();
-
-                // App in filesystem
-                if (apps[sel-1].address == 0) {
-                    // TODO Read file into buffer --> TODO read in chunks ???
-                    char filepath[32];
-                    snprintf(filepath, sizeof(filepath), "/bank2/%s", apps[sel-1].name);
-                    printf("Reading file in FS: filepath=%s buffer=0x%08x size=%d\n", filepath, &framebuffer1, apps[sel-1].size);
-                    fs_file_t *file;
-                    file = fs_open(filepath, FS_READ, FS_RAW);
-                    fs_read(file, &framebuffer1, apps[sel-1].size);
-                    fs_close(file);
-                    apps[sel-1].address = &framebuffer1;
-                    apps[sel-1].checksum = crc32_le(0, &framebuffer1, apps[sel-1].size);
-                }
-
-                
-                /*
-                // Program intflash bank2
-                flash_program((uint8_t*) 0x08100000, apps[sel-1].address, apps[sel-1].size);   // TODO bank2 base constant
-                // Verify checksum of freshly-flashed bank2
-                printf("Verifying CRC checksum...\n");
-                uint32_t crc = crc32_le(0, (unsigned char *) 0x08100000, apps[sel-1].size);
-                if (crc != apps[sel-1].checksum) {
-                    printf("Failed to program intflash bank2: checksum mismatch. expected=0x%08x actual=0x%08x\n", apps[sel-1].checksum, crc);
-                    Error_Handler();
-                } else {
-                    // Boot intflash bank2
-                    boot_magic_set(BOOT_MAGIC_BANK2);
-                    HAL_NVIC_SystemReset();
-                }
-                */
-
-                //uint32_t ram_addr = 0x24000000; // FIXME 0x240e0000;
-                //memcpy((uint8_t*) ram_addr, apps[sel-1].address, apps[sel-1].size);   // FIXME Always copy 128K ???
-                
-                // TODO compute checksum + breakpoint only if mismatch
-                //uint32_t crc = crc32_le(0, (unsigned char *) ram_addr, 127852);
-                //if (crc != 0x8da7dd6b) {
-                //    __asm("bkpt 1");
-                //} else {
-                    boot_magic_set(BOOT_MAGIC_RAM);
-                    HAL_NVIC_SystemReset();
-                //}
-
-            }
-            break;
-        }
-        break;
-    default:
-        break;
     }
 }
 
