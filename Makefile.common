@@ -931,7 +931,7 @@ help:
 	@echo "  EXTFLASH_FORCE_SPI  - Forces the use of legacy SPI mode for the external flash driver"
 	@echo "  EXTFLASH_SIZE_MB    - Sets the external flash size in megabytes"
 	@echo "  EXTFLASH_SIZE       - Sets the external flash size in bytes (has precedence over EXTFLASH_SIZE_MB)"
-	@echo "  FILESYSTEM_SIZE     - Sets the filesystem flash size in bytes.
+	@echo "  FILESYSTEM_SIZE     - Sets the filesystem flash size in bytes."
 	@echo "  FILESYSTEM_OFFSET   - Places the filesystem at a specified offset in the external flash. "
 	@echo "                        Defaults to placing the filesystem at the end of flash."
 	@echo "  LARGE_FLASH         - Sets the external flash size to 16MB  (deprecated)"
@@ -953,12 +953,12 @@ help:
 	@echo "  IT_IT,ZH_CN,ZH_TW,  "
 	@echo "  KO_KR,JA_JP,DE_DE,  "
 	@echo "  RU_RU               - Set to 1 to include or exclude some other language"
-	@echo "  SINGLE_FONT         - Set to 1 to only include a single default font.
-	@echo "                        Saves a few dozen KB of external flash.
+	@echo "  SINGLE_FONT         - Set to 1 to only include a single default font."
+	@echo "                        Saves a few dozen KB of external flash."
 	@echo "  COVERFLOW           - Set to 1 include cover art with rom (default=0)"
 	@echo "  JPG_QUALITY         - Set convert cover art image jpg quality (default = 90)"
 	@echo "  ENABLE_SCREENSHOT   - Set to 1 to enable screenshot support (default enabled)"
-	@echo "  GNW_TARGET          - Game & Watch target, Valid values {mario,zelda} (default=mario)"
+	@echo "  GNW_TARGET          - Game & Watch target, Valid values {mario,zelda} (default=mario)"makefile.
 	@echo "  GAME_GENIE          - Set to 1 to enable game genie support (deprecated, use CHEAT_CODES instead)"
 	@echo "  CHEAT_CODES         - Set to 1 to enable cheat codes support (default=0)"
 	@echo "  MSX_USE_BANK_2      - Set to 1 to use Internal Bank 2 for MSX performance improvements."
