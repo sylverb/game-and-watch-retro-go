@@ -180,9 +180,9 @@ def compress_chunks(chunks: List[bytes], max_workers=2):
 # LittleFS #
 ############
 class LfsDriverContext:
-    def __init__(self, offset) -> None:
-        validate_extflash_offset(offset)
-        self.offset = offset
+    def __init__(self, filesystem_end) -> None:
+        validate_extflash_offset(filesystem_end)
+        self.filesystem_end = filesystem_end
         self.cache = {}
 
     def read(self, cfg: 'LFSConfig', block: int, off: int, size: int) -> bytes:
@@ -192,7 +192,7 @@ class LfsDriverContext:
         except KeyError:
             pass
         wait_for_all_contexts_complete()  # if a prog/erase is being performed, chip is not in memory-mapped-mode
-        self.cache[block] = bytearray(extflash_read(self.offset + (block * cfg.block_size), size))
+        self.cache[block] = bytearray(extflash_read(self.filesystem_end - ((block+1) * cfg.block_size), size))
         return bytes(self.cache[block][off:off+size])
 
     def prog(self, cfg: 'LFSConfig', block: int, off: int, data: bytes) -> int:
@@ -208,7 +208,7 @@ class LfsDriverContext:
         decompressed_hash = sha256(data)
         compressed_data = compress_lzma(data)
 
-        extflash_write(self.offset + (block * cfg.block_size) + off,
+        extflash_write(self.filesystem_end - ((block+1) * cfg.block_size) + off,
                        compressed_data,
                        erase=False,
                        decompressed_size=len(data),
@@ -219,7 +219,7 @@ class LfsDriverContext:
     def erase(self, cfg: 'LFSConfig', block: int) -> int:
         logging.getLogger(__name__).debug('LFS Erase: Block: %d' % block)
         self.cache[block] = bytearray([0xFF]*cfg.block_size)
-        extflash_erase(self.offset + (block * cfg.block_size), cfg.block_size)
+        extflash_erase(self.filesystem_end - ((block+1) * cfg.block_size), cfg.block_size)
         return 0
 
     def sync(self, cfg: 'LFSConfig') -> int:
@@ -939,14 +939,14 @@ def main():
                     if i == 0:
                         start_flashapp(args.intflash_address)
 
-                        filesystem_offset = read_int("lfs_cfg_context") - 0x9000_0000
+                        filesystem_end = read_int("lfs_cfg_context") - 0x9000_0000
                         block_size = read_int("lfs_cfg_block_size")
                         block_count = read_int("lfs_cfg_block_count")
 
                         if block_size==0 or block_count==0:
                             raise DataError
 
-                        lfs_context = LfsDriverContext(filesystem_offset)
+                        lfs_context = LfsDriverContext(filesystem_end)
                         fs = LittleFS(lfs_context, block_size=block_size, block_count=block_count)
 
                     commands[args.command](

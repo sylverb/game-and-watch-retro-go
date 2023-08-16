@@ -65,7 +65,7 @@ static uint8_t lookahead_buffer[LFS_LOOKAHEAD_SIZE] __attribute__((aligned(4))) 
 
 static int littlefs_api_read(const struct lfs_config *c, lfs_block_t block,
         lfs_off_t off, void *buffer, lfs_size_t size) {
-    unsigned char *address = (unsigned char *)c->context + (block * c->block_size) + off;
+    unsigned char *address = (unsigned char *)c->context - ((block+1) * c->block_size) + off;
     memcpy(buffer, address, size);
     return 0;
 }
@@ -73,7 +73,7 @@ static int littlefs_api_read(const struct lfs_config *c, lfs_block_t block,
 static int littlefs_api_prog(const struct lfs_config *c, lfs_block_t block,
         lfs_off_t off, const void *buffer, lfs_size_t size) {
     bool toggle_dcache = is_dcache_enabled();
-    uint32_t address = (uint32_t)c->context + (block * c->block_size) + off;
+    uint32_t address = (uint32_t)c->context - ((block+1) * c->block_size) + off;
     
     if(toggle_dcache){
         SCB_CleanDCache_by_Addr(address, size);
@@ -95,7 +95,7 @@ static int littlefs_api_prog(const struct lfs_config *c, lfs_block_t block,
 
 static int littlefs_api_erase(const struct lfs_config *c, lfs_block_t block) {
     bool toggle_dcache = is_dcache_enabled();
-    uint32_t address = (uint32_t)c->context + (block * c->block_size);
+    uint32_t address = (uint32_t)c->context - ((block+1) * c->block_size);
     assert((address & (4*1024 - 1)) == 0);
 
     if(toggle_dcache){
@@ -235,7 +235,7 @@ static void release_file_handle(fs_file_t *file){
  * Initialize and mount the filesystem. Format the filesystem if unmountable (and then reattempt mount).
  */
 void fs_init(void){
-    lfs_cfg.context = &__FILESYSTEM_START__;
+    lfs_cfg.context = &__FILESYSTEM_END__;  // We work "backwards"
     lfs_cfg.block_size = OSPI_GetSmallestEraseSize();
     lfs_cfg.block_count = (&__FILESYSTEM_END__ - &__FILESYSTEM_START__) / lfs_cfg.block_size;
 
