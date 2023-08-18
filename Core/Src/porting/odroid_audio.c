@@ -233,7 +233,6 @@ static void set_audio_frequency(uint32_t frequency)
         /* check from the different possible values */
         if ((frequency == SAI_AUDIO_FREQUENCY_192K) ||
             (frequency == SAI_AUDIO_FREQUENCY_96K) ||
-            (frequency == 65835) ||
             (frequency == SAI_AUDIO_FREQUENCY_48K) ||
             (frequency == SAI_AUDIO_FREQUENCY_44K) ||
             (frequency == SAI_AUDIO_FREQUENCY_32K) ||
