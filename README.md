@@ -106,6 +106,7 @@ Supported emulators:
   - [Compression support](#compression-support)
   - [Cheat codes](#cheat-codes)
     - [Cheat codes on NES System](#cheat-codes-on-nes-system)
+    - [Cheat codes on GB System](#cheat-codes-on-gb-system)
     - [Cheat codes on PCE System](#cheat-codes-on-pce-system)
     - [Cheat codes on MSX System](#cheat-codes-on-msx-system)
   - [Upgrading the flash](#upgrading-the-flash)
@@ -306,6 +307,22 @@ GOZSXX, Invincibility
 When you re-flash, you can enable / disable each of your codes in the game selection screen.
 
 A collection of codes can be found here: [https://github.com/martaaay/game-and-watch-retro-go-game-genie-codes](https://github.com/martaaay/game-and-watch-retro-go-game-genie-codes).
+
+### Cheat codes on GB System
+
+To add Game Genie/Game Shark codes, create a file ending in .ggcodes in the same directory as your rom with the same name as your rom. For instance, for
+"roms/gb/Wario Land 3.gb" make a file called "roms/gb/Wario Land 3.ggcodes". In that file, each line can have several Game Genie / Game Shark codes
+(separate them using a +) and a maximum of 16 lines of active codes. Each line can also have a description (up to 25 characters long).
+You can comment out a line by prefixing with # or //. For example:
+```
+SXIOPO, Inf lives
+APZLGG+APZLTG+GAZUAG, Mega jump
+YSAOPE+YEAOZA+YEAPYA, Start on World 8-1
+YSAOPE+YEAOZA+LXAPYA, Start on World -1
+GOZSXX, Invincibility
+# TVVOAE, Circus music
+```
+When you re-flash, you can enable / disable each of your codes in the game selection screen or during game.
 
 ### Cheat codes on PCE System
 

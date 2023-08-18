@@ -85,6 +85,7 @@ __RAM_CORE_START__  = __RAM_START__ + __RAM_UC_LENGTH__;
 __RAM_EMU_START__   = __RAM_CORE_START__ + __RAM_CORE_LENGTH__;
 
 __RAM_EMU_END__     = __RAM_EMU_START__ + __RAM_EMU_LENGTH__;
+__RAM_END__         = 0x24000000 + 1024K;
 
 /* saveflash.ld sets __SAVEFLASH_LENGTH__ */
 /* offsaveflash.ld sets __OFFSAVEFLASH_LENGTH__ */
@@ -316,7 +317,7 @@ SECTIONS
   .overlay_gb __RAM_EMU_START__ : {
     . = ALIGN(4);
     __ram_emu_gb_start__ = .;
-    build/gnuboy/*.o (.data .data* .text .text* .rodata .rodata*)
+    build/tgbdual/*.o (.data .data* .text .text* .rodata .rodata*)
     . = ALIGN(4);
     _OVERLAY_GB_LOAD_END = .;
   } AT> EXTFLASH
@@ -326,9 +327,9 @@ SECTIONS
   .overlay_gb_bss _OVERLAY_GB_LOAD_END : {
     . = ALIGN(4);
     _OVERLAY_GB_BSS_START = .;
-    build/gnuboy/*.o (COMMON)
+    build/tgbdual/*.o (COMMON)
     . = ALIGN(4);
-    build/gnuboy/*.o (.bss .bss*)
+    build/tgbdual/*.o (.bss .bss*)
     _GB_ROM_UNPACK_BUFFER = .;
     _OVERLAY_GB_BSS_END = .;
     __ram_emu_gb_end__ = .;

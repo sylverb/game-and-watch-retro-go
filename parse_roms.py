@@ -720,7 +720,7 @@ class ROMParser:
         return str
 
     def get_gameboy_save_size(self, file: Path):
-        total_size = 4096
+        total_size = 4096*2 # 4228 bytes are used by tgb-dual internal data
         file = Path(file)
 
         if file.suffix in COMPRESSIONS:
@@ -1172,7 +1172,7 @@ class ROMParser:
             ["gb", "gbc"],
             "SAVE_GB_",
             romdef["gb"],
-            None,
+            "GG_GB_",
             current_id,
             args.compress,
             args.compress_gb_speed,

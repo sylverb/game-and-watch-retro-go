@@ -41,17 +41,22 @@ Core/Src/stm32h7xx_hal_msp.c \
 Core/Src/stm32h7xx_it.c \
 Core/Src/system_stm32h7xx.c
 
-GNUBOY_C_SOURCES = \
-Core/Src/porting/gb/main_gb.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/cpu.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/debug.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/emu.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/hw.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/lcd.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/loader.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/mem.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/rtc.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/sound.c \
+# Add common C++ sources here
+CXX_SOURCES = \
+Core/Src/heap.cpp \
+
+TGBDUAL_C_SOURCES = \
+
+TGBDUAL_CXX_SOURCES = \
+Core/Src/porting/gb_tgbdual/main_gb_tgbdual.cpp \
+Core/Src/porting/gb_tgbdual/gw_renderer.cpp \
+tgbdual-go/gb_core/tgbdual_apu.cpp \
+tgbdual-go/gb_core/tgbdual_cheat.cpp \
+tgbdual-go/gb_core/tgbdual_cpu.cpp \
+tgbdual-go/gb_core/tgbdual_gb.cpp \
+tgbdual-go/gb_core/tgbdual_lcd.cpp \
+tgbdual-go/gb_core/tgbdual_mbc.cpp \
+tgbdual-go/gb_core/tgbdual_rom.cpp
 
 NES_C_SOURCES = \
 Core/Src/porting/nes/main_nes.c \
@@ -566,12 +571,14 @@ Core/Src/porting/amstrad/amstrad_format.c \
 Core/Src/porting/amstrad/amstrad_loader.c \
 Core/Src/porting/amstrad/amstrad_video8bpp.c
 
-GNUBOY_C_INCLUDES +=  \
+TGBDUAL_C_INCLUDES +=  \
 -ICore/Inc \
+-ICore/Inc/porting/gb_tgbdual \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
--Iretro-go-stm32/components/odroid \
--Iretro-go-stm32/gnuboy-go/components \
+-Itgbdual-go \
+-Itgbdual-go/gb_core \
+-Itgbdual-go/libretro \
 -I./
 
 NES_C_INCLUDES +=  \
@@ -598,7 +605,6 @@ SMSPLUSGX_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Iretro-go-stm32/gnuboy-go/components \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus/cpu \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus/sound \
@@ -609,7 +615,6 @@ PCE_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Iretro-go-stm32/gnuboy-go/components \
 -Iretro-go-stm32/pce-go/components/pce-go \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus/cpu \
@@ -650,16 +655,7 @@ C_INCLUDES +=  \
 -Iretro-go-stm32/nofrendo-go/components/nofrendo/nes \
 -Iretro-go-stm32/nofrendo-go/components/nofrendo \
 -Iretro-go-stm32/components/odroid \
--Iretro-go-stm32/gnuboy-go/components \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus \
--I./
-
-GNUBOY_C_INCLUDES +=  \
--ICore/Inc \
--ICore/Src/porting/lib \
--ICore/Src/porting/lib/lzma \
--Iretro-go-stm32/components/odroid \
--Iretro-go-stm32/gnuboy-go/components \
 -I./
 
 MSX_C_INCLUDES += \
