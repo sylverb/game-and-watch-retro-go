@@ -25,8 +25,7 @@
 #include "main_a7800.h"
 #include "main_amstrad.h"
 #include "rg_rtc.h"
-
-extern void cpp_heap_init(size_t bss_end);
+#include "heap.hpp"
 
 #if !defined(COVERFLOW)
 #define COVERFLOW 0
