@@ -720,7 +720,10 @@ class ROMParser:
         return str
 
     def get_gameboy_save_size(self, file: Path):
-        total_size = 4096*2 # 4228 bytes are used by tgb-dual internal data
+        if args.gnuboy == 1:
+            total_size = 4096
+        else:
+            total_size = 4096*2 # 4228 bytes are used by tgb-dual internal data
         file = Path(file)
 
         if file.suffix in COMPRESSIONS:
@@ -1563,6 +1566,12 @@ if __name__ == "__main__":
         type=int,
         default=0,
         help="force nofrendo nes emulator instead of fceumm",
+    )
+    parser.add_argument(
+        "--gnuboy",
+        type=int,
+        default=0,
+        help="force gnuboy gb emulator instead of tgb-dual",
     )
     parser.add_argument(
         "--no-compress_gb_speed", dest="compress_gb_speed", action="store_false"

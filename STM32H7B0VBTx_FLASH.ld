@@ -314,10 +314,32 @@ SECTIONS
   _OVERLAY_NES_FCEU_BSS_SIZE = SIZEOF(.overlay_nes_fceu_bss);
   _NES_FCEU_ROM_UNPACK_BUFFER_SIZE = __RAM_EMU_START__ + __RAM_EMU_LENGTH__ - _NES_FCEU_ROM_UNPACK_BUFFER;
 
+  .overlay_tgb __RAM_EMU_START__ : {
+    . = ALIGN(4);
+    __ram_emu_tgb_start__ = .;
+    build/tgbdual/*.o (.data .data* .text .text* .rodata .rodata*)
+    . = ALIGN(4);
+    _OVERLAY_TGB_LOAD_END = .;
+  } AT> EXTFLASH
+  _OVERLAY_TGB_LOAD_START = LOADADDR(.overlay_tgb);
+  _OVERLAY_TGB_SIZE = SIZEOF(.overlay_tgb);
+
+  .overlay_tgb_bss _OVERLAY_TGB_LOAD_END : {
+    . = ALIGN(4);
+    _OVERLAY_TGB_BSS_START = .;
+    build/tgbdual/*.o (COMMON)
+    . = ALIGN(4);
+    build/tgbdual/*.o (.bss .bss*)
+    _OVERLAY_TGB_BSS_END = .;
+    __ram_emu_tgb_end__ = .;
+    ASSERT(ABSOLUTE(_OVERLAY_TGB_BSS_END) < __RAM_EMU_END__, "Error: TGB BSS overflow");
+  }
+  _OVERLAY_TGB_BSS_SIZE = SIZEOF(.overlay_tgb_bss);
+
   .overlay_gb __RAM_EMU_START__ : {
     . = ALIGN(4);
     __ram_emu_gb_start__ = .;
-    build/tgbdual/*.o (.data .data* .text .text* .rodata .rodata*)
+    build/gnuboy/*.o (.data .data* .text .text* .rodata .rodata*)
     . = ALIGN(4);
     _OVERLAY_GB_LOAD_END = .;
   } AT> EXTFLASH
@@ -327,9 +349,9 @@ SECTIONS
   .overlay_gb_bss _OVERLAY_GB_LOAD_END : {
     . = ALIGN(4);
     _OVERLAY_GB_BSS_START = .;
-    build/tgbdual/*.o (COMMON)
+    build/gnuboy/*.o (COMMON)
     . = ALIGN(4);
-    build/tgbdual/*.o (.bss .bss*)
+    build/gnuboy/*.o (.bss .bss*)
     _GB_ROM_UNPACK_BUFFER = .;
     _OVERLAY_GB_BSS_END = .;
     __ram_emu_gb_end__ = .;

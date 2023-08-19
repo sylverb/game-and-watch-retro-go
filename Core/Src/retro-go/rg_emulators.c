@@ -486,15 +486,21 @@ void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_pau
     // TODO: Make this cleaner
     if(strcmp(emu->system_name, "Nintendo Gameboy") == 0) {
 #ifdef ENABLE_EMULATOR_GB
+#if FORCE_GNUBOY == 1
         memcpy(&__RAM_EMU_START__, &_OVERLAY_GB_LOAD_START, (size_t)&_OVERLAY_GB_SIZE);
         memset(&_OVERLAY_GB_BSS_START, 0x0, (size_t)&_OVERLAY_GB_BSS_SIZE);
         SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_GB_SIZE);
+        app_main_gb(load_state, start_paused, save_slot);
+#else
+        memcpy(&__RAM_EMU_START__, &_OVERLAY_TGB_LOAD_START, (size_t)&_OVERLAY_TGB_SIZE);
+        memset(&_OVERLAY_TGB_BSS_START, 0x0, (size_t)&_OVERLAY_TGB_BSS_SIZE);
+        SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_TGB_SIZE);
         
         // Initializes the heap used by new and new[]
-        cpp_heap_init((size_t) &_OVERLAY_GB_BSS_END);
+        cpp_heap_init((size_t) &_OVERLAY_TGB_BSS_END);
 
         app_main_gb_tgbdual(load_state, start_paused, save_slot);
-//        app_main_gb(load_state, start_paused, save_slot);
+#endif
 #endif
     } else if(strcmp(emu->system_name, "Nintendo Entertainment System") == 0) {
 #ifdef ENABLE_EMULATOR_NES

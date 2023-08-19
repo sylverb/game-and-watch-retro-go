@@ -45,6 +45,18 @@ Core/Src/system_stm32h7xx.c
 CXX_SOURCES = \
 Core/Src/heap.cpp \
 
+GNUBOY_C_SOURCES = \
+Core/Src/porting/gb/main_gb.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/cpu.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/debug.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/emu.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/hw.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/lcd.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/loader.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/mem.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/rtc.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/sound.c
+
 TGBDUAL_C_SOURCES = \
 
 TGBDUAL_CXX_SOURCES = \
@@ -571,6 +583,13 @@ Core/Src/porting/amstrad/amstrad_format.c \
 Core/Src/porting/amstrad/amstrad_loader.c \
 Core/Src/porting/amstrad/amstrad_video8bpp.c
 
+GNUBOY_C_INCLUDES +=  \
+-ICore/Inc \
+-ICore/Src/porting/lib \
+-ICore/Src/porting/lib/lzma \
+-Iretro-go-stm32/components/odroid \
+-Iretro-go-stm32/gnuboy-go/components
+
 TGBDUAL_C_INCLUDES +=  \
 -ICore/Inc \
 -ICore/Inc/porting/gb_tgbdual \
@@ -713,7 +732,7 @@ include Makefile.common
 
 $(BUILD_DIR)/$(TARGET)_extflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)
-	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad $< $(BUILD_DIR)/$(TARGET)_extflash.bin
+	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_tgb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad $< $(BUILD_DIR)/$(TARGET)_extflash.bin
 
 $(BUILD_DIR)/$(TARGET)_intflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)

@@ -48,6 +48,10 @@ DISABLE_SPLASH_SCREEN ?= 0
 FORCE_NOFRENDO ?= 0 
 NOFRENDO_PARAM := --nofrendo=$(FORCE_NOFRENDO)
 
+# Default GB emulator is tgb-dual
+FORCE_GNUBOY ?= 0 
+GNUBOY_PARAM := --gnuboy=$(FORCE_GNUBOY)
+
 # Configure external flash size by setting EXTFLASH_SIZE
 ifeq ($(LARGE_FLASH),1)
 	# 16MB
@@ -445,6 +449,7 @@ C_DEFS +=  \
 -DGNW_TARGET_ZELDA=$(GNW_TARGET_ZELDA) \
 -DCHEAT_CODES=$(CHEAT_CODES) \
 -DFORCE_NOFRENDO=$(FORCE_NOFRENDO) \
+-DFORCE_GNUBOY=$(FORCE_GNUBOY) \
 -DDISABLE_SPLASH_SCREEN=$(DISABLE_SPLASH_SCREEN) \
 -DTARGET_GNW \
 -DNO_EMBEDDED_SAMPLES \
@@ -551,6 +556,7 @@ all: CheckTools CheckDirtySubmodules $(BUILD_DIR) $(BUILD_DIR)/$(TARGET).elf $(B
 #######################################
 # list of objects
 OBJECTS = $(addprefix $(BUILD_DIR)/core/,$(notdir $(C_SOURCES:.c=.o) $(SDK_C_SOURCES:.c=.o)))
+GNUBOY_OBJECTS = $(addprefix $(BUILD_DIR)/gnuboy/,$(notdir $(GNUBOY_C_SOURCES:.c=.o)))
 TGBDUAL_OBJECTS = $(addprefix $(BUILD_DIR)/tgbdual/,$(notdir $(TGBDUAL_C_SOURCES:.c=.o)))
 NES_OBJECTS = $(addprefix $(BUILD_DIR)/nes/,$(notdir $(NES_C_SOURCES:.c=.o)))
 NES_FCEU_OBJECTS = $(addprefix $(BUILD_DIR)/nes_fceu/,$(notdir $(NES_FCEU_C_SOURCES:.c=.o)))
@@ -563,7 +569,7 @@ MD_OBJECTS = $(addprefix $(BUILD_DIR)/md/,$(notdir $(MD_C_SOURCES:.c=.o)))
 A7800_OBJECTS = $(addprefix $(BUILD_DIR)/a7800/,$(notdir $(A7800_C_SOURCES:.c=.o)))
 AMSTRAD_OBJECTS = $(addprefix $(BUILD_DIR)/amstrad/,$(notdir $(AMSTRAD_C_SOURCES:.c=.o)))
 
-vpath %.c $(sort $(dir $(C_SOURCES) $(NES_C_SOURCES) $(NES_FCEU_C_SOURCES) $(TGBDUAL_C_SOURCES) $(SMSPLUSGX_C_SOURCES) $(PCE_C_SOURCES) $(MSX_C_SOURCES) $(GW_C_SOURCES) $(WSV_C_SOURCES) $(MD_C_SOURCES) $(A7800_C_SOURCES) $(AMSTRAD_C_SOURCES) $(SDK_C_SOURCES)))
+vpath %.c $(sort $(dir $(C_SOURCES) $(NES_C_SOURCES) $(NES_FCEU_C_SOURCES) $(GNUBOY_C_SOURCES) $(TGBDUAL_C_SOURCES) $(SMSPLUSGX_C_SOURCES) $(PCE_C_SOURCES) $(MSX_C_SOURCES) $(GW_C_SOURCES) $(WSV_C_SOURCES) $(MD_C_SOURCES) $(A7800_C_SOURCES) $(AMSTRAD_C_SOURCES) $(SDK_C_SOURCES)))
 
 # CXX
 CXX_OBJECTS =          $(addprefix $(BUILD_DIR)/core/,$(notdir $(CXX_SOURCES:.cpp=.o) ))
@@ -603,7 +609,7 @@ $(BUILD_DIR)/rom_files.txt: FORCE | $(BUILD_DIR)
 
 $(BUILD_DIR)/roms.a: $(BUILD_DIR)/rom_files.txt parse_roms.py
 	$(V)$(ECHO) [ PYTHON3 ] $(notdir $<)
-	$(V)$(PYTHON3) parse_roms.py --flash-size $(EXTFLASH_SIZE) $(SAVE_PARAM) $(COMPRESS_PARAM) $(CODEPAGE_PARAM) $(COVERFLOW_PARAM) $(JPG_QUALITY_PARAM) $(NOFRENDO_PARAM) --off_saveflash=$(OFF_SAVESTATE)
+	$(V)$(PYTHON3) parse_roms.py --flash-size $(EXTFLASH_SIZE) $(SAVE_PARAM) $(COMPRESS_PARAM) $(CODEPAGE_PARAM) $(COVERFLOW_PARAM) $(JPG_QUALITY_PARAM) $(NOFRENDO_PARAM) $(GNUBOY_PARAM) --off_saveflash=$(OFF_SAVESTATE)
 
 $(BUILD_DIR)/config.h $(BUILD_DIR)/saveflash.ld $(BUILD_DIR)/cacheflash.ld $(BUILD_DIR)/offsaveflash.ld &: $(BUILD_DIR)/roms.a
 	$(V)/bin/sh -c true
@@ -667,9 +673,9 @@ $(BUILD_DIR)/%.o: %.s Makefile.common Makefile $(BUILD_DIR)/config.h | $(BUILD_D
 	$(V)$(ECHO) [ AS ] $(notdir $<)
 	$(V)$(AS) -c $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(TGBDUAL_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(CXX_OBJECTS) $(TGBDUAL_CXX_OBJECTS) Makefile.common Makefile $(LDSCRIPT)
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(TGBDUAL_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(CXX_OBJECTS) $(TGBDUAL_CXX_OBJECTS) Makefile.common Makefile $(LDSCRIPT)
 	$(V)$(ECHO) [ LD ] $(notdir $@)
-	$(V)$(CC) $(OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(TGBDUAL_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(CXX_OBJECTS) $(TGBDUAL_CXX_OBJECTS) $(LDFLAGS) -o $@
+	$(V)$(CC) $(OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(TGBDUAL_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(CXX_OBJECTS) $(TGBDUAL_CXX_OBJECTS) $(LDFLAGS) -o $@
 	$(V)./scripts/extflash_size.sh $@
 
 $(BUILD_DIR)/core/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
@@ -683,6 +689,10 @@ $(BUILD_DIR)/nes/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/c
 $(BUILD_DIR)/nes_fceu/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
 	$(V)$(ECHO) [ CC nes-fceu ] $(notdir $<)
 	$(V)$(CC) -c $(CFLAGS) $(NES_FCEU_C_INCLUDES) -Wno-sequence-point -Wno-parentheses -Wa,-a,-ad,-alms=$(BUILD_DIR)/nes_fceu/$(notdir $(<:.c=.lst)) $< -o $@
+
+$(BUILD_DIR)/gnuboy/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+	$(V)$(ECHO) [ CC gb ] $(notdir $<)
+	$(V)$(CC) -c $(CFLAGS) $(GNUBOY_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/gnuboy/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/tgbdual/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
 	$(V)$(ECHO) [ CC GB TGB Dual ] $(notdir $<)
@@ -734,6 +744,7 @@ $(BUILD_DIR):
 	$(V)mkdir $@/core
 	$(V)mkdir $@/nes
 	$(V)mkdir $@/nes_fceu
+	$(V)mkdir $@/gnuboy
 	$(V)mkdir $@/tgbdual
 	$(V)mkdir $@/smsplusgx
 	$(V)mkdir $@/pce
@@ -937,6 +948,7 @@ help:
 	@echo "  SHARED_HIBERNATE_SAVESTATE - Set to 1 to enable a separate savestate for off/on (default=0)"
 	@echo "  DISABLE_SPLASH_SCREEN - Set to 1 to disable the slash screen animation at startup (default=0)"
 	@echo "  FORCE_NOFRENDO      - Set to 1 to force use of previous nofrendo-go emulator instead of fceumm (default=0)"
+	@echo "  FORCE_GNUBOY        - Set to 1 to force use of previous gnuboy emulator instead of tgb-dual (default=0)"
 	@echo ""
 	@echo "Current configuration:"
 	@echo "  EXTFLASH_FORCE_SPI=$(EXTFLASH_FORCE_SPI)"

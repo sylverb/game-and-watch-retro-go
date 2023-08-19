@@ -48,6 +48,7 @@ print_usage ram      __RAM_CORE_LENGTH__
 print_usage ram_emu_nes  __RAM_EMU_LENGTH__
 print_usage ram_emu_nes_fceu  __RAM_EMU_LENGTH__
 print_usage ram_emu_gb  __RAM_EMU_LENGTH__
+print_usage ram_emu_tgb  __RAM_EMU_LENGTH__
 print_usage ram_emu_sms  __RAM_EMU_LENGTH__
 print_usage ram_emu_pce  __RAM_EMU_LENGTH__
 print_usage ram_emu_gw   __RAM_EMU_LENGTH__
