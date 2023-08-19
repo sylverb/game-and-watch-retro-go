@@ -29,7 +29,6 @@ extern "C" void *heap_alloc_mem(size_t s) {
     if (itc_alloc) {
         DBG("-> itc_malloc %d\n", s);
         ptr = itc_malloc(s);
-        printf("itc ptr = %x\n",ptr);
     }
     if (ptr == (void *)0xffffffff) {
         ptr = &badheap[heap_offset];
