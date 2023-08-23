@@ -499,15 +499,20 @@ void pce_osd_gfx_blit(bool drawFrame) {
 
     uint8_t *emuFrameBuffer = osd_gfx_framebuffer();
     pixel_t *framebuffer_active = lcd_get_active_buffer();
-    int y=0, offsetY, offsetX = 0;
+    int y=0, offsetY, offsetX = 0, cropX = 0;
     int xScale = 0;
     uint8_t *fbTmp;
     
-    if (scaling != ODROID_DISPLAY_SCALING_OFF) {
+    if (scaling != ODROID_DISPLAY_SCALING_OFF ) {
         xScale = (current_width << 8) / GW_LCD_WIDTH ;
-    } else offsetX = (GW_LCD_WIDTH - current_width)/2; //center the image horizontally
+    } else if ( current_width < GW_LCD_WIDTH) {
+        offsetX = (GW_LCD_WIDTH - current_width)/2; //center the image horizontally
+    } else if ( current_width > GW_LCD_WIDTH) {
+        cropX = (current_width - GW_LCD_WIDTH)/2; //crop the image horizontally if it's bigger 
+    }
 
     int renderHeight = (current_height<=GW_LCD_HEIGHT)?current_height:GW_LCD_HEIGHT;
+    int renderWidth = (current_width<=GW_LCD_WIDTH)?current_width:GW_LCD_WIDTH;
 
     for(y=0;y<renderHeight;y++) {
         fbTmp = emuFrameBuffer+(y*XBUF_WIDTH);
@@ -519,8 +524,8 @@ void pce_osd_gfx_blit(bool drawFrame) {
             }
         } else {
             // No scaling, 1:1
-            for(int x=0;x<current_width;x++) {
-                   framebuffer_active[offsetY+x+offsetX]=mypalette[fbTmp[x]];
+            for(int x=0;x<renderWidth;x++) {
+                   framebuffer_active[offsetY+x+offsetX]=mypalette[fbTmp[x+cropX]];
             }
         }
     }
@@ -528,7 +533,7 @@ void pce_osd_gfx_blit(bool drawFrame) {
     for(;y<GW_LCD_HEIGHT;y++) {
         fbTmp = emuFrameBuffer+(y*XBUF_WIDTH);
         offsetY = y*GW_LCD_WIDTH;
-        for(int x=0;x<current_width;x++) {
+        for(int x=0;x<renderWidth;x++) {
             framebuffer_active[offsetY+x+offsetX]=0;
         }
     }
