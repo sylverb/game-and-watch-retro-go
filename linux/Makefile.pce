@@ -47,8 +47,8 @@ C_INCLUDES =  \
 -I../Core/Src/porting/lib/lzma \
 -I../retro-go-stm32/pce-go/components/pce-go \
 -I../retro-go-stm32/components/odroid \
--I../retro-go-stm32/components/lupng
-
+-I../retro-go-stm32/components/lupng \
+-I../
 
 ASFLAGS = $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 CFLAGS  = $(C_DEFS) $(C_INCLUDES) `sdl2-config --cflags` $(OPT) -Wall -fdata-sections -ffunction-sections
