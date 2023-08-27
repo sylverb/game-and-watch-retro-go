@@ -108,77 +108,53 @@ static bool main_menu_cpu_oc_cb(odroid_dialog_choice_t *option, odroid_dialog_ev
 {
     int cpu_oc = oc_level_gets();
     if (event == ODROID_DIALOG_PREV) {
-        cpu_oc--;
-        if (cpu_oc < 0)
+        if (cpu_oc > 0)
+            cpu_oc--;
+        else
             cpu_oc = 2;
+        oc_level_set(cpu_oc);
+        odroid_settings_cpu_oc_level_set(cpu_oc);
     }
     else if (event == ODROID_DIALOG_NEXT) {
-        cpu_oc++;
-        if (cpu_oc > 2)
+        if (cpu_oc < 2)
+            cpu_oc++;
+        else
             cpu_oc = 0;
+        oc_level_set(cpu_oc);
+        odroid_settings_cpu_oc_level_set(cpu_oc);
     }
-    oc_level_set(cpu_oc);
-    odroid_settings_cpu_oc_level_set(cpu_oc);
-    int cpu_oc1 = cpu_oc - oc_level_get();
-    char *s = (char *)(curr_lang->s_CPU_OC_Stay_at);
-    if (cpu_oc1 > 0)
-        s = (char *)(curr_lang->s_CPU_OC_Upgrade_to);
-    else if (cpu_oc1 < 0)
-        s = (char *)(curr_lang->s_CPU_OC_Downgrade_to);
-    switch (cpu_oc){
+    switch (cpu_oc) {
     case 1:
-        sprintf(option->value, "%s%s", s, curr_lang->s_CPU_Overclock_1);
+        sprintf(option->value, "%s", curr_lang->s_CPU_Overclock_1);
         break;
     case 2:
-        sprintf(option->value, "%s%s", s, curr_lang->s_CPU_Overclock_2);
+        sprintf(option->value, "%s", curr_lang->s_CPU_Overclock_2);
         break;
     default:
-        sprintf(option->value, "%s%s", s, curr_lang->s_CPU_Overclock_0);
+        sprintf(option->value, "%s", curr_lang->s_CPU_Overclock_0);
         break;
     }
     return event == ODROID_DIALOG_ENTER;
 }
 
 static bool main_menu_timeout_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
-{
+{ //TODO: Old timeouts should be rounded down to minutes.
+    const int TIMEOUT_STEP = 60;
+    const int TIMEOUT_MIN = 0;
+    const int TIMEOUT_MAX = 3600;
+
     uint16_t timeout = odroid_settings_MainMenuTimeoutS_get();
-    int step = 1;
-    const int threshold = 10;
-    const int fast_step = 10;
-
-    if (repeat > threshold)
-        step = fast_step;
-
     if (event == ODROID_DIALOG_PREV)
     {
-        if (timeout - step < 10)
-        {
-            // Lower than 10 seconds doesn't make sense. set to 0 = disabled
-            odroid_settings_MainMenuTimeoutS_set(0);
-            return false;
-        }
-
-        odroid_settings_MainMenuTimeoutS_set(timeout - step);
-        gui_redraw();
+        timeout = MAX(timeout - TIMEOUT_STEP, TIMEOUT_MIN);
+        odroid_settings_MainMenuTimeoutS_set(timeout);
     }
-    if (event == ODROID_DIALOG_NEXT)
+    else if (event == ODROID_DIALOG_NEXT)
     {
-        if (timeout == 0)
-        {
-            odroid_settings_MainMenuTimeoutS_set(10);
-            gui_redraw();
-            return false;
-        }
-        else if (timeout == 0xffff)
-            return false;
-
-        if (timeout > (0xffff - step))
-            step = 0xffff - timeout;
-
-        odroid_settings_MainMenuTimeoutS_set(timeout + step);
-        gui_redraw();
+        timeout = MIN(timeout + TIMEOUT_STEP, TIMEOUT_MAX);
+        odroid_settings_MainMenuTimeoutS_set(timeout);
     }
-    sprintf(option->value, "%d %s", odroid_settings_MainMenuTimeoutS_get(), curr_lang->s_Second_Unit);
+    sprintf(option->value, "%d %s", odroid_settings_MainMenuTimeoutS_get() / TIMEOUT_STEP, curr_lang->s_Minute);
     return event == ODROID_DIALOG_ENTER;
 }
 
@@ -222,22 +198,18 @@ static bool colors_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event
     if (event == ODROID_DIALOG_PREV)
     {
         if (colors > 0)
-            odroid_settings_colors_set(--colors);
+            colors--;
         else
-        {
             colors = gui_colors_count - 1;
-            odroid_settings_colors_set(gui_colors_count - 1);
-        }
+        odroid_settings_colors_set(colors);
     }
     else if (event == ODROID_DIALOG_NEXT)
     {
         if (colors < gui_colors_count - 1)
-            odroid_settings_colors_set(++colors);
+            colors++;
         else
-        {
             colors = 0;
-            odroid_settings_colors_set(0);
-        }
+        odroid_settings_colors_set(colors);
     }
     curr_colors = (colors_t *)(&gui_colors[colors]);
     option->value[0] = 0;
@@ -254,25 +226,21 @@ static bool font_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t
     if (event == ODROID_DIALOG_PREV)
     {
         if (font > 0)
-            odroid_settings_font_set(--font);
+            font--;
         else
-        {
             font = gui_font_count - 1;
-            odroid_settings_font_set(gui_font_count - 1);
-        }
+        odroid_settings_font_set(font);
     }
     else if (event == ODROID_DIALOG_NEXT)
     {
         if (font < gui_font_count - 1)
-            odroid_settings_font_set(++font);
+            font++;
         else
-        {
             font = 0;
-            odroid_settings_font_set(0);
-        }
+        odroid_settings_font_set(font);
     }
     curr_font = font;
-    sprintf(option->value, "%d/%d Wg", font + 1, gui_font_count);
+    sprintf(option->value, "%d/%d", font + 1, gui_font_count);
     return event == ODROID_DIALOG_ENTER;
 }
 
