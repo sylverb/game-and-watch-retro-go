@@ -4,15 +4,13 @@
 *  This file must be saved with Windows 1252 Encoding   *
 *********************************************************
 */
-
 #if !defined (INCLUDED_DE_DE)
 #define INCLUDED_DE_DE 1
 #endif
-
 #if INCLUDED_DE_DE == 1
-
 //#include "rg_i18n_lang.h"
 // Stand German
+
 
 int de_de_fmt_Title_Date_Format(char *outstr, const char *datefmt, uint16_t day, uint16_t month, const char *weekday, uint16_t hour, uint16_t minutes, uint16_t seconds)
 {
@@ -104,7 +102,6 @@ const lang_t lang_de_de LANG_DATA = {
     .s_amd_Press_Key = "Press Key",
     //=====================================================================
 
-
     // Core\Src\porting\gw\main_gw.c =======================================
     .s_copy_RTC_to_GW_time = "RTC -> G&W Zeit",
     .s_copy_GW_time_to_RTC = "G&W Zeit -> RTC",
@@ -121,9 +118,7 @@ const lang_t lang_de_de LANG_DATA = {
     // Core\Src\porting\odroid_overlay.c ===================================
     .s_Full = "\x7",
     .s_Fill = "\x8",
-
     .s_No_Cover = "kein Cover",
-
     .s_Yes = "Ja",
     .s_No = "Nein",
     .s_PlsChose = "Auswahl",
@@ -153,7 +148,6 @@ const lang_t lang_de_de LANG_DATA = {
     .s_Power_off = "Abschalten",
     .s_Quit_to_menu = "Verlassen (Hautptmenü)",
     .s_Retro_Go_options = "Retro-Go",
-
     .s_Font = "Schriftart",
     .s_Colors = "Farben",
     .s_Theme_Title = "UI Darstellung",
@@ -204,14 +198,13 @@ const lang_t lang_de_de LANG_DATA = {
     .s_Author = "von",
     .s_Author_ = "\t\t+",
     .s_UI_Mod = "UI Mod",
+    .s_UI_Mod_ = "\t\t+",
     .s_Lang = "Deutsch",
     .s_LangAuthor = "LeZerb",
     .s_Debug_menu = "Debug Menü",
     .s_Reset_settings = "Einstellungen zurücksetzen",
-    //.s_Close                   = "Schließen",
     .s_Retro_Go = "Über Retro-Go",
     .s_Confirm_Reset_settings = "Alle Einstellungen zurücksetzen?",
-
     .s_Flash_JEDEC_ID = "Flash JEDEC ID",
     .s_Flash_Name = "Flash Name",
     .s_Flash_SR = "Flash SR",
@@ -220,10 +213,8 @@ const lang_t lang_de_de LANG_DATA = {
     .s_DBGMCU_IDCODE = "DBGMCU IDCODE",
     .s_Enable_DBGMCU_CK = "DBGMCU CK aktivieren",
     .s_Disable_DBGMCU_CK = "DBGMCU CK deaktivieren",
-    //.s_Close                   = "Schließen",
     .s_Debug_Title = "Debug",
     .s_Idle_power_off = "Abschalten bei Leerlauf",
-
     .s_Time = "Zeit",
     .s_Date = "Datum",
     .s_Time_Title = "Zeit",
@@ -231,13 +222,11 @@ const lang_t lang_de_de LANG_DATA = {
     .s_Minute = "Minute",
     .s_Second = "Sekunde",
     .s_Time_setup = "Zeit setzen",
-
     .s_Day = "Tag",
     .s_Month = "Monat",
     .s_Year = "Jahr",
     .s_Weekday = "Wochentag",
     .s_Date_setup = "Datum setzen",
-
     .s_Weekday_Mon = "Mon",
     .s_Weekday_Tue = "Die",
     .s_Weekday_Wed = "Mit",
@@ -250,15 +239,12 @@ const lang_t lang_de_de LANG_DATA = {
     .s_Turbo_A = "A",
     .s_Turbo_B = "B",
     .s_Turbo_AB = "A & B",
-
     .s_Title_Date_Format = "%s %02d.%02d. %02d:%02d:%02d",
     .s_Date_Format = "%s der %02d.%02d.20%02d",
     .s_Time_Format = "%02d:%02d:%02d",
-
     .fmt_Title_Date_Format = de_de_fmt_Title_Date_Format,
     .fmtDate = de_de_fmt_Date,
     .fmtTime = de_de_fmt_Time,
-
     //=====================================================================
     //           ------------ end ---------------
 };
