@@ -168,6 +168,7 @@ typedef struct
     const char *s_Author;
     const char *s_Author_;
     const char *s_UI_Mod;
+    const char *s_UI_Mod_;
     const char *s_Lang;
     const char *s_LangAuthor;
     const char *s_Debug_menu;

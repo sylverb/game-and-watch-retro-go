@@ -11,6 +11,7 @@
 //#include "rg_i18n_lang.h"
 //Stand Spanish
 
+
 int es_es_fmt_Title_Date_Format(char *outstr, const char *datefmt, uint16_t day, uint16_t month, const char *weekday, uint16_t hour, uint16_t minutes, uint16_t seconds)
 {
     return sprintf(outstr, datefmt, day, month, weekday, hour, minutes, seconds);
@@ -48,7 +49,7 @@ const lang_t lang_es_es LANG_DATA = {
     .s_Palette = "Paleta",
     //=====================================================================
 
-    // Core\Src\porting\nes\main_nes.c
+    // Core\Src\porting\nes\main_nes.c =====================================
     //.s_Palette= "Palette" dul
     .s_Default = "Por defecto",
     //=====================================================================
@@ -64,8 +65,8 @@ const lang_t lang_es_es LANG_DATA = {
     .s_md_Option_OFF = "\x5",
     .s_md_AudioFilter = "Filtro de audio",
     .s_md_VideoUpscaler = "Sobreescalar video",
-
     //=====================================================================
+
     // Core\Src\porting\md\main_wsv.c ================================
     .s_wsv_palette_Default = "Por defecto",
     .s_wsv_palette_Amber = "Ambar",
@@ -117,9 +118,7 @@ const lang_t lang_es_es LANG_DATA = {
     // Core\Src\porting\odroid_overlay.c ===================================
     .s_Full = "\x7",
     .s_Fill = "\x8",
-
     .s_No_Cover = "Sin imagen",
-
     .s_Yes = "Si",
     .s_No = "No",
     .s_PlsChose = "Pregunta",
@@ -149,7 +148,6 @@ const lang_t lang_es_es LANG_DATA = {
     .s_Power_off = "Apagar",
     .s_Quit_to_menu = "Volver al menu",
     .s_Retro_Go_options = "Retro-Go",
-
     .s_Font = "Tipo de letra",
     .s_Colors = "Colores",
     .s_Theme_Title = "UI Tema",
@@ -161,7 +159,6 @@ const lang_t lang_es_es LANG_DATA = {
     //=====================================================================
 
     // Core\Src\retro-go\rg_emulators.c ====================================
-
     .s_File = "Archivo",
     .s_Type = "Tipo",
     .s_Size = "Tamaño",
@@ -179,8 +176,7 @@ const lang_t lang_es_es LANG_DATA = {
     .s_Cheat_Codes_Title = "Opciones Cheat",
     .s_Cheat_Codes_ON = "\x6",
     .s_Cheat_Codes_OFF = "\x5",
-#endif        
-
+#endif
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================
@@ -202,14 +198,13 @@ const lang_t lang_es_es LANG_DATA = {
     .s_Author = "Por",
     .s_Author_ = "\t\t+",
     .s_UI_Mod = "UI Mod",
+    .s_UI_Mod_ = "\t\t+",
     .s_Lang = "Español",
     .s_LangAuthor = "Ninoh-FOX",
     .s_Debug_menu = "Debug_menu",
     .s_Reset_settings = "Resetear configuración",
-    //.s_Close= "Cerrar",
     .s_Retro_Go = "Sobre Retro-Go",
     .s_Confirm_Reset_settings = "¿Resetear?",
-
     .s_Flash_JEDEC_ID = "Flash JEDEC ID",
     .s_Flash_Name = "Flash Nombre",
     .s_Flash_SR = "Flash SR",
@@ -218,10 +213,8 @@ const lang_t lang_es_es LANG_DATA = {
     .s_DBGMCU_IDCODE = "DBGMCU IDCODE",
     .s_Enable_DBGMCU_CK = "Habilitar DBGMCU CK",
     .s_Disable_DBGMCU_CK = "Deshabilitar DBGMCU CK",
-    //.s_Close= "Cerrar",
     .s_Debug_Title = "Debug",
     .s_Idle_power_off = "Apagado automático",
-
     .s_Time = "Hora",
     .s_Date = "Fecha",
     .s_Time_Title = "Fecha y hora",
@@ -229,13 +222,11 @@ const lang_t lang_es_es LANG_DATA = {
     .s_Minute = "Minuto",
     .s_Second = "Segundo",
     .s_Time_setup = "Conf. hora",
-
     .s_Day = "Día",
     .s_Month = "Mes",
     .s_Year = "Año",
     .s_Weekday = "Día de la semana",
     .s_Date_setup = "Configurar fecha",
-
     .s_Weekday_Mon = "Lun",
     .s_Weekday_Tue = "Mar",
     .s_Weekday_Wed = "Míe",
@@ -248,15 +239,14 @@ const lang_t lang_es_es LANG_DATA = {
     .s_Turbo_A = "A",
     .s_Turbo_B = "B",
     .s_Turbo_AB = "A & B",    
-
     .s_Title_Date_Format = "%02d-%02d %s %02d:%02d:%02d",
     .s_Date_Format = "%02d.%02d.20%02d %s",
     .s_Time_Format = "%02d:%02d:%02d",
-
     .fmt_Title_Date_Format = es_es_fmt_Title_Date_Format,
     .fmtDate = es_es_fmt_Date,
     .fmtTime = es_es_fmt_Time,
     //=====================================================================
+    //           ------------ end ---------------
 };
 
 #endif
