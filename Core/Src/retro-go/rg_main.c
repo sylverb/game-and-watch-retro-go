@@ -387,6 +387,7 @@ void retro_loop()
                     {9, curr_lang->s_Author_, "Sylver Bruneau", 1, NULL},
                     {9, curr_lang->s_Author_, "bzhxx", 1, NULL},
                     {9, curr_lang->s_UI_Mod, "orzeus", 1, NULL},
+                    {9, curr_lang->s_UI_Mod_, "Benjamin S\xd8lberg", 1, NULL},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
                     {1, curr_lang->s_Lang, curr_lang->s_LangAuthor, 1, NULL},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
