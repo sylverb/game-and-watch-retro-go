@@ -176,12 +176,19 @@ bool hour_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event,
     int8_t min = 0;
     int8_t max = 23;
 
-    if (event == ODROID_DIALOG_PREV && hour > min) {
-        GW_SetCurrentHour(--hour);
+    if (event == ODROID_DIALOG_PREV) {
+        if (hour == min)
+            hour = max;
+        else
+            hour--;
+        GW_SetCurrentHour(hour);
     }
-
-    if (event == ODROID_DIALOG_NEXT && hour < max) {
-        GW_SetCurrentHour(++hour);
+    else if (event == ODROID_DIALOG_NEXT) {
+        if (hour == max)
+            hour = min;
+        else
+            hour++;
+        GW_SetCurrentHour(hour);
     }
 
     sprintf(option->value, "%02d", hour);
@@ -195,12 +202,19 @@ bool minute_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t even
     int8_t min = 0;
     int8_t max = 59;
 
-    if (event == ODROID_DIALOG_PREV && minute > min) {
-        GW_SetCurrentMinute(--minute);
+    if (event == ODROID_DIALOG_PREV) {
+        if (minute == min)
+            minute = max;
+        else
+            minute--;
+        GW_SetCurrentMinute(minute);
     }
-
-    if (event == ODROID_DIALOG_NEXT && minute < max) {
-        GW_SetCurrentMinute(++minute);
+    else if (event == ODROID_DIALOG_NEXT) {
+        if (minute == max)
+            minute = min;
+        else
+            minute++;
+        GW_SetCurrentMinute(minute);
     }
 
     sprintf(option->value, "%02d", minute);
@@ -214,12 +228,19 @@ bool second_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t even
     int8_t min = 0;
     int8_t max = 59;
 
-    if (event == ODROID_DIALOG_PREV && second > min) {
-        GW_SetCurrentSecond(--second);
+    if (event == ODROID_DIALOG_PREV) {
+        if (second == min)
+            second = max;
+        else
+            second--;
+        GW_SetCurrentSecond(second);
     }
-
-    if (event == ODROID_DIALOG_NEXT && second < max) {
-        GW_SetCurrentSecond(++second);
+    else if (event == ODROID_DIALOG_NEXT) {
+        if (second == max)
+            second = min;
+        else
+            second++;
+        GW_SetCurrentSecond(second);
     }
 
     sprintf(option->value, "%02d", second);
@@ -234,12 +255,19 @@ bool month_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event
     int8_t min = 1;
     int8_t max = 12;
 
-    if (event == ODROID_DIALOG_PREV && month > min) {
-        GW_SetCurrentMonth(--month);
+    if (event == ODROID_DIALOG_PREV) {
+        if (month == min)
+            month = max;
+        else
+            month--;
+        GW_SetCurrentMonth(month);
     }
-
-    if (event == ODROID_DIALOG_NEXT && month < max) {
-        GW_SetCurrentMonth(++month);
+    else if (event == ODROID_DIALOG_NEXT) {
+        if (month == max)
+            month = min;
+        else
+            month++;
+        GW_SetCurrentMonth(month);
     }
 
     sprintf(option->value, "%02d", month);
@@ -253,12 +281,19 @@ bool day_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, 
     int8_t min = 1;
     int8_t max = 31;
 
-    if (event == ODROID_DIALOG_PREV && day > min) {
-        GW_SetCurrentDay(--day);
+    if (event == ODROID_DIALOG_PREV) {
+        if (day == min)
+            day = max;
+        else
+            day--;
+        GW_SetCurrentDay(day);
     }
-
-    if (event == ODROID_DIALOG_NEXT && day < max) {
-        GW_SetCurrentDay(++day);
+    else if (event == ODROID_DIALOG_NEXT) {
+        if (day == max)
+            day = min;
+        else
+            day++;
+        GW_SetCurrentDay(day);
     }
 
     sprintf(option->value, "%02d", day);
@@ -298,12 +333,19 @@ bool weekday_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t eve
     int8_t min = 1;
     int8_t max = 7;
 
-    if (event == ODROID_DIALOG_PREV && weekday > min) {
-        GW_SetCurrentWeekday(--weekday);
+    if (event == ODROID_DIALOG_PREV) {
+        if (weekday == min)
+            weekday = max;
+        else
+            weekday--;
+        GW_SetCurrentWeekday(weekday);
     }
-
-    if (event == ODROID_DIALOG_NEXT && weekday < max) {
-        GW_SetCurrentWeekday(++weekday);
+    else if (event == ODROID_DIALOG_NEXT) {
+        if (weekday == max)
+            weekday = min;
+        else
+            weekday++;
+        GW_SetCurrentWeekday(weekday);
     }
 
     sprintf(option->value, "%s", (char *) GW_RTC_Weekday[weekday-1]);
@@ -317,12 +359,19 @@ bool year_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event,
     int8_t min = 0;
     int8_t max = 99;
 
-    if (event == ODROID_DIALOG_PREV && year > min) {
-        GW_SetCurrentYear(--year);
+    if (event == ODROID_DIALOG_PREV) {
+        if (year == min)
+            year = max;
+        else
+            year--;
+        GW_SetCurrentYear(year);
     }
-
-    if (event == ODROID_DIALOG_NEXT && year < max) {
-        GW_SetCurrentYear(++year);
+    else if (event == ODROID_DIALOG_NEXT) {
+        if (year == max)
+            year = min;
+        else
+            year++;
+        GW_SetCurrentYear(year);
     }
 
     sprintf(option->value, "20%02d", year);
