@@ -570,7 +570,7 @@ void common_ingame_overlay(void) {
             break;
         case INGAME_OVERLAY_BRIGHTNESS:
             level = odroid_display_get_backlight();
-            bh = box_height(ODROID_BACKLIGHT_LEVEL_COUNT - 1);
+            bh = box_height(ODROID_BACKLIGHT_LEVEL_COUNT);
 
             draw_darken_rounded_rectangle(fb,
                     INGAME_OVERLAY_X,
@@ -579,19 +579,19 @@ void common_ingame_overlay(void) {
                     INGAME_OVERLAY_Y + INGAME_OVERLAY_BARS_H);
             draw_img(fb, IMG_SUN, INGAME_OVERLAY_BARS_IMG_X, INGAME_OVERLAY_BARS_IMG_Y);
 
-            for(int8_t i=ODROID_BACKLIGHT_LEVEL_COUNT-1; i > 0; i--){
-                if(i <= level)
-                    draw_rectangle(fb,
-                            INGAME_OVERLAY_BOX_X,
-                            by,
-                            INGAME_OVERLAY_BOX_X + INGAME_OVERLAY_BOX_W,
-                            by + bh);
-                else
+            for(int8_t i=ODROID_BACKLIGHT_LEVEL_COUNT; i > 0; i--) {
+                if (i > level + 1)
                     draw_darken_rectangle(fb,
-                            INGAME_OVERLAY_BOX_X,
-                            by,
-                            INGAME_OVERLAY_BOX_X + INGAME_OVERLAY_BOX_W,
-                            by + bh);
+                        INGAME_OVERLAY_BOX_X,
+                        by,
+                        INGAME_OVERLAY_BOX_X + INGAME_OVERLAY_BOX_W,
+                        by + bh);
+                else
+                    draw_rectangle(fb,
+                        INGAME_OVERLAY_BOX_X,
+                        by,
+                        INGAME_OVERLAY_BOX_X + INGAME_OVERLAY_BOX_W,
+                        by + bh);
 
                 by += bh + INGAME_OVERLAY_BOX_GAP;
             }
