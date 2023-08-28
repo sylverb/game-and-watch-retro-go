@@ -395,7 +395,7 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
 
     for (int i = 0; i < options_count; i++)
         if (options[i].update_cb != NULL)
-            options[i].update_cb(&options[i], ODROID_DIALOG_INIT, 0);
+            options[i].update_cb(&options[i], ODROID_DIALOG_INIT, sel); // A hack to transport currently selected item
 
     for (int i = 0; i < options_count; i++)
     {
@@ -805,7 +805,7 @@ static bool volume_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event
     int8_t level = odroid_audio_volume_get();
     int8_t min = ODROID_AUDIO_VOLUME_MIN;
     int8_t max = ODROID_AUDIO_VOLUME_MAX;
-    char volume_value[ODROID_AUDIO_VOLUME_MAX - ODROID_AUDIO_VOLUME_MIN + 2];
+    char volume_value[ODROID_AUDIO_VOLUME_MAX - ODROID_AUDIO_VOLUME_MIN + 2]; // One extra byte for the null byte
 
     if (event == ODROID_DIALOG_PREV && level > min)
         odroid_audio_volume_set(--level);
@@ -813,8 +813,15 @@ static bool volume_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event
     if (event == ODROID_DIALOG_NEXT && level < max)
         odroid_audio_volume_set(++level);
 
+    // The swapping of colors is done for the selected option only to ensure a visual pleasing bar graph while being inverted
+    char a = event == ODROID_DIALOG_INIT && option->id == repeat ? curr_lang->s_Fill[0] : curr_lang->s_Full[0];
+    char b = event == ODROID_DIALOG_INIT && option->id == repeat ? curr_lang->s_Full[0] : curr_lang->s_Fill[0];
+
     for (int i = ODROID_AUDIO_VOLUME_MIN; i <= ODROID_AUDIO_VOLUME_MAX; i++)
-        volume_value[i - ODROID_AUDIO_VOLUME_MIN] = (i - ODROID_AUDIO_VOLUME_MIN) <= level ? curr_lang->s_Full[0] : curr_lang->s_Fill[0];
+        // Please note that #0 volume shows NO bars and that full volume sets the last two bars.
+        // This is a bit of a visual hack to ensure both brightness and volume bars are visually aligned while still
+        // ensuring that no volume shows no bars when volume is off. A better way would be to add one more step (than brightness) to the volume
+        volume_value[i - ODROID_AUDIO_VOLUME_MIN] = i < level || (i == level && level == ODROID_AUDIO_VOLUME_MAX) ? a : b;
 
     volume_value[ODROID_AUDIO_VOLUME_MAX + 1] = 0;
     sprintf(option->value, "%s", (char *)volume_value);
@@ -833,8 +840,11 @@ static bool brightness_update_cb(odroid_dialog_choice_t *option, odroid_dialog_e
     if (event == ODROID_DIALOG_NEXT && level < max)
         odroid_display_set_backlight(++level);
 
+    char a = event == ODROID_DIALOG_INIT && option->id == repeat ? curr_lang->s_Fill[0] : curr_lang->s_Full[0];
+    char b = event == ODROID_DIALOG_INIT && option->id == repeat ? curr_lang->s_Full[0] : curr_lang->s_Fill[0];
+
     for (int i = ODROID_BACKLIGHT_LEVEL0; i <= ODROID_BACKLIGHT_LEVEL9; i++)
-        bright_value[i - ODROID_BACKLIGHT_LEVEL0] = (i - ODROID_BACKLIGHT_LEVEL0) <= level ? curr_lang->s_Full[0] : curr_lang->s_Fill[0];
+        bright_value[i - ODROID_BACKLIGHT_LEVEL0] = (i - ODROID_BACKLIGHT_LEVEL0) <= level ? a : b;
 
     bright_value[max + 1] = 0;
     sprintf(option->value, "%s", (char *)bright_value);
