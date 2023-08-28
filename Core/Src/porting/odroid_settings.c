@@ -449,7 +449,7 @@ void odroid_settings_StartupFile_set(void *value)
 
 uint16_t odroid_settings_MainMenuTimeoutS_get()
 {
-    return persistent_config_ram.main_menu_timeout_s;
+    return ((MIN(persistent_config_ram.main_menu_timeout_s, 3600) + 59) / 60) * 60; // > 0 : Round to whole minutes max one hour
 }
 void odroid_settings_MainMenuTimeoutS_set(uint16_t value)
 {
