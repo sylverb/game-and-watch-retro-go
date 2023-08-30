@@ -198,7 +198,6 @@ const lang_t lang_pt_pt LANG_DATA = {
     .s_Author = "Por",
     .s_Author_ = "\t\t+",
     .s_UI_Mod = "UI Mod",
-    .s_UI_Mod_ = "\t\t+",
     .s_Lang = "Português",
     .s_LangAuthor = "Pollux",
     .s_Debug_menu = "Menu de depuração",

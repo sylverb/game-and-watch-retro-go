@@ -198,7 +198,6 @@ const lang_t lang_ru_ru LANG_DATA = {
     .s_Author = "от",
     .s_Author_ = "\t\t+",
     .s_UI_Mod = "UI Mod",
-    .s_UI_Mod_ = "\t\t+",
     .s_Lang = "Russian",
     .s_LangAuthor = "teuchezh",
     .s_Debug_menu = "Иеню отладки",

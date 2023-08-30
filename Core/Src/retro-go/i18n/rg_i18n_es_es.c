@@ -198,7 +198,6 @@ const lang_t lang_es_es LANG_DATA = {
     .s_Author = "Por",
     .s_Author_ = "\t\t+",
     .s_UI_Mod = "UI Mod",
-    .s_UI_Mod_ = "\t\t+",
     .s_Lang = "Español",
     .s_LangAuthor = "Ninoh-FOX",
     .s_Debug_menu = "Debug_menu",

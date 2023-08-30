@@ -198,7 +198,6 @@ const lang_t lang_en_us LANG_DATA = {
     .s_Author = "By",
     .s_Author_ = "\t\t+",
     .s_UI_Mod = "UI Mod",
-    .s_UI_Mod_ = "\t\t+",
     .s_Lang = "English",
     .s_LangAuthor = "Original",
     .s_Debug_menu = "Debug menu",
