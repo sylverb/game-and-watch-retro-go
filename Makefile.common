@@ -106,7 +106,7 @@ INTFLASH_BANK = 1
 endif
 endif
 
-GNWMANAGER = $(PYTHON3) gnwmanager.py --intflash-address=$(INTFLASH_ADDRESS)
+GNWMANAGER = gnwmanager
 
 # Configure external flash size in MB (Megabytes)
 EXTFLASH_SIZE_MB ?= 1
@@ -127,6 +127,8 @@ FILESYSTEM_SIZE := $(shell \
 				   fi)
 FILESYSTEM_OFFSET ?= $(shell echo $$(($(EXTFLASH_SIZE) - $(FILESYSTEM_SIZE))))
 FILESYSTEM_END = $(shell echo $$(($(FILESYSTEM_OFFSET) + $(FILESYSTEM_SIZE))))
+FILESYSTEM_OFFSET_FROM_END ?= $(shell echo $$(($(EXTFLASH_SIZE) - $(FILESYSTEM_END))))
+
 
 # Check to see if the filesystem is within specified extflash
 FILESYSTEM_START_IN_EXTFLASH_RANGE := $(shell \
@@ -176,13 +178,12 @@ endif
 # Set to 0 to keep the clocks running when suspended (makes debugging easier)
 RESET_DBGMCU ?= 1
 ifeq ($(RESET_DBGMCU),1)
-	RESET_DBGMCU_CMD = $(MAKE) reset_dbgmcu
+	RESET_DBGMCU_CMD = -- disable-debug
 else
-	RESET_DBGMCU_CMD = $(MAKE) reset_mcu
+	RESET_DBGMCU_CMD =
 endif
 
 PYTHON3 ?= /usr/bin/env python3
-PYOCD ?= pyocd
 
 #######################################
 # paths
@@ -613,7 +614,6 @@ Core/Inc/githash.h: FORCE | $(BUILD_DIR)
 	$(V)./scripts/update_githash.sh $@
 
 $(BUILD_DIR)/core/main.o: Core/Inc/githash.h
-$(BUILD_DIR)/core/flashapp.o: Core/Inc/githash.h
 $(BUILD_DIR)/core/rg_main.o: Core/Inc/githash.h
 
 # Run parse_roms.py to generate information about the roms
@@ -771,98 +771,67 @@ $(BUILD_DIR):
 # Flashing
 #######################################
 
-OPENOCD ?= openocd
 ADAPTER ?= stlink
 
-# Starts openocd and attaches to the target. To be used with 'flash_intflash_nc' and 'gdb'
-openocd:
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; halt"
-.PHONY: openocd
-
 reset:
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; reset; exit"
+	@$(GNWMANAGER) start bank1
 .PHONY: reset
 
 erase_intflash_1:
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; halt; flash erase_address 0x08000000 131072; resume; exit"
+	@$(GNWMANAGER) erase bank1
 .PHONY: erase_intflash_1
 
 erase_intflash_2:
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; halt; flash erase_address 0x08100000 131072; resume; exit"
+	@$(GNWMANAGER) erase bank2
 .PHONY: erase_intflash_2
 
 erase_extflash:
 	@echo "Erasing External Flash..."
-	@$(GNWMANAGER) erase
-	@echo "Erasing External Complete!"
+	@$(GNWMANAGER) erase ext
+	@echo "Erasing Complete!"
 .PHONY: erase_extflash
 
+erase_all:
+	@echo "Erasing Internal & External Flash..."
+	@$(GNWMANAGER) erase all
+	@echo "Erasing Complete!"
+.PHONY: erase_all
+
 format:
-	@$(GNWMANAGER) format
+	@$(GNWMANAGER) format --offset=$(FILESYSTEM_OFFSET_FROM_END)
 
 start_bank_1:
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg \
-		-c 'init; reset halt' \
-		-c 'set MSP 0x[string range [mdw 0x08000000] 12 19]' \
-		-c 'set PC 0x[string range [mdw 0x08000004] 12 19]' \
-		-c 'echo "Setting MSP -> $$MSP"' \
-		-c 'echo "Setting PC -> $$PC"' \
-		-c 'reg msp $$MSP' \
-		-c 'reg pc $$PC' \
-		-c 'resume;exit'
+	$(GNWMANAGER) start bank1
 .PHONY: start_bank_1
 
 start_bank_2:
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg \
-		-c 'init; reset halt' \
-		-c 'set MSP 0x[string range [mdw 0x08100000] 12 19]' \
-		-c 'set PC 0x[string range [mdw 0x08100004] 12 19]' \
-		-c 'echo "Setting MSP -> $$MSP"' \
-		-c 'echo "Setting PC -> $$PC"' \
-		-c 'reg msp $$MSP' \
-		-c 'reg pc $$PC' \
-		-c 'resume;exit'
+	$(GNWMANAGER) start bank2
 .PHONY: start_bank_2
 
 start:  # Start code located at INTFLASH_ADDRESS
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg \
-		-c 'init; reset halt' \
-		-c 'set MSP 0x[string range [mdw $(INTFLASH_ADDRESS)] 12 19]' \
-		-c 'set PC 0x[string range [mdw [format 0x%x [expr {$(INTFLASH_ADDRESS) + 0x4}]]] 12 19]' \
-		-c 'echo "Setting MSP -> $$MSP"' \
-		-c 'echo "Setting PC -> $$PC"' \
-		-c 'reg msp $$MSP' \
-		-c 'reg pc $$PC' \
-		-c 'resume;exit'
+	$(GNWMANAGER) start $(INTFLASH_ADDRESS)
 .PHONY: start
 
 
-# Programs the internal flash using a new OpenOCD instance
 flash_intflash: $(BUILD_DIR)/$(TARGET)_intflash.bin
-	@$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "program $< $(INTFLASH_ADDRESS) verify reset exit"
+	$(GNWMANAGER) flash $(INTFLASH_ADDRESS) $< -- start $(INTFLASH_ADDRESS)
 .PHONY: flash_intflash
 
-# Flashes using an existing openocd instance
-flash_intflash_nc: $(BUILD_DIR)/$(TARGET)_intflash.bin
-	echo "program $< $(INTFLASH_ADDRESS) verify reset" | nc -c localhost 4444
-.PHONY: flash_intflash_nc
 
-flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin pyocd_check_pack
-	@$(GNWMANAGER) flash $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET) --progress-file=$(BUILD_DIR)/gnwmanager-flash-progress \
-		|| (echo "Game & Watch connection interrupt; re-run flash command to resume.\n" && exit 1)
+flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin
+	@$(GNWMANAGER) flash ext $< --offset=$(EXTFLASH_OFFSET) -- start $(INTFLASH_ADDRESS)
 .PHONY: flash_extflash
 
 # Programs both the external and internal flash.
 flash: CheckTools CheckDirtySubmodules
-	$(V)$(MAKE) flash_intflash
-	@if [ "$(INTFLASH_ADDRESS)" != "0x08000000" ]; then \
-		echo "\n\nPower on your Game & Watch, then press any key to continue..."; read -n1 -r key; \
-    fi
-	$(V)$(MAKE) flash_extflash
+	@$(GNWMANAGER) flash $(INTFLASH_ADDRESS) $(BUILD_DIR)/$(TARGET)_intflash.bin \
+		-- flash ext $(BUILD_DIR)/$(TARGET)_extflash.bin --offset=$(EXTFLASH_OFFSET) \
+		-- start $(INTFLASH_ADDRESS) \
+		$(RESET_DBGMCU_CMD)
 .PHONY: flash
 
 monitor:
-	$(V)$(PYTHON3) tools/logpoll.py
+	@$(GNWMANAGER) monitor
 .PHONY: monitor
 
 flash-monitor: flash
@@ -891,29 +860,17 @@ size: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET)_intflash.bin
 	$(V)./scripts/size.sh $<
 .PHONY: size
 
-reset_dbgmcu:
-	# Reset the DBGMCU configuration register (DBGMCU_CR)
-	$(V)$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; reset halt; mww 0x5C001004 0x00000000; resume; exit;"
-.PHONY: reset_dbgmcu
-
-reset_mcu:
-	$(V)$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; reset run; exit;" 2> $(BUILD_DIR)/openocd.log
-.PHONY: reset_mcu
-
 gdb: $(BUILD_DIR)/$(TARGET).elf
 	$(GDB) $< -ex "target extended-remote :3333"
 .PHONY: gdb
 
 # Flashes intflash *only* and launches gdb afterwards
-gdb_intflash: flash_intflash_nc gdb
+gdb_intflash: $(BUILD_DIR)/$(TARGET)_intflash.bin
+	$(GNWMANAGER) flash $(INTFLASH_ADDRESS) $< -- start $(INTFLASH_ADDRESS) --halt -- gdb
 .PHONY: gdb_intflash
 
-dump_logs: $(BUILD_DIR)/$(TARGET).elf
-	$(V)./scripts/dump_logs.sh
-.PHONY: dump_logs
-
 dump_screenshot:
-	@$(GNWMANAGER) screenshot
+	@$(GNWMANAGER) screenshot dump
 .PHONY: dump_screenshot
 
 docker_build:
@@ -939,7 +896,6 @@ help:
 	@echo "  INTFLASH_BANK       - Sets the internal flash bank. Valid values {1,2} (default=1)."
 	@echo "  INTFLASH_ADDRESS    - Explicit internal flash address. If not provided, derived from INTFLASH_BANK."
 	@echo "  BIG_BANK            - Use internal flash bank as undocumented 256k.(default=1, set 0 to 128k)."
-	@echo "                        It's required patched OPENOCD to work"
 	@echo "  COMPRESS            - Configures ROM compression, Valid values {0,lzma} (default=lzma)."
 	@echo "  RESET_DBGMCU        - Configures if DBGMCU should be reset after flashing."
 	@echo "                        Set to 0 to disable power saving (default=1)"
@@ -1003,16 +959,13 @@ help:
 	@echo "Targets:"
 	@echo "  docker            - Runs a docker container using the image created by docker_build"
 	@echo "  docker_build      - Builds a docker image"
-	@echo "  dump_logs         - Dumps the callstack and logbuf. Starts openocd and gdb under the hood."
 	@echo "  dump_screenshot   - Downloads the stored screenshot."
 	@echo "  flash             - Programs the internal and external flash"
 	@echo "  flash_all         - Alias for 'flash' (deprecated)"
 	@echo "  flash_extflash    - Only programs the external flash"
 	@echo "  flash_intflash    - Only programs the internal flash"
-	@echo "  flash_intflash_nc - Only programs the internal flash and uses an existing openocd server"
-	@echo "  gdb               - Starts gdb and attaches to openocd"
-	@echo "  gdb_intflash      - Runs flash_intflash_nc, then starts gdb and attaches to openocd"
-	@echo "  openocd           - Starts openocd with appropriate config"
+	@echo "  gdb               - Starts gdb and attaches to gdbserver"
+	@echo "  gdb_intflash      - Flashes intflash and then starts gdb and attaches to gdbserver"
 	@echo "  reset_dbgmcu      - Resets the unit and turns off DBGMCU (lowers battery drain)"
 	@echo "  reset_mcu         - Resets the unit"
 	@echo "  romdef            - Dumps all rom info to roms.json in roms directory to custom display name and"
@@ -1053,19 +1006,6 @@ clean:
 distclean: clean
 	$(V)$(ECHO) [ RM ] $(SDK_DIR)
 	$(V)rm -rf $(SDK_DIR)
-
-#########
-# pyOCD #
-#########
-pyocd_install_pack:
-	$(PYOCD) pack --install STM32H7B0VBTx
-.PHONY: pyocd_install_pack
-
-pyocd_check_pack:
-	@if [ $(shell pyocd pack find STM32H7B0VBTx --no-header 2>/dev/null | grep -c "True") -eq 0 ]; then \
-		$(MAKE) pyocd_install_pack; \
-	fi
-.PHONY: pyocd_check_pack
 
 #######################################
 # dependencies
