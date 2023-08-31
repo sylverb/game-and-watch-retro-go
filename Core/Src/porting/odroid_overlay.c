@@ -554,8 +554,8 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
 
     for (int i = start_index; i <= end_index; i++)
     {
-        color = options[i].enabled == 1 ? box_text_color : curr_colors->dis_c;
-        if (options[i].enabled == 1)
+        color = options[i].enabled >= 0 ? box_text_color : curr_colors->dis_c;
+        if (options[i].enabled >= 0)
         {
             fg = (i == sel) ? box_color : color;
             bg = (i == sel) ? color : box_color;
@@ -634,11 +634,46 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
     rg_free(i_height);
 }
 
+int odroid_overlay_dialog_find_next_item(odroid_dialog_choice_t *options, int size, int selected_index, int direction)
+{
+    size--; // Ignore last ODROID_DIALOG_CHOICE_LAST entry
+
+    if (direction == 0) // Search direction none
+    {
+        if (options[selected_index].enabled >= 1)
+            return selected_index;
+        else
+            direction = -1; // Search direction up
+    }
+
+    for (int i = 0; i < size; i++)
+    {
+        if (direction > 0)  // Search direction down
+        {
+            if (selected_index >= size)
+                selected_index = 0;
+            else
+                selected_index++;
+        }
+        else // Search direction up
+        {
+            if (selected_index <= 0)
+                selected_index = size;
+            else
+                selected_index--;
+        }
+
+        if (options[selected_index].enabled >= 1)
+            break;
+    }
+
+    return selected_index;
+}
+
 int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, int selected)
 {
     int options_count = get_dialog_items_count(options);
-    int sel = selected < 0 ? (options_count + selected) : selected;
-    int sel_old = sel;
+    int sel = odroid_overlay_dialog_find_next_item(options, options_count, selected < 0 ? (options_count + selected) : selected, 0);
     int last_key = -1;
     int repeat = 0;
     bool select = false;
@@ -662,15 +697,13 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
             if (joystick.values[ODROID_INPUT_UP])
             {
                 last_key = ODROID_INPUT_UP;
-                if (--sel < 0)
-                    sel = options_count - 1;
+                sel = odroid_overlay_dialog_find_next_item(options, options_count, sel, -1);
                 repeat++;
             }
             else if (joystick.values[ODROID_INPUT_DOWN])
             {
                 last_key = ODROID_INPUT_DOWN;
-                if (++sel > options_count - 1)
-                    sel = 0;
+                sel = odroid_overlay_dialog_find_next_item(options, options_count, sel, 1);
                 repeat++;
             }
             else if (joystick.values[ODROID_INPUT_B])
@@ -703,7 +736,8 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
                 odroid_system_sleep();
                 break;
             }
-            if (options[sel].enabled)
+
+            if (options[sel].enabled >= 1)
             {
                 select = false;
                 if (joystick.values[ODROID_INPUT_LEFT])
@@ -712,7 +746,6 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
                     if (options[sel].update_cb != NULL)
                     {
                         select = options[sel].update_cb(&options[sel], ODROID_DIALOG_PREV, repeat);
-                        sel_old = -1;
                     }
                     repeat++;
                 }
@@ -722,7 +755,6 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
                     if (options[sel].update_cb != NULL)
                     {
                         select = options[sel].update_cb(&options[sel], ODROID_DIALOG_NEXT, repeat);
-                        sel_old = -1;
                     }
                     repeat++;
                 }
@@ -732,7 +764,6 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
                     if (options[sel].update_cb != NULL)
                     {
                         select = options[sel].update_cb(&options[sel], ODROID_DIALOG_ENTER, 0);
-                        sel_old = -1;
                     }
                     else
                         select = true;
@@ -751,14 +782,6 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
                 last_key = -1;
                 repeat = 0;
             }
-        }
-        if (sel_old != sel)
-        {
-            int dir = sel - sel_old;
-            while (options[sel].enabled == -1 && sel_old != sel)
-                sel = (sel + dir) % options_count;
-
-            sel_old = sel;
         }
 
         odroid_overlay_draw_dialog(header, options, sel);

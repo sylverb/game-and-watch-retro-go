@@ -317,11 +317,11 @@ void emulator_show_file_info(retro_emulator_file_t *file)
     //crc_value[0] = '\x00';
 
     odroid_dialog_choice_t choices[] = {
-        {0, curr_lang->s_File, filename_value, 1, NULL},
-        {0, curr_lang->s_Type, type_value, 1, NULL},
-        {0, curr_lang->s_Size, size_value, 1, NULL},
+        {-1, curr_lang->s_File, filename_value, 0, NULL},
+        {-1, curr_lang->s_Type, type_value, 0, NULL},
+        {-1, curr_lang->s_Size, size_value, 0, NULL},
 		#if COVERFLOW != 0
-        {0, curr_lang->s_ImgSize, img_size, 1, NULL},
+        {-1, curr_lang->s_ImgSize, img_size, 0, NULL},
 		#endif
         ODROID_DIALOG_CHOICE_SEPARATOR,
         {1, curr_lang->s_Close, "", 1, NULL},
