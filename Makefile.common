@@ -823,7 +823,7 @@ flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin
 .PHONY: flash_extflash
 
 # Programs both the external and internal flash.
-flash: CheckTools CheckDirtySubmodules
+flash: CheckTools CheckDirtySubmodules $(BUILD_DIR)/$(TARGET)_intflash.bin $(BUILD_DIR)/$(TARGET)_extflash.bin
 	@$(GNWMANAGER) flash $(INTFLASH_ADDRESS) $(BUILD_DIR)/$(TARGET)_intflash.bin \
 		-- flash ext $(BUILD_DIR)/$(TARGET)_extflash.bin --offset=$(EXTFLASH_OFFSET) \
 		-- start $(INTFLASH_ADDRESS) \
