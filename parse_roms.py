@@ -106,8 +106,17 @@ following signature:
 
 Positional argument:
     data : bytes
-Returns compressed bytes.
+
+Optional argument:
+    level : ``None`` for default value,  depends on compression algorithm.
+            Can be the special ``DONT_COMPRESS`` sentinel value, in which the
+            returned uncompressed data is properly framed to be handled by the
+            decompressor.
+
+And return compressed bytes.
 """
+
+DONT_COMPRESS = object()
 
 
 class CompressionRegistry(dict):
