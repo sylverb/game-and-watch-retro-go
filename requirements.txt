@@ -1,7 +1,3 @@
 lz4
 pillow
 tqdm
-pyelftools
-pyocd
-littlefs-python>=0.6.0
-tamp

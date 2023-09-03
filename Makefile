@@ -23,7 +23,6 @@ Core/Src/gw_malloc.c \
 Core/Src/game_genie.c \
 Core/Src/main.c \
 Core/Src/sha256.c \
-Core/Src/flashapp.c \
 Core/Src/bq24072.c \
 Core/Src/filesystem.c \
 Core/Src/porting/lib/lzma/LzmaDec.c \

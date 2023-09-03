@@ -32,6 +32,8 @@ ENV GCC_PATH=/opt/gcc-arm-none-eabi-10-2020-q4-major/bin
 USER docker
 
 # Install openocd nightly
+# TODO: remove once gnwmanager fully supports raspberry pi in pyocd;
+# this currently leaves the option if we want to add openocd backend to gnwmanager.
 RUN wget https://nightly.link/kbeckmann/ubuntu-openocd-git-builder/workflows/docker/master/openocd-git.deb.zip && \
     unzip openocd-git.deb.zip && \
     sudo apt-get -y install ./openocd-git_*_amd64.deb

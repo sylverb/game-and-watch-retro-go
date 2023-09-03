@@ -600,7 +600,7 @@ SECTIONS
     PROVIDE_HIDDEN (__fini_array_end = .);
   } >FLASH
 
-  /* Force some variables at fixed locations to openocd can easily interact without needing ELF file */
+  /* Force some variables at fixed locations for easy OCD interactions without needing ELF file */
   ._persistent (NOLOAD) :
   {
     . = ALIGN(4);

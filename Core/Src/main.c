@@ -28,7 +28,6 @@
 #include "gw_lcd.h"
 #include "gw_linker.h"
 #include "githash.h"
-#include "flashapp.h"
 #include "bitmaps.h"
 #include "filesystem.h"
 
@@ -83,8 +82,7 @@ WWDG_HandleTypeDef hwwdg1;
 /* USER CODE BEGIN PV */
 
 #define BOOT_MODE_APP      0
-#define BOOT_MODE_FLASHAPP 1
-#define BOOT_MODE_WARM     2
+#define BOOT_MODE_WARM     1
 
 PERSISTENT(boot_magic) volatile uint32_t boot_magic;
 PERSISTENT(oc_level) volatile uint32_t oc_level;
@@ -411,9 +409,6 @@ int main(void)
     printf("Boot from watchdog reset!\nboot_magic=0x%08lx\n", boot_magic);
     trigger_wdt_bsod = 1;
     break;
-  case BOOT_MAGIC_FLASHAPP:
-    boot_mode = BOOT_MODE_FLASHAPP;
-    break;
   default:
     if ((boot_magic & BOOT_MAGIC_BSOD_MASK) == BOOT_MAGIC_BSOD) {
       uint16_t fault_idx = boot_magic & 0xffff;
@@ -542,9 +537,6 @@ int main(void)
     wdog_enable();
     // Launch the emulator
     app_main(boot_mode);
-    break;
-  case BOOT_MODE_FLASHAPP:
-    flashapp_main();
     break;
   default:
     break;
