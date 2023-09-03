@@ -380,15 +380,15 @@ void retro_loop()
             if ((last_key == ODROID_INPUT_START) || (last_key == ODROID_INPUT_X))
             {
                 odroid_dialog_choice_t choices[] = {
-                    {9, curr_lang->s_Version, GIT_HASH, 1, NULL},
-                    {9, curr_lang->s_Author, "ducalex", 1, NULL},
-                    {9, curr_lang->s_Author_, "kbeckmann", 1, NULL},
-                    {9, curr_lang->s_Author_, "stacksmashing", 1, NULL},
-                    {9, curr_lang->s_Author_, "Sylver Bruneau", 1, NULL},
-                    {9, curr_lang->s_Author_, "bzhxx", 1, NULL},
-                    {9, curr_lang->s_UI_Mod, "orzeus", 1, NULL},
+                    {-1, curr_lang->s_Version, GIT_HASH, 0, NULL},
+                    {-1, curr_lang->s_Author, "ducalex", 0, NULL},
+                    {-1, curr_lang->s_Author_, "kbeckmann", 0, NULL},
+                    {-1, curr_lang->s_Author_, "stacksmashing", 0, NULL},
+                    {-1, curr_lang->s_Author_, "Sylver Bruneau", 0, NULL},
+                    {-1, curr_lang->s_Author_, "bzhxx", 0, NULL},
+                    {-1, curr_lang->s_UI_Mod, "orzeus", 0, NULL},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
-                    {1, curr_lang->s_Lang, curr_lang->s_LangAuthor, 1, NULL},
+                    {-1, curr_lang->s_Lang, curr_lang->s_LangAuthor, 0, NULL},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
                     {2, curr_lang->s_Debug_menu, "", 1, NULL},
                     {1, curr_lang->s_Reset_settings, "", 1, NULL},
@@ -434,13 +434,13 @@ void retro_loop()
                     snprintf(dbgmcu_cr_str, sizeof(dbgmcu_cr_str), "0x%08lX", DBGMCU->CR);
 
                     odroid_dialog_choice_t debuginfo[] = {
-                        {0, curr_lang->s_Flash_JEDEC_ID, (char *)jedec_id_str, 1, NULL},
-                        {0, curr_lang->s_Flash_Name, (char *)OSPI_GetFlashName(), 1, NULL},
-                        {0, curr_lang->s_Flash_SR, (char *)status_str, 1, NULL},
-                        {0, curr_lang->s_Flash_CR, (char *)config_str, 1, NULL},
-                        {0, curr_lang->s_Smallest_erase, erase_size_str, 1, NULL},
+                        {-1, curr_lang->s_Flash_JEDEC_ID, (char *)jedec_id_str, 0, NULL},
+                        {-1, curr_lang->s_Flash_Name, (char *)OSPI_GetFlashName(), 0, NULL},
+                        {-1, curr_lang->s_Flash_SR, (char *)status_str, 0, NULL},
+                        {-1, curr_lang->s_Flash_CR, (char *)config_str, 0, NULL},
+                        {-1, curr_lang->s_Smallest_erase, erase_size_str, 0, NULL},
                         ODROID_DIALOG_CHOICE_SEPARATOR,
-                        {0, curr_lang->s_DBGMCU_IDCODE, dbgmcu_id_str, 1, NULL},
+                        {-1, curr_lang->s_DBGMCU_IDCODE, dbgmcu_id_str, 0, NULL},
                         {1, curr_lang->s_Enable_DBGMCU_CK, dbgmcu_cr_str, 1, NULL},
                         {2, curr_lang->s_Disable_DBGMCU_CK, "", 1, NULL},
                         ODROID_DIALOG_CHOICE_SEPARATOR,
