@@ -11,6 +11,7 @@
 //#include "rg_i18n_lang.h"
 // Stand French
 
+
 int fr_fr_fmt_Title_Date_Format(char *outstr, const char *datefmt, uint16_t day, uint16_t month, const char *weekday, uint16_t hour, uint16_t minutes, uint16_t seconds)
 {
     return sprintf(outstr, datefmt, day, month, weekday, hour, minutes, seconds);
@@ -117,9 +118,7 @@ const lang_t lang_fr_fr LANG_DATA = {
     // Core\Src\porting\odroid_overlay.c ===================================
     .s_Full = "\x7",
     .s_Fill = "\x8",
-
     .s_No_Cover = "Pas d'image",
-
     .s_Yes = "Oui",
     .s_No = "Non",
     .s_PlsChose = "Question",
@@ -149,7 +148,6 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_Power_off = "Eteindre",
     .s_Quit_to_menu = "Quitter vers le menu",
     .s_Retro_Go_options = "Retro-Go",
-
     .s_Font = "Polices",
     .s_Colors = "Couleurs",
     .s_Theme_Title = "Theme UI",
@@ -161,7 +159,6 @@ const lang_t lang_fr_fr LANG_DATA = {
     //=====================================================================
 
     // Core\Src\retro-go\rg_emulators.c ====================================
-
     .s_File = "Fichier",
     .s_Type = "Type",
     .s_Size = "Taille",
@@ -180,7 +177,6 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_Cheat_Codes_ON = "\x6",
     .s_Cheat_Codes_OFF = "\x5",
 #endif
-
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================
@@ -192,7 +188,6 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_CPU_OC_Downgrade_to = "Diminuer à ",
     .s_CPU_OC_Stay_at = "",
     .s_Confirm_OC_Reboot = "Un redémarrage est nécessaire pour appliquer le nouveau réglage de l'overclocking du CPU. Etes-vous sûr ?",
-//    .s_Confirm_OC_Reboot = "CPU Overclock configuration has changed and needs to reboot now. Are you sure?",
 #if INTFLASH_BANK == 2
     .s_Reboot = "Reboot",
     .s_Original_system = "Original system",
@@ -207,10 +202,8 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_LangAuthor = "Narkoa",
     .s_Debug_menu = "Menu Debug",
     .s_Reset_settings = "Restaurer les paramètres",
-    //.s_Close                   = "Fermer",
     .s_Retro_Go = "A propos de Retro-Go",
     .s_Confirm_Reset_settings = "Restaurer les paramètres ?",
-
     .s_Flash_JEDEC_ID = "Id Flash JEDEC",
     .s_Flash_Name = "Nom Flash",
     .s_Flash_SR = "SR Flash",
@@ -219,10 +212,8 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_DBGMCU_IDCODE = "DBGMCU IDCODE",
     .s_Enable_DBGMCU_CK = "Activer DBGMCU CK",
     .s_Disable_DBGMCU_CK = "Désactiver DBGMCU CK",
-    //.s_Close                   = "Fermer",
     .s_Debug_Title = "Debug",
     .s_Idle_power_off = "Temps avant veille",
-
     .s_Time = "Heure",
     .s_Date = "Date",
     .s_Time_Title = "TEMPS",
@@ -230,13 +221,11 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_Minute = "Minute",
     .s_Second = "Seconde",
     .s_Time_setup = "Réglage",
-
     .s_Day = "Jour",
     .s_Month = "Mois",
     .s_Year = "Année",
     .s_Weekday = "Jour de la semaine",
     .s_Date_setup = "Réglage Date",
-
     .s_Weekday_Mon = "Lun",
     .s_Weekday_Tue = "Mar",
     .s_Weekday_Wed = "Mer",
@@ -249,12 +238,9 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_Turbo_A = "A",
     .s_Turbo_B = "B",
     .s_Turbo_AB = "A & B",
-
-
     .s_Title_Date_Format = "%02d-%02d %s %02d:%02d:%02d",
     .s_Date_Format = "%02d.%02d.20%02d %s",
     .s_Time_Format = "%02d:%02d:%02d",
-
     .fmt_Title_Date_Format = fr_fr_fmt_Title_Date_Format,
     .fmtDate = fr_fr_fmt_Date,
     .fmtTime = fr_fr_fmt_Time,

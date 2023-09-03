@@ -11,6 +11,7 @@
 //#include "rg_i18n_lang.h"
 //Stand Russian
 
+
 int ru_ru_fmt_Title_Date_Format(char *outstr, const char *datefmt, uint16_t day, uint16_t month, const char *weekday, uint16_t hour, uint16_t minutes, uint16_t seconds)
 {
     return sprintf(outstr, datefmt, day, month, weekday, hour, minutes, seconds);
@@ -32,7 +33,7 @@ const lang_t lang_ru_ru LANG_DATA = {
     .s_LangUI = "Язык",
     .s_LangName = "Russian",
 
-     // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
+    // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
     .s_Crop_Vertical_Overscan = "Crop Vertical Overscan",
     .s_Crop_Horizontal_Overscan = "Crop Horizontal Overscan",
     .s_Disable_Sprite_Limit = "Disable sprite limit",
@@ -48,7 +49,7 @@ const lang_t lang_ru_ru LANG_DATA = {
     .s_Palette = "Палитра",
     //=====================================================================
 
-    // Core\Src\porting\nes\main_nes.c
+    // Core\Src\porting\nes\main_nes.c =====================================
     //.s_Palette= "Palette" dul
     .s_Default = "По умолчанию",
     //=====================================================================
@@ -117,9 +118,7 @@ const lang_t lang_ru_ru LANG_DATA = {
     // Core\Src\porting\odroid_overlay.c ==================================
     .s_Full = "\x7",
     .s_Fill = "\x8",
-
     .s_No_Cover = "Нет обложки",
-
     .s_Yes = "Да",
     .s_No = "Нет",
     .s_PlsChose = "Вопрос",
@@ -149,7 +148,6 @@ const lang_t lang_ru_ru LANG_DATA = {
     .s_Power_off = "Выключить",
     .s_Quit_to_menu = "Выйти в меню",
     .s_Retro_Go_options = "Retro-Go",
-
     .s_Font = "Шрифт",
     .s_Colors = "Цвета",
     .s_Theme_Title = "Тема интерфейса",
@@ -161,7 +159,6 @@ const lang_t lang_ru_ru LANG_DATA = {
     //=====================================================================
 
     // Core\Src\retro-go\rg_emulators.c ====================================
-
     .s_File = "Файл",
     .s_Type = "Тип",
     .s_Size = "Размер",
@@ -180,7 +177,6 @@ const lang_t lang_ru_ru LANG_DATA = {
     .s_Cheat_Codes_ON = "\x6",
     .s_Cheat_Codes_OFF = "\x5",
 #endif
-
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================
@@ -206,10 +202,8 @@ const lang_t lang_ru_ru LANG_DATA = {
     .s_LangAuthor = "teuchezh",
     .s_Debug_menu = "Иеню отладки",
     .s_Reset_settings = "Сбросить настройки",
-    //.s_Close                   = "Закрыть",
     .s_Retro_Go = "Об Retro-Go",
     .s_Confirm_Reset_settings = "Сбросить все настройки?",
-
     .s_Flash_JEDEC_ID = "Flash JEDEC ID",
     .s_Flash_Name = "Flash Name",
     .s_Flash_SR = "Flash SR",
@@ -218,10 +212,8 @@ const lang_t lang_ru_ru LANG_DATA = {
     .s_DBGMCU_IDCODE = "DBGMCU IDCODE",
     .s_Enable_DBGMCU_CK = "Enable DBGMCU CK",
     .s_Disable_DBGMCU_CK = "Disable DBGMCU CK",
-    //.s_Close                   = "Close",
     .s_Debug_Title = "Отладка",
     .s_Idle_power_off = "Отключение в простое",
-
     .s_Time = "Время",
     .s_Date = "Дата",
     .s_Time_Title = "ВРЕМЯ",
@@ -229,13 +221,11 @@ const lang_t lang_ru_ru LANG_DATA = {
     .s_Minute = "Минуты",
     .s_Second = "Секунды",
     .s_Time_setup = "Настройка времени",
-
     .s_Day = "День",
     .s_Month = "Месяц",
     .s_Year = "Год",
     .s_Weekday = "День недели",
     .s_Date_setup = "Настройка даты",
-
     .s_Weekday_Mon = "Пн",
     .s_Weekday_Tue = "Вт",
     .s_Weekday_Wed = "Ср",
@@ -248,15 +238,14 @@ const lang_t lang_ru_ru LANG_DATA = {
     .s_Turbo_A = "A",
     .s_Turbo_B = "B",
     .s_Turbo_AB = "A & B",
-
     .s_Title_Date_Format = "%02d-%02d %s %02d:%02d:%02d",
     .s_Date_Format = "%02d.%02d.20%02d %s",
     .s_Time_Format = "%02d:%02d:%02d",
-
     .fmt_Title_Date_Format = ru_ru_fmt_Title_Date_Format,
     .fmtDate = ru_ru_fmt_Date,
     .fmtTime = ru_ru_fmt_Time,
     //=====================================================================
+    //           ------------ end ---------------
 };
 
 #endif

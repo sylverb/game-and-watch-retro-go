@@ -4,13 +4,13 @@
 *  This file must be saved with Windows 1252 Encoding   *
 *********************************************************
 */
-//#include "rg_i18n_lang.h"
-// Stand Portuguese
 #if !defined (INCLUDED_PT_PT)
 #define INCLUDED_PT_PT 1
 #endif
-
 #if INCLUDED_PT_PT==1
+//#include "rg_i18n_lang.h"
+// Stand Portuguese
+
 
 int pt_pt_fmt_Title_Date_Format(char *outstr, const char *datefmt, uint16_t day, uint16_t month, const char *weekday, uint16_t hour, uint16_t minutes, uint16_t seconds)
 {
@@ -44,9 +44,11 @@ const lang_t lang_pt_pt LANG_DATA = {
     .s_NES_Swap_Side_FDS = "Trocar lado do Disco",
     .s_NES_FDS_Side_Format = "Disco %d Lado %s",
     //=====================================================================
+
     // Core\Src\porting\gb\main_gb.c =======================================
     .s_Palette = "Paleta",
     //=====================================================================
+
     // Core\Src\porting\nes\main_nes.c =====================================
     //.s_Palette= "Palette" dul
     .s_Default = "Padrão",
@@ -112,6 +114,7 @@ const lang_t lang_pt_pt LANG_DATA = {
     .s_filter_1_medium = "1-médio",
     .s_filter_2_high = "2-alto",
     //=====================================================================
+
     // Core\Src\porting\odroid_overlay.c ===================================
     .s_Full = "\x7",
     .s_Fill = "\x8",
@@ -154,6 +157,8 @@ const lang_t lang_pt_pt LANG_DATA = {
     .s_Theme_CoverLightV = "Encadeado V",
     .s_Theme_CoverLightH = "Encadeado H",
     //=====================================================================
+
+    // Core\Src\retro-go\rg_emulators.c ====================================
     .s_File = "Ficheiro",
     .s_Type = "Tipo",
     .s_Size = "ROM",
@@ -172,8 +177,8 @@ const lang_t lang_pt_pt LANG_DATA = {
     .s_Cheat_Codes_ON = "\x6",
     .s_Cheat_Codes_OFF = "\x5",
 #endif
-
     //=====================================================================
+
     // Core\Src\retro-go\rg_main.c =========================================
     .s_CPU_Overclock = "CPU Overclock",
     .s_CPU_Overclock_0 = "Zero",
@@ -197,7 +202,6 @@ const lang_t lang_pt_pt LANG_DATA = {
     .s_LangAuthor = "Pollux",
     .s_Debug_menu = "Menu de depuração",
     .s_Reset_settings = "Repôr configurações",
-    //.s_Close                  = "Fechar",
     .s_Retro_Go = "Sobre Retro-Go",
     .s_Confirm_Reset_settings = "Repôr configurações?",
     .s_Flash_JEDEC_ID = "Flash JEDEC ID",
@@ -208,10 +212,8 @@ const lang_t lang_pt_pt LANG_DATA = {
     .s_DBGMCU_IDCODE = "DBGMCU IDCODE",
     .s_Enable_DBGMCU_CK = "Ativar DBGMCU CK",
     .s_Disable_DBGMCU_CK = "Desativar DBGMCU CK",
-    //.s_Close                  = "Fechar",
     .s_Debug_Title = "Depuração",
     .s_Idle_power_off = "Desligar se inativo",
-
     .s_Time = "Hora",
     .s_Date = "Data",
     .s_Time_Title = "Data e Hora",
@@ -231,13 +233,11 @@ const lang_t lang_pt_pt LANG_DATA = {
     .s_Weekday_Fri = "Sex",
     .s_Weekday_Sat = "Sáb",
     .s_Weekday_Sun = "Dom",
-    
     .s_Turbo_Button = "Turbo",
     .s_Turbo_None = "Nenhum",
     .s_Turbo_A = "A",
     .s_Turbo_B = "B",
     .s_Turbo_AB = "A & B",
-
     .s_Title_Date_Format = "%02d-%02d %s %02d:%02d:%02d",
     .s_Date_Format = "%02d.%02d.20%02d %s",
     .s_Time_Format = "%02d:%02d:%02d",

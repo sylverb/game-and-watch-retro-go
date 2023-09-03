@@ -118,9 +118,7 @@ const lang_t lang_it_it LANG_DATA = {
     // Core\Src\porting\odroid_overlay.c ===================================
     .s_Full = "\x7",
     .s_Fill = "\x8",
-
     .s_No_Cover = "Senza immagine",
-
     .s_Yes = "Sì",
     .s_No = "No",
     .s_PlsChose = "Seleziona",
@@ -150,7 +148,6 @@ const lang_t lang_it_it LANG_DATA = {
     .s_Power_off = "Spegni",
     .s_Quit_to_menu = "Esci e torna al menù",
     .s_Retro_Go_options = "Retro-Go",
-
     .s_Font = "Carattere",
     .s_Colors = "Colori",
     .s_Theme_Title = "Temi UI",
@@ -162,7 +159,6 @@ const lang_t lang_it_it LANG_DATA = {
     //=====================================================================
 
     // Core\Src\retro-go\rg_emulators.c ====================================
-
     .s_File = "File",
     .s_Type = "Tipo",
     .s_Size = "Dimensione",
@@ -181,7 +177,6 @@ const lang_t lang_it_it LANG_DATA = {
     .s_Cheat_Codes_ON = "\x6",
     .s_Cheat_Codes_OFF = "\x5",
 #endif
-
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================
@@ -207,10 +202,8 @@ const lang_t lang_it_it LANG_DATA = {
     .s_LangAuthor = "SantX27",
     .s_Debug_menu = "Menù di Debug",
     .s_Reset_settings = "Ripristina configurazione",
-    //.s_Close = "Fermer",
     .s_Retro_Go = "Riguardo Retro-Go",
     .s_Confirm_Reset_settings = "Ripristinare configurazione?",
-
     .s_Flash_JEDEC_ID = "ID Flash JEDEC",
     .s_Flash_Name = "Nome Flash",
     .s_Flash_SR = "SR Flash",
@@ -219,10 +212,8 @@ const lang_t lang_it_it LANG_DATA = {
     .s_DBGMCU_IDCODE = "DBGMCU IDCODE",
     .s_Enable_DBGMCU_CK = "Attiva DBGMCU CK",
     .s_Disable_DBGMCU_CK = "Disattiva DBGMCU CK",
-    //.s_Close = "Fermer",
     .s_Debug_Title = "Debug",
     .s_Idle_power_off = "Spegnimento automatico",
-
     .s_Time = "Ora",
     .s_Date = "Data",
     .s_Time_Title = "Tempo",
@@ -230,13 +221,11 @@ const lang_t lang_it_it LANG_DATA = {
     .s_Minute = "Minuti",
     .s_Second = "Secondi",
     .s_Time_setup = "Conf. orario",
-
     .s_Day = "Giorno",
     .s_Month = "Mese",
     .s_Year = "Anno",
     .s_Weekday = "Giorno della settimana",
     .s_Date_setup = "Configura data",
-
     .s_Weekday_Mon = "Lun",
     .s_Weekday_Tue = "Mar",
     .s_Weekday_Wed = "Mer",
@@ -249,11 +238,9 @@ const lang_t lang_it_it LANG_DATA = {
     .s_Turbo_A = "A",
     .s_Turbo_B = "B",
     .s_Turbo_AB = "A & B",
-
     .s_Title_Date_Format = "%02d-%02d %s %02d:%02d:%02d",
     .s_Date_Format = "%02d.%02d.20%02d %s",
     .s_Time_Format = "%02d:%02d:%02d",
-
     .fmt_Title_Date_Format = it_it_fmt_Title_Date_Format,
     .fmtDate = it_it_fmt_Date,
     .fmtTime = it_it_fmt_Time,
