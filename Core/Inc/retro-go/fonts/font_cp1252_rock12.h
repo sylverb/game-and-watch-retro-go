@@ -85,32 +85,32 @@ const char font_cp1252_rock12[] FONT_DATA = {
      0x0c,0x30,  // ..OO........OO..
      0xf0,0x0f,  // ....OOOOOOOO....
      0x00,0x00,  // ................
-     /* 007 */ 
-     0xff, // OOOOOOOO
-     0xff, // OOOOOOOO
-     0xff, // OOOOOOOO
-     0xff, // OOOOOOOO
-     0xff, // OOOOOOOO
-     0xff, // OOOOOOOO
-     0xff, // OOOOOOOO
-     0xff, // OOOOOOOO
-     0xff, // OOOOOOOO
-     0xff, // OOOOOOOO
-     0xff, // OOOOOOOO
-     0xff, // OOOOOOOO
-     /* 008 */ 
-     0xfe, // .OOOOOOO
-     0x82, // .O.....O
-     0x82, // .O.....O
-     0x82, // .O.....O
-     0x82, // .O.....O
-     0x82, // .O.....O
-     0x82, // .O.....O
-     0x82, // .O.....O
-     0x82, // .O.....O
-     0x82, // .O.....O
-     0x82, // .O.....O
-     0xfe, // .OOOOOOO
+     /* 007 */
+     0b00000000, // ........
+     0b01111110, // .OOOOOO.
+     0b01111110, // .OOOOOO.
+     0b01111110, // .OOOOOO.
+     0b01111110, // .OOOOOO.
+     0b01111110, // .OOOOOO.
+     0b01111110, // .OOOOOO.
+     0b01111110, // .OOOOOO.
+     0b01111110, // .OOOOOO.
+     0b01111110, // .OOOOOO.
+     0b01111110, // .OOOOOO.
+     0b00000000, // ........
+     /* 008 */
+     0b00000000, // ........
+     0b01111110, // .OOOOOO.
+     0b01000010, // .O....O.
+     0b01000010, // .O....O.
+     0b01000010, // .O....O.
+     0b01000010, // .O....O.
+     0b01000010, // .O....O.
+     0b01000010, // .O....O.
+     0b01000010, // .O....O.
+     0b01000010, // .O....O.
+     0b01111110, // .OOOOOO.
+     0b00000000, // ........
      /* 009 */ 
      0x00,0x00,  // ............
      0x00,0x00,  // ............
