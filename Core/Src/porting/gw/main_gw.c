@@ -19,6 +19,7 @@
 #include "rom_manager.h"
 #include "rg_i18n.h"
 #include "gui.h"
+#include "rg_rtc.h"
 
 /* G&W system support */
 #include "gw_system.h"
@@ -47,15 +48,13 @@ static unsigned int softkey_duration = 0;
 
 static void gw_set_time() {
 
-    // Get time. According to STM docs, both functions need to be called at once.
-    RTC_TimeTypeDef GW_currentTime = {0};
-    RTC_DateTypeDef GW_currentDate = {0};
+    struct tm tm;
+    GW_GetUnixTM(&tm);
+
     gw_time_t time;
-    HAL_RTC_GetTime(&hrtc, &GW_currentTime, RTC_FORMAT_BIN);
-    HAL_RTC_GetDate(&hrtc, &GW_currentDate, RTC_FORMAT_BIN);
-    time.hours = GW_currentTime.Hours;
-    time.minutes = GW_currentTime.Minutes;
-    time.seconds = GW_currentTime.Seconds;
+    time.hours = tm.tm_hour;
+    time.minutes = tm.tm_min;
+    time.seconds = tm.tm_sec;
 
     // set time of the emulated system
     gw_system_set_time(time);
@@ -64,46 +63,33 @@ static void gw_set_time() {
 
 static void gw_get_time() {
 
-    // Update time before we can set it
-    RTC_TimeTypeDef GW_currentTime = {0};
-    RTC_DateTypeDef GW_currentDate = {0};
     gw_time_t time = {0};
 
     // check if the system is able to get the time
-
     time = gw_system_get_time();
     if (time.hours > 24) return;
 
-    HAL_RTC_GetTime(&hrtc, &GW_currentTime, RTC_FORMAT_BIN);
-    HAL_RTC_GetDate(&hrtc, &GW_currentDate, RTC_FORMAT_BIN);
-
     // Set times
-    GW_currentTime.Hours = time.hours;
-    GW_currentTime.Minutes = time.minutes;
-    GW_currentTime.Seconds = time.seconds;
-
-    if (HAL_RTC_SetTime(&hrtc, &GW_currentTime, RTC_FORMAT_BIN) != HAL_OK)
-    {
-        Error_Handler();
-    }
+    struct tm tm;
+    GW_GetUnixTM(&tm);
+    tm.tm_hour = time.hours;
+    tm.tm_min = time.minutes;
+    tm.tm_sec = time.seconds;
+    GW_SetUnixTM(&tm);
 }
 
 static void gw_check_time() {
 
     static unsigned int is_gw_time_sync=0;
 
-    // Update time before we can set it
-    RTC_TimeTypeDef GW_currentTime = {0};
-    RTC_DateTypeDef GW_currentDate = {0};
-    gw_time_t time = {0};
-
-    HAL_RTC_GetTime(&hrtc, &GW_currentTime, RTC_FORMAT_BIN);
-    HAL_RTC_GetDate(&hrtc, &GW_currentDate, RTC_FORMAT_BIN);
+    struct tm tm;
+    GW_GetUnixTM(&tm);
 
     // Set times
-    time.hours = GW_currentTime.Hours;
-    time.minutes = GW_currentTime.Minutes;
-    time.seconds = GW_currentTime.Seconds;
+    gw_time_t time;
+    time.hours = tm.tm_hour;
+    time.minutes = tm.tm_min;
+    time.seconds = tm.tm_sec;
 
     // update time every 30s
     if ( (time.seconds == 30) || (is_gw_time_sync==0) ) {
