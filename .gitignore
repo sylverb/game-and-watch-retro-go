@@ -42,3 +42,7 @@ venv
 
 .vs/*
 .vscode/*
+
+.clang-format
+.idea/
+cmake-build-debug
