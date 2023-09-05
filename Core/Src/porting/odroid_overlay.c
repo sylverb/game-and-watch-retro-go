@@ -205,8 +205,6 @@ static void draw_clock_digit(uint16_t *fb, const uint8_t clock, uint16_t px, uin
 void odroid_overlay_clock(int x_pos, int y_pos)
 {
     uint16_t *dst_img = lcd_get_active_buffer();
-    HAL_RTC_GetTime(&hrtc, &GW_currentTime, RTC_FORMAT_BIN);
-    HAL_RTC_GetDate(&hrtc, &GW_currentDate, RTC_FORMAT_BIN);
 
 #ifdef RETRO_LCD_CLOCK_ARTIFACTS
     uint16_t color = get_darken_pixel(curr_colors->main_c, 75);
@@ -219,13 +217,16 @@ void odroid_overlay_clock(int x_pos, int y_pos)
 #else
     uint16_t color = (GW_currentTime.SubSeconds < 100) ? curr_colors->sel_c : curr_colors->main_c;
 #endif
+
     odroid_overlay_draw_fill_rect(x_pos + 17, y_pos + 2, 2, 2, color);
     odroid_overlay_draw_fill_rect(x_pos + 17, y_pos + 6, 2, 2, color);
 
-    draw_clock_digit(dst_img, GW_currentTime.Minutes % 10, x_pos + 30, y_pos, curr_colors->sel_c);
-    draw_clock_digit(dst_img, GW_currentTime.Minutes / 10, x_pos + 22, y_pos, curr_colors->sel_c);
-    draw_clock_digit(dst_img, GW_currentTime.Hours % 10, x_pos + 8, y_pos, curr_colors->sel_c);
-    draw_clock_digit(dst_img, GW_currentTime.Hours / 10, x_pos, y_pos, curr_colors->sel_c);
+    int minute = GW_GetCurrentMinute();
+    int hour = GW_GetCurrentHour();
+    draw_clock_digit(dst_img, minute % 10, x_pos + 30, y_pos, curr_colors->sel_c);
+    draw_clock_digit(dst_img, minute / 10, x_pos + 22, y_pos, curr_colors->sel_c);
+    draw_clock_digit(dst_img, hour % 10, x_pos + 8, y_pos, curr_colors->sel_c);
+    draw_clock_digit(dst_img, hour / 10, x_pos, y_pos, curr_colors->sel_c);
 };
 
 
