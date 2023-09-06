@@ -681,6 +681,7 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
     int last_key = -1;
     int repeat = 0;
     bool select = false;
+    bool initial = true;
     odroid_gamepad_state_t joystick;
 
     lcd_sync();
@@ -689,14 +690,18 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
     odroid_overlay_draw_dialog(header, options, sel);
     dialog_open_depth++;
 
-    while (odroid_input_key_is_pressed(ODROID_INPUT_ANY))
-        wdog_refresh();
-
     while (1)
     {
         wdog_refresh();
         odroid_input_read_gamepad(&joystick);
-        if (last_key < 0 || ((repeat >= 30) && (repeat % 5 == 0)))
+
+        // Ignore all buttons until all buttons are released once (only on entry)
+        if (initial && !odroid_input_key_is_pressed(ODROID_INPUT_ANY)) {
+            initial = false;
+            HAL_Delay(50); // Poor mans debounce
+        }
+
+        if ((last_key < 0 || ((repeat >= 30) && (repeat % 5 == 0))) && !initial)
         {
             if (joystick.values[ODROID_INPUT_UP])
             {
