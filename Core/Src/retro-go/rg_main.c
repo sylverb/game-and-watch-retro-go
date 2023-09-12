@@ -396,7 +396,7 @@ void retro_loop()
                     {0, curr_lang->s_Close, "", 1, NULL},
                     ODROID_DIALOG_CHOICE_LAST};
 
-                int sel = odroid_overlay_dialog(curr_lang->s_Retro_Go, choices, -1);
+                int sel = odroid_overlay_dialog_live(curr_lang->s_Retro_Go, choices, -1, &gui_redraw_callback);
                 if (sel == 1)
                 {
                     // Reset settings
@@ -502,7 +502,7 @@ void retro_loop()
                     //{9, curr_lang->s_Reboot, curr_lang->s_Original_system, 1, NULL},
 #endif
                     ODROID_DIALOG_CHOICE_LAST};
-                int r = odroid_overlay_settings_menu(choices);
+                int r = odroid_overlay_settings_menu_live(choices, &gui_redraw_callback);
 #if INTFLASH_BANK == 2
                 if (r == 9)
                     soft_reset_do();
@@ -524,7 +524,7 @@ void retro_loop()
                     {0, curr_lang->s_Time, time_str, 1, &time_display_cb},
                     {1, curr_lang->s_Date, date_str, 1, &date_display_cb},
                     ODROID_DIALOG_CHOICE_LAST};
-                int sel = odroid_overlay_dialog(curr_lang->s_Time_Title, rtcinfo, 0);
+                int sel = odroid_overlay_dialog_live(curr_lang->s_Time_Title, rtcinfo, 0, &gui_redraw_callback);
 
                 if (sel == 0)
                 {
