@@ -650,7 +650,7 @@ int odroid_overlay_dialog_find_next_item(odroid_dialog_choice_t *options, int si
             direction = -1; // Search direction up
     }
 
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i <= size; i++)
     {
         if (direction > 0)  // Search direction down
         {
