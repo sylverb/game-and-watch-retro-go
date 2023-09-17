@@ -213,9 +213,9 @@ void odroid_overlay_clock(int x_pos, int y_pos)
     draw_clock_digit(dst_img, 8, x_pos + 8, y_pos, color);
     draw_clock_digit(dst_img, 8, x_pos, y_pos, color);
 
-    color = (GW_GetCurrentSubSeconds() < 125) ? curr_colors->sel_c : color;
+    color = (GW_GetCurrentSubSeconds() <= 127) ? curr_colors->sel_c : color;
 #else
-    uint16_t color = (GW_GetCurrentSubSeconds() < 125) ? curr_colors->sel_c : curr_colors->main_c;
+    uint16_t color = (GW_GetCurrentSubSeconds() <= 127) ? curr_colors->sel_c : curr_colors->main_c;
 #endif
 
     odroid_overlay_draw_fill_rect(x_pos + 17, y_pos + 2, 2, 2, color);
@@ -353,6 +353,7 @@ uint16_t get_shined_pixel(uint16_t color, uint16_t shined)
     return r | g | b;
 }
 
+__attribute__((optimize("unroll-loops")))
 void odroid_overlay_darken_all()
 {
     if (dialog_open_depth <= 0)

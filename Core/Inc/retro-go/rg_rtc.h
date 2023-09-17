@@ -16,12 +16,13 @@ extern "C" {
 uint8_t GW_GetCurrentHour(void);
 uint8_t GW_GetCurrentMinute(void);
 uint8_t GW_GetCurrentSecond(void);
-uint32_t GW_GetCurrentSubSeconds(void);
+uint8_t GW_GetCurrentSubSeconds(void);
 
 uint8_t GW_GetCurrentMonth(void);
 uint8_t GW_GetCurrentDay(void);
 uint8_t GW_GetCurrentWeekday(void);
 uint8_t GW_GetCurrentYear(void);
+uint64_t GW_GetCurrentMillis(void);
 
 time_t GW_GetUnixTime(void);
 void GW_GetUnixTM(struct tm *tm);

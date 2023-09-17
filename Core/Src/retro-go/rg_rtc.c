@@ -23,7 +23,7 @@ const uint8_t MIN_RTC_WEEKDAY = 1; // tm month is 0 and sunday based while RTC i
 const uint8_t MAX_RTC_WEEKDAY = 7;
 
 struct tm TM;
-uint32_t subSecond = 0;
+uint8_t subSecond = 0; // Between 0 and 0xFF in the G&W
 
 void ReadRTC() {
     RTC_TimeTypeDef GW_currentTime = {0};
@@ -40,7 +40,7 @@ void ReadRTC() {
     TM.tm_hour = GW_currentTime.Hours;
     TM.tm_min = GW_currentTime.Minutes;
     TM.tm_sec = GW_currentTime.Seconds;
-    subSecond = GW_currentTime.SubSeconds;
+    subSecond = 0xFF - (GW_currentTime.SubSeconds & 0xFF); // GW_currentTime.SubSeconds counts down from 0xFF towards 0
 
     // We make a lenient conversion of the RTC datetime as it can't really be trusted on the G&W if the original set datetime was invalid.
     // This also has the side effect of setting the correct "day of week".
@@ -107,7 +107,7 @@ uint8_t GW_GetCurrentSecond(void) {
     return TM.tm_sec;
 }
 
-uint32_t GW_GetCurrentSubSeconds(void) {
+uint8_t GW_GetCurrentSubSeconds(void) {
     ReadRTC();
 
     return subSecond;
@@ -228,7 +228,7 @@ void GW_AddToCurrentYear(const int8_t direction) {
 }
 
 // Function to return Unix timestamp since 1st Jan 1970.
-// The time is returned as an 64-bit value, but only the top 32-bits are populated.
+// The time is returned as an 64-bit value, but only the lower 32-bits are populated.
 time_t GW_GetUnixTime(void) {
     ReadRTC();
 
@@ -245,4 +245,11 @@ void GW_SetUnixTM(struct tm *tm) {
     TM = *tm; // Clone
 
     UpdateRTC();
+}
+
+// Millis since 1st Jan 1970.
+uint64_t GW_GetCurrentMillis(void) {
+    ReadRTC();
+
+    return (uint64_t) mktime(&TM) * 1000 + (subSecond * 1000 / 256);
 }
