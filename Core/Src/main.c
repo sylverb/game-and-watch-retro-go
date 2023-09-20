@@ -82,8 +82,8 @@ WWDG_HandleTypeDef hwwdg1;
 #define BOOT_MODE_FLASHAPP 1
 #define BOOT_MODE_WARM     2
 
-char logbuf[1024 * 4] PERSISTENT __attribute__((aligned(4)));
-uint32_t log_idx PERSISTENT;
+PERSISTENT char logbuf[1024 * 4]  __attribute__((aligned(4)));
+PERSISTENT volatile uint32_t log_idx;
 PERSISTENT volatile uint32_t boot_magic;
 PERSISTENT volatile uint32_t oc_level;
 
@@ -210,13 +210,16 @@ void abort(void)
 #if 1
 int _write(int file, char *ptr, int len)
 {
-  if (log_idx + len + 1 > sizeof(logbuf)) {
-    log_idx = 0;
+  uint32_t idx = log_idx;
+  if (idx + len + 1 > sizeof(logbuf)) {
+    idx = 0;
   }
 
-  memcpy(&logbuf[log_idx], ptr, len);
-  log_idx += len;
-  logbuf[log_idx + 1] = '\0';
+  memcpy(&logbuf[idx], ptr, len);
+  idx += len;
+  logbuf[idx] = '\0';
+
+  log_idx = idx;
 
   return len;
 }
