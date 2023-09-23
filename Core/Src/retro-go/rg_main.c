@@ -138,7 +138,7 @@ static bool main_menu_cpu_oc_cb(odroid_dialog_choice_t *option, odroid_dialog_ev
 }
 
 static bool main_menu_timeout_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
-{ //TODO: Old timeouts should be rounded down to minutes.
+{
     const int TIMEOUT_STEP = 60;
     const int TIMEOUT_MIN = 0;
     const int TIMEOUT_MAX = 3600;
