@@ -325,13 +325,13 @@ static int get_dialog_items_count(odroid_dialog_choice_t *options)
 uint16_t get_darken_pixel_d(uint16_t color, uint16_t color1, uint16_t darken)
 {
     int16_t r = (color1 & 0xF800);
-    if ((color & 0xF800) > (color1 & 0xF800)) 
+    if ((color & 0xF800) > (color1 & 0xF800))
         r = (int16_t)((color1 & 0xF800) + (((color & 0xF800) - (color1 & 0xF800)) * darken / 100)) & 0xF800;
     int16_t g = (color1 & 0x7E0);
-    if ((color & 0x07E0) > (color1 & 0x07E0)) 
+    if ((color & 0x07E0) > (color1 & 0x07E0))
         g = (int16_t)((color1 & 0x07E0) + (((color & 0x07E0) - (color1 & 0x07E0)) * darken / 100)) & 0x07E0;
     int16_t b = (color1 & 0x1F);
-    if ((color & 0x001F) > (color1 & 0x001F)) 
+    if ((color & 0x001F) > (color1 & 0x001F))
         b = (int16_t)((color1 & 0x001F) + (((color & 0x001F) - (color1 & 0x001F)) * darken / 100)) & 0x001F;
     return r | g | b;
 }
@@ -392,11 +392,11 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
     uint16_t *i_right = rg_alloc(options_count * 2, MEM_ANY);
     uint16_t *i_width = rg_alloc(options_count * 2, MEM_ANY);
     uint8_t *i_height = rg_alloc(options_count * 1, MEM_ANY);
-    
+
     uint16_t max_left = 0;
     uint16_t max_right = 0;
     uint16_t max_width = 0;
-    uint16_t max_height = 0; 
+    uint16_t max_height = 0;
     bool had_right = false;
     bool had_extent = false;
 
@@ -432,17 +432,17 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
         i_height[i] = row_height;
     };
 
-    if (max_width > (ODROID_SCREEN_WIDTH - 40)) 
+    if (max_width > (ODROID_SCREEN_WIDTH - 40))
     {
         max_width = ODROID_SCREEN_WIDTH - 40;
         if (had_right)
             max_width -= cen_space;
-        if (max_left > (max_width * 2 / 5)) 
+        if (max_left > (max_width * 2 / 5))
             max_left = max_width * 2 / 5;
         if (max_left < (max_width - max_right))
             max_left = (max_width - max_right);
 
-        if (max_right > (max_width * 3 / 5)) 
+        if (max_right > (max_width * 3 / 5))
             max_right = max_width * 3 / 5;
         if (max_right < (max_width - max_left))
             max_right = (max_width - max_left);
@@ -460,7 +460,7 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
                 int linecount = i18n_get_text_lines(options[i].value, max_right, curr_lang);
                 if (linecount > 8)
                     linecount = 8;
-                i_height[i] = linecount * i18n_get_text_height() + row_margin * 2; 
+                i_height[i] = linecount * i18n_get_text_height() + row_margin * 2;
             }
         }
         else
@@ -471,7 +471,7 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
                 int linecount = i18n_get_text_lines(options[i].label, max_width, curr_lang);
                 if (linecount > 8)
                     linecount = 8;
-                i_height[i] = linecount * i18n_get_text_height() + row_margin * 2; 
+                i_height[i] = linecount * i18n_get_text_height() + row_margin * 2;
             }
         }
         if (options[i].id == separator.id)
@@ -492,7 +492,7 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
     bool had_prior = false;
     bool had_next = false;
 
-    if (had_extent) 
+    if (had_extent)
     {
         start_index = sel;
         if (start_index < 0)
@@ -505,13 +505,13 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
             start_index --;
             max_bh -= i_height[start_index];
             box_height += i_height[start_index];
-            if (max_bh < 0) 
+            if (max_bh < 0)
             {
               box_height -= i_height[start_index];
               start_index ++;
             }
         };
-        
+
         box_height = (header ? row_height + 8 : 0) + box_padding * 2;
         max_bh = ODROID_SCREEN_HEIGHT - 20;
         //max height;
@@ -525,12 +525,12 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
         }
         had_prior = start_index > 0;
         had_next = end_index < (options_count - 1);
-        if (had_prior) 
+        if (had_prior)
             box_height += 5;
-        if (had_next) 
+        if (had_next)
             box_height += 5;
         box_y = (ODROID_SCREEN_HEIGHT - box_height) / 2;
-    }; 
+    };
 
     int x = box_x + box_padding;
     int y = box_y + box_padding;
@@ -547,7 +547,7 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
         y += row_height + 8;
     }
 
-    if (had_prior) 
+    if (had_prior)
     {
         odroid_overlay_draw_fill_rect(x, y, inner_width, 5, curr_colors->bg_c);
         odroid_overlay_draw_fill_rect(x + 16, y + 2, inner_width - 32, 1, get_darken_pixel(curr_colors->main_c,70));
@@ -585,10 +585,10 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
                 int c_b_w = (max_right - 2) / 4;
                 for (int j=0; j < 4; j++) {
                     odroid_overlay_draw_fill_rect(
-                        x + inner_width - line_padding - (4 - j) * c_b_w - 1, 
-                        y + row_margin, 
-                        c_b_w, 
-                        i_height[i] - 2 * row_margin, 
+                        x + inner_width - line_padding - (4 - j) * c_b_w - 1,
+                        y + row_margin,
+                        c_b_w,
+                        i_height[i] - 2 * row_margin,
                         color[j + 1]);
                 };
                 odroid_overlay_draw_rect(x + inner_width - line_padding - 4 * c_b_w - 2, y + row_margin, 4 * c_b_w + 2, i_height[i] - 2 * row_margin, 1, fg);
@@ -599,20 +599,20 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
                 {
                     i18n_draw_text_line(x + line_padding, y + row_margin, max_left, options[i].label, fg, bg, 0, curr_lang);
                     int txt_w = i18n_get_text_width(options[i].value, curr_lang);
-                    txt_w = (txt_w > max_right) ? max_right : txt_w;  
+                    txt_w = (txt_w > max_right) ? max_right : txt_w;
                     i18n_draw_text(
-                        x + inner_width - line_padding - txt_w, 
-                        y + row_margin, 
+                        x + inner_width - line_padding - txt_w,
+                        y + row_margin,
                         txt_w, i_height[i],
                          options[i].value, fg, bg, 0, curr_lang);
                     //left,right paint;
-                } 
+                }
                 else  //single paint;
                     i18n_draw_text(
-                        x + line_padding, 
-                        y + row_margin, 
-                        inner_width - 2 * line_padding, 
-                        i_height[i], 
+                        x + line_padding,
+                        y + row_margin,
+                        inner_width - 2 * line_padding,
+                        i_height[i],
                         options[i].label, fg, bg, 0, curr_lang);
 
             }
@@ -698,37 +698,61 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
         odroid_input_read_gamepad(&joystick);
         if (last_key < 0 || ((repeat >= 30) && (repeat % 5 == 0)))
         {
-            if (joystick.values[ODROID_INPUT_UP])
+            if (joystick.values[ODROID_INPUT_UP]) // G&W UP button
             {
                 last_key = ODROID_INPUT_UP;
                 sel = odroid_overlay_dialog_find_next_item(options, options_count, sel, -1);
                 repeat++;
             }
-            else if (joystick.values[ODROID_INPUT_DOWN])
+            else if (joystick.values[ODROID_INPUT_DOWN]) // G&W DOWN button
             {
                 last_key = ODROID_INPUT_DOWN;
                 sel = odroid_overlay_dialog_find_next_item(options, options_count, sel, 1);
                 repeat++;
             }
-            else if (joystick.values[ODROID_INPUT_B])
+            else if (joystick.values[ODROID_INPUT_B]) // G&W B button
             {
                 last_key = ODROID_INPUT_B;
                 sel = -1;
                 break;
             }
-            else if (joystick.values[ODROID_INPUT_VOLUME])
+            else if (joystick.values[ODROID_INPUT_VOLUME]) // G&W PAUSE/SET button
             {
                 last_key = ODROID_INPUT_VOLUME;
                 sel = -1;
                 break;
             }
-            else if (joystick.values[ODROID_INPUT_MENU])
+            else if (joystick.values[ODROID_INPUT_SELECT]) // G&W TIME button
+            {
+                last_key = ODROID_INPUT_SELECT;
+                sel = -1;
+                break;
+            }
+            else if (joystick.values[ODROID_INPUT_START]) // G&W GAME button
+            {
+                last_key = ODROID_INPUT_START;
+                sel = -1;
+                break;
+            }
+            else if (joystick.values[ODROID_INPUT_Y]) // G&W (zelda) SELECT button
+            {
+                last_key = ODROID_INPUT_Y;
+                sel = -1;
+                break;
+            }
+            else if (joystick.values[ODROID_INPUT_X]) // G&W (zelda) START button
+            {
+                last_key = ODROID_INPUT_X;
+                sel = -1;
+                break;
+            }
+            else if (joystick.values[ODROID_INPUT_MENU]) // Not an existing G&W button
             {
                 last_key = ODROID_INPUT_MENU;
                 sel = -1;
                 break;
             }
-            else if (joystick.values[ODROID_INPUT_POWER])
+            else if (joystick.values[ODROID_INPUT_POWER]) // G&W POWER button
             {
                 sel = -1;
 #if OFF_SAVESTATE == 1
@@ -744,7 +768,7 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
             if (options[sel].enabled >= 1)
             {
                 select = false;
-                if (joystick.values[ODROID_INPUT_LEFT])
+                if (joystick.values[ODROID_INPUT_LEFT]) // G&W LEFT button
                 {
                     last_key = ODROID_INPUT_LEFT;
                     if (options[sel].update_cb != NULL)
@@ -753,7 +777,7 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
                     }
                     repeat++;
                 }
-                else if (joystick.values[ODROID_INPUT_RIGHT])
+                else if (joystick.values[ODROID_INPUT_RIGHT]) // G&W RIGHT button
                 {
                     last_key = ODROID_INPUT_RIGHT;
                     if (options[sel].update_cb != NULL)
@@ -762,7 +786,7 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
                     }
                     repeat++;
                 }
-                else if (joystick.values[ODROID_INPUT_A])
+                else if (joystick.values[ODROID_INPUT_A]) // G&W A button
                 {
                     last_key = ODROID_INPUT_A;
                     if (options[sel].update_cb != NULL)
@@ -1105,7 +1129,7 @@ int odroid_overlay_game_debug_menu(void)
 static bool cheat_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
     bool is_on = odroid_settings_ActiveGameGenieCodes_is_enabled(CHOSEN_FILE->id, option->id);
-    if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) 
+    if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT)
     {
         is_on = is_on ? false : true;
         odroid_settings_ActiveGameGenieCodes_set(CHOSEN_FILE->id, option->id, is_on);
@@ -1125,13 +1149,13 @@ static bool cheat_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_
 static bool show_cheat_dialog()
 {
     static odroid_dialog_choice_t last = ODROID_DIALOG_CHOICE_LAST;
-    
+
     printf("count = %d\n",CHOSEN_FILE->cheat_count);
     // +1 for the terminator sentinel
     odroid_dialog_choice_t *choices = rg_alloc((CHOSEN_FILE->cheat_count + 1) * sizeof(odroid_dialog_choice_t), MEM_ANY);
     char svalues[MAX_CHEAT_CODES][10];
 
-    for(int i=0; i<CHOSEN_FILE->cheat_count; i++) 
+    for(int i=0; i<CHOSEN_FILE->cheat_count; i++)
     {
         const char *label = CHOSEN_FILE->cheat_descs[i];
         if (label == NULL) {
