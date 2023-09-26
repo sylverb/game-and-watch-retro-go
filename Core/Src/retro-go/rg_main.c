@@ -138,7 +138,7 @@ static bool main_menu_cpu_oc_cb(odroid_dialog_choice_t *option, odroid_dialog_ev
 }
 
 static bool main_menu_timeout_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
-{ //TODO: Old timeouts should be rounded down to minutes.
+{
     const int TIMEOUT_STEP = 60;
     const int TIMEOUT_MIN = 0;
     const int TIMEOUT_MAX = 3600;
@@ -265,6 +265,105 @@ static bool lang_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t
     return event == ODROID_DIALOG_ENTER;
 }
 
+bool hour_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    if (event == ODROID_DIALOG_PREV) {
+        GW_AddToCurrentHour(-1);
+    }
+    else if (event == ODROID_DIALOG_NEXT) {
+        GW_AddToCurrentHour(1);
+    }
+
+    sprintf(option->value, "%02d", GW_GetCurrentHour());
+    return event == ODROID_DIALOG_ENTER;
+}
+
+bool minute_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    if (event == ODROID_DIALOG_PREV) {
+        GW_AddToCurrentMinute(-1);
+    }
+    else if (event == ODROID_DIALOG_NEXT) {
+        GW_AddToCurrentMinute(1);
+    }
+
+    sprintf(option->value, "%02d", GW_GetCurrentMinute());
+    return event == ODROID_DIALOG_ENTER;
+}
+
+bool second_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    if (event == ODROID_DIALOG_PREV) {
+        GW_AddToCurrentSecond(-1);
+    }
+    else if (event == ODROID_DIALOG_NEXT) {
+        GW_AddToCurrentSecond(1);
+    }
+
+    sprintf(option->value, "%02d", GW_GetCurrentSecond());
+    return event == ODROID_DIALOG_ENTER;
+}
+
+bool day_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    if (event == ODROID_DIALOG_PREV) {
+        GW_AddToCurrentDay(-1);
+    }
+    else if (event == ODROID_DIALOG_NEXT) {
+        GW_AddToCurrentDay(1);
+    }
+
+    sprintf(option->value, "%02d", GW_GetCurrentDay());
+    return event == ODROID_DIALOG_ENTER;
+}
+
+bool weekday_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    const char * GW_RTC_Weekday[] = {curr_lang->s_Weekday_Mon, curr_lang->s_Weekday_Tue, curr_lang->s_Weekday_Wed, curr_lang->s_Weekday_Thu, curr_lang->s_Weekday_Fri, curr_lang->s_Weekday_Sat, curr_lang->s_Weekday_Sun};
+    sprintf(option->value, "%s", (char *) GW_RTC_Weekday[GW_GetCurrentWeekday() - 1]);
+    return event == ODROID_DIALOG_ENTER;
+}
+
+bool month_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    if (event == ODROID_DIALOG_PREV) {
+        GW_AddToCurrentMonth(-1);
+    }
+    else if (event == ODROID_DIALOG_NEXT) {
+        GW_AddToCurrentMonth(1);
+    }
+
+    sprintf(option->value, "%02d", GW_GetCurrentMonth());
+    return event == ODROID_DIALOG_ENTER;
+}
+
+bool year_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    if (event == ODROID_DIALOG_PREV) {
+        GW_AddToCurrentYear(-1);
+    }
+    else if (event == ODROID_DIALOG_NEXT) {
+        GW_AddToCurrentYear(1);
+    }
+
+    sprintf(option->value, "20%02d", GW_GetCurrentYear());
+    return event == ODROID_DIALOG_ENTER;
+
+}
+
+bool time_display_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    curr_lang->fmtTime(option->value, curr_lang->s_Time_Format, GW_GetCurrentHour(), GW_GetCurrentMinute(), GW_GetCurrentSecond());
+    return event == ODROID_DIALOG_ENTER;
+}
+
+bool date_display_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    const char * GW_RTC_Weekday[] = {curr_lang->s_Weekday_Mon, curr_lang->s_Weekday_Tue, curr_lang->s_Weekday_Wed, curr_lang->s_Weekday_Thu, curr_lang->s_Weekday_Fri, curr_lang->s_Weekday_Sat, curr_lang->s_Weekday_Sun};
+    curr_lang->fmtDate(option->value, curr_lang->s_Date_Format, GW_GetCurrentDay(), GW_GetCurrentMonth(), GW_GetCurrentYear(), (char *) GW_RTC_Weekday[GW_GetCurrentWeekday() - 1]);
+    return event == ODROID_DIALOG_ENTER;
+}
+
 static inline bool tab_enabled(tab_t *tab)
 {
     int disabled_tabs = 0;
@@ -361,13 +460,12 @@ void retro_loop()
                 if (gui.joystick.values[i])
                     last_key = i;
 
-            int hori_view = false;
             int key_up = ODROID_INPUT_UP;
             int key_down = ODROID_INPUT_DOWN;
             int key_left = ODROID_INPUT_LEFT;
             int key_right = ODROID_INPUT_RIGHT;
 #if COVERFLOW != 0
-            hori_view = odroid_settings_theme_get();
+            int hori_view = odroid_settings_theme_get();
             if ((hori_view== 2) | (hori_view==3))
             {
                 key_up = ODROID_INPUT_LEFT;
@@ -387,6 +485,7 @@ void retro_loop()
                     {-1, curr_lang->s_Author_, "Sylver Bruneau", 0, NULL},
                     {-1, curr_lang->s_Author_, "bzhxx", 0, NULL},
                     {-1, curr_lang->s_UI_Mod, "orzeus", 0, NULL},
+                    {-1, curr_lang->s_Author_, "Benjamin S\xf8lberg", 0, NULL},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
                     {-1, curr_lang->s_Lang, curr_lang->s_LangAuthor, 0, NULL},
                     ODROID_DIALOG_CHOICE_SEPARATOR,
@@ -480,7 +579,9 @@ void retro_loop()
             {
                 char font_value[16];
                 char timeout_value[16];
+#if COVERFLOW != 0
                 char theme_value[16];
+#endif
                 char colors_value[16];
                 char lang_value[64];
                 char ov_value[64];
@@ -502,10 +603,13 @@ void retro_loop()
                     //{9, curr_lang->s_Reboot, curr_lang->s_Original_system, 1, NULL},
 #endif
                     ODROID_DIALOG_CHOICE_LAST};
+
                 int r = odroid_overlay_settings_menu_live(choices, &gui_redraw_callback);
 #if INTFLASH_BANK == 2
                 if (r == 9)
                     soft_reset_do();
+#else
+                odroid_overlay_settings_menu(choices);
 #endif
                 if (oc_level_gets() != oc_level_get())
                     //reboot;
@@ -550,15 +654,14 @@ void retro_loop()
 
                     // Date setup
                     odroid_dialog_choice_t dateoptions[8] = {
-                        {0, curr_lang->s_Day, day_value, 1, &day_update_cb},
-                        {1, curr_lang->s_Month, month_value, 1, &month_update_cb},
                         {2, curr_lang->s_Year, year_value, 1, &year_update_cb},
-                        {3, curr_lang->s_Weekday, weekday_value, 1, &weekday_update_cb},
+                        {1, curr_lang->s_Month, month_value, 1, &month_update_cb},
+                        {0, curr_lang->s_Day, day_value, 1, &day_update_cb},
+                        {-1, curr_lang->s_Weekday, weekday_value, 0, &weekday_update_cb},
                         ODROID_DIALOG_CHOICE_LAST};
                     sel = odroid_overlay_dialog(curr_lang->s_Date_setup, dateoptions, 0);
                 }
 
-                (void)sel;
                 gui_redraw();
             }
             else if (last_key == key_up)

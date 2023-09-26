@@ -44,7 +44,9 @@ int odroid_overlay_game_menu()
 #include "rg_i18n.h"
 #include "main_msx.h"
 
+#if CHEAT_CODES == 1
 static retro_emulator_file_t *CHOSEN_FILE = NULL;
+#endif
 // static uint16_t *overlay_buffer = NULL;
 static uint16_t overlay_buffer[ODROID_SCREEN_WIDTH * 32 * 2] __attribute__((aligned(4)));
 static short dialog_open_depth = 0;
@@ -205,8 +207,6 @@ static void draw_clock_digit(uint16_t *fb, const uint8_t clock, uint16_t px, uin
 void odroid_overlay_clock(int x_pos, int y_pos)
 {
     uint16_t *dst_img = lcd_get_active_buffer();
-    HAL_RTC_GetTime(&hrtc, &GW_currentTime, RTC_FORMAT_BIN);
-    HAL_RTC_GetDate(&hrtc, &GW_currentDate, RTC_FORMAT_BIN);
 
 #ifdef RETRO_LCD_CLOCK_ARTIFACTS
     uint16_t color = get_darken_pixel(curr_colors->main_c, 75);
@@ -215,17 +215,20 @@ void odroid_overlay_clock(int x_pos, int y_pos)
     draw_clock_digit(dst_img, 8, x_pos + 8, y_pos, color);
     draw_clock_digit(dst_img, 8, x_pos, y_pos, color);
 
-    color = (GW_currentTime.SubSeconds < 100) ? curr_colors->sel_c : color;
+    color = (GW_GetCurrentSubSeconds() <= 127) ? curr_colors->sel_c : color;
 #else
-    uint16_t color = (GW_currentTime.SubSeconds < 100) ? curr_colors->sel_c : curr_colors->main_c;
+    uint16_t color = (GW_GetCurrentSubSeconds() <= 127) ? curr_colors->sel_c : curr_colors->main_c;
 #endif
+
     odroid_overlay_draw_fill_rect(x_pos + 17, y_pos + 2, 2, 2, color);
     odroid_overlay_draw_fill_rect(x_pos + 17, y_pos + 6, 2, 2, color);
 
-    draw_clock_digit(dst_img, GW_currentTime.Minutes % 10, x_pos + 30, y_pos, curr_colors->sel_c);
-    draw_clock_digit(dst_img, GW_currentTime.Minutes / 10, x_pos + 22, y_pos, curr_colors->sel_c);
-    draw_clock_digit(dst_img, GW_currentTime.Hours % 10, x_pos + 8, y_pos, curr_colors->sel_c);
-    draw_clock_digit(dst_img, GW_currentTime.Hours / 10, x_pos, y_pos, curr_colors->sel_c);
+    int minute = GW_GetCurrentMinute();
+    int hour = GW_GetCurrentHour();
+    draw_clock_digit(dst_img, minute % 10, x_pos + 30, y_pos, curr_colors->sel_c);
+    draw_clock_digit(dst_img, minute / 10, x_pos + 22, y_pos, curr_colors->sel_c);
+    draw_clock_digit(dst_img, hour % 10, x_pos + 8, y_pos, curr_colors->sel_c);
+    draw_clock_digit(dst_img, hour / 10, x_pos, y_pos, curr_colors->sel_c);
 };
 
 
@@ -352,6 +355,7 @@ uint16_t get_shined_pixel(uint16_t color, uint16_t shined)
     return r | g | b;
 }
 
+__attribute__((optimize("unroll-loops")))
 void odroid_overlay_darken_all()
 {
     if (dialog_open_depth <= 0)
@@ -677,6 +681,7 @@ int odroid_overlay_dialog_live(const char *header, odroid_dialog_choice_t *optio
     int last_key = -1;
     int repeat = 0;
     bool select = false;
+    bool initial = true;
     odroid_gamepad_state_t joystick;
 
     lcd_sync();
@@ -687,14 +692,18 @@ int odroid_overlay_dialog_live(const char *header, odroid_dialog_choice_t *optio
     odroid_overlay_draw_dialog(header, options, sel);
     dialog_open_depth++;
 
-    while (odroid_input_key_is_pressed(ODROID_INPUT_ANY))
-        wdog_refresh();
-
     while (1)
     {
         wdog_refresh();
         odroid_input_read_gamepad(&joystick);
-        if (last_key < 0 || ((repeat >= 30) && (repeat % 5 == 0)))
+
+        // Ignore all buttons until all buttons are released once (only on entry)
+        if (initial && !odroid_input_key_is_pressed(ODROID_INPUT_ANY)) {
+            initial = false;
+            HAL_Delay(50); // Poor mans debounce
+        }
+
+        if ((last_key < 0 || ((repeat >= 30) && (repeat % 5 == 0))) && !initial)
         {
             if (joystick.values[ODROID_INPUT_UP])
             {
