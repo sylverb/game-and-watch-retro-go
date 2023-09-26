@@ -337,7 +337,7 @@ void emulator_show_file_info(retro_emulator_file_t *file)
     sprintf(choices[3].value, "%d KB", file->img_size / 1024);
 	#endif
 
-    odroid_overlay_dialog(curr_lang->s_GameProp, choices, -1);
+    odroid_overlay_dialog_live(curr_lang->s_GameProp, choices, -1, &gui_redraw_callback);
 }
 
 #if CHEAT_CODES == 1
@@ -436,7 +436,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
 #endif
     }
 
-    int sel = odroid_overlay_dialog(file->name, choices, has_save ? 0 : 1);
+    int sel = odroid_overlay_dialog_live(file->name, choices, has_save ? 0 : 1, &gui_redraw_callback);
 
     if (sel == 0 || sel == 1) {
         gui_save_current_tab();

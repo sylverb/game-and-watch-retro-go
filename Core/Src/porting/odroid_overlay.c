@@ -369,15 +369,11 @@ void odroid_overlay_darken_all()
                 dst_img[y * ODROID_SCREEN_WIDTH + x] = get_darken_pixel(dst_img[y * ODROID_SCREEN_WIDTH + x], 40);
 
         dst_img[0] = mgic;
-        lcd_sync();
     }
 }
 
 void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *options, int sel)
 {
-
-    odroid_overlay_darken_all();
-
     int row_margin = 1;
     int row_height = i18n_get_text_height() + row_margin * 2;
     int box_width = 64;
@@ -678,7 +674,7 @@ int odroid_overlay_dialog_find_next_item(odroid_dialog_choice_t *options, int si
     return selected_index;
 }
 
-int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, int selected)
+int odroid_overlay_dialog_live(const char *header, odroid_dialog_choice_t *options, int selected, repaint_callback_t callback)
 {
     int options_count = get_dialog_items_count(options);
     int sel = odroid_overlay_dialog_find_next_item(options, options_count, selected < 0 ? (options_count + selected) : selected, 0);
@@ -691,6 +687,8 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
     lcd_sync();
     lcd_swap();
     HAL_Delay(20);
+    odroid_overlay_darken_all();
+    lcd_sync();
     odroid_overlay_draw_dialog(header, options, sel);
     dialog_open_depth++;
 
@@ -797,7 +795,18 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
             }
         }
 
+        if (callback != NULL)
+        {
+            callback();
+            dialog_open_depth--;
+        }
+        odroid_overlay_darken_all();
         odroid_overlay_draw_dialog(header, options, sel);
+        if (callback != NULL)
+        {
+            dialog_open_depth++;
+        }
+
         lcd_swap();
         HAL_Delay(20);
     }
@@ -809,6 +818,11 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
     dialog_open_depth--;
 
     return sel < 0 ? sel : options[sel].id;
+}
+
+int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, int selected)
+{
+    return odroid_overlay_dialog_live(header, options, selected, NULL);
 }
 
 int odroid_overlay_confirm(const char *text, bool yes_selected)
@@ -1008,7 +1022,7 @@ static bool turbo_buttons_update_cb(odroid_dialog_choice_t *option, odroid_dialo
     return event == ODROID_DIALOG_ENTER;
 }
 
-int odroid_overlay_settings_menu(odroid_dialog_choice_t *extra_options)
+int odroid_overlay_settings_menu_live(odroid_dialog_choice_t *extra_options, repaint_callback_t callback)
 {
     static char bright_value[25];
     static char volume_value[25];
@@ -1029,11 +1043,16 @@ int odroid_overlay_settings_menu(odroid_dialog_choice_t *extra_options)
         memcpy(&options[options_count], extra_options, (extra_options_count + 1) * sizeof(odroid_dialog_choice_t));
     }
 
-    int ret = odroid_overlay_dialog(curr_lang->s_OptionsTit, options, 0);
+    int ret = odroid_overlay_dialog_live(curr_lang->s_OptionsTit, options, 0, callback);
 
     odroid_settings_commit();
 
     return ret;
+}
+
+int odroid_overlay_settings_menu(odroid_dialog_choice_t *extra_options)
+{
+    return odroid_overlay_settings_menu_live(extra_options, NULL);
 }
 
 static void draw_game_status_bar(runtime_stats_t stats)

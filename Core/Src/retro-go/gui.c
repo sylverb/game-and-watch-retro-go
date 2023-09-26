@@ -315,12 +315,17 @@ void gui_scroll_list(tab_t *tab, scroll_mode_t mode)
     }
 }
 
-void gui_redraw()
+void gui_redraw_callback()
 {
     tab_t *tab = gui_get_current_tab();
     gui_draw_header(tab);
     gui_draw_status(tab);
     gui_draw_list(tab);
+}
+
+void gui_redraw()
+{
+    gui_redraw_callback();
 
     lcd_swap();
 }
