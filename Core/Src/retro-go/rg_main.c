@@ -603,13 +603,12 @@ void retro_loop()
                     //{9, curr_lang->s_Reboot, curr_lang->s_Original_system, 1, NULL},
 #endif
                     ODROID_DIALOG_CHOICE_LAST};
-
-                int r = odroid_overlay_settings_menu_live(choices, &gui_redraw_callback);
 #if INTFLASH_BANK == 2
+                int r = odroid_overlay_settings_menu_live(choices, &gui_redraw_callback);
                 if (r == 9)
                     soft_reset_do();
 #else
-                odroid_overlay_settings_menu(choices);
+                odroid_overlay_settings_menu_live(choices, &gui_redraw_callback);
 #endif
                 if (oc_level_gets() != oc_level_get())
                     //reboot;
