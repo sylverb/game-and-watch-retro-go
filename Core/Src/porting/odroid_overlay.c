@@ -44,7 +44,9 @@ int odroid_overlay_game_menu()
 #include "rg_i18n.h"
 #include "main_msx.h"
 
+#if CHEAT_CODES == 1
 static retro_emulator_file_t *CHOSEN_FILE = NULL;
+#endif
 // static uint16_t *overlay_buffer = NULL;
 static uint16_t overlay_buffer[ODROID_SCREEN_WIDTH * 32 * 2] __attribute__((aligned(4)));
 static short dialog_open_depth = 0;

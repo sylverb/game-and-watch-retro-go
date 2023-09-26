@@ -312,7 +312,9 @@ void emulator_show_file_info(retro_emulator_file_t *file)
     char filename_value[128];
     char type_value[32];
     char size_value[32];
+#if COVERFLOW != 0
     char img_size[32];
+#endif
     //char crc_value[32];
     //crc_value[0] = '\x00';
 

@@ -460,13 +460,12 @@ void retro_loop()
                 if (gui.joystick.values[i])
                     last_key = i;
 
-            int hori_view = false;
             int key_up = ODROID_INPUT_UP;
             int key_down = ODROID_INPUT_DOWN;
             int key_left = ODROID_INPUT_LEFT;
             int key_right = ODROID_INPUT_RIGHT;
 #if COVERFLOW != 0
-            hori_view = odroid_settings_theme_get();
+            int hori_view = odroid_settings_theme_get();
             if ((hori_view== 2) | (hori_view==3))
             {
                 key_up = ODROID_INPUT_LEFT;
@@ -580,7 +579,9 @@ void retro_loop()
             {
                 char font_value[16];
                 char timeout_value[16];
+#if COVERFLOW != 0
                 char theme_value[16];
+#endif
                 char colors_value[16];
                 char lang_value[64];
                 char ov_value[64];
@@ -602,10 +603,12 @@ void retro_loop()
                     //{9, curr_lang->s_Reboot, curr_lang->s_Original_system, 1, NULL},
 #endif
                     ODROID_DIALOG_CHOICE_LAST};
-                int r = odroid_overlay_settings_menu(choices);
 #if INTFLASH_BANK == 2
+                int r = odroid_overlay_settings_menu(choices);
                 if (r == 9)
                     soft_reset_do();
+#else
+                odroid_overlay_settings_menu(choices);
 #endif
                 if (oc_level_gets() != oc_level_get())
                     //reboot;
