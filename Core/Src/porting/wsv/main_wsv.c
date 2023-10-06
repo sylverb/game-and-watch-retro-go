@@ -121,9 +121,6 @@ static inline void screen_blit_nn(int32_t dest_width, int32_t dest_height)
 #ifdef PROFILING_ENABLED
     printf("Blit: %d us\n", (1000000 * PROFILING_DIFF(t_blit)) / t_blit_t0.SecondFraction);
 #endif
-    common_ingame_overlay();
-
-    lcd_swap();
 }
 
 static void screen_blit_bilinear(int32_t dest_width)
@@ -185,9 +182,6 @@ static void screen_blit_bilinear(int32_t dest_width)
 #ifdef PROFILING_ENABLED
     printf("Blit: %d us\n", (1000000 * PROFILING_DIFF(t_blit)) / t_blit_t0.SecondFraction);
 #endif
-    common_ingame_overlay();
-
-    lcd_swap();
 }
 
 static inline void screen_blit_v3to5(void) {
@@ -246,9 +240,6 @@ static inline void screen_blit_v3to5(void) {
 #ifdef PROFILING_ENABLED
     printf("Blit: %d us\n", (1000000 * PROFILING_DIFF(t_blit)) / t_blit_t0.SecondFraction);
 #endif
-    common_ingame_overlay();
-
-    lcd_swap();
 }
 
 
@@ -326,9 +317,6 @@ static inline void screen_blit_jth(void) {
 #ifdef PROFILING_ENABLED
     printf("Blit: %d us\n", (1000000 * PROFILING_DIFF(t_blit)) / t_blit_t0.SecondFraction);
 #endif
-    common_ingame_overlay();
-
-    lcd_swap();
 }
 
 static void blit(void)
@@ -359,7 +347,6 @@ static void blit(void)
             assert(!"Unknown filtering mode");
         }
         break;
-        break;
     case ODROID_DISPLAY_SCALING_FULL:
         // full height, full width
         switch (filtering) {
@@ -389,6 +376,7 @@ static void blit(void)
         assert(!"Unknown scaling mode");
         break;
     }
+    common_ingame_overlay();
 }
 
 void wsv_render_image() {
@@ -513,7 +501,7 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
         bool drawFrame = common_emu_frame_loop();
 
         odroid_input_read_gamepad(&joystick);
-        common_emu_input_loop(&joystick, options);
+        common_emu_input_loop(&joystick, options, &blit);
         uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
         bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
         bool turbo_b = (joystick.values[ODROID_INPUT_B] && (turbo_buttons & 2));
@@ -528,6 +516,7 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
         supervision_exec((uint16 *)wsv_framebuffer);
         if (drawFrame) {
             blit();
+            lcd_swap();
         }
         wsv_pcm_submit();
         if(!common_emu_state.skip_frames){

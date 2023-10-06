@@ -537,7 +537,13 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
             softkey_alarm_pressed = 0;
         }
 
-        common_emu_input_loop(&joystick, options);
+        void _blit()
+        {
+            gw_system_blit(lcd_get_active_buffer());
+            common_ingame_overlay();
+        }
+
+        common_emu_input_loop(&joystick, options, &_blit);
 
         bool drawFrame = common_emu_frame_loop();
 
@@ -552,10 +558,9 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
         /* update the screen only if there is no pending frame to render */
         if (!is_lcd_swap_pending() && drawFrame)
         {
-            gw_system_blit(lcd_get_active_buffer());
+            _blit();
             gw_debug_bar();
             if(debug_display_ram == 1) gw_display_ram_overlay();
-            common_ingame_overlay();
             lcd_swap();
 
             /* get how many cycles have been spent in graphics rendering */

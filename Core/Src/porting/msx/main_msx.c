@@ -1707,7 +1707,6 @@ size_t msx_getromdata(uint8_t **data, uint8_t *src_data, size_t src_size, const 
 
 void app_main_msx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 {
-    pixel_t *fb;
     odroid_dialog_choice_t options[10];
     bool drawFrame;
     dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
@@ -1788,7 +1787,17 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
         drawFrame = common_emu_frame_loop();
         odroid_gamepad_state_t joystick;
         odroid_input_read_gamepad(&joystick);
-        common_emu_input_loop(&joystick, options);
+        void _blit()
+        {
+            // If current MSX screen mode is 10 or 12, data has been directly written into
+            // framebuffer (scaling is not possible for these screen modes), elseway apply
+            // current scaling mode
+            if ((vdpGetScreenMode() != 10) && (vdpGetScreenMode() != 12)) {
+                blit(msx_framebuffer, lcd_get_active_buffer());
+            }
+            common_ingame_overlay();
+        }
+        common_emu_input_loop(&joystick, options, &_blit);
 
         uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
         bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
@@ -1806,14 +1815,7 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
         boardInfo.run(boardInfo.cpuRef);
 
         if (drawFrame) {
-            fb = lcd_get_active_buffer();
-            // If current MSX screen mode is 10 or 12, data has been directly written into
-            // framebuffer (scaling is not possible for these screen modes), elseway apply
-            // current scaling mode
-            if ((vdpGetScreenMode() != 10) && (vdpGetScreenMode() != 12)) {
-                blit(msx_framebuffer, fb);
-            }
-            common_ingame_overlay();
+            _blit();
             lcd_swap();
         }
 

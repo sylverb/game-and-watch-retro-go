@@ -745,7 +745,6 @@ static void blit(uint8_t *src, uint16_t *framebuffer)
         break;
     }
     common_ingame_overlay();
-    lcd_swap();
 }
 
 static void update_sound_nes(int32_t *sound, uint16_t size) {
@@ -1116,7 +1115,10 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
         }
     }
 #endif
-
+    void _blit()
+    {
+        blit(nes_framebuffer, lcd_get_active_buffer());
+    }
     while(1) {
         odroid_dialog_choice_t options[] = {
             // {101, "More...", "", 1, &advanced_settings_cb},
@@ -1132,7 +1134,7 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
 
         wdog_refresh();
         odroid_input_read_gamepad(&joystick);
-        common_emu_input_loop(&joystick, options);
+        common_emu_input_loop(&joystick, options, &_blit);
         uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
         bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
         bool turbo_b = (joystick.values[ODROID_INPUT_B] && (turbo_buttons & 2));
@@ -1145,7 +1147,10 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
         nesInputUpdate(&joystick);
         FCEUI_Emulate(&gfx, &sound, &ssize, !drawFrame);
         if (drawFrame)
-            blit(nes_framebuffer,lcd_get_active_buffer());
+        {
+            _blit();
+            lcd_swap();
+        }
         update_sound_nes(sound,ssize);
 
         if(!common_emu_state.skip_frames) {

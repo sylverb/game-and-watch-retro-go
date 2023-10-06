@@ -292,12 +292,22 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
         }
 #endif
     }
+
+    void blit()
+    {
+        videoWidth  = Rect_GetLength(&maria_visibleArea);
+        videoHeight = Rect_GetHeight(&maria_visibleArea);
+        buffer      = maria_surface + ((maria_visibleArea.top - maria_displayArea.top) * Rect_GetLength(&maria_visibleArea));
+        BLIT_VIDEO_BUFFER(uint16_t, buffer, display_palette16, 320, 240, 320, lcd_get_active_buffer());
+        common_ingame_overlay();
+    }
+
     while (1)
     {
         wdog_refresh();
         common_emu_frame_loop();
         odroid_input_read_gamepad(&joystick);
-        common_emu_input_loop(&joystick, options);
+        common_emu_input_loop(&joystick, options, &blit);
         
         uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
         bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
@@ -312,18 +322,13 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
         prosystem_ExecuteFrame(keyboard_data);
 
-        videoWidth  = Rect_GetLength(&maria_visibleArea);
-        videoHeight = Rect_GetHeight(&maria_visibleArea);
-        buffer      = maria_surface + ((maria_visibleArea.top - maria_displayArea.top) * Rect_GetLength(&maria_visibleArea));
-
-        BLIT_VIDEO_BUFFER(uint16_t, buffer, display_palette16, 320, 240, 320, lcd_get_active_buffer());
+        blit();
+        lcd_swap();
 
         offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : tia_size;
 
         sound_store(&audiobuffer_dma[offset]);
 
-        common_ingame_overlay();
-        lcd_swap();
         if(!common_emu_state.skip_frames){
             for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
                 while (dma_state == last_dma_state) {

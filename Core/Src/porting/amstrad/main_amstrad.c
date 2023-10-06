@@ -732,8 +732,6 @@ static void blit(uint8_t *src_fb, uint16_t *framebuffer)
             }
         }
     }
-    common_ingame_overlay();
-    lcd_swap();
 }
 
 void amstrad_pcm_submit()
@@ -816,9 +814,14 @@ static void computer_autoload()
 
 extern uint8_t *pbSndBuffer;
 
+void _blit()
+{
+    blit(amstrad_framebuffer, lcd_get_active_buffer());
+    common_ingame_overlay();
+}
+
 void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 {
-    pixel_t *fb;
     static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
     odroid_gamepad_state_t joystick;
     odroid_dialog_choice_t options[10];
@@ -913,12 +916,11 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
 
     while (1)
     {
-        fb = lcd_get_active_buffer();
         wdog_refresh();
         bool drawFrame = common_emu_frame_loop();
 
         odroid_input_read_gamepad(&joystick);
-        common_emu_input_loop(&joystick, options);
+        common_emu_input_loop(&joystick, options, &_blit);
 
         if (auto_key) {
             autorun_command();
@@ -938,7 +940,8 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
 
         caprice_retro_loop();
         if (drawFrame) {
-            blit(amstrad_framebuffer, fb);
+            _blit();
+            lcd_swap();
         }
         amstrad_pcm_submit();
         amstrad_set_audio_buffer((int8_t *)soundBuffer, AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS * 2);

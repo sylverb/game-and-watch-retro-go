@@ -361,6 +361,14 @@ void sms_pcm_submit() {
     }
 }
 
+static void blit()
+{
+    pixel_t* curr_framebuffer = lcd_get_active_buffer();
+    if (sms.console == CONSOLE_GG)     blit_gg(&bitmap, curr_framebuffer);
+    else                               blit_sms(&bitmap, curr_framebuffer);
+    common_ingame_overlay();
+}
+
 static void sms_draw_frame()
 {
   static uint32_t lastFPSTime = 0;
@@ -368,7 +376,6 @@ static void sms_draw_frame()
 
   uint32_t currentTime = HAL_GetTick();
   uint32_t delta = currentTime - lastFPSTime;
-  pixel_t* curr_framebuffer = NULL;
 
   frames++;
 
@@ -387,10 +394,7 @@ static void sms_draw_frame()
                           ((0b0000000000011111 & p));
   }
 
-  curr_framebuffer = lcd_get_active_buffer();
-  if (sms.console == CONSOLE_GG)     blit_gg(&bitmap, curr_framebuffer);
-  else                               blit_sms(&bitmap, curr_framebuffer);
-  common_ingame_overlay();
+  blit();
   lcd_swap();
 }
 
@@ -524,7 +528,7 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, 
         odroid_dialog_choice_t options[] = {
             ODROID_DIALOG_CHOICE_LAST
         };
-        common_emu_input_loop(&joystick, options);
+        common_emu_input_loop(&joystick, options, &blit);
 
         bool drawFrame = common_emu_frame_loop();
         uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
@@ -542,8 +546,8 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, 
 
         if (drawFrame) {
             sms_draw_frame();
-            sms_pcm_submit();
         }
+        sms_pcm_submit();
 
         if(!common_emu_state.skip_frames)
         {
