@@ -1,5 +1,6 @@
 #include "common.h"
 #include <odroid_system.h>
+#include <odroid_overlay.h>
 
 #include <string.h>
 #include <nofrendo.h>
@@ -142,12 +143,13 @@ bool common_emu_frame_loop(void){
  * is called.
  *
  */
-void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choice_t *game_options) {
+void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choice_t *game_options, void_callback_t repaint) {
     rg_app_desc_t *app = odroid_system_get_app();
     static emu_speedup_t last_speedup = SPEEDUP_1_5x;
     static int8_t last_key = -1;
     static bool pause_pressed = false;
     static bool macro_activated = false;
+    bool restore = false;
 
     if(joystick->values[ODROID_INPUT_VOLUME]){  // PAUSE/SET button
         // PAUSE/SET has been pressed, checking additional inputs for macros
@@ -220,8 +222,6 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
 
                 // Call ingame overlay so that the save icon gets displayed first.
                 set_ingame_overlay(INGAME_OVERLAY_SAVE);
-                common_ingame_overlay();
-                lcd_sync();
 
                 odroid_system_emu_save_state(0);
                 odroid_audio_mute(false);
@@ -237,7 +237,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
             else if(joystick->values[ODROID_INPUT_X]){
                 last_key = ODROID_INPUT_X;
                 odroid_audio_mute(true);
-                //change turbo 
+                //change turbo
                 uint8_t turbo_key = odroid_settings_turbo_buttons_get();
                 turbo_key ^= 1;
                 odroid_settings_turbo_buttons_set(turbo_key);
@@ -248,7 +248,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
             else if(joystick->values[ODROID_INPUT_Y]){
                 last_key = ODROID_INPUT_Y;
                 odroid_audio_mute(true);
-                //change turbo 
+                //change turbo
                 uint8_t turbo_key = odroid_settings_turbo_buttons_get();
                 turbo_key ^= 2;
                 odroid_settings_turbo_buttons_set(turbo_key);
@@ -277,9 +277,9 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
         // PAUSE/SET has been released without performing any macro. Launch menu
         pause_pressed = false;
 
-        odroid_overlay_game_menu(game_options);
-        memset(framebuffer1, 0x0, sizeof(framebuffer1));
-        memset(framebuffer2, 0x0, sizeof(framebuffer2));
+        odroid_overlay_game_menu(game_options, repaint);
+        restore = true;
+
         common_emu_state.startup_frames = 0;
         cpumon_stats.last_busy = 0;
     }
@@ -289,8 +289,23 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
         last_key = -1;
     }
 
-    if(get_elapsed_time_since(common_emu_state.last_overlay_time) > 1000){
-        set_ingame_overlay(INGAME_OVERLAY_NONE);
+    if(get_elapsed_time_since(common_emu_state.last_overlay_time) > 1000) {
+       if (common_emu_state.overlay != INGAME_OVERLAY_NONE) {
+            set_ingame_overlay(INGAME_OVERLAY_NONE);
+            restore = true;
+       }
+    }
+
+    if (restore) {
+       if (lcd_wait_if_swap_pending()) {
+            printf("Warning: Had to wait for lcd swap.\n");
+       }
+
+        // Restore front and back buffer
+        memset(lcd_get_active_buffer(), 0, sizeof(framebuffer1));
+        repaint();
+        lcd_swap_with_wait();
+        lcd_clone();
     }
 
     if (joystick->values[ODROID_INPUT_POWER]) {
@@ -434,59 +449,6 @@ static void draw_darken_rounded_rectangle(pixel_t *fb, uint16_t x1, uint16_t y1,
     // Draw lower rectangle
     for(uint16_t i=x1+8; i < x2 - 8; i++) for(uint8_t j=0; j < 8; j++)
         darken_pixel(&fb[ i + GW_LCD_WIDTH * (y2 - j - 1)]);
-}
-
-static inline void clear_pixel(pixel_t *p){
-    *p = 0;
-}
-
-__attribute__((optimize("unroll-loops")))
-static void draw_clear_rectangle(pixel_t *fb, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2){
-    for(uint16_t i=y1; i < y2; i++){
-        for(uint16_t j=x1; j < x2; j++){
-            clear_pixel(&fb[j + GW_LCD_WIDTH * i]);
-        }
-    }
-}
-
-__attribute__((optimize("unroll-loops")))
-static void draw_clear_rounded_rectangle(pixel_t *fb, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2){
-    // *1 is inclusive, *2 is exclusive
-    uint16_t h = y2 - y1;
-    uint16_t w = x2 - x1;
-    if (w < 16 || h < 16) {
-        // Draw not rounded rectangle
-        draw_clear_rectangle(fb, x1, y1, x2, y2);
-        return;
-    }
-
-    // Draw upper left round
-    for(uint8_t i=0; i < 8; i++) for(uint8_t j=0; j < 8; j++)
-        if(ROUND[i] & (1 << (7 - j))) clear_pixel(&fb[x1 + j + GW_LCD_WIDTH * (y1 + i)]);
-
-    // Draw upper right round
-    for(uint8_t i=0; i < 8; i++) for(uint8_t j=0; j < 8; j++)
-        if(ROUND[i] & (1 << (7 - j))) clear_pixel(&fb[x2 - j - 1 + GW_LCD_WIDTH * (y1 + i)]);
-
-    // Draw lower left round
-    for(uint8_t i=0; i < 8; i++) for(uint8_t j=0; j < 8; j++)
-        if(ROUND[i] & (1 << (7 - j))) clear_pixel(&fb[x1 + j + GW_LCD_WIDTH * (y2 - i - 1)]);
-
-    // Draw lower right round
-    for(uint8_t i=0; i < 8; i++) for(uint8_t j=0; j < 8; j++)
-        if(ROUND[i] & (1 <<  (7 - j))) clear_pixel(&fb[x2 - j - 1 + GW_LCD_WIDTH * (y2 - i - 1)]);
-
-    // Draw upper rectangle
-    for(uint16_t i=x1+8; i < x2 - 8; i++) for(uint8_t j=0; j < 8; j++)
-        clear_pixel(&fb[ i + GW_LCD_WIDTH * (y1 + j)]);
-
-    // Draw central rectangle
-    for(uint16_t i=x1; i < x2; i++) for(uint16_t j=y1+8; j < y2-8; j++)
-        clear_pixel(&fb[i+GW_LCD_WIDTH * j]);
-
-    // Draw lower rectangle
-    for(uint16_t i=x1+8; i < x2 - 8; i++) for(uint8_t j=0; j < 8; j++)
-        clear_pixel(&fb[ i + GW_LCD_WIDTH * (y2 - j - 1)]);
 }
 
 #define INGAME_OVERLAY_X 265
@@ -654,29 +616,7 @@ void common_ingame_overlay(void) {
     }
 }
 
-void common_ingame_overlay_clear(void) {
-    pixel_t *fb;
-    
-    fb = lcd_get_active_buffer();
-    draw_clear_rounded_rectangle(fb,
-                    INGAME_OVERLAY_X,
-                    INGAME_OVERLAY_Y,
-                    INGAME_OVERLAY_X + INGAME_OVERLAY_BARS_W,
-                    INGAME_OVERLAY_Y + INGAME_OVERLAY_BARS_H);
-
-    fb = lcd_get_inactive_buffer();
-    draw_clear_rounded_rectangle(fb,
-                    INGAME_OVERLAY_X,
-                    INGAME_OVERLAY_Y,
-                    INGAME_OVERLAY_X + INGAME_OVERLAY_BARS_W,
-                    INGAME_OVERLAY_Y + INGAME_OVERLAY_BARS_H);
-}
-
 static void set_ingame_overlay(ingame_overlay_t type){
-    if((type == INGAME_OVERLAY_NONE) && (common_emu_state.overlay != INGAME_OVERLAY_NONE)) {    // when transitioning from any overlay to no overlay
-        common_ingame_overlay_clear();  // clear the overlay area. This will ensure no partial overlay leftovers when emulation area does not fully cover the overlay area
-    }
-
     common_emu_state.overlay = type;
     common_emu_state.last_overlay_time = get_elapsed_time();
 }
