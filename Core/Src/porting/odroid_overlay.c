@@ -354,16 +354,11 @@ uint16_t get_shined_pixel(uint16_t color, uint16_t shined)
 __attribute__((optimize("unroll-loops")))
 void odroid_overlay_darken_all()
 {
-    uint16_t mgic = 0b0000100000100001;
     uint16_t *dst_img = lcd_get_active_buffer();
-    if (dst_img[0] == mgic)
-        return;
 
     for (int y = 0; y < ODROID_SCREEN_HEIGHT; y++)
         for (int x = 0; x < ODROID_SCREEN_WIDTH; x++)
             dst_img[y * ODROID_SCREEN_WIDTH + x] = get_darken_pixel(dst_img[y * ODROID_SCREEN_WIDTH + x], 40);
-
-    dst_img[0] = mgic;
 }
 
 void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *options, int sel)
