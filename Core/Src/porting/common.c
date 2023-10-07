@@ -142,6 +142,8 @@ bool common_emu_frame_loop(void){
  * after inputs are read into `joystick`, but before the actual emulation tick
  * is called.
  *
+ * Note: No pending LCD swaps are allowed when calling this function.
+ *       This is to ensure a stutter free handling of the in-game overlays.
  */
 void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choice_t *game_options, void_callback_t repaint) {
     rg_app_desc_t *app = odroid_system_get_app();
@@ -149,7 +151,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
     static int8_t last_key = -1;
     static bool pause_pressed = false;
     static bool macro_activated = false;
-    bool restore = false;
+    static uint8_t clear_frames = 0;
 
     if(joystick->values[ODROID_INPUT_VOLUME]){  // PAUSE/SET button
         // PAUSE/SET has been pressed, checking additional inputs for macros
@@ -278,7 +280,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
         pause_pressed = false;
 
         odroid_overlay_game_menu(game_options, repaint);
-        restore = true;
+        clear_frames = 2;
 
         common_emu_state.startup_frames = 0;
         cpumon_stats.last_busy = 0;
@@ -292,20 +294,21 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
     if(get_elapsed_time_since(common_emu_state.last_overlay_time) > 1000) {
        if (common_emu_state.overlay != INGAME_OVERLAY_NONE) {
             set_ingame_overlay(INGAME_OVERLAY_NONE);
-            restore = true;
+            clear_frames = 2;
        }
     }
 
-    if (restore) {
+    if (clear_frames) {
+       clear_frames--;
+        
        if (lcd_wait_if_swap_pending()) {
+            // It seems like an LCD swap was pending.
+            // Please read the note for this function.
             printf("Warning: Had to wait for lcd swap.\n");
        }
 
-        // Restore front and back buffer
+        // Clear the active screen buffer, caller must repaint it 
         memset(lcd_get_active_buffer(), 0, sizeof(framebuffer1));
-        repaint();
-        lcd_swap_with_wait();
-        lcd_clone();
     }
 
     if (joystick->values[ODROID_INPUT_POWER]) {
