@@ -480,27 +480,7 @@ void pce_input_read(odroid_gamepad_state_t* out_state) {
     PCE.Joypad.regs[0] = rc;
 }
 
-void pce_osd_gfx_blit(bool drawFrame) {
-    if (!drawFrame) {
-        memset(pce_framebuffer,0,sizeof(pce_framebuffer));
-        return;
-    }
-
-#ifdef PCE_SHOW_DEBUG
-    uint32_t currentTime = HAL_GetTick();
-    uint32_t delta = currentTime - lastFPSTime;
-    static uint32_t frames = 0;
-    static uint32_t lastFPSTime = 0;
-    static int framePerSecond=0;
-    frames++;
-    if (delta >= 1000) {
-        framePerSecond = (10000 * frames) / delta;
-        //printf("FPS: %d.%d, frames %ld, delta %ld ms\n", framePerSecond / 10, framePerSecond % 10, frames, delta);
-        frames = 0;
-        lastFPSTime = currentTime;
-    }
-#endif
-
+void blit() {
     odroid_display_scaling_t scaling = odroid_display_get_scaling_mode();
 
     uint8_t *emuFrameBuffer = osd_gfx_framebuffer();
@@ -508,13 +488,13 @@ void pce_osd_gfx_blit(bool drawFrame) {
     int y=0, offsetY, offsetX = 0, cropX = 0;
     int xScale = 0;
     uint8_t *fbTmp;
-    
+
     if (scaling != ODROID_DISPLAY_SCALING_OFF ) {
         xScale = (current_width << 8) / GW_LCD_WIDTH ;
     } else if ( current_width < GW_LCD_WIDTH) {
         offsetX = (GW_LCD_WIDTH - current_width)/2; //center the image horizontally
     } else if ( current_width > GW_LCD_WIDTH) {
-        cropX = (current_width - GW_LCD_WIDTH)/2; //crop the image horizontally if it's bigger 
+        cropX = (current_width - GW_LCD_WIDTH)/2; //crop the image horizontally if it's bigger
     }
 
     int renderHeight = (current_height<=GW_LCD_HEIGHT)?current_height:GW_LCD_HEIGHT;
@@ -524,7 +504,7 @@ void pce_osd_gfx_blit(bool drawFrame) {
         fbTmp = emuFrameBuffer+(y*XBUF_WIDTH);
         offsetY = y*GW_LCD_WIDTH;
         if (xScale) {
-            // Horizontal - Scale 
+            // Horizontal - Scale
             for(int x=0;x<GW_LCD_WIDTH;x++) {
                 framebuffer_active[offsetY+x]= mypalette[fbTmp[ (x * xScale) >> 8 ]];
             }
@@ -544,16 +524,33 @@ void pce_osd_gfx_blit(bool drawFrame) {
         }
     }
 
+    common_ingame_overlay();
+}
+
+void pce_osd_gfx_blit() {
+#ifdef PCE_SHOW_DEBUG
+    uint32_t currentTime = HAL_GetTick();
+    uint32_t delta = currentTime - lastFPSTime;
+    static uint32_t frames = 0;
+    static uint32_t lastFPSTime = 0;
+    static int framePerSecond=0;
+    frames++;
+    if (delta >= 1000) {
+        framePerSecond = (10000 * frames) / delta;
+        //printf("FPS: %d.%d, frames %ld, delta %ld ms\n", framePerSecond / 10, framePerSecond % 10, frames, delta);
+        frames = 0;
+        lastFPSTime = currentTime;
+    }
+#endif
+
+    blit();
+
 #ifdef PCE_SHOW_DEBUG
     char debugMsg[100];
     sprintf(debugMsg,"FPS:%d.%d,W:%d,H:%d,L:%s", framePerSecond / 10,framePerSecond % 10,current_width,current_height,pce_log);
     odroid_overlay_draw_text(0,0, GW_LCD_WIDTH, debugMsg,  curr_colors->sel_c, curr_colors->main_c);
 #endif
-
-    common_ingame_overlay();
     lcd_swap();
-
-    memset(pce_framebuffer,0,sizeof(pce_framebuffer));
 }
 
 void pce_pcm_submit() {
@@ -655,7 +652,7 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, uint8_t save_slot) {
         odroid_dialog_choice_t options[] = {
             ODROID_DIALOG_CHOICE_LAST
         };
-        common_emu_input_loop(&joystick, options);
+        common_emu_input_loop(&joystick, options, &blit);
         uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
         bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
         bool turbo_b = (joystick.values[ODROID_INPUT_B] && (turbo_buttons & 2));
@@ -671,8 +668,10 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, uint8_t save_slot) {
             gfx_run();
         }
 
-        pce_osd_gfx_blit(drawFrame);
-        if(drawFrame) pce_pcm_submit();
+        if (drawFrame) {
+            pce_osd_gfx_blit();
+        }
+        pce_pcm_submit();
 
         if(!common_emu_state.skip_frames){
             dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;

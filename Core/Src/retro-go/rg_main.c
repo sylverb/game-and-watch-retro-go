@@ -19,90 +19,9 @@
 #include "rg_i18n.h"
 #include "bitmaps.h"
 
-#if 0
-#define KEY_SELECTED_TAB "SelectedTab"
-#define KEY_GUI_THEME "ColorTheme"
-#define KEY_SHOW_EMPTY "ShowEmptyTabs"
-#define KEY_SHOW_COVER "ShowGameCover"
-
-static bool font_size_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
-{
-    int font_size = odroid_overlay_get_font_size();
-    if (event == ODROID_DIALOG_PREV && font_size > 8) {
-        odroid_overlay_set_font_size(font_size -= 4);
-        gui_redraw();
-    }
-    if (event == ODROID_DIALOG_NEXT && font_size < 16) {
-        odroid_overlay_set_font_size(font_size += 4);
-        gui_redraw();
-    }
-    sprintf(option->value, "%d", font_size);
-    if (font_size ==  8) strcpy(option->value, "Small ");
-    if (font_size == 12) strcpy(option->value, "Medium");
-    if (font_size == 16) strcpy(option->value, "Large ");
-    return event == ODROID_DIALOG_ENTER;
-}
-
-static bool show_empty_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
-{
-    if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
-        gui.show_empty = !gui.show_empty;
-        odroid_settings_int32_set(KEY_SHOW_EMPTY, gui.show_empty);
-    }
-    strcpy(option->value, gui.show_empty ? "Yes" : "No");
-    return event == ODROID_DIALOG_ENTER;
-}
-
-static bool startup_app_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
-{
-    int startup_app = odroid_settings_StartupApp_get();
-    if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
-        startup_app = startup_app ? 0 : 1;
-        odroid_settings_StartupApp_set(startup_app);
-    }
-    strcpy(option->value, startup_app == 0 ? "Launcher" : "LastUsed");
-    return event == ODROID_DIALOG_ENTER;
-}
-
-static bool show_cover_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
-{
-    if (event == ODROID_DIALOG_PREV) {
-        if (--gui.show_cover < 0) gui.show_cover = 2;
-        odroid_settings_int32_set(KEY_SHOW_COVER, gui.show_cover);
-    }
-    if (event == ODROID_DIALOG_NEXT) {
-        if (++gui.show_cover > 2) gui.show_cover = 0;
-        odroid_settings_int32_set(KEY_SHOW_COVER, gui.show_cover);
-    }
-    if (gui.show_cover == 0) strcpy(option->value, "No");
-    if (gui.show_cover == 1) strcpy(option->value, "Slow");
-    if (gui.show_cover == 2) strcpy(option->value, "Fast");
-    return event == ODROID_DIALOG_ENTER;
-}
-
-static bool color_shift_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
-{
-    int max = gui_themes_count - 1;
-    if (event == ODROID_DIALOG_PREV) {
-        if (--gui.theme < 0) gui.theme = max;
-        odroid_settings_int32_set(KEY_GUI_THEME, gui.theme);
-        gui_redraw();
-    }
-    if (event == ODROID_DIALOG_NEXT) {
-        if (++gui.theme > max) gui.theme = 0;
-        odroid_settings_int32_set(KEY_GUI_THEME, gui.theme);
-        gui_redraw();
-    }
-    sprintf(option->value, "%d/%d", gui.theme + 1, max + 1);
-    return event == ODROID_DIALOG_ENTER;
-}
-
-#endif
-
 #if !defined(COVERFLOW)
 #define COVERFLOW 0
 #endif /* COVERFLOW */
-
 
 static bool main_menu_cpu_oc_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
@@ -495,7 +414,7 @@ void retro_loop()
                     {0, curr_lang->s_Close, "", 1, NULL},
                     ODROID_DIALOG_CHOICE_LAST};
 
-                int sel = odroid_overlay_dialog_live(curr_lang->s_Retro_Go, choices, -1, &gui_redraw_callback);
+                int sel = odroid_overlay_dialog(curr_lang->s_Retro_Go, choices, -1, &gui_redraw_callback);
                 if (sel == 1)
                 {
                     // Reset settings
@@ -546,7 +465,7 @@ void retro_loop()
                         {0, curr_lang->s_Close, "", 1, NULL},
                         ODROID_DIALOG_CHOICE_LAST};
 
-                    int sel = odroid_overlay_dialog(curr_lang->s_Debug_Title, debuginfo, -1);
+                    int sel = odroid_overlay_dialog(curr_lang->s_Debug_Title, debuginfo, -1, NULL);
                     switch (sel)
                     {
                     case 1:
@@ -604,16 +523,17 @@ void retro_loop()
 #endif
                     ODROID_DIALOG_CHOICE_LAST};
 #if INTFLASH_BANK == 2
-                int r = odroid_overlay_settings_menu_live(choices, &gui_redraw_callback);
+                int r = odroid_overlay_settings_menu(choices, &gui_redraw_callback);
                 if (r == 9)
                     soft_reset_do();
 #else
-                odroid_overlay_settings_menu_live(choices, &gui_redraw_callback);
+                odroid_overlay_settings_menu(choices, &gui_redraw_callback);
 #endif
                 if (oc_level_gets() != oc_level_get())
                     //reboot;
                     if (odroid_overlay_confirm(curr_lang->s_Confirm_OC_Reboot, false) == 1)
                         odroid_system_switch_app(0);
+
                 gui_redraw();
             }
             // TIME menu
@@ -627,7 +547,7 @@ void retro_loop()
                     {0, curr_lang->s_Time, time_str, 1, &time_display_cb},
                     {1, curr_lang->s_Date, date_str, 1, &date_display_cb},
                     ODROID_DIALOG_CHOICE_LAST};
-                int sel = odroid_overlay_dialog_live(curr_lang->s_Time_Title, rtcinfo, 0, &gui_redraw_callback);
+                int sel = odroid_overlay_dialog(curr_lang->s_Time_Title, rtcinfo, 0, &gui_redraw_callback);
 
                 if (sel == 0)
                 {
@@ -641,7 +561,7 @@ void retro_loop()
                         {1, curr_lang->s_Minute, minute_value, 1, &minute_update_cb},
                         {2, curr_lang->s_Second, second_value, 1, &second_update_cb},
                         ODROID_DIALOG_CHOICE_LAST};
-                    sel = odroid_overlay_dialog(curr_lang->s_Time_setup, timeoptions, 0);
+                    sel = odroid_overlay_dialog(curr_lang->s_Time_setup, timeoptions, 0, NULL);
                 }
                 else if (sel == 1)
                 {
@@ -658,7 +578,7 @@ void retro_loop()
                         {0, curr_lang->s_Day, day_value, 1, &day_update_cb},
                         {-1, curr_lang->s_Weekday, weekday_value, 0, &weekday_update_cb},
                         ODROID_DIALOG_CHOICE_LAST};
-                    sel = odroid_overlay_dialog(curr_lang->s_Date_setup, dateoptions, 0);
+                    sel = odroid_overlay_dialog(curr_lang->s_Date_setup, dateoptions, 0, NULL);
                 }
 
                 gui_redraw();
@@ -732,7 +652,6 @@ void retro_loop()
         }
 
         gui_redraw();
-        HAL_Delay(20);
     }
 }
 

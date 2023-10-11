@@ -4,17 +4,17 @@
 #include "odroid_system.h"
 #include "odroid_overlay.h"
 
-int odroid_overlay_game_settings_menu(odroid_dialog_choice_t *extra_options)
+int odroid_overlay_game_settings_menu(odroid_dialog_choice_t *extra_options, void_callback_t repaint)
 {
     return 0;
 }
 
-int odroid_overlay_game_debug_menu(void)
+int odroid_overlay_game_debug_menu(void_callback_t repaint)
 {
     return 0;
 }
 
-int odroid_overlay_game_menu()
+int odroid_overlay_game_menu(odroid_dialog_choice_t *extra_options, void_callback_t repaint)
 {
     return 0;
 }
@@ -47,14 +47,12 @@ int odroid_overlay_game_menu()
 #if CHEAT_CODES == 1
 static retro_emulator_file_t *CHOSEN_FILE = NULL;
 #endif
-// static uint16_t *overlay_buffer = NULL;
+
 static uint16_t overlay_buffer[ODROID_SCREEN_WIDTH * 32 * 2] __attribute__((aligned(4)));
-static short dialog_open_depth = 0;
 static short font_size = 8;
 
 void odroid_overlay_init()
 {
-    // overlay_buffer = (uint16_t *)rg_alloc(ODROID_SCREEN_WIDTH * 32 * 2, MEM_SLOW);
     odroid_overlay_set_font_size(odroid_settings_FontSize_get());
 }
 
@@ -193,7 +191,6 @@ void odroid_overlay_draw_fill_rect(int x, int y, int width, int height, uint16_t
     }
 }
 
-
 static void draw_clock_digit(uint16_t *fb, const uint8_t clock, uint16_t px, uint16_t py, uint16_t color)
 {
     static const unsigned char *CLOCK_DIGITS[] = {img_clock_00, img_clock_01, img_clock_02, img_clock_03, img_clock_04, img_clock_05, img_clock_06, img_clock_07, img_clock_08, img_clock_09};
@@ -230,7 +227,6 @@ void odroid_overlay_clock(int x_pos, int y_pos)
     draw_clock_digit(dst_img, hour % 10, x_pos + 8, y_pos, curr_colors->sel_c);
     draw_clock_digit(dst_img, hour / 10, x_pos, y_pos, curr_colors->sel_c);
 };
-
 
 void odroid_overlay_draw_battery(int x_pos, int y_pos)
 {
@@ -358,18 +354,11 @@ uint16_t get_shined_pixel(uint16_t color, uint16_t shined)
 __attribute__((optimize("unroll-loops")))
 void odroid_overlay_darken_all()
 {
-    if (dialog_open_depth <= 0)
-    { //darken bg
-        uint16_t mgic = 0b0000100000100001;
-        uint16_t *dst_img = lcd_get_active_buffer();
-        if ((dst_img[0] == mgic) || is_lcd_swap_pending())
-            return;
-        for (int y = 0; y < ODROID_SCREEN_HEIGHT; y++)
-            for (int x = 0; x < ODROID_SCREEN_WIDTH; x++)
-                dst_img[y * ODROID_SCREEN_WIDTH + x] = get_darken_pixel(dst_img[y * ODROID_SCREEN_WIDTH + x], 40);
+    uint16_t *dst_img = lcd_get_active_buffer();
 
-        dst_img[0] = mgic;
-    }
+    for (int y = 0; y < ODROID_SCREEN_HEIGHT; y++)
+        for (int x = 0; x < ODROID_SCREEN_WIDTH; x++)
+            dst_img[y * ODROID_SCREEN_WIDTH + x] = get_darken_pixel(dst_img[y * ODROID_SCREEN_WIDTH + x], 40);
 }
 
 void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *options, int sel)
@@ -638,7 +627,7 @@ void odroid_overlay_draw_dialog(const char *header, odroid_dialog_choice_t *opti
     rg_free(i_height);
 }
 
-int odroid_overlay_dialog_find_next_item(odroid_dialog_choice_t *options, int size, int selected_index, int direction)
+static int odroid_overlay_dialog_find_next_item(odroid_dialog_choice_t *options, int size, int selected_index, int direction)
 {
     size--; // Ignore last ODROID_DIALOG_CHOICE_LAST entry
 
@@ -674,36 +663,56 @@ int odroid_overlay_dialog_find_next_item(odroid_dialog_choice_t *options, int si
     return selected_index;
 }
 
-int odroid_overlay_dialog_live(const char *header, odroid_dialog_choice_t *options, int selected, repaint_callback_t callback)
+// Please note: It is up to the caller to restore the screen
+int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, int selected, void_callback_t repaint)
 {
     int options_count = get_dialog_items_count(options);
     int sel = odroid_overlay_dialog_find_next_item(options, options_count, selected < 0 ? (options_count + selected) : selected, 0);
+    int last_sel = sel;
     int last_key = -1;
     int repeat = 0;
     bool select = false;
-    bool initial = true;
+    bool debounce = true;
+    bool clone = true;
     odroid_gamepad_state_t joystick;
 
-    lcd_sync();
-    lcd_swap();
-    HAL_Delay(20);
-    odroid_overlay_darken_all();
-    lcd_sync();
-    odroid_overlay_draw_dialog(header, options, sel);
-    dialog_open_depth++;
+    void _repaint()
+    {
+        wdog_refresh();
+
+        // Repaint background (if enabled)
+        if (repaint != NULL)
+        {
+            repaint();
+        }
+        // Darken background (if needed)
+        odroid_overlay_darken_all();
+        // Draw dialog on top of darken background
+        odroid_overlay_draw_dialog(header, options, sel);
+        // Show
+        lcd_swap_with_wait();
+
+        // Important: Clone full frame once to avoid any initial discrepancies between buffers to avoid flickering.
+        if (clone) {
+            lcd_clone();
+            clone = false;
+        }
+    }
 
     while (1)
     {
-        wdog_refresh();
+        _repaint();
+
         odroid_input_read_gamepad(&joystick);
 
         // Ignore all buttons until all buttons are released once (only on entry)
-        if (initial && !odroid_input_key_is_pressed(ODROID_INPUT_ANY)) {
-            initial = false;
+        if (debounce && !odroid_input_key_is_pressed(ODROID_INPUT_ANY)) {
+            wdog_refresh();
             HAL_Delay(50); // Poor mans debounce
+            debounce = false;
         }
 
-        if ((last_key < 0 || ((repeat >= 30) && (repeat % 5 == 0))) && !initial)
+        if (!debounce && (last_key < 0 || ((repeat >= 30) && (repeat % 5 == 0))))
         {
             if (joystick.values[ODROID_INPUT_UP]) // G&W UP button
             {
@@ -808,6 +817,7 @@ int odroid_overlay_dialog_live(const char *header, odroid_dialog_choice_t *optio
                     break;
             }
         }
+        last_sel = sel;
         if (repeat > 0)
             repeat++;
         if (last_key >= 0)
@@ -818,35 +828,18 @@ int odroid_overlay_dialog_live(const char *header, odroid_dialog_choice_t *optio
                 repeat = 0;
             }
         }
-
-        if (callback != NULL)
-        {
-            callback();
-            dialog_open_depth--;
-        }
-        odroid_overlay_darken_all();
-        odroid_overlay_draw_dialog(header, options, sel);
-        if (callback != NULL)
-        {
-            dialog_open_depth++;
-        }
-
-        lcd_swap();
-        HAL_Delay(20);
     }
 
-    odroid_input_wait_for_key(last_key, false);
-
-    odroid_display_force_refresh();
-
-    dialog_open_depth--;
+    // Keep paint loop running until the button is released
+    int tmp_sel = sel;
+    sel = last_sel;
+    do {
+        odroid_input_read_gamepad(&joystick);
+        _repaint();
+    } while (joystick.values[last_key] == 1);
+    sel = tmp_sel;
 
     return sel < 0 ? sel : options[sel].id;
-}
-
-int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, int selected)
-{
-    return odroid_overlay_dialog_live(header, options, selected, NULL);
 }
 
 int odroid_overlay_confirm(const char *text, bool yes_selected)
@@ -858,7 +851,7 @@ int odroid_overlay_confirm(const char *text, bool yes_selected)
         {0, curr_lang->s_No, "", 1, NULL},
         ODROID_DIALOG_CHOICE_LAST,
     };
-    return odroid_overlay_dialog(curr_lang->s_PlsChose, choices, yes_selected ? 2 : 3);
+    return odroid_overlay_dialog(curr_lang->s_PlsChose, choices, yes_selected ? 2 : 3, NULL); //TODO add repaint callback
 }
 
 void odroid_overlay_alert(const char *text)
@@ -869,12 +862,7 @@ void odroid_overlay_alert(const char *text)
         {1, curr_lang->s_OK, "", 1, NULL},
         ODROID_DIALOG_CHOICE_LAST,
     };
-    odroid_overlay_dialog(curr_lang->s_Confirm, choices, 2);
-}
-
-bool odroid_overlay_dialog_is_open(void)
-{
-    return dialog_open_depth > 0;
+    odroid_overlay_dialog(curr_lang->s_Confirm, choices, 2, NULL); //TODO add repaint callback
 }
 
 static bool volume_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
@@ -1046,7 +1034,7 @@ static bool turbo_buttons_update_cb(odroid_dialog_choice_t *option, odroid_dialo
     return event == ODROID_DIALOG_ENTER;
 }
 
-int odroid_overlay_settings_menu_live(odroid_dialog_choice_t *extra_options, repaint_callback_t callback)
+int odroid_overlay_settings_menu(odroid_dialog_choice_t *extra_options, void_callback_t repaint)
 {
     static char bright_value[25];
     static char volume_value[25];
@@ -1067,16 +1055,11 @@ int odroid_overlay_settings_menu_live(odroid_dialog_choice_t *extra_options, rep
         memcpy(&options[options_count], extra_options, (extra_options_count + 1) * sizeof(odroid_dialog_choice_t));
     }
 
-    int ret = odroid_overlay_dialog_live(curr_lang->s_OptionsTit, options, 0, callback);
+    int ret = odroid_overlay_dialog(curr_lang->s_OptionsTit, options, 0, repaint);
 
     odroid_settings_commit();
 
     return ret;
-}
-
-int odroid_overlay_settings_menu(odroid_dialog_choice_t *extra_options)
-{
-    return odroid_overlay_settings_menu_live(extra_options, NULL);
 }
 
 static void draw_game_status_bar(runtime_stats_t stats)
@@ -1101,7 +1084,8 @@ static void draw_game_status_bar(runtime_stats_t stats)
     odroid_overlay_draw_battery(ODROID_SCREEN_WIDTH - 22, ODROID_SCREEN_HEIGHT - 13);
 }
 
-int odroid_overlay_game_settings_menu(odroid_dialog_choice_t *extra_options)
+int
+odroid_overlay_game_settings_menu(odroid_dialog_choice_t *extra_options, void_callback_t repaint)
 {
     char speedup_value[15];
     char scaling_value[15];
@@ -1126,17 +1110,15 @@ int odroid_overlay_game_settings_menu(odroid_dialog_choice_t *extra_options)
     }
 
     odroid_audio_mute(true);
-    while (odroid_input_key_is_pressed(ODROID_INPUT_ANY))
-        wdog_refresh();
 
-    int r = odroid_overlay_settings_menu(options);
+    int r = odroid_overlay_settings_menu(options, repaint);
 
     odroid_audio_mute(false);
 
     return r;
 }
 
-int odroid_overlay_game_debug_menu(void)
+int odroid_overlay_game_debug_menu(void_callback_t repaint)
 {
     odroid_dialog_choice_t options[12] = {
         {10, "Screen Res", "A", 1, NULL},
@@ -1147,10 +1129,7 @@ int odroid_overlay_game_debug_menu(void)
         {10, "Registers", "C", 1, NULL},
         ODROID_DIALOG_CHOICE_LAST,
     };
-
-    while (odroid_input_key_is_pressed(ODROID_INPUT_ANY))
-        wdog_refresh();
-    return odroid_overlay_dialog("Debugging", options, 0);
+    return odroid_overlay_dialog("Debugging", options, 0, repaint);
 }
 
 #if CHEAT_CODES == 1
@@ -1196,15 +1175,28 @@ static bool show_cheat_dialog()
         choices[i].update_cb = cheat_update_cb;
     }
     choices[CHOSEN_FILE->cheat_count] = last;
-    odroid_overlay_dialog(curr_lang->s_Cheat_Codes_Title, choices, 0);
+    odroid_overlay_dialog(curr_lang->s_Cheat_Codes_Title, choices, 0, NULL); //TODO add repaint callback
 
     rg_free(choices);
     odroid_settings_commit();
     return false;
 }
 #endif
-int odroid_overlay_game_menu(odroid_dialog_choice_t *extra_options)
+
+int odroid_overlay_game_menu(odroid_dialog_choice_t *extra_options, void_callback_t repaint)
 {
+    // Collect stats before freezing emulation
+    runtime_stats_t stats = odroid_system_get_stats();
+
+    void _repaint()
+    {
+        if (repaint != NULL)
+        {
+            repaint();
+        }
+        draw_game_status_bar(stats);
+    }
+
 #if CHEAT_CODES == 1
     odroid_dialog_choice_t choices[12];
     bool cheat_update_support = false;
@@ -1307,17 +1299,10 @@ int odroid_overlay_game_menu(odroid_dialog_choice_t *extra_options)
         }
     }
 
-    // Collect stats before freezing emulation with wait_all_keys_released()
-    runtime_stats_t stats = odroid_system_get_stats();
-
     odroid_audio_mute(true);
-    while (odroid_input_key_is_pressed(ODROID_INPUT_ANY))
-        wdog_refresh();
-    draw_game_status_bar(stats);
 
-    lcd_sync();
-
-    int r = odroid_overlay_dialog(curr_lang->s_Retro_Go_options, choices, 0);
+    lcd_wait_if_swap_pending(); // Wait for a known good state
+    int r = odroid_overlay_dialog(curr_lang->s_Retro_Go_options, choices, 0, &_repaint);
 
     // Clear startup file so we boot into the retro-go gui
     odroid_settings_StartupFile_set(NULL);
@@ -1335,10 +1320,10 @@ int odroid_overlay_game_menu(odroid_dialog_choice_t *extra_options)
         odroid_system_emu_load_state(0);
         break; // TODO: Reload emulator?
     case 40:
-        odroid_overlay_game_settings_menu(extra_options);
+        odroid_overlay_game_settings_menu(extra_options, &_repaint);
         break;
     case 50:
-        odroid_overlay_game_debug_menu();
+        odroid_overlay_game_debug_menu(&_repaint);
         break;
 #if CHEAT_CODES == 1
     case 60:

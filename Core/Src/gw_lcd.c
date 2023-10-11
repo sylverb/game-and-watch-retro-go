@@ -141,6 +141,23 @@ uint32_t is_lcd_swap_pending(void)
   return (uint32_t) ((hltdc.Instance->SRCR) & (LTDC_SRCR_VBR | LTDC_SRCR_IMR));
 }
 
+uint32_t lcd_wait_if_swap_pending(void)
+{
+  uint32_t pending = is_lcd_swap_pending();
+
+  if (pending)
+  {
+    wdog_refresh();
+    while (is_lcd_swap_pending())
+    {
+        __NOP();
+    }
+    wdog_refresh();
+  }
+
+  return pending;
+}
+
 uint32_t lcd_get_pixel_position()
 {
   return (uint32_t)(hltdc.Instance->CPSR);
@@ -152,6 +169,12 @@ void lcd_swap(void)
   active_framebuffer = active_framebuffer ? 0 : 1;
 }
 
+void lcd_swap_with_wait(void)
+{
+  lcd_swap();
+  lcd_wait_if_swap_pending();
+}
+
 void lcd_sync(void)
 {
   void *active = lcd_get_active_buffer();
@@ -159,6 +182,16 @@ void lcd_sync(void)
 
   if (active != inactive) {
     memcpy(inactive, active, sizeof(framebuffer1));
+  }
+}
+
+void lcd_clone(void)
+{
+  void *active = lcd_get_active_buffer();
+  void *inactive = lcd_get_inactive_buffer();
+
+  if (active != inactive) {
+    memcpy(active, inactive, sizeof(framebuffer1));
   }
 }
 
