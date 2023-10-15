@@ -101,6 +101,12 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_amd_palette_Color = "²ÊÉ«",
     .s_amd_palette_Green = "ÂÌÉ«",
     .s_amd_palette_Grey = "»ÒÉ«",
+    .s_amd_game_Button = "Game¼ü",
+    .s_amd_time_Button = "Time¼ü",
+    .s_amd_start_Button = "Start¼ü",
+    .s_amd_select_Button = "Select¼ü",
+    .s_amd_A_Button = "A¼ü",
+    .s_amd_B_Button = "B¼ü",
     .s_amd_Press_Key = "Ä£Äâ°´¼ü",
     //=====================================================================
 

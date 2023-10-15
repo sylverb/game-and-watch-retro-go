@@ -99,6 +99,12 @@ const lang_t lang_pt_pt LANG_DATA = {
     .s_amd_palette_Color = "Cor",
     .s_amd_palette_Green = "Verde",
     .s_amd_palette_Grey = "Cinza",
+    .s_amd_game_Button = "Botão Game",
+    .s_amd_time_Button = "Botão Time",
+    .s_amd_start_Button = "Botão Start",
+    .s_amd_select_Button = "Botão Select",
+    .s_amd_A_Button = "Botão A",
+    .s_amd_B_Button = "Botão B",
     .s_amd_Press_Key = "Pressione botão",
     //=====================================================================
 

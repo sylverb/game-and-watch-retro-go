@@ -97,6 +97,12 @@ const lang_t lang_ja_jp LANG_DATA = {
     .s_amd_palette_Color = "色",
     .s_amd_palette_Green = "緑",
     .s_amd_palette_Grey = "灰色",
+    .s_amd_game_Button = "Game ボタン",
+    .s_amd_time_Button = "Time ボタン",
+    .s_amd_start_Button = "Start ボタン",
+    .s_amd_select_Button = "Select ボタン",
+    .s_amd_A_Button = "A ボタン",
+    .s_amd_B_Button = "B ボタン",
     .s_amd_Press_Key = "キーを押す",
     //=====================================================================
 

@@ -72,6 +72,12 @@ typedef struct
     const char *s_amd_palette_Color;
     const char *s_amd_palette_Green;
     const char *s_amd_palette_Grey;
+    const char *s_amd_game_Button;
+    const char *s_amd_time_Button;
+    const char *s_amd_start_Button;
+    const char *s_amd_select_Button;
+    const char *s_amd_A_Button;
+    const char *s_amd_B_Button;
     const char *s_amd_Press_Key;
     //=====================================================================
 

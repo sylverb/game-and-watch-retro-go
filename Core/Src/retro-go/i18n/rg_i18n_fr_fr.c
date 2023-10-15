@@ -78,27 +78,33 @@ const lang_t lang_fr_fr LANG_DATA = {
 
     // Core\Src\porting\md\main_msx.c ================================
     .s_msx_Change_Dsk = "Change Dsk",
-    .s_msx_Select_MSX = "Select MSX",
+    .s_msx_Select_MSX = "Type de MSX",
     .s_msx_MSX1_EUR = "MSX1 (EUR)",
     .s_msx_MSX2_EUR = "MSX2 (EUR)",
     .s_msx_MSX2_JP = "MSX2+ (JP)",
-    .s_msx_Frequency = "Frequency",
+    .s_msx_Frequency = "Fréquence",
     .s_msx_Freq_Auto = "Auto",
     .s_msx_Freq_50 = "50Hz",
     .s_msx_Freq_60 = "60Hz",
-    .s_msx_A_Button = "A Button",
-    .s_msx_B_Button = "B Button",
+    .s_msx_A_Button = "Bouton A",
+    .s_msx_B_Button = "Bouton B",
     .s_msx_Press_Key = "Press Key",
     //=====================================================================
 
     // Core\Src\porting\md\main_amstrad.c ================================
     .s_amd_Change_Dsk = "Change Dsk",
-    .s_amd_Controls = "Controls",
-    .s_amd_Controls_Joystick = "Joystick",
-    .s_amd_Controls_Keyboard = "Keyboard",
-    .s_amd_palette_Color = "Color",
-    .s_amd_palette_Green = "Green",
-    .s_amd_palette_Grey = "Grey",
+    .s_amd_Controls = "Contrôles",
+    .s_amd_Controls_Joystick = "Manette",
+    .s_amd_Controls_Keyboard = "Clavier",
+    .s_amd_palette_Color = "Couleur",
+    .s_amd_palette_Green = "Vert",
+    .s_amd_palette_Grey = "Gris",
+    .s_amd_game_Button = "Bouton Game",
+    .s_amd_time_Button = "Bouton Time",
+    .s_amd_start_Button = "Bouton Start",
+    .s_amd_select_Button = "Bouton Select",
+    .s_amd_A_Button = "Bouton A",
+    .s_amd_B_Button = "Bouton B",
     .s_amd_Press_Key = "Press Key",
     //=====================================================================
 
