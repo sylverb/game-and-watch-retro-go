@@ -51,6 +51,8 @@ static retro_emulator_file_t *CHOSEN_FILE = NULL;
 static uint16_t overlay_buffer[ODROID_SCREEN_WIDTH * 32 * 2] __attribute__((aligned(4)));
 static short font_size = 8;
 
+#define MAX_OPTIONS_COUNT 17
+
 void odroid_overlay_init()
 {
     odroid_overlay_set_font_size(odroid_settings_FontSize_get());
@@ -315,7 +317,7 @@ static int get_dialog_items_count(odroid_dialog_choice_t *options)
     if (options == NULL)
         return 0;
 
-    for (int i = 0; i < 17; i++)
+    for (int i = 0; i < MAX_OPTIONS_COUNT+1; i++)
         if (options[i].id == last.id && options[i].enabled == last.enabled)
             return i;
     return 0;
@@ -1040,7 +1042,7 @@ int odroid_overlay_settings_menu(odroid_dialog_choice_t *extra_options, void_cal
     static char volume_value[25];
     static char turbo_value[25];
 
-    odroid_dialog_choice_t options[16] = {                         //
+    odroid_dialog_choice_t options[MAX_OPTIONS_COUNT] = {                         //
         {0, curr_lang->s_Brightness, bright_value, 1, &brightness_update_cb}, //
         {1, curr_lang->s_Volume, volume_value, 1, &volume_update_cb},
         {2, curr_lang->s_Turbo_Button, turbo_value, 1, &turbo_buttons_update_cb},
@@ -1093,7 +1095,7 @@ odroid_overlay_game_settings_menu(odroid_dialog_choice_t *extra_options, void_ca
     strcpy(filtering_value, curr_lang->s_FilteringOff);
     strcpy(scaling_value, curr_lang->s_SCalingFull);
 
-    odroid_dialog_choice_t options[16] = {
+    odroid_dialog_choice_t options[MAX_OPTIONS_COUNT] = {
         ODROID_DIALOG_CHOICE_SEPARATOR,
         {200, curr_lang->s_Scaling, scaling_value, 1, &scaling_update_cb},
         {210, curr_lang->s_Filtering, filtering_value, 1, &filter_update_cb}, // Interpolation
