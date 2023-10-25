@@ -623,3 +623,13 @@ static void set_ingame_overlay(ingame_overlay_t type){
     common_emu_state.overlay = type;
     common_emu_state.last_overlay_time = get_elapsed_time();
 }
+
+bool common_sleep_while_lcd_swap_pending() {
+    bool pending = false;
+    while (lcd_is_swap_pending()) {
+        pending = true;
+        cpumon_sleep();
+    }
+
+    return pending;
+}
