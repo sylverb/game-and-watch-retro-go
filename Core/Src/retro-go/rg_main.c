@@ -476,7 +476,7 @@ void retro_loop()
                 if (sel == 1)
                 {
                     // Reset settings
-                    if (odroid_overlay_confirm(curr_lang->s_Confirm_Reset_settings, false) == 1)
+                    if (odroid_overlay_confirm(curr_lang->s_Confirm_Reset_settings, false, &gui_redraw_callback) == 1)
                     {
                         odroid_settings_reset();
                         odroid_system_switch_app(0); // reset
@@ -566,7 +566,7 @@ void retro_loop()
 #endif
                 if (oc_level_gets() != oc_level_get())
                     //reboot;
-                    if (odroid_overlay_confirm(curr_lang->s_Confirm_OC_Reboot, false) == 1)
+                    if (odroid_overlay_confirm(curr_lang->s_Confirm_OC_Reboot, false, &gui_redraw_callback) == 1)
                         odroid_system_switch_app(0);
 
                 gui_redraw();
@@ -596,7 +596,7 @@ void retro_loop()
                         {1, curr_lang->s_Minute, minute_value, 1, &minute_update_cb},
                         {2, curr_lang->s_Second, second_value, 1, &second_update_cb},
                         ODROID_DIALOG_CHOICE_LAST};
-                    sel = odroid_overlay_dialog(curr_lang->s_Time_setup, timeoptions, 0, NULL);
+                    sel = odroid_overlay_dialog(curr_lang->s_Time_setup, timeoptions, 0, &gui_redraw_callback);
                 }
                 else if (sel == 1)
                 {
@@ -613,7 +613,7 @@ void retro_loop()
                         {0, curr_lang->s_Day, day_value, 1, &day_update_cb},
                         {-1, curr_lang->s_Weekday, weekday_value, 0, &weekday_update_cb},
                         ODROID_DIALOG_CHOICE_LAST};
-                    sel = odroid_overlay_dialog(curr_lang->s_Date_setup, dateoptions, 0, NULL);
+                    sel = odroid_overlay_dialog(curr_lang->s_Date_setup, dateoptions, 0, &gui_redraw_callback);
                 }
 
                 gui_redraw();

@@ -842,7 +842,7 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
     return sel < 0 ? sel : options[sel].id;
 }
 
-int odroid_overlay_confirm(const char *text, bool yes_selected)
+int odroid_overlay_confirm(const char *text, bool yes_selected, void_callback_t repaint)
 {
     odroid_dialog_choice_t choices[] = {
         {0, text, "", -1, NULL},
@@ -851,7 +851,7 @@ int odroid_overlay_confirm(const char *text, bool yes_selected)
         {0, curr_lang->s_No, "", 1, NULL},
         ODROID_DIALOG_CHOICE_LAST,
     };
-    return odroid_overlay_dialog(curr_lang->s_PlsChose, choices, yes_selected ? 2 : 3, NULL); //TODO add repaint callback
+    return odroid_overlay_dialog(curr_lang->s_PlsChose, choices, yes_selected ? 2 : 3, repaint);
 }
 
 void odroid_overlay_alert(const char *text)
@@ -862,7 +862,7 @@ void odroid_overlay_alert(const char *text)
         {1, curr_lang->s_OK, "", 1, NULL},
         ODROID_DIALOG_CHOICE_LAST,
     };
-    odroid_overlay_dialog(curr_lang->s_Confirm, choices, 2, NULL); //TODO add repaint callback
+    odroid_overlay_dialog(curr_lang->s_Confirm, choices, 2, NULL);
 }
 
 static bool volume_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
