@@ -310,6 +310,58 @@ void soft_reset_do(void)
 }
 #endif
 
+static void enable_full_debug_clock()
+{
+    DBGMCU->CR = DBGMCU_CR_DBG_SLEEPCD |
+                    DBGMCU_CR_DBG_STOPCD |
+                    DBGMCU_CR_DBG_STANDBYCD |
+                    DBGMCU_CR_DBG_TRACECKEN |
+                    DBGMCU_CR_DBG_CKCDEN |
+                    DBGMCU_CR_DBG_CKSRDEN;
+}
+
+// This ensures that we are able to catch the cpu while it is waiting for interrupts aka __WFI
+static void enable_minimal_debug_clock()
+{
+    DBGMCU->CR = DBGMCU_CR_DBG_SLEEPCD;
+}
+
+static void sleep_hook_callback()
+{
+    if (!odroid_settings_DebugMenuDebugClockAlwaysOn_get())
+    {
+        // Disable any debug clock
+        DBGMCU->CR = 0;
+    }
+}
+
+static void update_debug_clock()
+{
+    odroid_settings_DebugMenuDebugClockAlwaysOn_get() ? enable_full_debug_clock() : enable_minimal_debug_clock();
+}
+
+static bool debug_menu_debug_clock_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    bool always_on = odroid_settings_DebugMenuDebugClockAlwaysOn_get();
+    if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
+        always_on = !always_on;
+        odroid_settings_DebugMenuDebugClockAlwaysOn_set(always_on);
+    }
+
+    sprintf(option->value, "%s", always_on ? curr_lang->s_DBGMCU_clock_on : curr_lang->s_DBGMCU_clock_auto);
+
+    update_debug_clock();
+
+    return event == ODROID_DIALOG_ENTER;
+}
+
+static bool debug_menu_debug_cr_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    sprintf(option->value, "0x%08lX", DBGMCU->CR);
+
+    return event == ODROID_DIALOG_ENTER;
+}
+
 void retro_loop()
 {
     tab_t *tab = gui_get_current_tab();
@@ -332,6 +384,12 @@ void retro_loop()
     // gui.theme      = odroid_settings_int32_get(KEY_GUI_THEME, 0);
     // gui.show_empty = odroid_settings_int32_get(KEY_SHOW_EMPTY, 1);
     // gui.show_cover = odroid_settings_int32_get(KEY_SHOW_COVER, 1);
+
+    // This will upon power down disable the debug clock to save battery power
+    odroid_system_set_sleep_hook(&sleep_hook_callback);
+
+    // This will ensure that we can still catch the CPU during WFI
+    update_debug_clock();
 
     while (true)
     {
@@ -436,6 +494,7 @@ void retro_loop()
                     char erase_size_str[32];
                     char dbgmcu_id_str[16];
                     char dbgmcu_cr_str[16];
+                    char dbgmcu_clock_str[16];
 
                     // Read jedec id and status register from the external flash
                     OSPI_DisableMemoryMappedMode();
@@ -449,7 +508,6 @@ void retro_loop()
                     snprintf(config_str, sizeof(config_str), "0x%02X", config);
                     snprintf(erase_size_str, sizeof(erase_size_str), "%ld kB", OSPI_GetSmallestEraseSize() / 1024);
                     snprintf(dbgmcu_id_str, sizeof(dbgmcu_id_str), "0x%08lX", DBGMCU->IDCODE);
-                    snprintf(dbgmcu_cr_str, sizeof(dbgmcu_cr_str), "0x%08lX", DBGMCU->CR);
 
                     odroid_dialog_choice_t debuginfo[] = {
                         {-1, curr_lang->s_Flash_JEDEC_ID, (char *)jedec_id_str, 0, NULL},
@@ -459,37 +517,14 @@ void retro_loop()
                         {-1, curr_lang->s_Smallest_erase, erase_size_str, 0, NULL},
                         ODROID_DIALOG_CHOICE_SEPARATOR,
                         {-1, curr_lang->s_DBGMCU_IDCODE, dbgmcu_id_str, 0, NULL},
-                        {1, curr_lang->s_Enable_DBGMCU_CK, dbgmcu_cr_str, 1, NULL},
-                        {2, curr_lang->s_Disable_DBGMCU_CK, "", 1, NULL},
+                        {-1, curr_lang->s_DBGMCU_CR, dbgmcu_cr_str, 0, debug_menu_debug_cr_cb},
+                        {1, curr_lang->s_DBGMCU_clock, dbgmcu_clock_str, 1, debug_menu_debug_clock_cb},
                         ODROID_DIALOG_CHOICE_SEPARATOR,
                         {0, curr_lang->s_Close, "", 1, NULL},
                         ODROID_DIALOG_CHOICE_LAST};
 
-                    int sel = odroid_overlay_dialog(curr_lang->s_Debug_Title, debuginfo, -1, NULL);
-                    switch (sel)
-                    {
-                    case 1:
-                        // Enable debug clocks explicitly
-                        SET_BIT(DBGMCU->CR,
-                                DBGMCU_CR_DBG_SLEEPCD |
-                                    DBGMCU_CR_DBG_STOPCD |
-                                    DBGMCU_CR_DBG_STANDBYCD |
-                                    DBGMCU_CR_DBG_TRACECKEN |
-                                    DBGMCU_CR_DBG_CKCDEN |
-                                    DBGMCU_CR_DBG_CKSRDEN);
-                    case 2:
-                        // Disable debug clocks explicitly
-                        CLEAR_BIT(DBGMCU->CR,
-                                  DBGMCU_CR_DBG_SLEEPCD |
-                                      DBGMCU_CR_DBG_STOPCD |
-                                      DBGMCU_CR_DBG_STANDBYCD |
-                                      DBGMCU_CR_DBG_TRACECKEN |
-                                      DBGMCU_CR_DBG_CKCDEN |
-                                      DBGMCU_CR_DBG_CKSRDEN);
-                        break;
-                    default:
-                        break;
-                    }
+                    odroid_overlay_dialog(curr_lang->s_Debug_Title, debuginfo, -1, &gui_redraw_callback);
+                    odroid_settings_commit();
                 }
 
                 gui_redraw();

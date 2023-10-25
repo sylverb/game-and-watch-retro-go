@@ -181,8 +181,10 @@ typedef struct
     const char *s_Flash_CR;
     const char *s_Smallest_erase;
     const char *s_DBGMCU_IDCODE;
-    const char *s_Enable_DBGMCU_CK;
-    const char *s_Disable_DBGMCU_CK;
+    const char *s_DBGMCU_CR;
+    const char *s_DBGMCU_clock;
+    const char *s_DBGMCU_clock_on;
+    const char *s_DBGMCU_clock_auto;
     const char *s_Debug_Title;
     const char *s_Idle_power_off;
     const char *s_Time;
