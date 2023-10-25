@@ -673,12 +673,13 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
     int repeat = 0;
     bool select = false;
     bool debounce = true;
-    bool clone = true;
     odroid_gamepad_state_t joystick;
 
     void _repaint()
     {
         wdog_refresh();
+        lcd_sleep_while_swap_pending();
+        memset(lcd_get_active_buffer(), 0, sizeof(framebuffer1));
 
         // Repaint background (if enabled)
         if (repaint != NULL)
@@ -690,13 +691,7 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
         // Draw dialog on top of darken background
         odroid_overlay_draw_dialog(header, options, sel);
         // Show
-        lcd_swap_with_wait();
-
-        // Important: Clone full frame once to avoid any initial discrepancies between buffers to avoid flickering.
-        if (clone) {
-            lcd_clone();
-            clone = false;
-        }
+        lcd_swap();
     }
 
     while (1)
@@ -1301,7 +1296,6 @@ int odroid_overlay_game_menu(odroid_dialog_choice_t *extra_options, void_callbac
 
     odroid_audio_mute(true);
 
-    lcd_wait_if_swap_pending(); // Wait for a known good state
     int r = odroid_overlay_dialog(curr_lang->s_Retro_Go_options, choices, 0, &_repaint);
 
     // Clear startup file so we boot into the retro-go gui

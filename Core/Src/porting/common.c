@@ -135,7 +135,15 @@ bool common_emu_frame_loop(void){
     return draw_frame;
 }
 
-
+static bool ingame_overlay_loop() {
+    if(get_elapsed_time_since(common_emu_state.last_overlay_time) > 1000) {
+        if (common_emu_state.overlay != INGAME_OVERLAY_NONE) {
+            set_ingame_overlay(INGAME_OVERLAY_NONE);
+            return true;
+        }
+    }
+    return false;
+}
 
 /**
  * Common input/macro/menuing features inside all emu loops. This is to be called
@@ -153,6 +161,11 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
     static bool macro_activated = false;
     static uint8_t clear_frames = 0;
 
+    void _repaint() {
+        ingame_overlay_loop();
+        repaint();
+    }
+
     if(joystick->values[ODROID_INPUT_VOLUME]){  // PAUSE/SET button
         // PAUSE/SET has been pressed, checking additional inputs for macros
         pause_pressed = true;
@@ -167,6 +180,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
 #if ENABLE_SCREENSHOT
                 printf("Capturing screenshot...\n");
                 odroid_audio_mute(true);
+                common_sleep_while_lcd_swap_pending();
                 store_save((uint8_t *) framebuffer_capture, lcd_get_inactive_buffer(), sizeof(framebuffer_capture));
                 set_ingame_overlay(INGAME_OVERLAY_SC);
                 odroid_audio_mute(false);
@@ -279,7 +293,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
         // PAUSE/SET has been released without performing any macro. Launch menu
         pause_pressed = false;
 
-        odroid_overlay_game_menu(game_options, repaint);
+        odroid_overlay_game_menu(game_options, _repaint);
         clear_frames = 2;
 
         common_emu_state.startup_frames = 0;
@@ -291,21 +305,13 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
         last_key = -1;
     }
 
-    if(get_elapsed_time_since(common_emu_state.last_overlay_time) > 1000) {
-       if (common_emu_state.overlay != INGAME_OVERLAY_NONE) {
-            set_ingame_overlay(INGAME_OVERLAY_NONE);
-            clear_frames = 2;
-       }
+    if (ingame_overlay_loop()) {
+        clear_frames = 2;
     }
 
     if (clear_frames) {
-       clear_frames--;
-        
-       if (lcd_wait_if_swap_pending()) {
-            // It seems like an LCD swap was pending.
-            // Please read the note for this function.
-            printf("Warning: Had to wait for lcd swap.\n");
-       }
+        clear_frames--;
+        common_sleep_while_lcd_swap_pending();
 
         // Clear the active screen buffer, caller must repaint it 
         memset(lcd_get_active_buffer(), 0, sizeof(framebuffer1));

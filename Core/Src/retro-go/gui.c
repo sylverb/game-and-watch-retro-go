@@ -325,8 +325,9 @@ void gui_redraw_callback()
 
 void gui_redraw()
 {
+    lcd_sleep_while_swap_pending();
     gui_redraw_callback();
-    lcd_swap_with_wait();
+    lcd_swap();
 }
 
 void gui_draw_navbar()
