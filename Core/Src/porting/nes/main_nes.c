@@ -397,6 +397,7 @@ void osd_blitscreen(bitmap_t *bmp)
         lastFPSTime = currentTime;
     }
 
+    common_sleep_while_lcd_swap_pending();
     PROFILING_INIT(t_blit);
     PROFILING_START(t_blit);
 

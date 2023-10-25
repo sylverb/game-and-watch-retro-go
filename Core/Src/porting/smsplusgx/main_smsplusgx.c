@@ -394,6 +394,7 @@ static void sms_draw_frame()
                           ((0b0000000000011111 & p));
   }
 
+  common_sleep_while_lcd_swap_pending();
   blit();
   lcd_swap();
 }
