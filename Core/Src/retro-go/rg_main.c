@@ -346,11 +346,10 @@ static bool debug_menu_debug_clock_cb(odroid_dialog_choice_t *option, odroid_dia
     if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
         always_on = !always_on;
         odroid_settings_DebugMenuDebugClockAlwaysOn_set(always_on);
+        update_debug_clock();
     }
 
     sprintf(option->value, "%s", always_on ? curr_lang->s_DBGMCU_clock_on : curr_lang->s_DBGMCU_clock_auto);
-
-    update_debug_clock();
 
     return event == ODROID_DIALOG_ENTER;
 }
