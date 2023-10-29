@@ -407,11 +407,6 @@ void retro_loop()
             if (!tab->initialized)
             {
                 gui_init_tab(tab);
-                gui_redraw();
-            }
-            else if (tab_enabled(tab))
-            {
-                gui_redraw();
             }
 
             if (!tab_enabled(tab))
@@ -525,8 +520,6 @@ void retro_loop()
                     odroid_overlay_dialog(curr_lang->s_Debug_Title, debuginfo, -1, &gui_redraw_callback);
                     odroid_settings_commit();
                 }
-
-                gui_redraw();
             }
             else if ((last_key == ODROID_INPUT_VOLUME) || (last_key == ODROID_INPUT_Y))
             {
@@ -567,8 +560,6 @@ void retro_loop()
                     //reboot;
                     if (odroid_overlay_confirm(curr_lang->s_Confirm_OC_Reboot, false, &gui_redraw_callback) == 1)
                         odroid_system_switch_app(0);
-
-                gui_redraw();
             }
             // TIME menu
             else if (last_key == ODROID_INPUT_SELECT)
@@ -614,8 +605,6 @@ void retro_loop()
                         ODROID_DIALOG_CHOICE_LAST};
                     sel = odroid_overlay_dialog(curr_lang->s_Date_setup, dateoptions, 0, &gui_redraw_callback);
                 }
-
-                gui_redraw();
             }
             else if (last_key == key_up)
             {
