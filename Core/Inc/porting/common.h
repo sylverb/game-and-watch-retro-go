@@ -89,3 +89,9 @@ extern common_emu_state_t common_emu_state;
  * Drawable stuff over current emulation.
  */
 void common_ingame_overlay(void);
+
+/**
+ * Will go to sleep and wait for an interrupt to save power while lcd swap is pending.
+ * The LCD controller will generate an interrupt when the swap has been completed.
+ */
+bool common_sleep_while_lcd_swap_pending(void);

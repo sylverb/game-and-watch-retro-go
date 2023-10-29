@@ -310,6 +310,57 @@ void soft_reset_do(void)
 }
 #endif
 
+static void enable_full_debug_clock()
+{
+    DBGMCU->CR = DBGMCU_CR_DBG_SLEEPCD |
+                    DBGMCU_CR_DBG_STOPCD |
+                    DBGMCU_CR_DBG_STANDBYCD |
+                    DBGMCU_CR_DBG_TRACECKEN |
+                    DBGMCU_CR_DBG_CKCDEN |
+                    DBGMCU_CR_DBG_CKSRDEN;
+}
+
+// This ensures that we are able to catch the cpu while it is waiting for interrupts aka __WFI
+static void enable_minimal_debug_clock()
+{
+    DBGMCU->CR = DBGMCU_CR_DBG_SLEEPCD;
+}
+
+static void sleep_hook_callback()
+{
+    if (!odroid_settings_DebugMenuDebugClockAlwaysOn_get())
+    {
+        // Disable any debug clock
+        DBGMCU->CR = 0;
+    }
+}
+
+static void update_debug_clock()
+{
+    odroid_settings_DebugMenuDebugClockAlwaysOn_get() ? enable_full_debug_clock() : enable_minimal_debug_clock();
+}
+
+static bool debug_menu_debug_clock_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    bool always_on = odroid_settings_DebugMenuDebugClockAlwaysOn_get();
+    if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
+        always_on = !always_on;
+        odroid_settings_DebugMenuDebugClockAlwaysOn_set(always_on);
+        update_debug_clock();
+    }
+
+    sprintf(option->value, "%s", always_on ? curr_lang->s_DBGMCU_clock_on : curr_lang->s_DBGMCU_clock_auto);
+
+    return event == ODROID_DIALOG_ENTER;
+}
+
+static bool debug_menu_debug_cr_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    sprintf(option->value, "0x%08lX", DBGMCU->CR);
+
+    return event == ODROID_DIALOG_ENTER;
+}
+
 void retro_loop()
 {
     tab_t *tab = gui_get_current_tab();
@@ -332,6 +383,12 @@ void retro_loop()
     // gui.theme      = odroid_settings_int32_get(KEY_GUI_THEME, 0);
     // gui.show_empty = odroid_settings_int32_get(KEY_SHOW_EMPTY, 1);
     // gui.show_cover = odroid_settings_int32_get(KEY_SHOW_COVER, 1);
+
+    // This will upon power down disable the debug clock to save battery power
+    odroid_system_set_sleep_hook(&sleep_hook_callback);
+
+    // This will ensure that we can still catch the CPU during WFI
+    update_debug_clock();
 
     while (true)
     {
@@ -418,7 +475,7 @@ void retro_loop()
                 if (sel == 1)
                 {
                     // Reset settings
-                    if (odroid_overlay_confirm(curr_lang->s_Confirm_Reset_settings, false) == 1)
+                    if (odroid_overlay_confirm(curr_lang->s_Confirm_Reset_settings, false, &gui_redraw_callback) == 1)
                     {
                         odroid_settings_reset();
                         odroid_system_switch_app(0); // reset
@@ -436,6 +493,7 @@ void retro_loop()
                     char erase_size_str[32];
                     char dbgmcu_id_str[16];
                     char dbgmcu_cr_str[16];
+                    char dbgmcu_clock_str[16];
 
                     // Read jedec id and status register from the external flash
                     OSPI_DisableMemoryMappedMode();
@@ -449,7 +507,6 @@ void retro_loop()
                     snprintf(config_str, sizeof(config_str), "0x%02X", config);
                     snprintf(erase_size_str, sizeof(erase_size_str), "%ld kB", OSPI_GetSmallestEraseSize() / 1024);
                     snprintf(dbgmcu_id_str, sizeof(dbgmcu_id_str), "0x%08lX", DBGMCU->IDCODE);
-                    snprintf(dbgmcu_cr_str, sizeof(dbgmcu_cr_str), "0x%08lX", DBGMCU->CR);
 
                     odroid_dialog_choice_t debuginfo[] = {
                         {-1, curr_lang->s_Flash_JEDEC_ID, (char *)jedec_id_str, 0, NULL},
@@ -459,37 +516,14 @@ void retro_loop()
                         {-1, curr_lang->s_Smallest_erase, erase_size_str, 0, NULL},
                         ODROID_DIALOG_CHOICE_SEPARATOR,
                         {-1, curr_lang->s_DBGMCU_IDCODE, dbgmcu_id_str, 0, NULL},
-                        {1, curr_lang->s_Enable_DBGMCU_CK, dbgmcu_cr_str, 1, NULL},
-                        {2, curr_lang->s_Disable_DBGMCU_CK, "", 1, NULL},
+                        {-1, curr_lang->s_DBGMCU_CR, dbgmcu_cr_str, 0, debug_menu_debug_cr_cb},
+                        {1, curr_lang->s_DBGMCU_clock, dbgmcu_clock_str, 1, debug_menu_debug_clock_cb},
                         ODROID_DIALOG_CHOICE_SEPARATOR,
                         {0, curr_lang->s_Close, "", 1, NULL},
                         ODROID_DIALOG_CHOICE_LAST};
 
-                    int sel = odroid_overlay_dialog(curr_lang->s_Debug_Title, debuginfo, -1, NULL);
-                    switch (sel)
-                    {
-                    case 1:
-                        // Enable debug clocks explicitly
-                        SET_BIT(DBGMCU->CR,
-                                DBGMCU_CR_DBG_SLEEPCD |
-                                    DBGMCU_CR_DBG_STOPCD |
-                                    DBGMCU_CR_DBG_STANDBYCD |
-                                    DBGMCU_CR_DBG_TRACECKEN |
-                                    DBGMCU_CR_DBG_CKCDEN |
-                                    DBGMCU_CR_DBG_CKSRDEN);
-                    case 2:
-                        // Disable debug clocks explicitly
-                        CLEAR_BIT(DBGMCU->CR,
-                                  DBGMCU_CR_DBG_SLEEPCD |
-                                      DBGMCU_CR_DBG_STOPCD |
-                                      DBGMCU_CR_DBG_STANDBYCD |
-                                      DBGMCU_CR_DBG_TRACECKEN |
-                                      DBGMCU_CR_DBG_CKCDEN |
-                                      DBGMCU_CR_DBG_CKSRDEN);
-                        break;
-                    default:
-                        break;
-                    }
+                    odroid_overlay_dialog(curr_lang->s_Debug_Title, debuginfo, -1, &gui_redraw_callback);
+                    odroid_settings_commit();
                 }
 
                 gui_redraw();
@@ -531,7 +565,7 @@ void retro_loop()
 #endif
                 if (oc_level_gets() != oc_level_get())
                     //reboot;
-                    if (odroid_overlay_confirm(curr_lang->s_Confirm_OC_Reboot, false) == 1)
+                    if (odroid_overlay_confirm(curr_lang->s_Confirm_OC_Reboot, false, &gui_redraw_callback) == 1)
                         odroid_system_switch_app(0);
 
                 gui_redraw();
@@ -561,7 +595,7 @@ void retro_loop()
                         {1, curr_lang->s_Minute, minute_value, 1, &minute_update_cb},
                         {2, curr_lang->s_Second, second_value, 1, &second_update_cb},
                         ODROID_DIALOG_CHOICE_LAST};
-                    sel = odroid_overlay_dialog(curr_lang->s_Time_setup, timeoptions, 0, NULL);
+                    sel = odroid_overlay_dialog(curr_lang->s_Time_setup, timeoptions, 0, &gui_redraw_callback);
                 }
                 else if (sel == 1)
                 {
@@ -578,7 +612,7 @@ void retro_loop()
                         {0, curr_lang->s_Day, day_value, 1, &day_update_cb},
                         {-1, curr_lang->s_Weekday, weekday_value, 0, &weekday_update_cb},
                         ODROID_DIALOG_CHOICE_LAST};
-                    sel = odroid_overlay_dialog(curr_lang->s_Date_setup, dateoptions, 0, NULL);
+                    sel = odroid_overlay_dialog(curr_lang->s_Date_setup, dateoptions, 0, &gui_redraw_callback);
                 }
 
                 gui_redraw();
@@ -770,24 +804,16 @@ void app_logo()
 
 void app_sleep_logo()
 {
-    odroid_overlay_draw_fill_rect(0, 0, ODROID_SCREEN_WIDTH, ODROID_SCREEN_HEIGHT, curr_colors->bg_c);
-    
-    odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - logo_gnw.width) / 2, 90, (retro_logo_image *)(&logo_gnw), curr_colors->sel_c);
-    odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - logo_rgo.width) / 2, 174, (retro_logo_image *)(&logo_rgo), curr_colors->dis_c);
-    for (int i = 0; i < 100; i++)
+    for (int i = 10; i <= 100; i+=2)
     {
-        wdog_refresh();
-        HAL_Delay(10);
-    }
-    for (int i = 10; i <= 100; i++)
-    {
-        odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - logo_gnw.width) / 2, 90,(retro_logo_image *)(&logo_gnw), 
+        lcd_sleep_while_swap_pending();
+        odroid_overlay_draw_fill_rect(0, 0, ODROID_SCREEN_WIDTH, ODROID_SCREEN_HEIGHT, curr_colors->bg_c);
+        odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - logo_gnw.width) / 2, 90,(retro_logo_image *)(&logo_gnw),
             get_darken_pixel_d(curr_colors->sel_c, curr_colors->bg_c, 110 - i));
 
         odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - logo_rgo.width) / 2, 174, (retro_logo_image *)(&logo_rgo), 
            get_darken_pixel_d(curr_colors->dis_c,curr_colors->bg_c, 110 - i));
 
-        lcd_sync();
         lcd_swap();
         wdog_refresh();
         HAL_Delay(i / 10);

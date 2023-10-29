@@ -675,12 +675,13 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
     int repeat = 0;
     bool select = false;
     bool debounce = true;
-    bool clone = true;
     odroid_gamepad_state_t joystick;
 
     void _repaint()
     {
         wdog_refresh();
+        lcd_sleep_while_swap_pending();
+        memset(lcd_get_active_buffer(), 0, sizeof(framebuffer1));
 
         // Repaint background (if enabled)
         if (repaint != NULL)
@@ -692,13 +693,7 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
         // Draw dialog on top of darken background
         odroid_overlay_draw_dialog(header, options, sel);
         // Show
-        lcd_swap_with_wait();
-
-        // Important: Clone full frame once to avoid any initial discrepancies between buffers to avoid flickering.
-        if (clone) {
-            lcd_clone();
-            clone = false;
-        }
+        lcd_swap();
     }
 
     while (1)
@@ -844,7 +839,7 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
     return sel < 0 ? sel : options[sel].id;
 }
 
-int odroid_overlay_confirm(const char *text, bool yes_selected)
+int odroid_overlay_confirm(const char *text, bool yes_selected, void_callback_t repaint)
 {
     odroid_dialog_choice_t choices[] = {
         {0, text, "", -1, NULL},
@@ -853,7 +848,7 @@ int odroid_overlay_confirm(const char *text, bool yes_selected)
         {0, curr_lang->s_No, "", 1, NULL},
         ODROID_DIALOG_CHOICE_LAST,
     };
-    return odroid_overlay_dialog(curr_lang->s_PlsChose, choices, yes_selected ? 2 : 3, NULL); //TODO add repaint callback
+    return odroid_overlay_dialog(curr_lang->s_PlsChose, choices, yes_selected ? 2 : 3, repaint);
 }
 
 void odroid_overlay_alert(const char *text)
@@ -864,7 +859,7 @@ void odroid_overlay_alert(const char *text)
         {1, curr_lang->s_OK, "", 1, NULL},
         ODROID_DIALOG_CHOICE_LAST,
     };
-    odroid_overlay_dialog(curr_lang->s_Confirm, choices, 2, NULL); //TODO add repaint callback
+    odroid_overlay_dialog(curr_lang->s_Confirm, choices, 2, NULL);
 }
 
 static bool volume_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
@@ -1303,7 +1298,6 @@ int odroid_overlay_game_menu(odroid_dialog_choice_t *extra_options, void_callbac
 
     odroid_audio_mute(true);
 
-    lcd_wait_if_swap_pending(); // Wait for a known good state
     int r = odroid_overlay_dialog(curr_lang->s_Retro_Go_options, choices, 0, &_repaint);
 
     // Clear startup file so we boot into the retro-go gui

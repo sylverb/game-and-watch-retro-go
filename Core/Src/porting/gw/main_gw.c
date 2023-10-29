@@ -556,8 +556,9 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
         proc_cycles = get_dwt_cycles();
 
         /* update the screen only if there is no pending frame to render */
-        if (!is_lcd_swap_pending() && drawFrame)
+        if (drawFrame)
         {
+            common_sleep_while_lcd_swap_pending();
             _blit();
             gw_debug_bar();
             if(debug_display_ram == 1) gw_display_ram_overlay();

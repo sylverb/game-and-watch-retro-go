@@ -305,10 +305,10 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     while (1)
     {
         wdog_refresh();
-        common_emu_frame_loop();
+        bool drawFrame = common_emu_frame_loop();
         odroid_input_read_gamepad(&joystick);
         common_emu_input_loop(&joystick, options, &blit);
-        
+
         uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
         bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
         bool turbo_b = (joystick.values[ODROID_INPUT_B] && (turbo_buttons & 2));
@@ -322,8 +322,11 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
         prosystem_ExecuteFrame(keyboard_data);
 
-        blit();
-        lcd_swap();
+        if (drawFrame) {
+            common_sleep_while_lcd_swap_pending();
+            blit();
+            lcd_swap();
+        }
 
         offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : tia_size;
 

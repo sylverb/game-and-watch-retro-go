@@ -373,7 +373,7 @@ static bool show_cheat_dialog()
         choices[i].update_cb = cheat_update_cb;
     }
     choices[CHOSEN_FILE->cheat_count] = last;
-    odroid_overlay_dialog(curr_lang->s_Cheat_Codes_Title, choices, 0);
+    odroid_overlay_dialog(curr_lang->s_Cheat_Codes_Title, choices, 0, NULL);
 
     rg_free(choices);
     odroid_settings_commit();
@@ -443,7 +443,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
         emulator_start(file, sel == 0, false, 0);
     }
     else if (sel == 2) {
-        if (odroid_overlay_confirm(curr_lang->s_Confiem_del_save, false) == 1) {
+        if (odroid_overlay_confirm(curr_lang->s_Confiem_del_save, false, &gui_redraw_callback) == 1) {
             store_erase(file->save_address, file->save_size);
         }
     }

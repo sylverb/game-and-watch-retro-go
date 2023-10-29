@@ -11,6 +11,7 @@ static runtime_stats_t statistics;
 static runtime_counters_t counters;
 static uint skip;
 
+static sleep_hook_t sleep_hook = NULL;
 
 #define TURBOS_SPEED 10
 
@@ -155,8 +156,17 @@ runtime_stats_t odroid_system_get_stats()
     return statistics;
 }
 
+void odroid_system_set_sleep_hook(sleep_hook_t callback)
+{
+    sleep_hook = callback;
+}
+
 void odroid_system_sleep(void)
 {
+    if (sleep_hook != NULL)
+    {
+        sleep_hook();
+    }
     odroid_settings_StartupFile_set(ACTIVE_FILE);
 
     // odroid_settings_commit();

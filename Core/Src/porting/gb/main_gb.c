@@ -363,6 +363,7 @@ static void blit(void)
 
 static void blit_and_swap(void)
 {
+    common_sleep_while_lcd_swap_pending();
     blit();
     lcd_swap();
 }
