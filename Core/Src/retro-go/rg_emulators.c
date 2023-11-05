@@ -90,22 +90,16 @@ static void event_handler(gui_event_t event, tab_t *tab)
     if (event == KEY_PRESS_A)
     {
         emulator_show_file_menu(file);
-        gui_redraw();
     }
     else if (event == KEY_PRESS_B)
     {
         emulator_show_file_info(file);
-        gui_redraw();
     }
     else if (event == TAB_IDLE)
     {
-        //if (file->checksum == 0) {
-        //    emulator_crc32_file(file);
-        // }
     }
     else if (event == TAB_REDRAW)
     {
-        gui_redraw();
     }
 }
 
