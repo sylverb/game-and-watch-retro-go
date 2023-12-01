@@ -363,7 +363,9 @@ static void blit(void)
 
 static void blit_and_swap(void)
 {
-    common_sleep_while_lcd_swap_pending();
+    // Temporary disabled as it causes sound jitter/issues (Verified in Super Mario Land 2.0 rom hack)
+    // common_sleep_while_lcd_swap_pending();
+
     blit();
     lcd_swap();
 }
