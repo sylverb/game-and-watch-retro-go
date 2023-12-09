@@ -28,12 +28,14 @@ void lcd_backlight_set(uint8_t brightness);
 void lcd_backlight_on();
 void lcd_backlight_off();
 void lcd_swap(void);
-void lcd_sync(void);
+ void lcd_sync(void); // DEPRECATED
+void lcd_clone(void);
 void* lcd_get_active_buffer(void);
 void* lcd_get_inactive_buffer(void);
 void lcd_set_buffers(uint16_t *buf1, uint16_t *buf2);
 void lcd_wait_for_vblank(void);
-uint32_t is_lcd_swap_pending(void);
+uint32_t lcd_is_swap_pending(void);
+uint32_t lcd_sleep_while_swap_pending(void);
 
 // To be used by fault handlers
 void lcd_reset_active_buffer(void);

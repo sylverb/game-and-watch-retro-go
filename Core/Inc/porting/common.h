@@ -34,7 +34,7 @@ extern int16_t audiobuffer_dma[AUDIO_BUFFER_LENGTH * 2] __attribute__((section (
 extern const uint8_t volume_tbl[ODROID_AUDIO_VOLUME_MAX + 1];
 
 bool common_emu_frame_loop(void);
-void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choice_t *game_options);
+void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choice_t *game_options, void_callback_t repaint);
 
 typedef struct {
     uint last_busy;
@@ -89,3 +89,9 @@ extern common_emu_state_t common_emu_state;
  * Drawable stuff over current emulation.
  */
 void common_ingame_overlay(void);
+
+/**
+ * Will go to sleep and wait for an interrupt to save power while lcd swap is pending.
+ * The LCD controller will generate an interrupt when the swap has been completed.
+ */
+bool common_sleep_while_lcd_swap_pending(void);

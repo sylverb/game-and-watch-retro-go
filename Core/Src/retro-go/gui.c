@@ -43,6 +43,7 @@
 #define COVER_MAX_HEIGHT (100)
 #define COVER_MAX_WIDTH (186)
 
+
 #ifdef COVERFLOW
 /* instances for JPEG decoder */
 #include "hw_jpeg_decoder.h"
@@ -57,14 +58,16 @@
 
 static uint8_t *pJPEG_Buffer = NULL;
 static uint16_t *pCover_Buffer = NULL;
-static uint32_t current_cover_width = NOCOVER_WIDTH;
-static uint32_t current_cover_height = NOCOVER_HEIGHT;
-const static uint32_t COVER_BORDER = 6;
 
 const uint8_t cover_light[5] = {60, 120, 255, 120, 60};
 const uint8_t cover_light3[3] = {255, 120, 60};
 #endif
 
+#if COVERFLOW != 0
+const static uint32_t COVER_BORDER = 6;
+static uint32_t current_cover_width = NOCOVER_WIDTH;
+static uint32_t current_cover_height = NOCOVER_HEIGHT;
+#endif
 
 #if GNW_TARGET_ZELDA != 0
 //zelda version change mario red to zelda green
@@ -312,13 +315,18 @@ void gui_scroll_list(tab_t *tab, scroll_mode_t mode)
     }
 }
 
-void gui_redraw()
+void gui_redraw_callback()
 {
     tab_t *tab = gui_get_current_tab();
     gui_draw_header(tab);
     gui_draw_status(tab);
     gui_draw_list(tab);
+}
 
+void gui_redraw()
+{
+    lcd_sleep_while_swap_pending();
+    gui_redraw_callback();
     lcd_swap();
 }
 

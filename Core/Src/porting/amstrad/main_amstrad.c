@@ -216,6 +216,13 @@ int amstrad_button_time_key = CPC_RETURN;
 int amstrad_button_start_key = CPC_SPACE;
 int amstrad_button_select_key = CPC_RETURN;
 
+static char game_button_name[10];
+static char time_button_name[10];
+static char start_button_name[10];
+static char select_button_name[10];
+static char a_button_name[10];
+static char b_button_name[10];
+
 #define RELEASE_KEY_DELAY 5
 static int selected_key_index = 0;
 static char key_name[10];
@@ -255,10 +262,8 @@ static const uint8_t volume_table[ODROID_AUDIO_VOLUME_MAX + 1] = {
 
 static char *headerString = "AMST0000";
 
-
 extern int cap32_save_state(fs_file_t *file);
 extern int cap32_load_state(fs_file_t *file);
-
 
 bool saveAmstradState(char *pathName) {
     // Show disk icon when saving state
@@ -281,6 +286,13 @@ bool saveAmstradState(char *pathName) {
     fs_write(file, (unsigned char *)&selected_disk_index, 4);
     fs_write(file, (unsigned char *)&selected_controls_index, 4);
     fs_write(file, (unsigned char *)&selected_key_index, 4);
+    fs_write(file, (unsigned char *)&amstrad_button_a_key, 4);
+    fs_write(file, (unsigned char *)&amstrad_button_b_key, 4);
+    fs_write(file, (unsigned char *)&amstrad_button_game_key, 4);
+    fs_write(file, (unsigned char *)&amstrad_button_time_key, 4);
+    fs_write(file, (unsigned char *)&amstrad_button_start_key, 4);
+    fs_write(file, (unsigned char *)&amstrad_button_select_key, 4);
+
     fs_close(file);
 
     return 0;
@@ -300,6 +312,13 @@ bool loadAmstradState(char *pathName) {
         fs_read(file, (unsigned char *)&selected_disk_index, 4);
         fs_read(file, (unsigned char *)&selected_controls_index, 4);
         fs_read(file, (unsigned char *)&selected_key_index, 4);
+
+        fs_read(file, (unsigned char *)&amstrade_button_a_key, 4);
+        fs_read(file, (unsigned char *)&amstrade_button_b_key, 4);
+        fs_read(file, (unsigned char *)&amstrade_button_game_key, 4);
+        fs_read(file, (unsigned char *)&amstrade_button_time_key, 4);
+        fs_read(file, (unsigned char *)&amstrade_button_start_key, 4);
+        fs_read(file, (unsigned char *)&amstrade_button_select_key, 4);
     }
     fs_close(file);
     return true;
@@ -328,11 +347,21 @@ struct amstrad_key_info amstrad_keyboard[] = {
     {CPC_F7, "F7", true},
     {CPC_F8, "F8", true},
     {CPC_F9, "F9", true},
+    {CPC_FPERIOD, ".", true},
     {CPC_ENTER, "Enter", true},
+    {CPC_RETURN, "Return", true},
     {CPC_SPACE, "Space", true},
-    {CPC_ESC, "Esc", true},
-    {CPC_LSHIFT, "Shift", false},
+    {CPC_ESC, "ESC", true},
+    {CPC_TAB, "TAB", true},
+    {CPC_CAPSLOCK, "CAPSLOCK", true},
+    {CPC_LSHIFT, "L Shift", false},
+    {CPC_RSHIFT, "R Shift", false},
     {CPC_CONTROL, "Control", false},
+    {CPC_COPY, "COPY", true},
+    {CPC_CLR, "CLR", true},
+    {CPC_DEL, "DEL", true},
+    {CPC_MINUS, "-", true},
+    {CPC_POWER, "^", true},
     {CPC_1, "1/!", true},
     {CPC_2, "2/\"", true},
     {CPC_3, "3/#", true},
@@ -369,8 +398,159 @@ struct amstrad_key_info amstrad_keyboard[] = {
     {CPC_x, "x", true},
     {CPC_y, "y", true},
     {CPC_z, "z", true},
-    {CPC_FPERIOD, ".", true},
+    {CPC_J0_FIRE1, "JOY1 A", true},
+    {CPC_J0_FIRE2, "JOY1 B", true},
 };
+
+static bool update_game_button_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    int max_index = sizeof(amstrad_keyboard) / sizeof(amstrad_keyboard[0]) - 1;
+    int amstrad_button_key_index = 0;
+
+    // find index for current key
+    for (int i = 0; i <= max_index; i++) {
+        if (amstrad_keyboard[i].key_id == amstrad_button_game_key) {
+            amstrad_button_key_index = i;
+            break;
+        }
+    }
+
+    if (event == ODROID_DIALOG_PREV) {
+        amstrad_button_key_index = amstrad_button_key_index > 0 ? amstrad_button_key_index - 1 : max_index;
+    }
+    if (event == ODROID_DIALOG_NEXT) {
+        amstrad_button_key_index = amstrad_button_key_index < max_index ? amstrad_button_key_index + 1 : 0;
+    }
+
+    amstrad_button_game_key = amstrad_keyboard[amstrad_button_key_index].key_id;
+    strcpy(option->value, amstrad_keyboard[amstrad_button_key_index].name);
+    return event == ODROID_DIALOG_ENTER;
+}
+
+static bool update_time_button_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    int max_index = sizeof(amstrad_keyboard) / sizeof(amstrad_keyboard[0]) - 1;
+    int amstrad_button_key_index = 0;
+
+    // find index for current key
+    for (int i = 0; i <= max_index; i++) {
+        if (amstrad_keyboard[i].key_id == amstrad_button_time_key) {
+            amstrad_button_key_index = i;
+            break;
+        }
+    }
+
+    if (event == ODROID_DIALOG_PREV) {
+        amstrad_button_key_index = amstrad_button_key_index > 0 ? amstrad_button_key_index - 1 : max_index;
+    }
+    if (event == ODROID_DIALOG_NEXT) {
+        amstrad_button_key_index = amstrad_button_key_index < max_index ? amstrad_button_key_index + 1 : 0;
+    }
+
+    amstrad_button_time_key = amstrad_keyboard[amstrad_button_key_index].key_id;
+    strcpy(option->value, amstrad_keyboard[amstrad_button_key_index].name);
+    return event == ODROID_DIALOG_ENTER;
+}
+
+static bool update_start_button_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    int max_index = sizeof(amstrad_keyboard) / sizeof(amstrad_keyboard[0]) - 1;
+    int amstrad_button_key_index = 0;
+
+    // find index for current key
+    for (int i = 0; i <= max_index; i++) {
+        if (amstrad_keyboard[i].key_id == amstrad_button_start_key) {
+            amstrad_button_key_index = i;
+            break;
+        }
+    }
+
+    if (event == ODROID_DIALOG_PREV) {
+        amstrad_button_key_index = amstrad_button_key_index > 0 ? amstrad_button_key_index - 1 : max_index;
+    }
+    if (event == ODROID_DIALOG_NEXT) {
+        amstrad_button_key_index = amstrad_button_key_index < max_index ? amstrad_button_key_index + 1 : 0;
+    }
+
+    amstrad_button_start_key = amstrad_keyboard[amstrad_button_key_index].key_id;
+    strcpy(option->value, amstrad_keyboard[amstrad_button_key_index].name);
+    return event == ODROID_DIALOG_ENTER;
+}
+
+static bool update_select_button_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    int max_index = sizeof(amstrad_keyboard) / sizeof(amstrad_keyboard[0]) - 1;
+    int amstrad_button_key_index = 0;
+
+    // find index for current key
+    for (int i = 0; i <= max_index; i++) {
+        if (amstrad_keyboard[i].key_id == amstrad_button_select_key) {
+            amstrad_button_key_index = i;
+            break;
+        }
+    }
+
+    if (event == ODROID_DIALOG_PREV) {
+        amstrad_button_key_index = amstrad_button_key_index > 0 ? amstrad_button_key_index - 1 : max_index;
+    }
+    if (event == ODROID_DIALOG_NEXT) {
+        amstrad_button_key_index = amstrad_button_key_index < max_index ? amstrad_button_key_index + 1 : 0;
+    }
+
+    amstrad_button_select_key = amstrad_keyboard[amstrad_button_key_index].key_id;
+    strcpy(option->value, amstrad_keyboard[amstrad_button_key_index].name);
+    return event == ODROID_DIALOG_ENTER;
+}
+
+static bool update_a_button_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    int max_index = sizeof(amstrad_keyboard) / sizeof(amstrad_keyboard[0]) - 1;
+    int amstrad_button_key_index = 0;
+
+    // find index for current key
+    for (int i = 0; i <= max_index; i++) {
+        if (amstrad_keyboard[i].key_id == amstrad_button_a_key) {
+            amstrad_button_key_index = i;
+            break;
+        }
+    }
+
+    if (event == ODROID_DIALOG_PREV) {
+        amstrad_button_key_index = amstrad_button_key_index > 0 ? amstrad_button_key_index - 1 : max_index;
+    }
+    if (event == ODROID_DIALOG_NEXT) {
+        amstrad_button_key_index = amstrad_button_key_index < max_index ? amstrad_button_key_index + 1 : 0;
+    }
+
+    amstrad_button_a_key = amstrad_keyboard[amstrad_button_key_index].key_id;
+    strcpy(option->value, amstrad_keyboard[amstrad_button_key_index].name);
+    return event == ODROID_DIALOG_ENTER;
+}
+
+static bool update_b_button_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    int max_index = sizeof(amstrad_keyboard) / sizeof(amstrad_keyboard[0]) - 1;
+    int amstrad_button_key_index = 0;
+
+    // find index for current key
+    for (int i = 0; i <= max_index; i++) {
+        if (amstrad_keyboard[i].key_id == amstrad_button_b_key) {
+            amstrad_button_key_index = i;
+            break;
+        }
+    }
+
+    if (event == ODROID_DIALOG_PREV) {
+        amstrad_button_key_index = amstrad_button_key_index > 0 ? amstrad_button_key_index - 1 : max_index;
+    }
+    if (event == ODROID_DIALOG_NEXT) {
+        amstrad_button_key_index = amstrad_button_key_index < max_index ? amstrad_button_key_index + 1 : 0;
+    }
+
+    amstrad_button_b_key = amstrad_keyboard[amstrad_button_key_index].key_id;
+    strcpy(option->value, amstrad_keyboard[amstrad_button_key_index].name);
+    return event == ODROID_DIALOG_ENTER;
+}
 
 static bool update_keyboard_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
@@ -520,6 +700,44 @@ static void createOptionMenu(odroid_dialog_choice_t *options)
     options[index].value = controls_name;
     options[index].enabled = 1;
     options[index].update_cb = &update_controls_cb;
+    index++;
+    options[index].id = 100;
+    options[index].label = curr_lang->s_amd_game_Button;
+    options[index].value = game_button_name;
+    options[index].enabled = 1;
+    options[index].update_cb = &update_game_button_cb;
+    index++;
+    options[index].id = 100;
+    options[index].label = curr_lang->s_amd_time_Button;
+    options[index].value = time_button_name;
+    options[index].enabled = 1;
+    options[index].update_cb = &update_time_button_cb;
+    index++;
+#if GNW_TARGET_ZELDA != 0
+    options[index].id = 100;
+    options[index].label = curr_lang->s_amd_start_Button;
+    options[index].value = start_button_name;
+    options[index].enabled = 1;
+    options[index].update_cb = &update_start_button_cb;
+    index++;
+    options[index].id = 100;
+    options[index].label = curr_lang->s_amd_select_Button;
+    options[index].value = select_button_name;
+    options[index].enabled = 1;
+    options[index].update_cb = &update_select_button_cb;
+    index++;
+#endif
+    options[index].id = 100;
+    options[index].label = curr_lang->s_amd_A_Button;
+    options[index].value = a_button_name;
+    options[index].enabled = 1;
+    options[index].update_cb = &update_a_button_cb;
+    index++;
+    options[index].id = 100;
+    options[index].label = curr_lang->s_amd_B_Button;
+    options[index].value = b_button_name;
+    options[index].enabled = 1;
+    options[index].update_cb = &update_b_button_cb;
     index++;
     options[index].id = 100;
     options[index].label = curr_lang->s_amd_Press_Key;
@@ -731,8 +949,6 @@ static void blit(uint8_t *src_fb, uint16_t *framebuffer)
             }
         }
     }
-    common_ingame_overlay();
-    lcd_swap();
 }
 
 void amstrad_pcm_submit()
@@ -815,12 +1031,17 @@ static void computer_autoload()
 
 extern uint8_t *pbSndBuffer;
 
+void _blit()
+{
+    blit(amstrad_framebuffer, lcd_get_active_buffer());
+    common_ingame_overlay();
+}
+
 void app_main_amstrad(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
-    pixel_t *fb;
     static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
     odroid_gamepad_state_t joystick;
-    odroid_dialog_choice_t options[10];
+    odroid_dialog_choice_t options[11];
     int disk_load_result = 0;
     int load_result = 0;
 
@@ -889,12 +1110,11 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, int8_t save_slot
 
     while (1)
     {
-        fb = lcd_get_active_buffer();
         wdog_refresh();
         bool drawFrame = common_emu_frame_loop();
 
         odroid_input_read_gamepad(&joystick);
-        common_emu_input_loop(&joystick, options);
+        common_emu_input_loop(&joystick, options, &_blit);
 
         if (auto_key) {
             autorun_command();
@@ -914,7 +1134,9 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, int8_t save_slot
 
         caprice_retro_loop();
         if (drawFrame) {
-            blit(amstrad_framebuffer, fb);
+            common_sleep_while_lcd_swap_pending();
+            _blit();
+            lcd_swap();
         }
         amstrad_pcm_submit();
         amstrad_set_audio_buffer((int8_t *)soundBuffer, AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS * 2);

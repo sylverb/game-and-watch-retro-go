@@ -72,6 +72,12 @@ typedef struct
     const char *s_amd_palette_Color;
     const char *s_amd_palette_Green;
     const char *s_amd_palette_Grey;
+    const char *s_amd_game_Button;
+    const char *s_amd_time_Button;
+    const char *s_amd_start_Button;
+    const char *s_amd_select_Button;
+    const char *s_amd_A_Button;
+    const char *s_amd_B_Button;
     const char *s_amd_Press_Key;
     //=====================================================================
 
@@ -169,6 +175,7 @@ typedef struct
     const char *s_Author;
     const char *s_Author_;
     const char *s_UI_Mod;
+    const char *s_UI_Mod_;
     const char *s_Lang;
     const char *s_LangAuthor;
     const char *s_Debug_menu;
@@ -181,8 +188,10 @@ typedef struct
     const char *s_Flash_CR;
     const char *s_Smallest_erase;
     const char *s_DBGMCU_IDCODE;
-    const char *s_Enable_DBGMCU_CK;
-    const char *s_Disable_DBGMCU_CK;
+    const char *s_DBGMCU_CR;
+    const char *s_DBGMCU_clock;
+    const char *s_DBGMCU_clock_on;
+    const char *s_DBGMCU_clock_auto;
     const char *s_Debug_Title;
     const char *s_Idle_power_off;
     const char *s_Time;

@@ -46,3 +46,6 @@ venv
 .gdbinit
 screenshot.png
 /backup
+.clang-format
+.idea/
+cmake-build-debug

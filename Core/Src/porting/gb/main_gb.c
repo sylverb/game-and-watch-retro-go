@@ -105,8 +105,6 @@ static inline void screen_blit_nn(int32_t dest_width, int32_t dest_height)
 #ifdef PROFILING_ENABLED
     printf("Blit: %d us\n", (1000000 * PROFILING_DIFF(t_blit)) / t_blit_t0.SecondFraction);
 #endif
-
-    lcd_swap();
 }
 
 static void screen_blit_bilinear(int32_t dest_width)
@@ -168,8 +166,6 @@ static void screen_blit_bilinear(int32_t dest_width)
 #ifdef PROFILING_ENABLED
     printf("Blit: %d us\n", (1000000 * PROFILING_DIFF(t_blit)) / t_blit_t0.SecondFraction);
 #endif
-
-    lcd_swap();
 }
 
 static inline void screen_blit_v3to5(void) {
@@ -228,11 +224,7 @@ static inline void screen_blit_v3to5(void) {
 #ifdef PROFILING_ENABLED
     printf("Blit: %d us\n", (1000000 * PROFILING_DIFF(t_blit)) / t_blit_t0.SecondFraction);
 #endif
-    common_ingame_overlay();
-
-    lcd_swap();
 }
-
 
 static inline void screen_blit_jth(void) {
     static uint32_t lastFPSTime = 0;
@@ -308,10 +300,7 @@ static inline void screen_blit_jth(void) {
 #ifdef PROFILING_ENABLED
     printf("Blit: %d us\n", (1000000 * PROFILING_DIFF(t_blit)) / t_blit_t0.SecondFraction);
 #endif
-
-    lcd_swap();
 }
-
 
 static void blit(void)
 {
@@ -340,7 +329,6 @@ static void blit(void)
             printf("Unknown filtering mode %d\n", filtering);
             assert(!"Unknown filtering mode");
         }
-        break;
         break;
     case ODROID_DISPLAY_SCALING_FULL:
         // full height, full width
@@ -371,6 +359,16 @@ static void blit(void)
         assert(!"Unknown scaling mode");
         break;
     }
+    common_ingame_overlay();
+}
+
+static void blit_and_swap(void)
+{
+    // Temporary disabled as it causes sound jitter/issues (Verified in Super Mario Land 2.0 rom hack)
+    // common_sleep_while_lcd_swap_pending();
+
+    blit();
+    lcd_swap();
 }
 
 #define STATE_SAVE_BUFFER_LENGTH 1024 * 192
@@ -429,10 +427,6 @@ static bool palette_update_cb(odroid_dialog_choice_t *option, odroid_dialog_even
     if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
         odroid_settings_Palette_set(pal);
         pal_set_dmg(pal);
-        lcd_reset_active_buffer();
-        emu_run(true);
-        lcd_swap();
-        lcd_sync();
     }
 
     if (pal == 0) strcpy(option->value, "GBC");
@@ -556,7 +550,7 @@ rg_app_desc_t * init(uint8_t load_state, int8_t save_slot)
     fb.pitch = update1.stride;
     fb.ptr = currentUpdate->buffer;
     fb.enabled = 1;
-    fb.blit_func = &blit;
+    fb.blit_func = &blit_and_swap;
 
     // Audio
     audiobuffer_emulator = ahb_calloc(sizeof(uint16_t),AUDIO_BUFFER_LENGTH_GB);
@@ -609,7 +603,7 @@ void app_main_gb(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
             // {301, "More...", "", 1, &advanced_settings_cb},
             ODROID_DIALOG_CHOICE_LAST
         };
-        common_emu_input_loop(&joystick, options);
+        common_emu_input_loop(&joystick, options, &blit);
 
         uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
         bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));

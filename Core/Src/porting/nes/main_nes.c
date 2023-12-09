@@ -346,8 +346,9 @@ static void blit_5to6(bitmap_t *bmp, uint16_t *framebuffer) {
 }
 #endif
 
-static void blit(bitmap_t *bmp, uint16_t *framebuffer)
+static void blit(bitmap_t *bmp)
 {
+    uint16_t *framebuffer = lcd_get_active_buffer()
     odroid_display_scaling_t scaling = odroid_display_get_scaling_mode();
     odroid_display_filter_t filtering = odroid_display_get_filter_mode();
 
@@ -375,8 +376,8 @@ static void blit(bitmap_t *bmp, uint16_t *framebuffer)
         assert(!"Unknown scaling mode");
         break;
     }
+    common_ingame_overlay();
 }
-
 
 void osd_blitscreen(bitmap_t *bmp)
 {
@@ -396,13 +397,12 @@ void osd_blitscreen(bitmap_t *bmp)
         lastFPSTime = currentTime;
     }
 
+    common_sleep_while_lcd_swap_pending();
     PROFILING_INIT(t_blit);
     PROFILING_START(t_blit);
 
     // This takes less than 1ms
-    pixel_t *fb = lcd_get_active_buffer();
-    blit(bmp, fb);
-    common_ingame_overlay();
+    blit(bmp);
     lcd_swap();
 
     PROFILING_END(t_blit);
@@ -428,7 +428,7 @@ static bool palette_update_cb(odroid_dialog_choice_t *option, odroid_dialog_even
    return event == ODROID_DIALOG_ENTER;
 }
 
-void osd_getinput(void)
+void osd_getinput(bitmap_t *bmp)
 {
     uint16 pad0 = 0;
     //char pal_name[16];
@@ -444,7 +444,11 @@ void osd_getinput(void)
             // {101, "More...", "", 1, &advanced_settings_cb},
             ODROID_DIALOG_CHOICE_LAST
     };
-    common_emu_input_loop(&joystick, options);
+    void _blit()
+    {
+      blit(bmp);
+    }
+    common_emu_input_loop(&joystick, options, &_blit);
 
     uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
     bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));

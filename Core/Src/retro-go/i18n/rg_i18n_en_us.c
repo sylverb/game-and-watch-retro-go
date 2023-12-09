@@ -1,6 +1,16 @@
+/*
+*********************************************************
+*                Warning!!!!!!!                         *
+*  This file must be saved with Windows 1252 Encoding   *
+*********************************************************
+*/
+
+
+
 
 //#include "rg_i18n_lang.h"
 // Stand English
+
 
 int en_us_fmt_Title_Date_Format(char *outstr, const char *datefmt, uint16_t day, uint16_t month, const char *weekday, uint16_t hour, uint16_t minutes, uint16_t seconds)
 {
@@ -89,6 +99,12 @@ const lang_t lang_en_us LANG_DATA = {
     .s_amd_palette_Color = "Color",
     .s_amd_palette_Green = "Green",
     .s_amd_palette_Grey = "Grey",
+    .s_amd_game_Button = "Game Button",
+    .s_amd_time_Button = "Time Button",
+    .s_amd_start_Button = "Start Button",
+    .s_amd_select_Button = "Select Button",
+    .s_amd_A_Button = "A Button",
+    .s_amd_B_Button = "B Button",
     .s_amd_Press_Key = "Press Key",
     //=====================================================================
 
@@ -108,9 +124,7 @@ const lang_t lang_en_us LANG_DATA = {
     // Core\Src\porting\odroid_overlay.c ===================================
     .s_Full = "\x7",
     .s_Fill = "\x8",
-
     .s_No_Cover = "no Cover",
-
     .s_Yes = "Yes",
     .s_No = "No",
     .s_PlsChose = "Question",
@@ -140,7 +154,6 @@ const lang_t lang_en_us LANG_DATA = {
     .s_Power_off = "Power off",
     .s_Quit_to_menu = "Quit to menu",
     .s_Retro_Go_options = "Retro-Go",
-
     .s_Font = "Font",
     .s_Colors = "Colors",
     .s_Theme_Title = "UI Theme",
@@ -152,7 +165,6 @@ const lang_t lang_en_us LANG_DATA = {
     //=====================================================================
 
     // Core\Src\retro-go\rg_emulators.c ====================================
-
     .s_File = "File",
     .s_Type = "Type",
     .s_Size = "Size",
@@ -197,22 +209,20 @@ const lang_t lang_en_us LANG_DATA = {
     .s_LangAuthor = "Original",
     .s_Debug_menu = "Debug menu",
     .s_Reset_settings = "Reset settings",
-    //.s_Close                   = "Close",
     .s_Retro_Go = "About Retro-Go",
     .s_Confirm_Reset_settings = "Reset all settings?",
-
     .s_Flash_JEDEC_ID = "Flash JEDEC ID",
     .s_Flash_Name = "Flash Name",
     .s_Flash_SR = "Flash SR",
     .s_Flash_CR = "Flash CR",
     .s_Smallest_erase = "Smallest erase",
     .s_DBGMCU_IDCODE = "DBGMCU IDCODE",
-    .s_Enable_DBGMCU_CK = "Enable DBGMCU CK",
-    .s_Disable_DBGMCU_CK = "Disable DBGMCU CK",
-    //.s_Close                   = "Close",
+    .s_DBGMCU_CR = "DBGMCU CR",
+    .s_DBGMCU_clock = "DBGMCU Clock",
+    .s_DBGMCU_clock_on = "On",
+    .s_DBGMCU_clock_auto = "Auto",
     .s_Debug_Title = "Debug",
     .s_Idle_power_off = "Idle power off",
-
     .s_Time = "Time",
     .s_Date = "Date",
     .s_Time_Title = "TIME",
@@ -220,13 +230,11 @@ const lang_t lang_en_us LANG_DATA = {
     .s_Minute = "Minute",
     .s_Second = "Second",
     .s_Time_setup = "Time setup",
-
     .s_Day = "Day",
     .s_Month = "Month",
     .s_Year = "Year",
     .s_Weekday = "Weekday",
     .s_Date_setup = "Date setup",
-
     .s_Weekday_Mon = "Mon",
     .s_Weekday_Tue = "Tue",
     .s_Weekday_Wed = "Wed",
@@ -239,14 +247,14 @@ const lang_t lang_en_us LANG_DATA = {
     .s_Turbo_A = "A",
     .s_Turbo_B = "B",
     .s_Turbo_AB = "A & B",
-
     .s_Title_Date_Format = "%02d-%02d %s %02d:%02d:%02d",
     .s_Date_Format = "%02d.%02d.20%02d %s",
     .s_Time_Format = "%02d:%02d:%02d",
-
     .fmt_Title_Date_Format = en_us_fmt_Title_Date_Format,
     .fmtDate = en_us_fmt_Date,
     .fmtTime = en_us_fmt_Time,
     //=====================================================================
     //           ------------ end ---------------
 };
+
+

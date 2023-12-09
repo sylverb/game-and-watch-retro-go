@@ -711,7 +711,27 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot
 
         ODROID_DIALOG_CHOICE_LAST};
 
-    common_emu_input_loop(&joystick, options);
+    hint_counter = gwenesis_vdp_regs[10];
+
+      screen_height = REG1_PAL ? 240 : 224;
+      screen_width = REG12_MODE_H40 ? 320 : 256;
+      lines_per_frame = REG1_PAL ? LINES_PER_FRAME_PAL : LINES_PER_FRAME_NTSC;
+      vert_screen_offset = REG1_PAL ? 0 : 320 * (240 - 224) / 2;
+
+      hori_screen_offset = 0; //REG12_MODE_H40 ? 0 : (320 - 256) / 2;
+
+    void _repaint()
+    {
+        screen = lcd_get_active_buffer();
+        gwenesis_vdp_set_buffer(&screen[vert_screen_offset + hori_screen_offset]);
+        for (int l = 0; l < lines_per_frame; l++)
+        {
+            gwenesis_vdp_render_line(l); /* render scan_line */
+        }
+        common_ingame_overlay();
+    }
+
+    common_emu_input_loop(&joystick, options, &_repaint);
 
      uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
      bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
@@ -726,14 +746,6 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     common_emu_frame_loop();
 
       /* Eumulator loop */
-      hint_counter = gwenesis_vdp_regs[10];
-
-      screen_height = REG1_PAL ? 240 : 224;
-      screen_width = REG12_MODE_H40 ? 320 : 256;
-      lines_per_frame = REG1_PAL ? LINES_PER_FRAME_PAL : LINES_PER_FRAME_NTSC;
-      vert_screen_offset = REG1_PAL ? 0 : 320 * (240 - 224) / 2;
-
-      hori_screen_offset = 0; //REG12_MODE_H40 ? 0 : (320 - 256) / 2;
       screen = lcd_get_active_buffer();
       gwenesis_vdp_set_buffer(&screen[vert_screen_offset + hori_screen_offset]);
 
@@ -847,9 +859,7 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot
         } else {
           lcd_swap();
           drawFrame = 1;
-
-          while (is_lcd_swap_pending())
-            __NOP();
+          common_sleep_while_lcd_swap_pending();
         }
 
         /* AUDIO SYNC mode */

@@ -93,22 +93,16 @@ static void event_handler(gui_event_t event, tab_t *tab)
     if (event == KEY_PRESS_A)
     {
         emulator_show_file_menu(file);
-        gui_redraw();
     }
     else if (event == KEY_PRESS_B)
     {
         emulator_show_file_info(file);
-        gui_redraw();
     }
     else if (event == TAB_IDLE)
     {
-        //if (file->checksum == 0) {
-        //    emulator_crc32_file(file);
-        // }
     }
     else if (event == TAB_REDRAW)
     {
-        gui_redraw();
     }
 }
 
@@ -315,16 +309,18 @@ void emulator_show_file_info(retro_emulator_file_t *file)
     char filename_value[128];
     char type_value[32];
     char size_value[32];
+#if COVERFLOW != 0
     char img_size[32];
+#endif
     //char crc_value[32];
     //crc_value[0] = '\x00';
 
     odroid_dialog_choice_t choices[] = {
-        {0, curr_lang->s_File, filename_value, 1, NULL},
-        {0, curr_lang->s_Type, type_value, 1, NULL},
-        {0, curr_lang->s_Size, size_value, 1, NULL},
+        {-1, curr_lang->s_File, filename_value, 0, NULL},
+        {-1, curr_lang->s_Type, type_value, 0, NULL},
+        {-1, curr_lang->s_Size, size_value, 0, NULL},
 		#if COVERFLOW != 0
-        {0, curr_lang->s_ImgSize, img_size, 1, NULL},
+        {-1, curr_lang->s_ImgSize, img_size, 0, NULL},
 		#endif
         ODROID_DIALOG_CHOICE_SEPARATOR,
         {1, curr_lang->s_Close, "", 1, NULL},
@@ -338,7 +334,7 @@ void emulator_show_file_info(retro_emulator_file_t *file)
     sprintf(choices[3].value, "%d KB", file->img_size / 1024);
 	#endif
 
-    odroid_overlay_dialog(curr_lang->s_GameProp, choices, -1);
+    odroid_overlay_dialog(curr_lang->s_GameProp, choices, -1, &gui_redraw_callback);
 }
 
 #if CHEAT_CODES == 1
@@ -374,7 +370,7 @@ static bool show_cheat_dialog()
         choices[i].update_cb = cheat_update_cb;
     }
     choices[CHOSEN_FILE->cheat_count] = last;
-    odroid_overlay_dialog(curr_lang->s_Cheat_Codes_Title, choices, 0);
+    odroid_overlay_dialog(curr_lang->s_Cheat_Codes_Title, choices, 0, NULL);
 
     rg_free(choices);
     odroid_settings_commit();
@@ -439,7 +435,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
         choices[4] = last;
 #endif
 
-    int sel = odroid_overlay_dialog(file->name, choices, has_save ? 0 : 1);
+    int sel = odroid_overlay_dialog(file->name, choices, has_save ? 0 : 1, &gui_redraw_callback);
 
     if (sel == 0) { // Resume game
         gui_save_current_tab();
@@ -458,7 +454,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
         }
     }
     else if (sel == 2) {
-        if (odroid_overlay_confirm(curr_lang->s_Confiem_del_save, false) == 1) {
+        if (odroid_overlay_confirm(curr_lang->s_Confiem_del_save, false, &gui_redraw_callback) == 1) {
             fs_delete(path);
         }
     }

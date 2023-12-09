@@ -72,6 +72,8 @@ typedef struct persistent_config {
     uint16_t main_menu_selected_tab;
     uint16_t main_menu_cursor;
 
+    bool debug_clock_always_on;
+
     app_config_t app[APPID_COUNT];
 
 #if CHEAT_CODES == 1
@@ -83,7 +85,7 @@ typedef struct persistent_config {
 
 static const persistent_config_t persistent_config_default = {
     .magic = CONFIG_MAGIC,
-    .version = 5,
+    .version = 6,
 
     .backlight = ODROID_BACKLIGHT_LEVEL6,
     .start_action = ODROID_START_ACTION_RESUME,
@@ -121,6 +123,7 @@ static const persistent_config_t persistent_config_default = {
     .main_menu_timeout_s = 60 * 10, // Turn off after 10 minutes of idle time in the main menu
     .main_menu_selected_tab = 0,
     .main_menu_cursor = 0,
+    .debug_clock_always_on = false,
     .app = {
         {0}, // Launcher
         {
@@ -467,10 +470,9 @@ void odroid_settings_StartupFile_set(void *value)
     persistent_config_ram.startup_file = value;
 }
 
-
 uint16_t odroid_settings_MainMenuTimeoutS_get()
 {
-    return persistent_config_ram.main_menu_timeout_s;
+    return ((MIN(persistent_config_ram.main_menu_timeout_s, 3600) + 59) / 60) * 60; // > 0 : Round to whole minutes max one hour
 }
 void odroid_settings_MainMenuTimeoutS_set(uint16_t value)
 {
@@ -592,3 +594,13 @@ bool odroid_settings_ActiveGameGenieCodes_set(uint32_t rom_id, int code_index, b
     return true;
 }
 #endif
+
+bool odroid_settings_DebugMenuDebugClockAlwaysOn_get()
+{
+    return persistent_config_ram.debug_clock_always_on;
+}
+void odroid_settings_DebugMenuDebugClockAlwaysOn_set(bool value)
+{
+    persistent_config_ram.debug_clock_always_on = value;
+}
+

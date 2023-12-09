@@ -136,9 +136,24 @@ void HAL_LTDC_LineEventCallback (LTDC_HandleTypeDef *hltdc) {
   HAL_LTDC_ProgramLineEvent(hltdc,  239);
 }
 
-uint32_t is_lcd_swap_pending(void)
+uint32_t lcd_is_swap_pending(void)
 {
   return (uint32_t) ((hltdc.Instance->SRCR) & (LTDC_SRCR_VBR | LTDC_SRCR_IMR));
+}
+
+uint32_t lcd_sleep_while_swap_pending(void)
+{
+  uint32_t pending = lcd_is_swap_pending();
+
+  if (pending)
+  {
+    while (lcd_is_swap_pending())
+    {
+      __WFI();
+    }
+  }
+
+  return pending;
 }
 
 uint32_t lcd_get_pixel_position()
@@ -159,6 +174,16 @@ void lcd_sync(void)
 
   if (active != inactive) {
     memcpy(inactive, active, sizeof(framebuffer1));
+  }
+}
+
+void lcd_clone(void)
+{
+  void *active = lcd_get_active_buffer();
+  void *inactive = lcd_get_inactive_buffer();
+
+  if (active != inactive) {
+    memcpy(active, inactive, sizeof(framebuffer1));
   }
 }
 
@@ -188,7 +213,7 @@ void lcd_wait_for_vblank(void)
 {
   uint32_t old_counter = frame_counter;
   while (old_counter == frame_counter) {
-    __asm("nop");
+    __WFI();
   }
 }
 
