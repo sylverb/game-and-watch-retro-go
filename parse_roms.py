@@ -91,6 +91,7 @@ SAVE_SIZES = {
     "md": 144 * 1024,
     "a7800": 36 * 1024,
     "amstrad": 132 * 1024,
+    "zelda3": 8 * 1024,
 }
 
 
@@ -1163,6 +1164,7 @@ class ROMParser:
         romdef.setdefault('wsv', {})
         romdef.setdefault('a7800', {})
         romdef.setdefault('amstrad', {})
+        romdef.setdefault('zelda3', {})
 
         system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/gb_roms.c",
@@ -1463,6 +1465,23 @@ class ROMParser:
         total_save_size += save_size
         total_rom_size += rom_size
         build_config += "#define ENABLE_EMULATOR_AMSTRAD\n" if rom_size > 0 else ""
+        if system_save_size > larger_save_size : larger_save_size = system_save_size
+
+        # FIXME zelda3 homebrew --> how to enable/disable ???
+        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+            "Core/Src/retro-go/zelda3_roms.c",
+            "Zelda3",
+            "zelda3_system",
+            "zelda3",
+            ["bin"],
+            "SAVE_ZELDA3_",
+            romdef["zelda3"],
+            None,
+            current_id
+        )
+        total_save_size += save_size
+        total_rom_size += rom_size
+        build_config += "#define ENABLE_HOMEBREW_ZELDA3\n" if rom_size > 0 else ""
         if system_save_size > larger_save_size : larger_save_size = system_save_size
 
         total_size = total_save_size + total_rom_size + total_img_size

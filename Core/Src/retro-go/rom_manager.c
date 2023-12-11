@@ -25,6 +25,7 @@ retro_emulator_file_t *ACTIVE_FILE = NULL;
 #include "md_roms.c"
 #include "a7800_roms.c"
 #include "amstrad_roms.c"
+#include "zelda3_roms.c"
 
 const rom_system_t *systems[] = {
     &nes_system,
@@ -42,6 +43,7 @@ const rom_system_t *systems[] = {
     &md_system,
     &a7800_system,
     &amstrad_system,
+    &zelda3_system,
 };
 
 const rom_manager_t rom_mgr = {

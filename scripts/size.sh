@@ -56,6 +56,7 @@ print_usage ram_emu_wsv  __RAM_EMU_LENGTH__
 print_usage ram_emu_md __RAM_EMU_LENGTH__
 print_usage ram_emu_a7800  __RAM_EMU_LENGTH__
 print_usage ram_emu_amstrad  __RAM_EMU_LENGTH__
+print_usage ram_emu_zelda3  __RAM_EMU_LENGTH__
 print_usage ahbram   __AHBRAM_LENGTH__
 print_usage flash    __FLASH_LENGTH__
 print_usage cacheflash __CACHEFLASH_LENGTH__

@@ -10,6 +10,8 @@
 #define LOGO_DATA __attribute__((section(".extflash_logo")))
 #endif
 
+// FIXME zelda header and logo
+
 const retro_logo_image logo_rgo = {
     64,
     12,

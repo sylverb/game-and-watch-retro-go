@@ -22,3 +22,6 @@
 [submodule "fceumm-go"]
 	path = fceumm-go
 	url = https://github.com/sylverb/fceumm-go.git
+[submodule "zelda3"]
+	path = zelda3
+	url = https://github.com/marian-m12l/zelda3.git
