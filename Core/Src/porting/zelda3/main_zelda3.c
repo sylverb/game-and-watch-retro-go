@@ -135,21 +135,16 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     odroid_input_read_gamepad(&joystick);
 
 
+    odroid_dialog_choice_t options[] = {
+            ODROID_DIALOG_CHOICE_LAST
+    };
     // FIXME repaint???
-    /*
     void _repaint()
     {
-        screen = lcd_get_active_buffer();
-        gwenesis_vdp_set_buffer(&screen[vert_screen_offset + hori_screen_offset]);
-        for (int l = 0; l < lines_per_frame; l++)
-        {
-            gwenesis_vdp_render_line(l); /* render scan_line *//*
-        }
+        // TODO blit game???
         common_ingame_overlay();
     }
-
     common_emu_input_loop(&joystick, options, &_repaint);
-    */
 
 
     bool drawFrame = common_emu_frame_loop();
