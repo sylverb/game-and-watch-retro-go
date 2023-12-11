@@ -701,6 +701,16 @@ $(BUILD_DIR)/zelda3/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR
 	$(V)$(ECHO) [ CC zelda3 CPC ] $(notdir $<)
 	$(V)$(CC) -c $(CFLAGS) $(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/zelda3/$(notdir $(<:.c=.lst)) $< -o $@
 
+Core/Src/porting/zelda3/zelda_assets.c: scripts/zelda3/update_assets.py zelda3/tables/zelda3_assets.dat | $(BUILD_DIR)
+	$(PYTHON3) ./scripts/zelda3/update_assets.py
+
+
+# FIXME call make on submodule??? (-C zelda3)
+# FIXME use zelda3.sfc from roms/zelda3 folder???
+zelda3/tables/zelda3_assets.dat: zelda3/tables/zelda3.sfc | $(BUILD_DIR)
+	$(ECHO) "Extracting game resources"
+	cd zelda3/tables; $(PYTHON3) restool.py --extract-from-rom -r zelda3.sfc
+
 $(BUILD_DIR):
 	$(V)mkdir $@
 	$(V)mkdir $@/core
@@ -994,6 +1004,8 @@ download_sdk: $(SDK_HEADERS) $(SDK_C_SOURCES) $(SDK_ASM_SOURCES)
 clean:
 	$(V)$(ECHO) [ RM ] $(BUILD_DIR)
 	$(V)-rm -fR $(BUILD_DIR)
+	$(V)-rm -fR Core/Src/porting/zelda3/zelda_assets.c
+	cd zelda3 && make clean
 
 distclean: clean
 	$(V)$(ECHO) [ RM ] $(SDK_DIR)

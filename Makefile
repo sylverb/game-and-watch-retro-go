@@ -568,7 +568,8 @@ Core/Src/porting/amstrad/amstrad_video8bpp.c
 
 ZELDA3_C_SOURCES = \
 zelda3/zelda_rtl.c \
-Core/Src/porting/zelda3/main_zelda3.c
+Core/Src/porting/zelda3/main_zelda3.c \
+Core/Src/porting/zelda_assets.c
 
 GNUBOY_C_INCLUDES +=  \
 -ICore/Inc \

@@ -26,8 +26,11 @@ TODO copyright?
 #include "appid.h"
 #include "rg_i18n.h"
 
+#include "zelda_assets.h"
+
 // FIXME zelda3 includes ?
 #include "zelda3/zelda_rtl.h"
+#include "zelda3/assets.h"
 
 // FIXME optimization flags ?
 #pragma GCC optimize("Ofast")
@@ -40,6 +43,10 @@ TODO copyright?
 
 static uint32 frameCtr = 0;
 static uint32 renderedFrameCtr = 0;
+
+
+const uint8 *g_asset_ptrs[kNumberOfAssets];
+uint32 g_asset_sizes[kNumberOfAssets];
 
 
 /* keys inputs (hw & sw) FIXME needed? */
@@ -55,6 +62,37 @@ static odroid_gamepad_state_t joystick;
 /* FIXME ??? callback used by the emulator to capture keys */
 void zelda3_io_get_buttons()
 {
+}
+
+
+static void LoadAssetsChunk(size_t length, uint8* data) {
+  uint32 offset = 88 + kNumberOfAssets * 4 + *(uint32 *)(data + 84);
+  for (size_t i = 0; i < kNumberOfAssets; i++) {
+    uint32 size = *(uint32 *)(data + 88 + i * 4);
+    offset = (offset + 3) & ~3;
+    if ((uint64)offset + size > length)
+      assert(!"Assets file corruption");
+    g_asset_sizes[i] = size;
+    g_asset_ptrs[i] = data + offset;
+    offset += size;
+  }
+}
+
+static void LoadAssets() {
+  // Load some assets with assets in extflash
+  LoadAssetsChunk(zelda_assets_length, zelda_assets);
+
+  // Make sure all assets were loaded
+  for (size_t i = 0; i < kNumberOfAssets; i++) {
+    if (g_asset_ptrs[i] == 0) {
+      assert(!"Missing asset");
+    }
+  }
+
+}
+
+MemBlk FindInAssetArray(int asset, int idx) {
+  return FindIndexInMemblk((MemBlk) { g_asset_ptrs[asset], g_asset_sizes[asset] }, idx);
 }
 
 // FIXME init game?
@@ -104,21 +142,17 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
   // TODO init settings + main loop
 
   printf("Zelda3 start\n");
-
-  // TODO write something to current framebuffer as a first step
-
-
+  
   common_emu_state.frame_time_10us = (uint16_t)(100000 / FRAMERATE + 0.5f);
-
 
   /* clear the screen before rendering */
   memset(lcd_get_inactive_buffer(), 0, 320 * 240 * 2);
   memset(lcd_get_active_buffer(), 0, 320 * 240 * 2);
   
-
   unsigned short *screen = 0;
-
   screen = lcd_get_active_buffer();
+
+  LoadAssets();
 
   /* Start at the same time DMAs audio & video */
   /* Audio period and Video period are the same (almost at least 1 hour) */
