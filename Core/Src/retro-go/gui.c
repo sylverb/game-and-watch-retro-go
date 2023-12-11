@@ -309,8 +309,6 @@ void gui_scroll_list(tab_t *tab, scroll_mode_t mode)
 
     if (cur_cursor != old_cursor)
     {
-        gui_draw_notice(" ", curr_colors->bg_c);
-        gui_draw_list(tab);
         gui_event(TAB_SCROLL, tab);
     }
 }
