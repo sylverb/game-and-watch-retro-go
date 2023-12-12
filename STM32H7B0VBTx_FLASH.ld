@@ -261,6 +261,21 @@ SECTIONS
     __extflash_game_rom_start__ = .;
     *(.extflash_game_rom)
     __extflash_game_rom_end__ = .;
+    /* FIXME Avoid hard-coded assignments to extflash??? */
+    . = ALIGN(4K);
+    __extflash_zelda3_start__ = .;
+    build/zelda3/ancilla.o (.text .text* .rodata .rodata*)
+    build/zelda3/attract.o (.text .text* .rodata .rodata*)
+    build/zelda3/audio.o (.text .text* .rodata .rodata*)
+    build/zelda3/dungeon.o (.text .text* .rodata .rodata*)
+    build/zelda3/ending.o (.text .text* .rodata .rodata*)
+    build/zelda3/misc.o (.text .text* .rodata .rodata*)
+    build/zelda3/overlord.o (.text .text* .rodata .rodata*)
+    build/zelda3/opus_decoder_amalgam.o (.text .text* .rodata .rodata*)
+    build/zelda3/util.o (.text .text* .rodata .rodata*)
+    build/zelda3/select_file.o (.text .text* .rodata .rodata*)
+    build/zelda3/tagalong.o (.text .text* .rodata .rodata*)
+    __extflash_zelda3_end__ = .;
   } > EXTFLASH
 
   .overlay_nes __RAM_EMU_START__ : {

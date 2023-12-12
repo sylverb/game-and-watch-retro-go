@@ -456,7 +456,9 @@ C_DEFS +=  \
 -DMSX_NO_STEREO \
 -DFCEU_VERSION_NUMERIC=9813 \
 -DFCEU_LOW_RAM \
--DFCEU_NO_MALLOC
+-DFCEU_NO_MALLOC \
+-DHEADLESS
+# FIXME zelda3-specific HEADLESS flag???
 
 # AS includes
 AS_INCLUDES +=
@@ -696,6 +698,11 @@ $(BUILD_DIR)/a7800/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)
 $(BUILD_DIR)/amstrad/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
 	$(V)$(ECHO) [ CC amstrad CPC ] $(notdir $<)
 	$(V)$(CC) -c $(CFLAGS) $(AMSTRAD_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/amstrad/$(notdir $(<:.c=.lst)) $< -o $@
+
+# FIXME Find a better solution for sources in snes subdir
+$(BUILD_DIR)/zelda3/%.o: zelda3/snes/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+	$(V)$(ECHO) [ CC zelda3_snes CPC ] $(notdir $<)
+	$(V)$(CC) -c $(CFLAGS) $(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/zelda3/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/zelda3/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
 	$(V)$(ECHO) [ CC zelda3 CPC ] $(notdir $<)

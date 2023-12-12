@@ -568,6 +568,32 @@ Core/Src/porting/amstrad/amstrad_video8bpp.c
 
 ZELDA3_C_SOURCES = \
 zelda3/zelda_rtl.c \
+zelda3/misc.c \
+zelda3/nmi.c \
+zelda3/poly.c \
+zelda3/attract.c \
+zelda3/snes/ppu.c \
+zelda3/snes/dma.c \
+zelda3/spc_player.c \
+zelda3/util.c \
+zelda3/audio.c \
+zelda3/overworld.c \
+zelda3/ending.c \
+zelda3/select_file.c \
+zelda3/dungeon.c \
+zelda3/messaging.c \
+zelda3/hud.c \
+zelda3/load_gfx.c \
+zelda3/ancilla.c \
+zelda3/player.c \
+zelda3/sprite.c \
+zelda3/player_oam.c \
+zelda3/snes/dsp.c \
+zelda3/sprite_main.c \
+zelda3/tagalong.c \
+zelda3/third_party/opus-1.3.1-stripped/opus_decoder_amalgam.c \
+zelda3/tile_detect.c \
+zelda3/overlord.c \
 Core/Src/porting/zelda3/main_zelda3.c \
 Core/Src/porting/zelda_assets.c
 

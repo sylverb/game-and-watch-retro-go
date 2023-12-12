@@ -28,9 +28,13 @@ TODO copyright?
 
 #include "zelda_assets.h"
 
-// FIXME zelda3 includes ?
-#include "zelda3/zelda_rtl.h"
-#include "zelda3/assets.h"
+// zelda3
+#include "assets.h"
+#include "config.h"
+#include "snes/ppu.h"
+#include "types.h"
+#include "zelda_rtl.h"
+#include "hud.h"
 
 // FIXME optimization flags ?
 #pragma GCC optimize("Ofast")
@@ -40,6 +44,12 @@ TODO copyright?
 
 // FIXME 30/60 fps ???
 #define FRAMERATE 30
+
+#if EXTENDED_SCREEN != 0
+static int g_ppu_render_flags = kPpuRenderFlags_NewRenderer | kPpuRenderFlags_Height240;
+#else
+static int g_ppu_render_flags = kPpuRenderFlags_NewRenderer;
+#endif /* EXTENDED_SCREEN */
 
 static uint32 frameCtr = 0;
 static uint32 renderedFrameCtr = 0;
@@ -93,6 +103,37 @@ static void LoadAssets() {
 
 MemBlk FindInAssetArray(int asset, int idx) {
   return FindIndexInMemblk((MemBlk) { g_asset_ptrs[asset], g_asset_sizes[asset] }, idx);
+}
+
+
+static void DrawPpuFrame(void* framebuffer) {
+  wdog_refresh();
+  #if EXTENDED_SCREEN == 2
+  uint8 *pixel_buffer = framebuffer;
+  #elif EXTENDED_SCREEN == 1
+  uint8 *pixel_buffer = framebuffer + 32;    // Start 32 pixels from left
+  #else
+  uint8 *pixel_buffer = framebuffer + 320*8 + 32;    // Start 8 rows from the top, 32 pixels from left
+  #endif /* EXTENDED_SCREEN */
+  int pitch = 320 * 2;
+  
+  ZeldaDrawPpuFrame(pixel_buffer, pitch, g_ppu_render_flags);
+}
+
+
+void ZeldaApuLock() {
+}
+
+void ZeldaApuUnlock() {
+}
+
+// FIXME SRAM save uint8_t SAVE_SRAM_EXTFLASH[8192]  __attribute__((section (".saveflash"))) __attribute__((aligned(4096)));
+
+uint8_t* readSramImpl() {
+  return NULL;// FIXME SRAM save SAVE_SRAM_EXTFLASH;
+}
+void writeSramImpl(uint8_t* sram) {
+  // FIXME SRAM save store_save(SAVE_SRAM_EXTFLASH, sram, 8192);
 }
 
 // FIXME init game?
@@ -153,6 +194,18 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
   screen = lcd_get_active_buffer();
 
   LoadAssets();
+    
+  ZeldaInitialize();
+
+  #if EXTENDED_SCREEN == 2
+  g_zenv.ppu->extraLeftRight = UintMin(32, kPpuExtraLeftRight);
+  #else
+  g_zenv.ppu->extraLeftRight = 0;
+  #endif /* EXTENDED_SCREEN */
+
+  g_wanted_zelda_features = 0;  //FIXME FEATURES;
+
+  ZeldaEnableMsu(false);
 
   /* Start at the same time DMAs audio & video */
   /* Audio period and Video period are the same (almost at least 1 hour) */
@@ -180,17 +233,33 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     common_emu_input_loop(&joystick, options, &_repaint);
 
 
+    // FIXME Handle inputs
+    // Clear gamepad inputs when joypad directional inputs to avoid wonkiness
+    int inputs = 0;
+    /*int inputs = g_input1_state;
+    if (g_input1_state & 0xf0)
+      g_gamepad_buttons = 0;
+    inputs |= g_gamepad_buttons;*/
+
+
     bool drawFrame = common_emu_frame_loop();
+
+    // FIXME Run to frames at 30fps
+    bool is_replay = ZeldaRunFrame(inputs);
+    ZeldaRunFrame(inputs);
 
     frameCtr++;
 
 
     if (drawFrame) {
+      ZeldaDiscardUnusedAudioFrames();
+
       // todo switch framebuffer ??
       screen = lcd_get_active_buffer();
 
       // TODO draw something !!!
-      memset(screen, (frameCtr % 0xff), 320 * 240 * 2);
+      //memset(screen, (frameCtr % 0xff), 320 * 240 * 2);
+      DrawPpuFrame(screen);
 
       // FIXME in-game overlay ???
       common_ingame_overlay();
