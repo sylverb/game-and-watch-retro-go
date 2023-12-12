@@ -44,6 +44,11 @@ extern void * _OVERLAY_GB_LOAD_START[];
 extern uint8_t _OVERLAY_GB_SIZE;
 extern void * _OVERLAY_GB_BSS_START[];
 extern uint8_t _OVERLAY_GB_BSS_SIZE;
+extern void * _OVERLAY_TGB_LOAD_START[];
+extern uint8_t _OVERLAY_TGB_SIZE;
+extern void * _OVERLAY_TGB_BSS_START[];
+extern void * _OVERLAY_TGB_BSS_END[];
+extern uint8_t _OVERLAY_TGB_BSS_SIZE;
 extern void * _OVERLAY_SMS_LOAD_START[];
 extern uint8_t _OVERLAY_SMS_SIZE;
 extern void * _OVERLAY_SMS_BSS_START[];
@@ -88,3 +93,5 @@ extern uint8_t _GB_ROM_UNPACK_BUFFER_SIZE;
 
 extern uint8_t *_PCE_ROM_UNPACK_BUFFER;
 extern uint8_t _PCE_ROM_UNPACK_BUFFER_SIZE;
+
+extern void * __RAM_END__[];

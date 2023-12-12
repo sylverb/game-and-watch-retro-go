@@ -52,6 +52,10 @@ DISABLE_SPLASH_SCREEN ?= 0
 FORCE_NOFRENDO ?= 0 
 NOFRENDO_PARAM := --nofrendo=$(FORCE_NOFRENDO)
 
+# Default GB emulator is tgb-dual
+FORCE_GNUBOY ?= 0 
+GNUBOY_PARAM := --gnuboy=$(FORCE_GNUBOY)
+
 # Configure external flash size by setting EXTFLASH_SIZE
 ifeq ($(LARGE_FLASH),1)
 	# 16MB
@@ -411,6 +415,7 @@ PREFIX = arm-none-eabi-
 # either it can be added to the PATH environment variable.
 ifdef GCC_PATH
 CC   = $(GCC_PATH)/$(PREFIX)gcc
+CXX  = $(GCC_PATH)/$(PREFIX)g++
 AS   = $(GCC_PATH)/$(PREFIX)gcc -x assembler-with-cpp
 CP   = $(GCC_PATH)/$(PREFIX)objcopy
 SZ   = $(GCC_PATH)/$(PREFIX)size
@@ -418,6 +423,7 @@ GDB  = $(GCC_PATH)/$(PREFIX)gdb
 DUMP = $(GCC_PATH)/$(PREFIX)objdump
 else
 CC   = $(PREFIX)gcc
+CXX  = $(PREFIX)g++
 AS   = $(PREFIX)gcc -x assembler-with-cpp
 CP   = $(PREFIX)objcopy
 SZ   = $(PREFIX)size
@@ -486,6 +492,7 @@ C_DEFS +=  \
 -DGNW_TARGET_ZELDA=$(GNW_TARGET_ZELDA) \
 -DCHEAT_CODES=$(CHEAT_CODES) \
 -DFORCE_NOFRENDO=$(FORCE_NOFRENDO) \
+-DFORCE_GNUBOY=$(FORCE_GNUBOY) \
 -DDISABLE_SPLASH_SCREEN=$(DISABLE_SPLASH_SCREEN) \
 -DTARGET_GNW \
 -DNO_EMBEDDED_SAMPLES \
@@ -499,7 +506,9 @@ C_DEFS +=  \
 -DMSX_NO_STEREO \
 -DFCEU_VERSION_NUMERIC=9813 \
 -DFCEU_LOW_RAM \
--DFCEU_NO_MALLOC
+-DFCEU_NO_MALLOC \
+-DVIDEO_RGB565 \
+-DCC_RESAMPLER_NO_HIGHPASS
 
 # AS includes
 AS_INCLUDES +=
@@ -509,6 +518,7 @@ C_INCLUDES +=  \
 -ICore/Inc \
 -ICore/Inc/porting \
 -ICore/Inc/porting/gb \
+-ICore/Inc/porting/gb_tgbdual \
 -ICore/Inc/porting/nes \
 -ICore/Inc/porting/nes_fceu \
 -ICore/Inc/porting/smsplusgx \
@@ -526,6 +536,8 @@ C_INCLUDES +=  \
 -IDrivers/CMSIS/Include \
 -Iretro-go-stm32/components/lupng \
 
+CXX_INCLUDES += \
+
 # Force include the configuration
 CFLAGS += $(CFLAGS_EXTRA) -include $(BUILD_DIR)/config.h
 
@@ -542,6 +554,15 @@ CFLAGS += -fstack-usage -Wstack-usage=20480
 
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
+
+CXXFLAGS = $(CFLAGS) $(CXX_INCLUDES) \
+-fno-rtti \
+-fno-math-errno \
+-fomit-frame-pointer \
+-fno-stack-protector \
+-DRIGHTSHIFT_IS_SAR \
+-DHAVE_STDINT_H \
+-Wno-error=format-truncation
 
 LDFLAGS += -Wl,--defsym=__EXTFLASH_OFFSET__=$(EXTFLASH_OFFSET)
 LDFLAGS += -Wl,--defsym=__EXTFLASH_TOTAL_LENGTH__=$(EXTFLASH_TOTAL_LENGTH)
@@ -567,8 +588,9 @@ LDSCRIPT ?= STM32H7B0VBTx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys
+CXXLIBS = -lstdc++
 LIBDIR +=
-LDFLAGS += $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS += $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) $(CXXLIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
 # default action: build all
 all: CheckTools CheckDirtySubmodules $(BUILD_DIR) $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET)_extflash.bin $(BUILD_DIR)/$(TARGET)_intflash.bin $(BUILD_DIR)/$(TARGET)_intflash2.bin
@@ -580,6 +602,7 @@ all: CheckTools CheckDirtySubmodules $(BUILD_DIR) $(BUILD_DIR)/$(TARGET).elf $(B
 OBJECTS = $(addprefix $(BUILD_DIR)/core/,$(notdir $(C_SOURCES:.c=.o) $(SDK_C_SOURCES:.c=.o)))
 TAMP_OBJECTS = $(addprefix $(BUILD_DIR)/tamp/,$(notdir $(TAMP_C_SOURCES:.c=.o)))
 GNUBOY_OBJECTS = $(addprefix $(BUILD_DIR)/gnuboy/,$(notdir $(GNUBOY_C_SOURCES:.c=.o)))
+TGBDUAL_OBJECTS = $(addprefix $(BUILD_DIR)/tgbdual/,$(notdir $(TGBDUAL_C_SOURCES:.c=.o)))
 NES_OBJECTS = $(addprefix $(BUILD_DIR)/nes/,$(notdir $(NES_C_SOURCES:.c=.o)))
 NES_FCEU_OBJECTS = $(addprefix $(BUILD_DIR)/nes_fceu/,$(notdir $(NES_FCEU_C_SOURCES:.c=.o)))
 SMSPLUSGX_OBJECTS = $(addprefix $(BUILD_DIR)/smsplusgx/,$(notdir $(SMSPLUSGX_C_SOURCES:.c=.o)))
@@ -591,7 +614,14 @@ MD_OBJECTS = $(addprefix $(BUILD_DIR)/md/,$(notdir $(MD_C_SOURCES:.c=.o)))
 A7800_OBJECTS = $(addprefix $(BUILD_DIR)/a7800/,$(notdir $(A7800_C_SOURCES:.c=.o)))
 AMSTRAD_OBJECTS = $(addprefix $(BUILD_DIR)/amstrad/,$(notdir $(AMSTRAD_C_SOURCES:.c=.o)))
 
-vpath %.c $(sort $(dir $(C_SOURCES) $(TAMP_C_SOURCES) $(NES_C_SOURCES) $(NES_FCEU_C_SOURCES) $(GNUBOY_C_SOURCES) $(SMSPLUSGX_C_SOURCES) $(PCE_C_SOURCES) $(MSX_C_SOURCES) $(GW_C_SOURCES) $(WSV_C_SOURCES) $(MD_C_SOURCES) $(A7800_C_SOURCES) $(AMSTRAD_C_SOURCES) $(SDK_C_SOURCES)))
+vpath %.c $(sort $(dir $(C_SOURCES) $(TAMP_C_SOURCES) $(NES_C_SOURCES) $(NES_FCEU_C_SOURCES) $(GNUBOY_C_SOURCES) $(TGBDUAL_C_SOURCES) $(TGBDUAL_C_SOURCES) $(SMSPLUSGX_C_SOURCES) $(PCE_C_SOURCES) $(MSX_C_SOURCES) $(GW_C_SOURCES) $(WSV_C_SOURCES) $(MD_C_SOURCES) $(A7800_C_SOURCES) $(AMSTRAD_C_SOURCES) $(SDK_C_SOURCES)))
+
+# CXX
+CXX_OBJECTS =          $(addprefix $(BUILD_DIR)/core/,$(notdir $(CXX_SOURCES:.cpp=.o) ))
+TGBDUAL_CXX_OBJECTS = $(addprefix $(BUILD_DIR)/tgbdual/,$(notdir $(TGBDUAL_CXX_SOURCES:.cpp=.o)))
+
+vpath %.cpp $(sort $(dir $(CXX_SOURCES) $(TGBDUAL_CXX_SOURCES) ))
+
 # list of ASM program objects
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(SDK_ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(SDK_ASM_SOURCES)))
@@ -694,9 +724,9 @@ $(BUILD_DIR)/%.o: %.s Makefile.common Makefile $(BUILD_DIR)/config.h | $(BUILD_D
 	$(V)$(ECHO) [ AS ] $(notdir $<)
 	$(V)$(AS) -c $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) $(TAMP_OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) Makefile.common Makefile $(LDSCRIPT)
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) $(TAMP_OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(TGBDUAL_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(CXX_OBJECTS) $(TGBDUAL_CXX_OBJECTS) Makefile.common Makefile $(LDSCRIPT)
 	$(V)$(ECHO) [ LD ] $(notdir $@)
-	$(V)$(CC) $(OBJECTS) $(TAMP_OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(LDFLAGS) -o $@
+	$(V)$(CC) $(OBJECTS) $(A7800_OBJECTS) $(TAMP_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(TGBDUAL_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(CXX_OBJECTS) $(TGBDUAL_CXX_OBJECTS) $(LDFLAGS) -o $@
 	$(V)./scripts/extflash_size.sh $@
 
 $(BUILD_DIR)/core/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
@@ -718,6 +748,10 @@ $(BUILD_DIR)/nes_fceu/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_D
 $(BUILD_DIR)/gnuboy/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
 	$(V)$(ECHO) [ CC gb ] $(notdir $<)
 	$(V)$(CC) -c $(CFLAGS) $(GNUBOY_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/gnuboy/$(notdir $(<:.c=.lst)) $< -o $@
+
+$(BUILD_DIR)/tgbdual/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+	$(V)$(ECHO) [ CC GB TGB Dual ] $(notdir $<)
+	$(V)$(CC) -c $(CFLAGS) $(TGBDUAL_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/tgbdual/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/smsplusgx/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
 	$(V)$(ECHO) [ CC sms ] $(notdir $<)
@@ -751,6 +785,15 @@ $(BUILD_DIR)/amstrad/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DI
 	$(V)$(ECHO) [ CC amstrad CPC ] $(notdir $<)
 	$(V)$(CC) -c $(CFLAGS) $(AMSTRAD_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/amstrad/$(notdir $(<:.c=.lst)) $< -o $@
 
+# CXX
+$(BUILD_DIR)/core/%.o: %.cpp Makefile Makefile.common $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+	$(V)$(ECHO) [ CXX core ] $(notdir $<)
+	$(V)$(CXX) -c $(CXXFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/core/$(notdir $(<:.cpp=.lst)) $< -o $@
+
+$(BUILD_DIR)/tgbdual/%.o: %.cpp Makefile Makefile.common $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+	$(V)$(ECHO) [ CXX GB TGB Dual ] $(notdir $<)
+	$(V)$(CXX) -c $(CXXFLAGS) $(TGBDUAL_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/tgbdual/$(notdir $(<:.cpp=.lst)) $< -o $@
+
 $(BUILD_DIR):
 	$(V)mkdir $@
 	$(V)mkdir $@/tamp
@@ -758,6 +801,7 @@ $(BUILD_DIR):
 	$(V)mkdir $@/nes
 	$(V)mkdir $@/nes_fceu
 	$(V)mkdir $@/gnuboy
+	$(V)mkdir $@/tgbdual
 	$(V)mkdir $@/smsplusgx
 	$(V)mkdir $@/pce
 	$(V)mkdir $@/msx
@@ -922,6 +966,7 @@ help:
 	@echo "  SHARED_HIBERNATE_SAVESTATE - Set to 1 to enable a separate savestate for off/on (default=0)"
 	@echo "  DISABLE_SPLASH_SCREEN - Set to 1 to disable the slash screen animation at startup (default=0)"
 	@echo "  FORCE_NOFRENDO      - Set to 1 to force use of previous nofrendo-go emulator instead of fceumm (default=0)"
+	@echo "  FORCE_GNUBOY        - Set to 1 to force use of previous gnuboy emulator instead of tgb-dual (default=0)"
 	@echo ""
 	@echo "Current configuration:"
 	@echo "  EXTFLASH_FORCE_SPI=$(EXTFLASH_FORCE_SPI)"

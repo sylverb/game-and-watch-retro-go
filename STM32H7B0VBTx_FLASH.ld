@@ -84,6 +84,7 @@ __RAM_CORE_START__  = __RAM_START__ + __RAM_UC_LENGTH__;
 __RAM_EMU_START__   = __RAM_CORE_START__ + __RAM_CORE_LENGTH__;
 
 __RAM_EMU_END__     = __RAM_EMU_START__ + __RAM_EMU_LENGTH__;
+__RAM_END__         = __RAM_START__ + 1024K;
 
 INCLUDE build/cacheflash.ld
 
@@ -312,6 +313,28 @@ SECTIONS
   }
   _OVERLAY_GB_BSS_SIZE = SIZEOF(.overlay_gb_bss);
    _GB_ROM_UNPACK_BUFFER_SIZE = __RAM_EMU_START__ + __RAM_EMU_LENGTH__ - _GB_ROM_UNPACK_BUFFER;
+
+  .overlay_tgb __RAM_EMU_START__ : {
+    . = ALIGN(4);
+    __ram_emu_tgb_start__ = .;
+    build/tgbdual/*.o (.data .data* .text .text* .rodata .rodata*)
+    . = ALIGN(4);
+    _OVERLAY_TGB_LOAD_END = .;
+  } AT> EXTFLASH
+  _OVERLAY_TGB_LOAD_START = LOADADDR(.overlay_tgb);
+  _OVERLAY_TGB_SIZE = SIZEOF(.overlay_tgb);
+
+  .overlay_tgb_bss _OVERLAY_TGB_LOAD_END : {
+    . = ALIGN(4);
+    _OVERLAY_TGB_BSS_START = .;
+    build/tgbdual/*.o (COMMON)
+    . = ALIGN(4);
+    build/tgbdual/*.o (.bss .bss*)
+    _OVERLAY_TGB_BSS_END = .;
+    __ram_emu_tgb_end__ = .;
+    ASSERT(ABSOLUTE(_OVERLAY_TGB_BSS_END) < __RAM_EMU_END__, "Error: TGB BSS overflow");
+  }
+  _OVERLAY_TGB_BSS_SIZE = SIZEOF(.overlay_tgb_bss);
 
   .overlay_sms __RAM_EMU_START__ : {
       . = ALIGN(4);

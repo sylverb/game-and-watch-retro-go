@@ -13,6 +13,7 @@
 #include "gw_lcd.h"
 #include "main.h"
 #include "main_gb.h"
+#include "main_gb_tgbdual.h"
 #include "main_nes.h"
 #include "main_nes_fceu.h"
 #include "main_smsplusgx.h"
@@ -24,6 +25,7 @@
 #include "main_a7800.h"
 #include "main_amstrad.h"
 #include "rg_rtc.h"
+#include "heap.hpp"
 
 #if !defined(COVERFLOW)
 #define COVERFLOW 0
@@ -496,10 +498,21 @@ void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_pau
     // TODO: Make this cleaner
     if(strcmp(emu->system_name, "Nintendo Gameboy") == 0) {
 #ifdef ENABLE_EMULATOR_GB
+#if FORCE_GNUBOY == 1
         memcpy(&__RAM_EMU_START__, &_OVERLAY_GB_LOAD_START, (size_t)&_OVERLAY_GB_SIZE);
         memset(&_OVERLAY_GB_BSS_START, 0x0, (size_t)&_OVERLAY_GB_BSS_SIZE);
         SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_GB_SIZE);
         app_main_gb(load_state, start_paused, save_slot);
+#else
+        memcpy(&__RAM_EMU_START__, &_OVERLAY_TGB_LOAD_START, (size_t)&_OVERLAY_TGB_SIZE);
+        memset(&_OVERLAY_TGB_BSS_START, 0x0, (size_t)&_OVERLAY_TGB_BSS_SIZE);
+        SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_TGB_SIZE);
+
+        // Initializes the heap used by new and new[]
+        cpp_heap_init((size_t) &_OVERLAY_TGB_BSS_END);
+
+        app_main_gb_tgbdual(load_state, start_paused, save_slot);
+#endif
 #endif
     } else if(strcmp(emu->system_name, "Nintendo Entertainment System") == 0) {
 #ifdef ENABLE_EMULATOR_NES
@@ -585,12 +598,12 @@ void emulators_init()
 {
 #if !( defined(ENABLE_EMULATOR_GB) || defined(ENABLE_EMULATOR_NES) || defined(ENABLE_EMULATOR_SMS) || defined(ENABLE_EMULATOR_GG) || defined(ENABLE_EMULATOR_COL) || defined(ENABLE_EMULATOR_SG1000) || defined(ENABLE_EMULATOR_PCE) || defined(ENABLE_EMULATOR_GW) || defined(ENABLE_EMULATOR_MSX) || defined(ENABLE_EMULATOR_WSV) || defined(ENABLE_EMULATOR_MD) || defined(ENABLE_EMULATOR_A7800) || defined(ENABLE_EMULATOR_AMSTRAD))
     // Add gameboy as a placeholder in case no emulator is built.
-    add_emulator("Nintendo Gameboy", "gb", "gb", "gnuboy-go", 0, &pad_gb, &header_gb);
+    add_emulator("Nintendo Gameboy", "gb", "gb", "tgbdual-go", 0, &pad_gb, &header_gb);
 #endif
 
 
 #ifdef ENABLE_EMULATOR_GB
-    add_emulator("Nintendo Gameboy", "gb", "gb", "gnuboy-go", 0, &pad_gb, &header_gb);
+    add_emulator("Nintendo Gameboy", "gb", "gb", "tgbdual-go", 0, &pad_gb, &header_gb);
     // add_emulator("Nintendo Gameboy Color", "gbc", "gbc", "gnuboy-go", 0, logo_gbc, header_gbc);
 #endif
 

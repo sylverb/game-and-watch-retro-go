@@ -49,6 +49,10 @@ $(TAMP_DIR)/tamp/common.c \
 $(TAMP_DIR)/tamp/compressor.c \
 $(TAMP_DIR)/tamp/decompressor.c
 
+# Add common C++ sources here
+CXX_SOURCES = \
+Core/Src/heap.cpp \
+
 GNUBOY_C_SOURCES = \
 Core/Src/porting/gb/main_gb.c \
 retro-go-stm32/gnuboy-go/components/gnuboy/cpu.c \
@@ -60,6 +64,19 @@ retro-go-stm32/gnuboy-go/components/gnuboy/loader.c \
 retro-go-stm32/gnuboy-go/components/gnuboy/mem.c \
 retro-go-stm32/gnuboy-go/components/gnuboy/rtc.c \
 retro-go-stm32/gnuboy-go/components/gnuboy/sound.c \
+
+TGBDUAL_C_SOURCES = \
+
+TGBDUAL_CXX_SOURCES = \
+Core/Src/porting/gb_tgbdual/main_gb_tgbdual.cpp \
+Core/Src/porting/gb_tgbdual/gw_renderer.cpp \
+tgbdual-go/gb_core/tgbdual_apu.cpp \
+tgbdual-go/gb_core/tgbdual_cheat.cpp \
+tgbdual-go/gb_core/tgbdual_cpu.cpp \
+tgbdual-go/gb_core/tgbdual_gb.cpp \
+tgbdual-go/gb_core/tgbdual_lcd.cpp \
+tgbdual-go/gb_core/tgbdual_mbc.cpp \
+tgbdual-go/gb_core/tgbdual_rom.cpp
 
 NES_C_SOURCES = \
 Core/Src/porting/nes/main_nes.c \
@@ -579,6 +596,15 @@ GNUBOY_C_INCLUDES +=  \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
 -Iretro-go-stm32/gnuboy-go/components \
+
+TGBDUAL_C_INCLUDES +=  \
+-ICore/Inc \
+-ICore/Inc/porting/gb_tgbdual \
+-ICore/Src/porting/lib \
+-ICore/Src/porting/lib/lzma \
+-Itgbdual-go \
+-Itgbdual-go/gb_core \
+-Itgbdual-go/libretro \
 -I./
 
 NES_C_INCLUDES +=  \
@@ -605,7 +631,6 @@ SMSPLUSGX_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Iretro-go-stm32/gnuboy-go/components \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus/cpu \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus/sound \
@@ -616,11 +641,7 @@ PCE_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Iretro-go-stm32/gnuboy-go/components \
 -Iretro-go-stm32/pce-go/components/pce-go \
--Iretro-go-stm32/smsplusgx-go/components/smsplus \
--Iretro-go-stm32/smsplusgx-go/components/smsplus/cpu \
--Iretro-go-stm32/smsplusgx-go/components/smsplus/sound \
 -I./
 
 GW_C_INCLUDES +=  \
@@ -718,7 +739,7 @@ include Makefile.common
 
 $(BUILD_DIR)/$(TARGET)_extflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)
-	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad $< $(BUILD_DIR)/$(TARGET)_extflash.bin
+	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_tgb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad $< $(BUILD_DIR)/$(TARGET)_extflash.bin
 
 $(BUILD_DIR)/$(TARGET)_intflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)

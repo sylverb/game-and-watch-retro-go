@@ -81,15 +81,21 @@ void itc_init() {
 }
 
 void *itc_malloc(size_t size) {
-  void *pointer = (void *)current_itc_pointer;
+  // ITC ram start at 0x00000000 so we can't use NULL value to tell if allocation is not possible.
+  void *pointer = (void *)0xffffffff;
+//  void *pointer = (void *)current_itc_pointer;
 //  printf("itc_malloc 0x%lx size %d\n",current_itc_pointer,size);
-  current_itc_pointer = (current_itc_pointer + size + 3) & ~0x03; // Make sure pointers are always 32 bits aligned;
-  assert((current_itc_pointer) <= ((((uint32_t)&__itcram_start__) + ((uint32_t)(&__ITCMRAM_LENGTH__)) - ((uint32_t)(&__NULLPTR_LENGTH__)))));
+  if (((current_itc_pointer + size + 3) & ~0x03) <= ((((uint32_t)&__itcram_start__) + ((uint32_t)(&__ITCMRAM_LENGTH__)) - ((uint32_t)(&__NULLPTR_LENGTH__))))) {
+    pointer = (void *)current_itc_pointer;
+    current_itc_pointer = (current_itc_pointer + size + 3) & ~0x03; // Make sure pointers are always 32 bits aligned;
+  }
+//  assert((current_itc_pointer) <= ((((uint32_t)&__itcram_start__) + ((uint32_t)(&__ITCMRAM_LENGTH__)) - ((uint32_t)(&__NULLPTR_LENGTH__)))));
   return pointer;
 }
 
 void *itc_calloc(size_t count,size_t size) {
   void *pointer = itc_malloc(count*size);
-  memset(pointer,0,count*size);
+  if (pointer != (void *)0xffffffff)
+    memset(pointer,0,count*size);
   return pointer;
 }
