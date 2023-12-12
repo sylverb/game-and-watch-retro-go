@@ -9,7 +9,6 @@ TODO copyright?
 #include <string.h>
 #include <assert.h>
 
-// FIXME gw includes ?
 #include "main.h"
 #include "gw_lcd.h"
 #include "gw_linker.h"
@@ -18,10 +17,8 @@ TODO copyright?
 #include "lzma.h"
 #include "appid.h"
 
-/* TO move elsewhere */
 #include "stm32h7xx_hal.h"
 
-// FIXME retro-go includes ?
 #include "common.h"
 #include "rom_manager.h"
 #include "appid.h"
@@ -29,7 +26,6 @@ TODO copyright?
 
 #include "zelda_assets.h"
 
-// zelda3
 #include "assets.h"
 #include "zelda3/config.h"
 #include "snes/ppu.h"
@@ -37,14 +33,11 @@ TODO copyright?
 #include "zelda_rtl.h"
 #include "hud.h"
 
-// FIXME optimization flags ?
 #pragma GCC optimize("Ofast")
 
 
-// FIXME zelda3 global variables, settings, etc. (c.f. main.c in zelda3 standalone)
-
-// TODO reconfigure audio buffer/dma at 30fps / 16000Hz ???
-// TODO text KO ???
+#define STRINGIZE(x) #x
+#define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
 
 #if EXTENDED_SCREEN != 0
 static int g_ppu_render_flags = kPpuRenderFlags_NewRenderer | kPpuRenderFlags_Height240;
@@ -69,24 +62,17 @@ static uint32 renderedFrameCtr = 0;
 
 int16_t audiobuffer_zelda3[AUDIO_BUFFER_LENGTH];  // FIXME use audioBuffer from common.h instead???
 
+uint8_t savestateBuffer[4096];
+uint16_t bufferCount = 0;
+uint32_t dstPos = 0;
+uint8_t* save_address;
+
 const uint8 *g_asset_ptrs[kNumberOfAssets];
 uint32 g_asset_sizes[kNumberOfAssets];
 
 
-/* keys inputs (hw & sw) FIXME needed? */
+/* keys inputs (hw & sw) */
 static odroid_gamepad_state_t joystick;
-
-// FIXME buttons mappings from zelda and mario units
-#if GNW_TARGET_ZELDA != 0
-
-#else
-
-#endif
-
-/* FIXME ??? callback used by the emulator to capture keys */
-void zelda3_io_get_buttons()
-{
-}
 
 
 static void LoadAssetsChunk(size_t length, uint8* data) {
@@ -120,7 +106,7 @@ MemBlk FindInAssetArray(int asset, int idx) {
 }
 
 
-static void DrawPpuFrame(void* framebuffer) {
+static void DrawPpuFrame(uint16_t* framebuffer) {
   wdog_refresh();
   #if EXTENDED_SCREEN == 2
   uint8 *pixel_buffer = framebuffer;
@@ -157,52 +143,101 @@ static void HandleCommand(uint32 j, bool pressed) {
   }*/
 
 
-  /* FIXME #if ENABLE_SAVESTATE != 0
-  // FIXME Support multiple slots?
   if (j == kKeys_Load) {
     // Mute
     for (int i = 0; i < AUDIO_BUFFER_LENGTH_DMA; i++) {
         audiobuffer_dma[i] = 0;
     }
-    SaveLoadSlot(kSaveLoad_Load, &SAVESTATE_EXTFLASH);
+    SaveLoadSlot(kSaveLoad_Load, save_address);
   } else if (j == kKeys_Save) {
     // Mute
     for (int i = 0; i < AUDIO_BUFFER_LENGTH_DMA; i++) {
         audiobuffer_dma[i] = 0;
     }
-    SaveLoadSlot(kSaveLoad_Save, &SAVESTATE_EXTFLASH);
+    SaveLoadSlot(kSaveLoad_Save, save_address);
   }
-  #endif*/
 }
 
-// FIXME SRAM save uint8_t SAVE_SRAM_EXTFLASH[8192]  __attribute__((section (".saveflash"))) __attribute__((aligned(4096)));
+void writeSaveStateInitImpl() {
+  dstPos = 0;
+  bufferCount = 0;
+}
+void writeSaveStateImpl(uint8_t* data, size_t size) {
+  uint32_t srcPos = 0;
+  size_t remaining = size;
+  if (bufferCount > 0) {
+    size_t a = 4096 - bufferCount;
+    size_t b = size;
+    size_t bufferPad = a < b ? a : b;
+    memcpy(savestateBuffer + bufferCount, data, bufferPad);
+    bufferCount += bufferPad;
+    remaining -= bufferPad;
+    srcPos += bufferPad;
+    if (bufferCount == 4096) {
+      store_save(save_address + dstPos, savestateBuffer, 4096);
+      dstPos += 4096;
+      bufferCount = 0;
+    }
+  }
+  while (remaining >= 4096) {
+    store_save(save_address + dstPos, data + srcPos, 4096);
+    dstPos += 4096;
+    srcPos += 4096;
+    remaining -= 4096;
+    wdog_refresh();
+  }
+  if (remaining > 0) {
+    memcpy(savestateBuffer, data + srcPos, remaining);
+    bufferCount += remaining;
+  }
+}
+void writeSaveStateFinalizeImpl() {
+  if (bufferCount > 0) {
+    store_save(save_address + dstPos, savestateBuffer, bufferCount);
+    dstPos += bufferCount;
+    bufferCount = 0;
+  }
+  writeSaveStateInitImpl();
+}
 
+static bool zelda3_system_SaveState(char *pathName) {
+  printf("Saving state...\n");
+#if OFF_SAVESTATE==1
+  if (strcmp(pathName,"1") == 0) {
+    // Save in common save slot (during a power off)
+    save_address = (unsigned char *)&__OFFSAVEFLASH_START__;
+  } else {
+#endif
+    save_address = (unsigned char *)ACTIVE_FILE->save_address;
+#if OFF_SAVESTATE==1
+  }
+#endif
+  HandleCommand(kKeys_Save, true);
+  printf("Saved state\n");
+  return true;
+}
+
+static bool zelda3_system_LoadState(char *pathName) {
+  printf("Loading state...\n");
+  save_address = (unsigned char *)ACTIVE_FILE->save_address;
+  HandleCommand(kKeys_Load, true);
+}
+
+// FIXME no support for SRAM saves ???
 uint8_t* readSramImpl() {
-  return NULL;// FIXME SRAM save SAVE_SRAM_EXTFLASH;
+  return NULL;//SAVE_SRAM_EXTFLASH;
 }
 void writeSramImpl(uint8_t* sram) {
-  // FIXME SRAM save store_save(SAVE_SRAM_EXTFLASH, sram, 8192);
+  //store_save(SAVE_SRAM_EXTFLASH, sram, 8192);
 }
 
-// FIXME init game?
-static void zelda3_system_init() {
-}
 static void zelda3_sound_start()
 {
+  memset(audiobuffer_zelda3, 0, sizeof(audiobuffer_zelda3));
+  memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
+  HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA);
 }
 
-// FIXME audio configuration?
-// FIXME overclocking??
-/* AUDIO PLL controller */
-static void zelda3_audio_pll_stepdown() {
-}
-static void zelda3_audio_pll_stepup() {
-}
-
-static void zelda3_audio_pll_center() {
-}
-
-// FIXME sound?
 static void zelda3_sound_submit() {
   uint8_t volume = odroid_audio_volume_get();
   int16_t factor = volume_tbl[volume];
@@ -221,38 +256,12 @@ static void zelda3_sound_submit() {
   }
 }
 
-// FIXME in-game retro-go menu??
-static bool zelda3_submenu_setABC(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
-{
-}
-
-
-// FIXME in-game retro-go menu settings??
-void zelda3_save_local_data(void) {
-}
-
-void zelda3_load_local_data(void) {
-}
-
-static bool zelda3_system_SaveState(char *pathName) {
-}
-
-static bool zelda3_system_LoadState(char *pathName) {
-}
-
 /* Main */
 int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 {
-  // TODO init settings + main loop
-
   printf("Zelda3 start\n");
   odroid_system_init(APPID_ZELDA3, AUDIO_SAMPLE_RATE);
   odroid_system_emu_init(&zelda3_system_LoadState, &zelda3_system_SaveState, NULL);
-
-  // Init Sound
-  memset(audiobuffer_zelda3, 0, sizeof(audiobuffer_zelda3));
-  memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-  HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA);
   
   common_emu_state.frame_time_10us = (uint16_t)(100000 / FRAMERATE + 0.5f);
 
@@ -276,13 +285,27 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
   g_wanted_zelda_features = 0;  //FIXME FEATURES;
 
   ZeldaEnableMsu(false);
+  ZeldaSetLanguage(STRINGIZE_VALUE_OF(DIALOGUES_LANGUAGE));
+    
+  if (load_state) {
+#if OFF_SAVESTATE==1
+    if (save_slot == 1) {
+      // Load from common save slot if needed
+      save_address = (unsigned char *)&__OFFSAVEFLASH_START__;
+    } else {
+#endif
+      save_address = (unsigned char *)ACTIVE_FILE->save_address;
+#if OFF_SAVESTATE==1
+    }
+#endif
+    HandleCommand(kKeys_Load, true);
+  }
 
   /* Start at the same time DMAs audio & video */
   /* Audio period and Video period are the same (almost at least 1 hour) */
   lcd_wait_for_vblank();
   zelda3_sound_start();
 
-  // gwenesis_init_position = 0xFFFF & lcd_get_pixel_position();
   while (true) {
 
     /* reset watchdog */
@@ -303,7 +326,7 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     common_emu_input_loop(&joystick, options, &_repaint);
 
 
-    // FIXME Handle inputs
+    // Handle inputs
     // FIXME Play well with retro-go's controls
     HandleCommand(1, joystick.values[ODROID_INPUT_UP]);
     HandleCommand(2, joystick.values[ODROID_INPUT_DOWN]);
@@ -345,7 +368,6 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
     bool drawFrame = common_emu_frame_loop();
 
-    // FIXME Run to frames at 30fps
     bool is_replay = ZeldaRunFrame(inputs);
 
     frameCtr++;
@@ -368,14 +390,10 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
       ZeldaDiscardUnusedAudioFrames();
 
-      // todo switch framebuffer ??
       screen = lcd_get_active_buffer();
 
-      // TODO draw something !!!
-      //memset(screen, (frameCtr % 0xff), 320 * 240 * 2);
       DrawPpuFrame(screen);
 
-      // FIXME in-game overlay ???
       common_ingame_overlay();
 
       lcd_swap();
@@ -393,7 +411,6 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
             last_dma_state = dma_state;
         }
     }
-    //lcd_wait_for_vblank();
 
   }
 

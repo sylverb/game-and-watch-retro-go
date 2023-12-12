@@ -460,6 +460,7 @@ C_DEFS +=  \
 -DHEADLESS \
 -DLIMIT_30FPS=1 \
 -DEXTENDED_SCREEN=1 \
+-DDIALOGUES_LANGUAGE=us \
 # FIXME zelda3-specific HEADLESS flag???
 
 # AS includes
