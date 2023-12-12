@@ -30,7 +30,7 @@ TODO copyright?
 
 // zelda3
 #include "assets.h"
-#include "config.h"
+#include "zelda3/config.h"
 #include "snes/ppu.h"
 #include "types.h"
 #include "zelda_rtl.h"
@@ -50,6 +50,9 @@ static int g_ppu_render_flags = kPpuRenderFlags_NewRenderer | kPpuRenderFlags_He
 #else
 static int g_ppu_render_flags = kPpuRenderFlags_NewRenderer;
 #endif /* EXTENDED_SCREEN */
+
+static uint8 g_gamepad_buttons;
+static int g_input1_state;
 
 static uint32 frameCtr = 0;
 static uint32 renderedFrameCtr = 0;
@@ -125,6 +128,40 @@ void ZeldaApuLock() {
 }
 
 void ZeldaApuUnlock() {
+}
+
+static void HandleCommand(uint32 j, bool pressed) {
+  if (j <= kKeys_Controls_Last) {
+    static const uint8 kKbdRemap[] = { 0, 4, 5, 6, 7, 2, 3, 8, 0, 9, 1, 10, 11 };
+    if (pressed)
+      g_input1_state |= 1 << kKbdRemap[j];
+    else
+      g_input1_state &= ~(1 << kKbdRemap[j]);
+    return;
+  }
+
+  /* FIXME if (j == kKeys_Turbo) {
+    g_turbo = pressed;
+    return;
+  }*/
+
+
+  /* FIXME #if ENABLE_SAVESTATE != 0
+  // FIXME Support multiple slots?
+  if (j == kKeys_Load) {
+    // Mute
+    for (int i = 0; i < AUDIO_BUFFER_LENGTH_DMA; i++) {
+        audiobuffer_dma[i] = 0;
+    }
+    SaveLoadSlot(kSaveLoad_Load, &SAVESTATE_EXTFLASH);
+  } else if (j == kKeys_Save) {
+    // Mute
+    for (int i = 0; i < AUDIO_BUFFER_LENGTH_DMA; i++) {
+        audiobuffer_dma[i] = 0;
+    }
+    SaveLoadSlot(kSaveLoad_Save, &SAVESTATE_EXTFLASH);
+  }
+  #endif*/
 }
 
 // FIXME SRAM save uint8_t SAVE_SRAM_EXTFLASH[8192]  __attribute__((section (".saveflash"))) __attribute__((aligned(4096)));
@@ -234,12 +271,43 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
 
     // FIXME Handle inputs
+    // FIXME Play well with retro-go's controls
+    HandleCommand(1, joystick.values[ODROID_INPUT_UP]);
+    HandleCommand(2, joystick.values[ODROID_INPUT_DOWN]);
+    HandleCommand(3, joystick.values[ODROID_INPUT_LEFT]);
+    HandleCommand(4, joystick.values[ODROID_INPUT_RIGHT]);
+
+    HandleCommand(7, joystick.values[ODROID_INPUT_A]);  // A (Pegasus Boots/Interacting)
+    HandleCommand(8, joystick.values[ODROID_INPUT_B]);  // B (Sword)
+
+    #if GNW_TARGET_ZELDA != 0
+        HandleCommand(9, joystick.values[ODROID_INPUT_VOLUME]);    // X (Show Map)
+        HandleCommand(10, joystick.values[ODROID_INPUT_Y]);  // Y (Use Item)
+        
+        HandleCommand(5, joystick.values[ODROID_INPUT_SELECT]);   // Select (Save Screen)
+        HandleCommand(6, joystick.values[ODROID_INPUT_X]);  // Start (Item Selection Screen)
+        
+        // L & R aren't used in Zelda3, but we could enable item quick-swapping.
+        // FIXME HandleCommand(11, (buttons & B_GAME) && (buttons & B_SELECT)); // L
+        // FIXME HandleCommand(12, (buttons & B_GAME) && (buttons & B_START)); // R
+    #else 
+        HandleCommand(9, !joystick.values[ODROID_INPUT_START] && joystick.values[ODROID_INPUT_SELECT]);    // X
+        HandleCommand(10, !joystick.values[ODROID_INPUT_START] && joystick.values[ODROID_INPUT_VOLUME]);  // Y
+        
+        HandleCommand(5, joystick.values[ODROID_INPUT_START] && joystick.values[ODROID_INPUT_SELECT]);   // Select
+        HandleCommand(6, joystick.values[ODROID_INPUT_START] && joystick.values[ODROID_INPUT_VOLUME]);  // Start
+
+        // No button combinations available for L/R on Mario units...
+        //HandleCommand(11, (buttons & B_GAME) && (buttons & B_B)); // L
+        //HandleCommand(12, (buttons & B_GAME) && (buttons & B_A)); // R
+    #endif /* GNW_TARGET_ZELDA */
+
+
     // Clear gamepad inputs when joypad directional inputs to avoid wonkiness
-    int inputs = 0;
-    /*int inputs = g_input1_state;
+    int inputs = g_input1_state;
     if (g_input1_state & 0xf0)
       g_gamepad_buttons = 0;
-    inputs |= g_gamepad_buttons;*/
+    inputs |= g_gamepad_buttons;
 
 
     bool drawFrame = common_emu_frame_loop();
