@@ -16,6 +16,7 @@ TODO copyright?
 #include "gw_buttons.h"
 #include "gw_flash.h"
 #include "lzma.h"
+#include "appid.h"
 
 /* TO move elsewhere */
 #include "stm32h7xx_hal.h"
@@ -42,8 +43,8 @@ TODO copyright?
 
 // FIXME zelda3 global variables, settings, etc. (c.f. main.c in zelda3 standalone)
 
-// FIXME 30/60 fps ???
-#define FRAMERATE 30
+// TODO reconfigure audio buffer/dma at 30fps / 16000Hz ???
+// TODO text KO ???
 
 #if EXTENDED_SCREEN != 0
 static int g_ppu_render_flags = kPpuRenderFlags_NewRenderer | kPpuRenderFlags_Height240;
@@ -57,6 +58,16 @@ static int g_input1_state;
 static uint32 frameCtr = 0;
 static uint32 renderedFrameCtr = 0;
 
+#define AUDIO_SAMPLE_RATE   (16000)   // SAI Sample rate
+#if LIMIT_30FPS != 0
+#define FRAMERATE 30
+#else
+#define FRAMERATE 60
+#endif /* LIMIT_30FPS */
+#define AUDIO_BUFFER_LENGTH 534  // When limited to 30 fps, audio is generated for two frames at once
+#define AUDIO_BUFFER_LENGTH_DMA (2 * AUDIO_BUFFER_LENGTH) // DMA buffer contains 2 frames worth of audio samples in a ring buffer
+
+int16_t audiobuffer_zelda3[AUDIO_BUFFER_LENGTH];  // FIXME use audioBuffer from common.h instead???
 
 const uint8 *g_asset_ptrs[kNumberOfAssets];
 uint32 g_asset_sizes[kNumberOfAssets];
@@ -193,6 +204,21 @@ static void zelda3_audio_pll_center() {
 
 // FIXME sound?
 static void zelda3_sound_submit() {
+  uint8_t volume = odroid_audio_volume_get();
+  int16_t factor = volume_tbl[volume];
+
+  size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_BUFFER_LENGTH;
+
+  if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
+    for (int i = 0; i < AUDIO_BUFFER_LENGTH; i++) {
+      audiobuffer_dma[i + offset] = 0;
+    }
+  } else {
+    for (int i = 0; i < AUDIO_BUFFER_LENGTH; i++) {
+      int32_t sample = audiobuffer_zelda3[i];
+      audiobuffer_dma[i + offset] = (sample * factor) >> 8;
+    }
+  }
 }
 
 // FIXME in-game retro-go menu??
@@ -220,6 +246,13 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
   // TODO init settings + main loop
 
   printf("Zelda3 start\n");
+  odroid_system_init(APPID_ZELDA3, AUDIO_SAMPLE_RATE);
+  odroid_system_emu_init(&zelda3_system_LoadState, &zelda3_system_SaveState, NULL);
+
+  // Init Sound
+  memset(audiobuffer_zelda3, 0, sizeof(audiobuffer_zelda3));
+  memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
+  HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA);
   
   common_emu_state.frame_time_10us = (uint16_t)(100000 / FRAMERATE + 0.5f);
 
@@ -314,12 +347,25 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
     // FIXME Run to frames at 30fps
     bool is_replay = ZeldaRunFrame(inputs);
-    ZeldaRunFrame(inputs);
 
     frameCtr++;
 
+    #if LIMIT_30FPS != 0
+    // Render audio to DMA buffer
+    ZeldaRenderAudio(audiobuffer_zelda3, AUDIO_BUFFER_LENGTH / 2, 1);
+    // Render two frames worth of gameplay / audio for each screen render
+    ZeldaRunFrame(inputs);
+    ZeldaRenderAudio(audiobuffer_zelda3 + (AUDIO_BUFFER_LENGTH / 2), AUDIO_BUFFER_LENGTH / 2, 1);
+    #else
+    ZeldaRenderAudio(audiobuffer_zelda3, AUDIO_BUFFER_LENGTH, 1);
+    #endif /* LIMIT_30FPS*/
+
 
     if (drawFrame) {
+
+      /* copy audio samples for DMA */
+      zelda3_sound_submit();
+
       ZeldaDiscardUnusedAudioFrames();
 
       // todo switch framebuffer ??
@@ -337,10 +383,8 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
       renderedFrameCtr++;
     }
 
-    /*if(!common_emu_state.skip_frames)
+    if(!common_emu_state.skip_frames)
     {
-        // odroid_audio_submit(pcm.buf, pcm.pos >> 1);
-        // handled in pcm_submit instead.
         static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
         for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
             while (dma_state == last_dma_state) {
@@ -348,10 +392,8 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
             }
             last_dma_state = dma_state;
         }
-    }*/
-    lcd_wait_for_vblank();
-
-    // TODO How to exit game???
+    }
+    //lcd_wait_for_vblank();
 
   }
 
