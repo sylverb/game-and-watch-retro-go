@@ -1483,6 +1483,30 @@ class ROMParser:
         total_rom_size += rom_size
         build_config += "#define ENABLE_HOMEBREW_ZELDA3\n" if rom_size > 0 else ""
         if system_save_size > larger_save_size : larger_save_size = system_save_size
+        if rom_size > 0:
+            self.write_if_changed(
+                "build/zelda3_extflash.ld",
+                """
+                . = ALIGN(4K);
+                __extflash_zelda3_start__ = .;
+                build/zelda3/ancilla.o (.text .text* .rodata .rodata*)
+                build/zelda3/attract.o (.text .text* .rodata .rodata*)
+                build/zelda3/audio.o (.text .text* .rodata .rodata*)
+                build/zelda3/dungeon.o (.text .text* .rodata .rodata*)
+                build/zelda3/ending.o (.text .text* .rodata .rodata*)
+                build/zelda3/misc.o (.text .text* .rodata .rodata*)
+                build/zelda3/overlord.o (.text .text* .rodata .rodata*)
+                build/zelda3/opus_decoder_amalgam.o (.text .text* .rodata .rodata*)
+                build/zelda3/util.o (.text .text* .rodata .rodata*)
+                build/zelda3/select_file.o (.text .text* .rodata .rodata*)
+                build/zelda3/tagalong.o (.text .text* .rodata .rodata*)
+                __extflash_zelda3_end__ = .;
+                """
+            )
+        else:
+            self.write_if_changed(
+                "build/zelda3_extflash.ld",""
+            )
 
         total_size = total_save_size + total_rom_size + total_img_size
         #total_size +=sega_larger_rom_size
