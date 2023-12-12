@@ -462,6 +462,7 @@ C_DEFS +=  \
 -DEXTENDED_SCREEN=1 \
 -DDIALOGUES_LANGUAGE=us \
 # FIXME zelda3-specific HEADLESS flag???
+# FIXME smw-specific FEATURES flag???
 
 # AS includes
 AS_INCLUDES +=
@@ -482,6 +483,7 @@ C_INCLUDES +=  \
 -ICore/Inc/porting/a7800 \
 -ICore/Inc/porting/amstrad \
 -ICore/Inc/porting/zelda3 \
+-ICore/Inc/porting/smw \
 -ICore/Inc/retro-go \
 -IDrivers/STM32H7xx_HAL_Driver/Inc \
 -IDrivers/STM32H7xx_HAL_Driver/Inc/Legacy \
@@ -551,8 +553,9 @@ MD_OBJECTS = $(addprefix $(BUILD_DIR)/md/,$(notdir $(MD_C_SOURCES:.c=.o)))
 A7800_OBJECTS = $(addprefix $(BUILD_DIR)/a7800/,$(notdir $(A7800_C_SOURCES:.c=.o)))
 AMSTRAD_OBJECTS = $(addprefix $(BUILD_DIR)/amstrad/,$(notdir $(AMSTRAD_C_SOURCES:.c=.o)))
 ZELDA3_OBJECTS = $(addprefix $(BUILD_DIR)/zelda3/,$(notdir $(ZELDA3_C_SOURCES:.c=.o)))
+SMW_OBJECTS = $(addprefix $(BUILD_DIR)/smw/,$(notdir $(SMW_C_SOURCES:.c=.o)))
 
-vpath %.c $(sort $(dir $(C_SOURCES) $(NES_C_SOURCES) $(NES_FCEU_C_SOURCES) $(GNUBOY_C_SOURCES) $(SMSPLUSGX_C_SOURCES) $(PCE_C_SOURCES) $(MSX_C_SOURCES) $(GW_C_SOURCES) $(WSV_C_SOURCES) $(MD_C_SOURCES) $(A7800_C_SOURCES) $(AMSTRAD_C_SOURCES) $(ZELDA3_C_SOURCES) $(SDK_C_SOURCES)))
+vpath %.c $(sort $(dir $(C_SOURCES) $(NES_C_SOURCES) $(NES_FCEU_C_SOURCES) $(GNUBOY_C_SOURCES) $(SMSPLUSGX_C_SOURCES) $(PCE_C_SOURCES) $(MSX_C_SOURCES) $(GW_C_SOURCES) $(WSV_C_SOURCES) $(MD_C_SOURCES) $(A7800_C_SOURCES) $(AMSTRAD_C_SOURCES) $(ZELDA3_C_SOURCES) $(SMW_C_SOURCES) $(SDK_C_SOURCES)))
 # list of ASM program objects
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(SDK_ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(SDK_ASM_SOURCES)))
@@ -649,9 +652,9 @@ $(BUILD_DIR)/%.o: %.s Makefile.common Makefile $(BUILD_DIR)/config.h | $(BUILD_D
 	$(V)$(ECHO) [ AS ] $(notdir $<)
 	$(V)$(AS) -c $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(ZELDA3_OBJECTS) Makefile.common Makefile $(LDSCRIPT)
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(ZELDA3_OBJECTS) $(SMW_OBJECTS) Makefile.common Makefile $(LDSCRIPT)
 	$(V)$(ECHO) [ LD ] $(notdir $@)
-	$(V)$(CC) $(OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(ZELDA3_OBJECTS) $(LDFLAGS) -o $@
+	$(V)$(CC) $(OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(ZELDA3_OBJECTS) $(SMW_OBJECTS) $(LDFLAGS) -o $@
 	$(V)./scripts/extflash_size.sh $@
 
 $(BUILD_DIR)/core/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
@@ -714,12 +717,39 @@ $(BUILD_DIR)/zelda3/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR
 Core/Src/porting/zelda3/zelda_assets.c: scripts/zelda3/update_assets.py zelda3/tables/zelda3_assets.dat | $(BUILD_DIR)
 	$(PYTHON3) ./scripts/zelda3/update_assets.py
 
+# FIXME Find a better solution for sources in snes subdir
+#FIXME prefix all symbols in smw objects???
+$(BUILD_DIR)/smw/%.o: smw/src/snes/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+	$(V)$(ECHO) [ CC smw_snes CPC ] $(notdir $<)
+	$(V)$(CC) -c $(CFLAGS) $(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/smw/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CP) --redefine-syms=smw_redefines $@
+
+$(BUILD_DIR)/smw/%.o: smw/src/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+	$(V)$(ECHO) [ CC smw_snes CPC ] $(notdir $<)
+	$(V)$(CC) -c $(CFLAGS) $(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/smw/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CP) --redefine-syms=smw_redefines $@
+
+$(BUILD_DIR)/smw/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+	$(V)$(ECHO) [ CC smw CPC ] $(notdir $<)
+	$(V)$(CC) -c $(CFLAGS) $(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/smw/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CP) --redefine-syms=smw_redefines $@
+
+Core/Src/porting/smw/smw_assets.c: scripts/smw/update_assets.py smw/smw_assets.dat | $(BUILD_DIR)
+	$(PYTHON3) ./scripts/smw/update_assets.py
+
 
 # FIXME call make on submodule??? (-C zelda3)
 # FIXME use zelda3.sfc from roms/zelda3 folder???
 zelda3/tables/zelda3_assets.dat: zelda3/tables/zelda3.sfc | $(BUILD_DIR)
 	$(ECHO) "Extracting game resources"
 	cd zelda3/tables; $(PYTHON3) restool.py --extract-from-rom -r zelda3.sfc
+
+
+# FIXME call make on submodule??? (-C smw)
+# FIXME use smw.sfc from roms/smw folder???
+smw/smw_assets.dat: smw/assets/smw.sfc | $(BUILD_DIR)
+	$(ECHO) "Extracting game resources"
+	cd smw && make smw_assets.dat
 
 $(BUILD_DIR):
 	$(V)mkdir $@
@@ -736,6 +766,7 @@ $(BUILD_DIR):
 	$(V)mkdir $@/a7800
 	$(V)mkdir $@/amstrad
 	$(V)mkdir $@/zelda3
+	$(V)mkdir $@/smw
 
 #######################################
 # Flashing
@@ -1016,6 +1047,8 @@ clean:
 	$(V)-rm -fR $(BUILD_DIR)
 	$(V)-rm -fR Core/Src/porting/zelda3/zelda_assets.c
 	cd zelda3 && make clean
+	$(V)-rm -fR Core/Src/porting/smw/smw_assets.c
+	cd smw && make clean
 
 distclean: clean
 	$(V)$(ECHO) [ RM ] $(SDK_DIR)

@@ -24,13 +24,14 @@
 #include "main_a7800.h"
 #include "main_amstrad.h"
 #include "main_zelda3.h"
+#include "main_smw.h"
 #include "rg_rtc.h"
 
 #if !defined(COVERFLOW)
 #define COVERFLOW 0
 #endif /* COVERFLOW */
 // Increase when adding new emulators
-#define MAX_EMULATORS 14
+#define MAX_EMULATORS 15
 static retro_emulator_t emulators[MAX_EMULATORS];
 static int emulators_count = 0;
 
@@ -570,6 +571,13 @@ void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_pau
       SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_ZELDA3_SIZE);
       app_main_zelda3(load_state, start_paused, save_slot);
   #endif
+    } else if(strcmp(emu->system_name, "SMW") == 0)  {
+ #ifdef ENABLE_HOMEBREW_SMW
+      memcpy(&__RAM_EMU_START__, &_OVERLAY_SMW_LOAD_START, (size_t)&_OVERLAY_SMW_SIZE);
+      memset(&_OVERLAY_SMW_BSS_START, 0x0, (size_t)&_OVERLAY_SMW_BSS_SIZE);
+      SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_SMW_SIZE);
+      app_main_smw(load_state, start_paused, save_slot);
+  #endif
     }
     
 }
@@ -637,6 +645,10 @@ void emulators_init()
 
 #ifdef ENABLE_HOMEBREW_ZELDA3
     add_emulator("Zelda3", "zelda3", "zelda3", "zelda3", 0, &pad_amstrad, &header_amstrad); // FIXME &pad_zelda3, &header_zelda3);
+#endif
+
+#ifdef ENABLE_HOMEBREW_SMW
+    add_emulator("SMW", "smw", "smw", "smw", 0, &pad_amstrad, &header_amstrad); // FIXME &pad_smw, &header_smw);
 #endif
 
     // add_emulator("ColecoVision", "col", "col", "smsplusgx-go", 0, logo_col, header_col);

@@ -11,6 +11,7 @@
 #endif
 
 // FIXME zelda header and logo
+// FIXME smw header and logo
 
 const retro_logo_image logo_rgo = {
     64,

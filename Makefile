@@ -597,6 +597,36 @@ zelda3/overlord.c \
 Core/Src/porting/zelda3/main_zelda3.c \
 Core/Src/porting/zelda_assets.c
 
+SMW_C_SOURCES = \
+smw/src/smw_rtl.c \
+smw/src/smw_00.c \
+smw/src/smw_01.c \
+smw/src/smw_02.c \
+smw/src/smw_03.c \
+smw/src/smw_04.c \
+smw/src/smw_05.c \
+smw/src/smw_07.c \
+smw/src/smw_0c.c \
+smw/src/smw_0d.c \
+smw/src/smw_cpu_infra.c \
+smw/src/smw_spc_player.c \
+smw/src/config.c \
+smw/src/common_rtl.c \
+smw/src/common_cpu_infra.c \
+smw/src/util.c \
+smw/src/lm.c \
+smw/src/snes/ppu.c \
+smw/src/snes/dma.c \
+smw/src/snes/dsp.c \
+smw/src/snes/apu.c \
+smw/src/snes/spc.c \
+smw/src/snes/snes.c \
+smw/src/snes/cpu.c \
+smw/src/snes/cart.c \
+smw/src/snes/tracing.c \
+Core/Src/porting/smw/main_smw.c \
+Core/Src/porting/smw_assets.c
+
 GNUBOY_C_INCLUDES +=  \
 -ICore/Inc \
 -ICore/Src/porting/lib \
@@ -752,12 +782,20 @@ ZELDA3_C_INCLUDES +=  \
 -Izelda3/ \
 -I./
 
+SMW_C_INCLUDES +=  \
+-ICore/Inc \
+-ICore/Src/porting/lib \
+-ICore/Src/porting/lib/lzma \
+-Iretro-go-stm32/components/odroid \
+-Ismw/ \
+-I./
+
 include Makefile.common
 
 
 $(BUILD_DIR)/$(TARGET)_extflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)
-	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 $< $(BUILD_DIR)/$(TARGET)_extflash.bin
+	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 -j .overlay_smw $< $(BUILD_DIR)/$(TARGET)_extflash.bin
 
 $(BUILD_DIR)/$(TARGET)_intflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)

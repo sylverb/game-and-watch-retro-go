@@ -30,6 +30,8 @@ Core/Src/retro-go/md_roms.c
 Core/Src/retro-go/a7800_roms.c
 Core/Src/retro-go/zelda3_roms.c
 Core/Src/porting/zelda3/zelda_assets.c
+Core/Src/retro-go/smw_roms.c
+Core/Src/porting/smw/smw_assets.c
 
 linux/loaded_gb_rom.c
 linux/loaded_nes_rom.c

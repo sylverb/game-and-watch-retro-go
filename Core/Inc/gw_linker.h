@@ -86,6 +86,10 @@ extern void * _OVERLAY_ZELDA3_LOAD_START[];
 extern uint8_t _OVERLAY_ZELDA3_SIZE;
 extern void * _OVERLAY_ZELDA3_BSS_START[];
 extern uint8_t _OVERLAY_ZELDA3_BSS_SIZE;
+extern void * _OVERLAY_SMW_LOAD_START[];
+extern uint8_t _OVERLAY_SMW_SIZE;
+extern void * _OVERLAY_SMW_BSS_START[];
+extern uint8_t _OVERLAY_SMW_BSS_SIZE;
 
 extern uint8_t *_NES_ROM_UNPACK_BUFFER;
 extern uint8_t _NES_ROM_UNPACK_BUFFER_SIZE;

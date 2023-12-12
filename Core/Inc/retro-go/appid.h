@@ -13,6 +13,7 @@ typedef enum {
     APPID_A7800    = 9,
     APPID_AMSTRAD  = 10,
     APPID_ZELDA3   = 11,
+    APPID_SMW      = 12,
 
     APPID_COUNT,
 } appid_t;

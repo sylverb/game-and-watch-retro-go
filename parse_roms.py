@@ -92,6 +92,7 @@ SAVE_SIZES = {
     "a7800": 36 * 1024,
     "amstrad": 132 * 1024,
     "zelda3": 272 * 1024,
+    "smw": 264 * 1024,
 }
 
 
@@ -1165,6 +1166,7 @@ class ROMParser:
         romdef.setdefault('a7800', {})
         romdef.setdefault('amstrad', {})
         romdef.setdefault('zelda3', {})
+        romdef.setdefault('smw', {})
 
         system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/gb_roms.c",
@@ -1506,6 +1508,48 @@ class ROMParser:
         else:
             self.write_if_changed(
                 "build/zelda3_extflash.ld",""
+            )
+
+        # FIXME smw homebrew --> how to enable/disable ???
+        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+            "Core/Src/retro-go/smw_roms.c",
+            "SMW",
+            "smw_system",
+            "smw",
+            ["bin"],
+            "SAVE_SMW_",
+            romdef["smw"],
+            None,
+            current_id
+        )
+        total_save_size += save_size
+        total_rom_size += rom_size
+        build_config += "#define ENABLE_HOMEBREW_SMW\n" if rom_size > 0 else ""
+        if system_save_size > larger_save_size : larger_save_size = system_save_size
+        if rom_size > 0:
+            self.write_if_changed(
+                "build/smw_extflash.ld",
+                """
+                . = ALIGN(4K);
+                __extflash_smw_start__ = .;
+                build/smw/apu.o (.text .text* .rodata .rodata*)
+                build/smw/cart.o (.text .text* .rodata .rodata*)
+                build/smw/common_cpu_infra.o (.text .text* .rodata .rodata*)
+                build/smw/common_rtl.o (.text .text* .rodata .rodata*)
+                build/smw/config.o (.text .text* .rodata .rodata*)
+                build/smw/cpu.o (.text .text* .rodata .rodata*)
+                build/smw/lm.o (.text .text* .rodata .rodata*)
+                build/smw/smw_cpu_infra.o (.text .text* .rodata .rodata*)
+                build/smw/snes.o (.text .text* .rodata .rodata*)
+                build/smw/spc.o (.text .text* .rodata .rodata*)
+                build/smw/tracing.o (.text .text* .rodata .rodata*)
+                build/smw/util.o (.text .text* .rodata .rodata*)
+                __extflash_smw_end__ = .;
+                """
+            )
+        else:
+            self.write_if_changed(
+                "build/smw_extflash.ld",""
             )
 
         total_size = total_save_size + total_rom_size + total_img_size
