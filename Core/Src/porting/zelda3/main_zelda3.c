@@ -117,6 +117,11 @@ static void DrawPpuFrame(uint16_t* framebuffer) {
   int pitch = 320 * 2;
   
   ZeldaDrawPpuFrame(pixel_buffer, pitch, g_ppu_render_flags);
+
+  // Draw borders
+  #if EXTENDED_SCREEN < 2
+  draw_border_zelda3(framebuffer);
+  #endif /* EXTENDED_SCREEN */
 }
 
 

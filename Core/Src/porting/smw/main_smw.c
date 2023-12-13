@@ -126,6 +126,9 @@ static void DrawPpuFrame(uint16_t* framebuffer) {
 
   PpuBeginDrawing(g_my_ppu, pixel_buffer, pitch, g_ppu_render_flags);
   RtlDrawPpuFrame(pixel_buffer, pitch, g_ppu_render_flags);
+
+  // Draw borders
+  draw_border_smw(framebuffer);
 }
 
 

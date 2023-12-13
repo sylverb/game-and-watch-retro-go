@@ -81,4 +81,8 @@ extern const unsigned char img_clock_07[];
 extern const unsigned char img_clock_08[];
 extern const unsigned char img_clock_09[];
 
+extern const unsigned char IMG_BORDER_ZELDA3[];
+extern const unsigned char IMG_BORDER_LEFT_SMW[];
+extern const unsigned char IMG_BORDER_RIGHT_SMW[];
+
 
