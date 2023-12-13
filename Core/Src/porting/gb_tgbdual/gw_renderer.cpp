@@ -23,6 +23,7 @@ extern "C" {
 #include "common.h"
 #include "gw_lcd.h"
 #include "rg_rtc.h"
+#include "main_gb_tgbdual.h"
 }
 
 #include <string.h>
@@ -105,10 +106,12 @@ int gw_renderer::check_pad()
 
 void gw_renderer::render_screen(byte *buf,int width,int height,int depth)
 {
-   // Temporary disabled as it causes sound jitter/issues (Verified in Super Mario Land 2.0 rom hack)
-   // common_sleep_while_lcd_swap_pending();
-   gb_blit((uint16_t *)buf);
-   lcd_swap();
+   if (tgb_drawFrame) {
+      // Temporary disabled as it causes sound jitter/issues (Verified in Super Mario Land 2.0 rom hack)
+      // common_sleep_while_lcd_swap_pending();
+      gb_blit((uint16_t *)buf);
+      lcd_swap();
+   }
 }
 
 byte gw_renderer::get_time(int type)

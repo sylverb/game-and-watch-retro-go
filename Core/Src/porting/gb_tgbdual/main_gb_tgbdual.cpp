@@ -18,6 +18,7 @@ extern "C" {
 #include "appid.h"
 #include "gw_malloc.h"
 #include "filesystem.h"
+#include "main_gb_tgbdual.h"
 
 extern void __libc_init_array(void);
 }
@@ -55,7 +56,7 @@ gb *g_gb;
 gw_renderer *render;
 
 static uint16_t *tgb_buffer;
-
+bool tgb_drawFrame;
 
 // --- MAIN
 
@@ -453,7 +454,7 @@ extern "C" void update_cheats_gb() {
 }
 #endif
 
-void app_main_gb_tgbdual_cpp(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
+void app_main_gb_tgbdual_cpp(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
     char palette_values[16];
     odroid_gamepad_state_t joystick;
@@ -512,13 +513,13 @@ void app_main_gb_tgbdual_cpp(uint8_t load_state, uint8_t start_paused, uint8_t s
     {
         wdog_refresh();
 
-        bool drawFrame = common_emu_frame_loop();
+        tgb_drawFrame = common_emu_frame_loop();
         odroid_input_read_gamepad(&joystick);
 
         common_emu_input_loop(&joystick, options, &gb_process_blit);
 
         for (int line = 0;line < 154; line++) {
-                g_gb->run();
+            g_gb->run();
         }
 
         if(!common_emu_state.skip_frames)
