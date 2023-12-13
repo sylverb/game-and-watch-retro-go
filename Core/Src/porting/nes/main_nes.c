@@ -22,6 +22,7 @@
 #include <assert.h>
 #include  "miniz.h"
 #include "lzma.h"
+#include "filesystem.h"
 #include "appid.h"
 
 static uint samplesPerFrame;
@@ -44,17 +45,12 @@ static bool SaveState(char *pathName)
 {
     printf("Saving state...\n");
 
-    nes_state_save(nes_save_buffer, 24000);
-#if OFF_SAVESTATE==1
-    if (strcmp(pathName,"1") == 0) {
-        // Save in common save slot (during a power off)
-        store_save((uint8_t *) &__OFFSAVEFLASH_START__, nes_save_buffer, sizeof(nes_save_buffer));
-    } else {
-#endif
-        store_save((uint8_t *) ACTIVE_FILE->save_address, nes_save_buffer, sizeof(nes_save_buffer));
-#if OFF_SAVESTATE==1
-    }
-#endif
+    nes_state_save(nes_save_buffer, sizeof(nes_save_buffer));
+
+    fs_file_t *file;
+    file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
+    fs_write(file, nes_save_buffer, sizeof(nes_save_buffer));
+    fs_close(file);
 
     return 0;
 }
@@ -64,7 +60,13 @@ extern int nes_state_load(uint8_t* flash_ptr, size_t size);
 
 static bool LoadState(char *pathName)
 {
-    nes_state_load((uint8_t *) ACTIVE_FILE->save_address, ACTIVE_FILE->save_size);
+    fs_file_t *file;
+    file = fs_open(pathName, FS_READ, FS_COMPRESS);
+    fs_read(file, nes_save_buffer, sizeof(nes_save_buffer));
+    fs_close(file);
+
+    nes_state_load((uint8_t *) nes_save_buffer, sizeof(nes_save_buffer));
+
     return true;
 }
 
@@ -348,7 +350,7 @@ static void blit_5to6(bitmap_t *bmp, uint16_t *framebuffer) {
 
 static void blit(bitmap_t *bmp)
 {
-    uint16_t *framebuffer = lcd_get_active_buffer()
+    uint16_t *framebuffer = lcd_get_active_buffer();
     odroid_display_scaling_t scaling = odroid_display_get_scaling_mode();
     odroid_display_filter_t filtering = odroid_display_get_filter_mode();
 
@@ -511,17 +513,7 @@ void osd_loadstate()
 {
     if(autoload) {
         autoload = false;
-
-#if OFF_SAVESTATE==1
-        if (save_slot_load == 1) {
-            // Load from common save slot if needed
-            nes_state_load((uint8_t *)&__OFFSAVEFLASH_START__, ACTIVE_FILE->save_size);
-        } else {
-#endif
-            LoadState("");
-#if OFF_SAVESTATE==1
-        }
-#endif
+        odroid_system_emu_load_state(save_slot_load);
     }
 }
 
