@@ -740,18 +740,14 @@ Core/Src/porting/smw/smw_assets.c: scripts/smw/update_assets.py smw/smw_assets.d
 	$(PYTHON3) ./scripts/smw/update_assets.py
 
 
-# FIXME call make on submodule??? (-C zelda3)
-# FIXME use zelda3.sfc from roms/zelda3 folder???
-zelda3/tables/zelda3_assets.dat: zelda3/tables/zelda3.sfc | $(BUILD_DIR)
-	$(ECHO) "Extracting game resources"
-	cd zelda3/tables; $(PYTHON3) restool.py --extract-from-rom -r zelda3.sfc
+zelda3/tables/zelda3_assets.dat: roms/zelda3/zelda3.sfc | $(BUILD_DIR)
+	cp $< zelda3/tables/zelda3.sfc
+	$(MAKE) -C zelda3 tables/zelda3_assets.dat
 
 
-# FIXME call make on submodule??? (-C smw)
-# FIXME use smw.sfc from roms/smw folder???
-smw/smw_assets.dat: smw/assets/smw.sfc | $(BUILD_DIR)
-	$(ECHO) "Extracting game resources"
-	cd smw && make smw_assets.dat
+smw/smw_assets.dat: roms/smw/smw.sfc | $(BUILD_DIR)
+	cp $< smw/assets/smw.sfc
+	$(MAKE) -C smw smw_assets.dat
 
 $(BUILD_DIR):
 	$(V)mkdir $@
@@ -1048,9 +1044,11 @@ clean:
 	$(V)$(ECHO) [ RM ] $(BUILD_DIR)
 	$(V)-rm -fR $(BUILD_DIR)
 	$(V)-rm -fR Core/Src/porting/zelda3/zelda_assets.c
-	cd zelda3 && make clean
+	$(V)-rm -fR zelda3/tables/zelda3.sfc
+	$(V)$(MAKE) -C zelda3 clean
 	$(V)-rm -fR Core/Src/porting/smw/smw_assets.c
-	cd smw && make clean
+	$(V)-rm -fR smw/assets/smw.sfc
+	$(V)$(MAKE) -C smw clean
 
 distclean: clean
 	$(V)$(ECHO) [ RM ] $(SDK_DIR)

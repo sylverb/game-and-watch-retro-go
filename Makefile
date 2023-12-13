@@ -566,6 +566,7 @@ Core/Src/porting/amstrad/amstrad_format.c \
 Core/Src/porting/amstrad/amstrad_loader.c \
 Core/Src/porting/amstrad/amstrad_video8bpp.c
 
+ifneq ("$(wildcard roms/zelda3/zelda3.sfc)","")
 ZELDA3_C_SOURCES = \
 zelda3/zelda_rtl.c \
 zelda3/misc.c \
@@ -596,7 +597,11 @@ zelda3/tile_detect.c \
 zelda3/overlord.c \
 Core/Src/porting/zelda3/main_zelda3.c \
 Core/Src/porting/zelda3/zelda_assets.c
+else
+ZELDA3_C_SOURCES = 
+endif
 
+ifneq ("$(wildcard roms/smw/smw.sfc)","")
 SMW_C_SOURCES = \
 smw/src/smw_rtl.c \
 smw/src/smw_00.c \
@@ -626,6 +631,9 @@ smw/src/snes/cart.c \
 smw/src/tracing.c \
 Core/Src/porting/smw/main_smw.c \
 Core/Src/porting/smw/smw_assets.c
+else
+SMW_C_SOURCES = 
+endif
 
 GNUBOY_C_INCLUDES +=  \
 -ICore/Inc \
