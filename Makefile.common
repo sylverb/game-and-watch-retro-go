@@ -705,46 +705,36 @@ $(BUILD_DIR)/amstrad/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DI
 	$(V)$(ECHO) [ CC amstrad CPC ] $(notdir $<)
 	$(V)$(CC) -c $(CFLAGS) $(AMSTRAD_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/amstrad/$(notdir $(<:.c=.lst)) $< -o $@
 
-# FIXME Find a better solution for sources in snes subdir
-$(BUILD_DIR)/zelda3/%.o: zelda3/snes/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
-	$(V)$(ECHO) [ CC zelda3_snes CPC ] $(notdir $<)
-	$(V)$(CC) -c $(CFLAGS) $(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/zelda3/$(notdir $(<:.c=.lst)) $< -o $@
-	$(CP) --redefine-syms=zelda3_redefines $@
 
-$(BUILD_DIR)/zelda3/%.o: zelda3/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
-	$(V)$(ECHO) [ CC zelda3_snes CPC ] $(notdir $<)
-	$(V)$(CC) -c $(CFLAGS) $(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/zelda3/$(notdir $(<:.c=.lst)) $< -o $@
-	$(CP) --redefine-syms=zelda3_redefines $@
+# function used to generate prerequisite rules for zelda3 objects
+define zelda3_obj_prereq_gen
+$$(BUILD_DIR)/zelda3/$(patsubst %.c,%.o,$(notdir $1)): $1 Makefile.common Makefile $$(SDK_HEADERS) $$(BUILD_DIR)/config.h | $$(BUILD_DIR)
+	$$(V)$$(ECHO) [ CC zelda3 CPC ] $$(notdir $$<)
+	$$(V)$$(CC) -c $$(CFLAGS) $$(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$$(BUILD_DIR)/zelda3/$$(notdir $$(<:.c=.lst)) $$< -o $$@
+	$$(CP) --redefine-syms=zelda3_redefines $$@
 
-$(BUILD_DIR)/zelda3/%.o: zelda3/third_party/opus-1.3.1-stripped/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
-	$(V)$(ECHO) [ CC zelda3_snes CPC ] $(notdir $<)
-	$(V)$(CC) -c $(CFLAGS) $(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/zelda3/$(notdir $(<:.c=.lst)) $< -o $@
-	$(CP) --redefine-syms=zelda3_redefines $@
+endef
+# note: the blank line above is intentional
 
-$(BUILD_DIR)/zelda3/%.o: Core/Src/porting/zelda3/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
-	$(V)$(ECHO) [ CC zelda3 CPC ] $(notdir $<)
-	$(V)$(CC) -c $(CFLAGS) $(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/zelda3/$(notdir $(<:.c=.lst)) $< -o $@
-	$(CP) --redefine-syms=zelda3_redefines $@
+# generate all zelda3 object prerequisite rules
+$(eval $(foreach obj,$(ZELDA3_C_SOURCES),$(call zelda3_obj_prereq_gen,$(obj))))
 
 Core/Src/porting/zelda3/zelda_assets.c: scripts/zelda3/update_assets.py zelda3/tables/zelda3_assets.dat | $(BUILD_DIR)
 	$(PYTHON3) ./scripts/zelda3/update_assets.py
 
-# FIXME Find a better solution for sources in snes subdir
-#FIXME prefix all symbols in smw objects???
-$(BUILD_DIR)/smw/%.o: smw/src/snes/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
-	$(V)$(ECHO) [ CC smw_snes CPC ] $(notdir $<)
-	$(V)$(CC) -c $(CFLAGS) $(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/smw/$(notdir $(<:.c=.lst)) $< -o $@
-	$(CP) --redefine-syms=smw_redefines $@
 
-$(BUILD_DIR)/smw/%.o: smw/src/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
-	$(V)$(ECHO) [ CC smw_snes CPC ] $(notdir $<)
-	$(V)$(CC) -c $(CFLAGS) $(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/smw/$(notdir $(<:.c=.lst)) $< -o $@
-	$(CP) --redefine-syms=smw_redefines $@
+# function used to generate prerequisite rules for smw objects
+define smw_obj_prereq_gen
+$$(BUILD_DIR)/smw/$(patsubst %.c,%.o,$(notdir $1)): $1 Makefile.common Makefile $$(SDK_HEADERS) $$(BUILD_DIR)/config.h | $$(BUILD_DIR)
+	$$(V)$$(ECHO) [ CC smw CPC ] $$(notdir $$<)
+	$$(V)$$(CC) -c $$(CFLAGS) $$(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$$(BUILD_DIR)/smw/$$(notdir $$(<:.c=.lst)) $$< -o $$@
+	$$(CP) --redefine-syms=smw_redefines $$@
 
-$(BUILD_DIR)/smw/%.o: Core/Src/porting/smw/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
-	$(V)$(ECHO) [ CC smw CPC ] $(notdir $<)
-	$(V)$(CC) -c $(CFLAGS) $(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/smw/$(notdir $(<:.c=.lst)) $< -o $@
-	$(CP) --redefine-syms=smw_redefines $@
+endef
+# note: the blank line above is intentional
+
+# generate all smw object prerequisite rules
+$(eval $(foreach obj,$(SMW_C_SOURCES),$(call smw_obj_prereq_gen,$(obj))))
 
 Core/Src/porting/smw/smw_assets.c: scripts/smw/update_assets.py smw/smw_assets.dat | $(BUILD_DIR)
 	$(PYTHON3) ./scripts/smw/update_assets.py

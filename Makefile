@@ -623,7 +623,7 @@ smw/src/snes/spc.c \
 smw/src/snes/snes.c \
 smw/src/snes/cpu.c \
 smw/src/snes/cart.c \
-smw/src/snes/tracing.c \
+smw/src/tracing.c \
 Core/Src/porting/smw/main_smw.c \
 Core/Src/porting/smw/smw_assets.c
 
