@@ -595,7 +595,7 @@ zelda3/third_party/opus-1.3.1-stripped/opus_decoder_amalgam.c \
 zelda3/tile_detect.c \
 zelda3/overlord.c \
 Core/Src/porting/zelda3/main_zelda3.c \
-Core/Src/porting/zelda_assets.c
+Core/Src/porting/zelda3/zelda_assets.c
 
 SMW_C_SOURCES = \
 smw/src/smw_rtl.c \
@@ -625,7 +625,7 @@ smw/src/snes/cpu.c \
 smw/src/snes/cart.c \
 smw/src/snes/tracing.c \
 Core/Src/porting/smw/main_smw.c \
-Core/Src/porting/smw_assets.c
+Core/Src/porting/smw/smw_assets.c
 
 GNUBOY_C_INCLUDES +=  \
 -ICore/Inc \
@@ -773,7 +773,6 @@ AMSTRAD_C_INCLUDES +=  \
 -Icaprice32-go/cap32 \
 -I./
 
-# FIXME required includes???
 ZELDA3_C_INCLUDES +=  \
 -ICore/Inc \
 -ICore/Src/porting/lib \

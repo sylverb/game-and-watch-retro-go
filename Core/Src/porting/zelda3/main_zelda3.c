@@ -15,7 +15,6 @@ TODO copyright?
 #include "gw_buttons.h"
 #include "gw_flash.h"
 #include "lzma.h"
-#include "appid.h"
 
 #include "stm32h7xx_hal.h"
 
@@ -24,14 +23,14 @@ TODO copyright?
 #include "appid.h"
 #include "rg_i18n.h"
 
-#include "zelda_assets.h"
+#include "zelda3/zelda_assets.h"
 
-#include "assets.h"
+#include "zelda3/assets.h"
 #include "zelda3/config.h"
-#include "snes/ppu.h"
-#include "types.h"
-#include "zelda_rtl.h"
-#include "hud.h"
+#include "zelda3/snes/ppu.h"
+#include "zelda3/types.h"
+#include "zelda3/zelda_rtl.h"
+#include "zelda3/hud.h"
 
 #pragma GCC optimize("Ofast")
 

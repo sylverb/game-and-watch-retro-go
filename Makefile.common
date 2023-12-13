@@ -709,10 +709,22 @@ $(BUILD_DIR)/amstrad/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DI
 $(BUILD_DIR)/zelda3/%.o: zelda3/snes/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
 	$(V)$(ECHO) [ CC zelda3_snes CPC ] $(notdir $<)
 	$(V)$(CC) -c $(CFLAGS) $(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/zelda3/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CP) --redefine-syms=zelda3_redefines $@
 
-$(BUILD_DIR)/zelda3/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+$(BUILD_DIR)/zelda3/%.o: zelda3/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+	$(V)$(ECHO) [ CC zelda3_snes CPC ] $(notdir $<)
+	$(V)$(CC) -c $(CFLAGS) $(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/zelda3/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CP) --redefine-syms=zelda3_redefines $@
+
+$(BUILD_DIR)/zelda3/%.o: zelda3/third_party/opus-1.3.1-stripped/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+	$(V)$(ECHO) [ CC zelda3_snes CPC ] $(notdir $<)
+	$(V)$(CC) -c $(CFLAGS) $(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/zelda3/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CP) --redefine-syms=zelda3_redefines $@
+
+$(BUILD_DIR)/zelda3/%.o: Core/Src/porting/zelda3/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
 	$(V)$(ECHO) [ CC zelda3 CPC ] $(notdir $<)
 	$(V)$(CC) -c $(CFLAGS) $(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/zelda3/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CP) --redefine-syms=zelda3_redefines $@
 
 Core/Src/porting/zelda3/zelda_assets.c: scripts/zelda3/update_assets.py zelda3/tables/zelda3_assets.dat | $(BUILD_DIR)
 	$(PYTHON3) ./scripts/zelda3/update_assets.py
@@ -729,7 +741,7 @@ $(BUILD_DIR)/smw/%.o: smw/src/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUIL
 	$(V)$(CC) -c $(CFLAGS) $(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/smw/$(notdir $(<:.c=.lst)) $< -o $@
 	$(CP) --redefine-syms=smw_redefines $@
 
-$(BUILD_DIR)/smw/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+$(BUILD_DIR)/smw/%.o: Core/Src/porting/smw/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
 	$(V)$(ECHO) [ CC smw CPC ] $(notdir $<)
 	$(V)$(CC) -c $(CFLAGS) $(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/smw/$(notdir $(<:.c=.lst)) $< -o $@
 	$(CP) --redefine-syms=smw_redefines $@

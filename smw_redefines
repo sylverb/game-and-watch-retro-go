@@ -50,3 +50,15 @@ dsp_cycle smw__dsp_cycle
 dsp_read smw__dsp_read
 dsp_write smw__dsp_write
 dsp_getSamples smw__dsp_getSamples
+FindInAssetArray smw__FindInAssetArray
+g_asset_sizes smw__g_asset_sizes
+g_asset_ptrs smw__g_asset_ptrs
+writeSaveStateInitImpl smw__writeSaveStateInitImpl
+writeSaveStateImpl smw__writeSaveStateImpl
+writeSaveStateFinalizeImpl smw__writeSaveStateFinalizeImpl
+dstPos smw__dstPos
+bufferCount smw__bufferCount
+savestateBuffer smw__savestateBuffer
+save_address smw__save_address
+readSramImpl smw__readSramImpl
+writeSramImpl smw__writeSramImpl

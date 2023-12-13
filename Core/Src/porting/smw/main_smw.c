@@ -23,7 +23,7 @@ TODO copyright?
 #include "appid.h"
 #include "rg_i18n.h"
 
-#include "smw_assets.h"
+#include "smw/smw_assets.h"
 
 #include "smw/assets/smw_assets.h"
 #include "smw/src/config.h"
@@ -269,7 +269,7 @@ static void smw_sound_submit() {
 int app_main_smw(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 {
   printf("SMW start\n");
-  odroid_system_init(APPID_SMW, AUDIO_SAMPLE_RATE);
+odroid_system_init(APPID_SMW, AUDIO_SAMPLE_RATE);
   odroid_system_emu_init(&smw_system_LoadState, &smw_system_SaveState, NULL);
   
   common_emu_state.frame_time_10us = (uint16_t)(100000 / FRAMERATE + 0.5f);
@@ -277,8 +277,8 @@ int app_main_smw(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
   /* clear the screen before rendering */
   memset(lcd_get_inactive_buffer(), 0, 320 * 240 * 2);
   memset(lcd_get_active_buffer(), 0, 320 * 240 * 2);
-  
-  unsigned short *screen = 0;
+
+unsigned short *screen = 0;
   screen = lcd_get_active_buffer();
 
   LoadAssets();
