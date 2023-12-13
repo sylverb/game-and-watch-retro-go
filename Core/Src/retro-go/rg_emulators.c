@@ -565,7 +565,6 @@ void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_pau
   #endif
     } else if(strcmp(emu->system_name, "Zelda3") == 0)  {
  #ifdef ENABLE_HOMEBREW_ZELDA3
-      // TODO More memory regions to initialize???
       memcpy(&__RAM_EMU_START__, &_OVERLAY_ZELDA3_LOAD_START, (size_t)&_OVERLAY_ZELDA3_SIZE);
       memset(&_OVERLAY_ZELDA3_BSS_START, 0x0, (size_t)&_OVERLAY_ZELDA3_BSS_SIZE);
       SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_ZELDA3_SIZE);

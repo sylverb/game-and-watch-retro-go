@@ -581,7 +581,7 @@ $(BUILD_DIR)/core/main.o: Core/Inc/githash.h
 $(BUILD_DIR)/core/flashapp.o: Core/Inc/githash.h
 $(BUILD_DIR)/core/rg_main.o: Core/Inc/githash.h
 
-# Run parse_roms.py to generate information about the roms FIXME zelda3 / homebrews folder to enable / disable ???
+# Run parse_roms.py to generate information about the roms
 $(BUILD_DIR)/rom_files.txt: FORCE | $(BUILD_DIR)
 	$(V)$(ECHO) [ BASH ] Checking for updated roms
 	$(V)./scripts/update_rom_files.sh build/rom_files.txt roms/gb roms/nes roms/sms roms/gg roms/col roms/pce roms/sg roms/msx roms/gw roms/wsv roms/md roms/a7800 roms/amstrad
