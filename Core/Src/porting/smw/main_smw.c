@@ -335,34 +335,58 @@ unsigned short *screen = 0;
 
 
     // Handle inputs
-    // FIXME Play well with retro-go's controls
-    HandleCommand(1, joystick.values[ODROID_INPUT_UP]);
-    HandleCommand(2, joystick.values[ODROID_INPUT_DOWN]);
-    HandleCommand(3, joystick.values[ODROID_INPUT_LEFT]);
-    HandleCommand(4, joystick.values[ODROID_INPUT_RIGHT]);
+    /*
+    Retro-Go controls:
+      PAUSE/SET + GAME    Store a screenshot. (Disabled by default on 1MB flash builds)
+      PAUSE/SET + TIME    Toggle speedup between 1x and the last non-1x speed. Defaults to 1.5x.
+      PAUSE/SET + UP 	    Brightness up.
+      PAUSE/SET + DOWN 	  Brightness down.
+      PAUSE/SET + RIGHT 	Volume up.
+      PAUSE/SET + LEFT 	  Volume down.
+      PAUSE/SET + B 	    Load state.
+      PAUSE/SET + A 	    Save state.
+      PAUSE/SET + POWER 	Poweroff WITHOUT save-stating.
+    Game controls for zelda console:
+      A                   A button (Spin Jump)
+      B                   B button (Regular Jump)
+      SELECT | START      X/Y button (Dash/Shoot)
+      TIME                Select button (Use Reserve Item)
+      GAME + TIME         Start button (Pause Game)
+      GAME + B            L button (Scroll Screen Left)
+      GAME + A            R button (Scroll Screen Right)
+    Game controls for mario console:
+      A                   A button (Spin Jump)
+      B                   B button (Regular Jump)
+      TIME                X/Y button (Dash/Shoot)
+      GAME + A            Select button (Use Reserve Item)
+      GAME + TIME         Start button (Pause Game)
+      ----                L button (Scroll Screen Left)
+      ----                R button (Scroll Screen Right)
+    */
 
-    HandleCommand(8, joystick.values[ODROID_INPUT_A]);  // B (Regular Jump)
-    HandleCommand(9, joystick.values[ODROID_INPUT_B]);  // X (Dash/Shoot)
-    HandleCommand(10, joystick.values[ODROID_INPUT_B]); // Y (Dash/Shoot)
+    bool isPauseModifierPressed = joystick.values[ODROID_INPUT_VOLUME];
+    bool isGameModifierPressed = joystick.values[ODROID_INPUT_START];
+
+    HandleCommand(1, !isPauseModifierPressed && joystick.values[ODROID_INPUT_UP]);
+    HandleCommand(2, !isPauseModifierPressed && joystick.values[ODROID_INPUT_DOWN]);
+    HandleCommand(3, !isPauseModifierPressed && joystick.values[ODROID_INPUT_LEFT]);
+    HandleCommand(4, !isPauseModifierPressed && joystick.values[ODROID_INPUT_RIGHT]);
+    HandleCommand(7, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_A]); // A == A (Spin Jump)
+    HandleCommand(8, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_B]); // B == B (Regular Jump)
+    HandleCommand(6, !isPauseModifierPressed && isGameModifierPressed && joystick.values[ODROID_INPUT_SELECT]); // GAME + TIME == Start (Pause Game)
 
     #if GNW_TARGET_ZELDA != 0
-        HandleCommand(7, joystick.values[ODROID_INPUT_X]);  // A (Spin Jump)
-        
-        HandleCommand(5, joystick.values[ODROID_INPUT_Y]);  // Select (Use reserve item)
-        HandleCommand(6, joystick.values[ODROID_INPUT_VOLUME]);  // Start
-        
+        HandleCommand(9, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_Y]); // SELECT == X (Dash/Shoot)
+        HandleCommand(10, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_X]);  // START == Y (Dash/Shoot)
+        HandleCommand(5, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_SELECT]);  // TIME == Select (Use reserve item)
         // L & R are used to scroll screen
-        // FIXME HandleCommand(11, (buttons & B_GAME) && (buttons & B_SELECT)); // L
-        // FIXME HandleCommand(12, (buttons & B_GAME) && (buttons & B_START)); // R
-    #else 
-        HandleCommand(7, !joystick.values[ODROID_INPUT_START] && joystick.values[ODROID_INPUT_VOLUME]);   // A (Spin Jump)
-        
-        HandleCommand(5, joystick.values[ODROID_INPUT_SELECT]);   // Select (Use reserve item)
-        HandleCommand(6, joystick.values[ODROID_INPUT_START] && joystick.values[ODROID_INPUT_VOLUME]);    // Start
-
+        HandleCommand(11, !isPauseModifierPressed && isGameModifierPressed && joystick.values[ODROID_INPUT_B]); // GAME + B == L
+        HandleCommand(12, !isPauseModifierPressed && isGameModifierPressed && joystick.values[ODROID_INPUT_A]); // GAME + A == R
+    #else
+        HandleCommand(9, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_SELECT]);  // TIME == X (Dash/Shoot)
+        HandleCommand(10, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_SELECT]); // TIME == Y (Dash/Shoot)
+        HandleCommand(5, !isPauseModifierPressed && isGameModifierPressed && joystick.values[ODROID_INPUT_A]);  // GAME + A == Select (Use reserve item)
         // No button combinations available for L/R on Mario units...
-        //HandleCommand(11, (buttons & B_GAME) && (buttons & B_B)); // L
-        //HandleCommand(12, (buttons & B_GAME) && (buttons & B_A)); // R
     #endif /* GNW_TARGET_ZELDA */
 
 
