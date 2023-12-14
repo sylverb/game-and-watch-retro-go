@@ -292,11 +292,6 @@ unsigned short *screen = 0;
 
   g_spc_player = SmwSpcPlayer_Create();
   g_spc_player->initialize(g_spc_player);
-  
-  // FIXME Which framebuffer? how to handle double buffering???
-  /*uint8 *pixel_buffer = screen + 320*8 + 32;    // Start 8 rows from the top, 32 pixels from left
-  int pitch = 320 * 2;
-  PpuBeginDrawing(g_my_ppu, pixel_buffer, pitch, g_ppu_render_flags);*/
     
   if (load_state) {
 #if OFF_SAVESTATE==1

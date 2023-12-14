@@ -142,7 +142,7 @@ static void HandleCommand(uint32 j, bool pressed) {
     return;
   }
 
-  /* FIXME if (j == kKeys_Turbo) {
+  /*if (j == kKeys_Turbo) {
     g_turbo = pressed;
     return;
   }*/
