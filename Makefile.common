@@ -789,6 +789,10 @@ $(eval $(foreach obj,$(ZELDA3_C_SOURCES),$(call zelda3_obj_prereq_gen,$(obj))))
 Core/Src/porting/zelda3/zelda_assets.c: scripts/zelda3/update_assets.py zelda3/tables/zelda3_assets.dat | $(BUILD_DIR)
 	$(PYTHON3) ./scripts/zelda3/update_assets.py
 
+zelda3/tables/zelda3_assets.dat: roms/zelda3/zelda3.sfc | $(BUILD_DIR)
+	cp $< zelda3/tables/zelda3.sfc
+	$(MAKE) -C zelda3 tables/zelda3_assets.dat
+
 
 # SMW configuration
 
@@ -823,12 +827,6 @@ $(eval $(foreach obj,$(SMW_C_SOURCES),$(call smw_obj_prereq_gen,$(obj))))
 
 Core/Src/porting/smw/smw_assets.c: scripts/smw/update_assets.py smw/smw_assets.dat | $(BUILD_DIR)
 	$(PYTHON3) ./scripts/smw/update_assets.py
-
-
-zelda3/tables/zelda3_assets.dat: roms/zelda3/zelda3.sfc | $(BUILD_DIR)
-	cp $< zelda3/tables/zelda3.sfc
-	$(MAKE) -C zelda3 tables/zelda3_assets.dat
-
 
 smw/smw_assets.dat: roms/smw/smw.sfc | $(BUILD_DIR)
 	cp $< smw/assets/smw.sfc
