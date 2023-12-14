@@ -457,12 +457,6 @@ C_DEFS +=  \
 -DFCEU_VERSION_NUMERIC=9813 \
 -DFCEU_LOW_RAM \
 -DFCEU_NO_MALLOC \
--DHEADLESS \
--DLIMIT_30FPS=1 \
--DEXTENDED_SCREEN=1 \
--DDIALOGUES_LANGUAGE=us \
-# FIXME zelda3-specific HEADLESS flag???
-# FIXME smw-specific FEATURES flag???
 
 # AS includes
 AS_INCLUDES +=
@@ -706,11 +700,84 @@ $(BUILD_DIR)/amstrad/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DI
 	$(V)$(CC) -c $(CFLAGS) $(AMSTRAD_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/amstrad/$(notdir $(<:.c=.lst)) $< -o $@
 
 
+# Zelda3 configuration
+
+# Limit to 30 fps for improved stability
+ZELDA3_LIMIT_30FPS ?= 1
+
+# Increase UI speed (item menu, etc.)
+ZELDA3_FASTER_UI ?= 1
+
+# Display battery indicator in item menu
+ZELDA3_BATTERY_INDICATOR ?= 1
+
+# Extended screensize (0 for default screen size 256x224, 1 for full-height 256x240, 2 for full screen 320x240)
+ZELDA3_EXTENDED_SCREEN ?= 1
+
+# Item switch on L/R. Also allows reordering of items in inventory by pressing Y+direction.
+# Hold X, L, or R inside of the item selection screen to assign items to those buttons.
+# If X is reassigned, Select opens the map. Push Select while paused to save or quit.
+# When L or R are assigned items, those buttons will no longer cycle items.
+ZELDA3_FEATURE_SWITCH_LR ?= 0
+# Allow turning while dashing
+ZELDA3_FEATURE_TURN_WHILE_DASHING ?= 0
+# Allow mirror to be used to warp to the Dark World
+ZELDA3_FEATURE_MIRROR_TO_DARK_WORLD ?= 0
+# Collect items (like hearts) with sword instead of having to touch them
+ZELDA3_FEATURE_COLLECT_ITEMS_WITH_SWORD ?= 0
+# Level 2-4 sword can be used to break pots
+ZELDA3_FEATURE_BREAK_POTS_WITH_SWORD ?= 0
+# Disable the low health beep
+ZELDA3_FEATURE_DISABLE_LOW_HEALTH_BEEP ?= 0
+# Avoid waiting too much at the start
+ZELDA3_FEATURE_SKIP_INTRO_ON_KEYPRESS ?= 1
+# Display max rupees/bombs/arrows with orange/yellow color
+ZELDA3_FEATURE_SHOW_MAX_ITEMS_IN_YELLOW ?= 0
+# Allows up to four bombs active at a time instead of two.
+ZELDA3_FEATURE_MORE_ACTIVE_BOMBS ?= 0
+# Can carry 9999 rupees instead of 999
+ZELDA3_FEATURE_CARRY_MORE_RUPEES ?= 0
+# Enable various zelda bug fixes
+ZELDA3_FEATURE_MISC_BUG_FIXES ?= 0
+# Allow bird travel to be cancelled by hitting the X key
+ZELDA3_FEATURE_CANCEL_BIRD_TRAVEL ?= 0
+# Enable some more advanced zelda bugfixes that change game behavior
+ZELDA3_FEATURE_GAME_CHANGING_BUG_FIXES ?= 0
+# Enable this to limit the ItemSwitchLR item cycling to the first 4 items.
+ZELDA3_FEATURE_SWITCH_LR_LIMIT ?= 0
+
+ZELDA3_FEATURES := 0
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_SWITCH_LR) << 1 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_TURN_WHILE_DASHING) << 2 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_MIRROR_TO_DARK_WORLD) << 3 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_COLLECT_ITEMS_WITH_SWORD) << 4 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_BREAK_POTS_WITH_SWORD) << 5 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_DISABLE_LOW_HEALTH_BEEP) << 6 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_SKIP_INTRO_ON_KEYPRESS) << 7 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_SHOW_MAX_ITEMS_IN_YELLOW) << 8 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_MORE_ACTIVE_BOMBS) << 9 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_CARRY_MORE_RUPEES) << 11 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_MISC_BUG_FIXES) << 12 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_CANCEL_BIRD_TRAVEL) << 13 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_GAME_CHANGING_BUG_FIXES) << 14 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_SWITCH_LR_LIMIT) << 15 ))")
+
+
+# C defines for zelda3
+C_DEFS_ZELDA3 =  \
+-DHEADLESS \
+-DLIMIT_30FPS=$(ZELDA3_LIMIT_30FPS) \
+-DEXTENDED_SCREEN=$(ZELDA3_EXTENDED_SCREEN) \
+-DDIALOGUES_LANGUAGE=us \
+-DFEATURES=$(ZELDA3_FEATURES) \
+-DFASTER_UI=$(ZELDA3_FASTER_UI) \
+-DBATTERY_INDICATOR=$(ZELDA3_BATTERY_INDICATOR) \
+
 # function used to generate prerequisite rules for zelda3 objects
 define zelda3_obj_prereq_gen
 $$(BUILD_DIR)/zelda3/$(patsubst %.c,%.o,$(notdir $1)): $1 Makefile.common Makefile $$(SDK_HEADERS) $$(BUILD_DIR)/config.h | $$(BUILD_DIR)
 	$$(V)$$(ECHO) [ CC zelda3 CPC ] $$(notdir $$<)
-	$$(V)$$(CC) -c $$(CFLAGS) $$(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$$(BUILD_DIR)/zelda3/$$(notdir $$(<:.c=.lst)) $$< -o $$@
+	$$(V)$$(CC) -c $$(CFLAGS) $$(C_DEFS_ZELDA3) $$(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$$(BUILD_DIR)/zelda3/$$(notdir $$(<:.c=.lst)) $$< -o $$@
 	$$(CP) --redefine-syms=zelda3_redefines $$@
 
 endef
@@ -723,11 +790,29 @@ Core/Src/porting/zelda3/zelda_assets.c: scripts/zelda3/update_assets.py zelda3/t
 	$(PYTHON3) ./scripts/zelda3/update_assets.py
 
 
+# SMW configuration
+
+# Limit to 30 fps for improved stability
+SMW_LIMIT_30FPS ?= 1
+
+# Save to SRAM after each beaten level (instead of saving after castle is beaten).
+# SRAM save remains valid/compatible with emulators.
+SMW_FEATURE_SAVE_AFTER_EACH_BEATEN_LEVEL ?= 0
+
+SMW_FEATURES := 0
+SMW_FEATURES := $(shell echo "$$(( $(SMW_FEATURES) | $(SMW_FEATURE_SAVE_AFTER_EACH_BEATEN_LEVEL) << 0 ))")
+
+# C defines for smw
+C_DEFS_SMW =  \
+-DHEADLESS \
+-DLIMIT_30FPS=$(SMW_LIMIT_30FPS) \
+-DFEATURES=$(SMW_FEATURES) \
+
 # function used to generate prerequisite rules for smw objects
 define smw_obj_prereq_gen
 $$(BUILD_DIR)/smw/$(patsubst %.c,%.o,$(notdir $1)): $1 Makefile.common Makefile $$(SDK_HEADERS) $$(BUILD_DIR)/config.h | $$(BUILD_DIR)
 	$$(V)$$(ECHO) [ CC smw CPC ] $$(notdir $$<)
-	$$(V)$$(CC) -c $$(CFLAGS) $$(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$$(BUILD_DIR)/smw/$$(notdir $$(<:.c=.lst)) $$< -o $$@
+	$$(V)$$(CC) -c $$(CFLAGS) $$(C_DEFS_SMW) $$(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$$(BUILD_DIR)/smw/$$(notdir $$(<:.c=.lst)) $$< -o $$@
 	$$(CP) --redefine-syms=smw_redefines $$@
 
 endef

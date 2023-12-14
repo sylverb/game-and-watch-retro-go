@@ -15,6 +15,7 @@ TODO copyright?
 #include "gw_buttons.h"
 #include "gw_flash.h"
 #include "lzma.h"
+#include "bq24072.h"
 
 #include "stm32h7xx_hal.h"
 
@@ -286,7 +287,7 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
   g_zenv.ppu->extraLeftRight = 0;
   #endif /* EXTENDED_SCREEN */
 
-  g_wanted_zelda_features = 0;  //FIXME FEATURES;
+  g_wanted_zelda_features = FEATURES;
 
   ZeldaEnableMsu(false);
   ZeldaSetLanguage(STRINGIZE_VALUE_OF(DIALOGUES_LANGUAGE));
@@ -314,6 +315,15 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
     /* reset watchdog */
     wdog_refresh();
+
+    // Update battery level
+    #if BATTERY_INDICATOR
+    g_battery.level = bq24072_get_percent_filtered();
+    g_battery.is_charging = (
+        (bq24072_get_state() == BQ24072_STATE_CHARGING)
+        || (bq24072_get_state() == BQ24072_STATE_FULL)
+        );
+    #endif
 
     /* hardware keys */
     odroid_input_read_gamepad(&joystick);

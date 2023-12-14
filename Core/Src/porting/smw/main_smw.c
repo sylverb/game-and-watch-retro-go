@@ -288,7 +288,7 @@ unsigned short *screen = 0;
 
   Snes *snes = SnesInit(NULL, 0);
     
-  g_wanted_features = 0;  //FIXME FEATURES; //FIXME SMW-specific features
+  g_wanted_features = FEATURES;
 
   g_spc_player = SmwSpcPlayer_Create();
   g_spc_player->initialize(g_spc_player);
