@@ -84,6 +84,11 @@ Supported emulators:
 - Sega SG-1000 (sg)
 - Watara Supervision (wsv)
 
+Supported SNES game _ports_:
+
+- The Legend of Zelda: A Link to the Past
+- Super Mario World
+
 ## Table of Contents
 - [NewUI howto](#newui-howto)
   - [**Undocumented 256k BANK used by default**](#undocumented-256k-bank-used-by-default)
@@ -410,6 +415,72 @@ What is supported :
 Tape support has not been ported, if there is any interest in adding this, it could be considered.
 
 Note that the Amstrad CPC6128 support is done using caprice32 emulator, any game that is not working correctly using this emulator will not work on the Game & Watch. To fit in the G&W, a some features have been removed, so it's possible that some games running on caprice32 will not work in the G&W port. The emulator port is still in progress, consider it as a preview version.
+
+## SNES game ports
+
+Some SNES game have been _ported_ to the G&W.
+
+### The Legend of Zelda: A Link to the Past
+
+To enable this port, copy the SNES ROM (US version) to `roms/zelda3/zelda3.sfc`.
+
+Due to the limited set of buttons (especially on the Mario console), the controls are peculiar:
+
+| Description | Binding on Mario units | Binding on Zelda units |
+| ----------- | ---------------------- | ---------------------- |
+| `A` button (Pegasus Boots / Interacting) | `A` | `A` |
+| `B` button (Sword) | `B` | `B` |
+| `X` button (Show Map) | `GAME + B` | `TIME` |
+| `Y` button (Use Item) | `TIME` | `SELECT` |
+| `Select` button (Save Screen) | `GAME + TIME` | `GAME + TIME` |
+| `Start` button (Item Selection Screen) | `GAME + A` | `START` |
+| `L` button (Quick-swapping, if enabled) | `-` | `GAME + B` |
+| `R` button (Quick-swapping, if enabled) | `-` | `GAME + A` |
+
+Some features can be configured with flags:
+
+| Build flag    | Description |
+| ------------- | ------------- |
+| `LIMIT_30FPS` | Limit to 30 fps for improved stability.<br>Enabled by default.<br>Disabling this flag will result in unsteady framerate and stuttering. |
+| `FASTER_UI` | Increase UI speed (item menu, etc.).<br>Enabled by default. |
+| `BATTERY_INDICATOR` | Display battery indicator in item menu.<br>Enabled by default. |
+| `EXTENDED_SCREEN` | Extended screensize (0 for default screen size 256x224, 1 for full-height 256x240, 2 for full screen 320x240).<br>Default value: 1. |
+| `FEATURE_SWITCH_LR` | Item switch on L/R. Also allows reordering of items in inventory by pressing Y+direction.<br>Hold X, L, or R inside of the item selection screen to assign items to those buttons.<br>If X is reassigned, Select opens the map. Push Select while paused to save or quit.<br>When L or R are assigned items, those buttons will no longer cycle items. |
+| `FEATURE_TURN_WHILE_DASHING` | Allow turning while dashing. |
+| `FEATURE_MIRROR_TO_DARK_WORLD` | Allow mirror to be used to warp to the Dark World. |
+| `FEATURE_COLLECT_ITEMS_WITH_SWORD` | Collect items (like hearts) with sword instead of having to touch them. |
+| `FEATURE_BREAK_POTS_WITH_SWORD` | Level 2-4 sword can be used to break pots. |
+| `FEATURE_DISABLE_LOW_HEALTH_BEEP` | Disable the low health beep. |
+| `FEATURE_SKIP_INTRO_ON_KEYPRESS` | Avoid waiting too much at the start.<br>Enabled by default. |
+| `FEATURE_SHOW_MAX_ITEMS_IN_YELLOW` | Display max rupees/bombs/arrows with orange/yellow color. |
+| `FEATURE_MORE_ACTIVE_BOMBS` | Allows up to four bombs active at a time instead of two. |
+| `FEATURE_CARRY_MORE_RUPEES` | Can carry 9999 rupees instead of 999. |
+| `FEATURE_MISC_BUG_FIXES` | Enable various zelda bug fixes. |
+| `FEATURE_CANCEL_BIRD_TRAVEL` | Allow bird travel to be cancelled by hitting the X key. |
+| `FEATURE_GAME_CHANGING_BUG_FIXES` | Enable some more advanced zelda bugfixes that change game behavior. |
+| `FEATURE_SWITCH_LR_LIMIT` | Enable this to limit the ItemSwitchLR item cycling to the first 4 items. |
+
+### Super Mario World
+
+To enable this port, copy the SNES ROM (US version) to `roms/smw/smw.sfc`.
+
+Due to the limited set of buttons (especially on the Mario console), the controls are peculiar:
+
+| Description | Binding on Mario units | Binding on Zelda units |
+| ----------- | ---------------------- | ---------------------- |
+| `A` button (Spin Jump) | `A` | `A` |
+| `B` button (Regular Jump) | `B` | `B` |
+| `X`/`Y` button (Dash/Shoot) | `TIME` | `SELECT` or `START` |
+| `Select` button (Use Reserve Item) | `GAME + A` | `TIME` |
+| `Start` button (Pause Game) | `GAME + TIME` | `GAME + TIME` |
+| `L` button (Scroll Screen Left) | `-` | `GAME + B` |
+| `R` button (Scroll Screen Right) | `-` | `GAME + A` |
+
+Some features can be configured with flags:
+
+| Build flag    | Description |
+| ------------- | ------------- |
+| `LIMIT_30FPS` | Limit to 30 fps for improved stability.<br>Enabled by default.<br>Disabling this flag will result in unsteady framerate and stuttering. |
 
 ## Discord, support and discussion 
 
