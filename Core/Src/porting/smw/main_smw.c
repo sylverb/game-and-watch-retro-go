@@ -1,6 +1,3 @@
-/*
-TODO copyright?
-*/
 #include "build/config.h"
 #ifdef ENABLE_HOMEBREW_SMW
 
