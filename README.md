@@ -116,6 +116,9 @@ Supported SNES game _ports_:
   - [Upgrading the flash](#upgrading-the-flash)
   - [Advanced Flash Examples](#advanced-flash-examples)
     - [Custom Firmware (CFW)](#custom-firmware-cfw)
+  - [SNES game ports](#snes-game-ports)
+    - [The Legend of Zelda: A Link to the Past](#the-legend-of-zelda-a-link-to-the-past)
+    - [Super Mario World](#super-mario-world)
   - [Discord, support and discussion](#discord-support-and-discussion)
   - [LICENSE](#license)
 
