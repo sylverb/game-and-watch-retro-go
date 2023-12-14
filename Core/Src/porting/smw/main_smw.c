@@ -327,7 +327,8 @@ unsigned short *screen = 0;
     };
     void _repaint()
     {
-        // FIXME blit game???
+        screen = lcd_get_active_buffer();
+        DrawPpuFrame(screen);
         common_ingame_overlay();
     }
     common_emu_input_loop(&joystick, options, &_repaint);

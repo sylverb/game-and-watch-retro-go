@@ -334,8 +334,9 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     };
     void _repaint()
     {
-        // FIXME blit game???
-        common_ingame_overlay();
+      screen = lcd_get_active_buffer();
+      DrawPpuFrame(screen);
+      common_ingame_overlay();
     }
     common_emu_input_loop(&joystick, options, &_repaint);
 
