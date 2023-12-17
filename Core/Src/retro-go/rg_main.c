@@ -412,7 +412,7 @@ static void handle_about_menu()
             {-1, curr_lang->s_Author_, "bzhxx", 0, NULL},
             {-1, curr_lang->s_UI_Mod, "orzeus", 0, NULL},
             {-1, curr_lang->s_Author_, "Benjamin S\xf8lberg", 0, NULL},
-            {-1, curr_lang->s_Author_, "Brian Pugh", 1, NULL},
+            {-1, curr_lang->s_Author_, "Brian Pugh", 0, NULL},
             ODROID_DIALOG_CHOICE_SEPARATOR,
             {-1, curr_lang->s_Lang, (char *)curr_lang->s_LangAuthor, 0, NULL},
             ODROID_DIALOG_CHOICE_SEPARATOR,
