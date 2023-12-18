@@ -9,6 +9,14 @@
 #include "tamp/decompressor.h"
 #include "stm32h7xx.h"
 
+#include "bitmaps.h"
+#include "odroid_colors.h"
+#include "odroid_overlay.h"
+#include "odroid_input.h"
+#include "githash.h"
+#include "config.h"
+#include "gui.h"
+
 #define LFS_CACHE_SIZE 256
 #define LFS_LOOKAHEAD_SIZE 16
 #define LFS_NUM_ATTRS 1  // Number of atttached file attributes; currently just 1 for "time".
@@ -57,6 +65,7 @@ static inline bool is_dcache_enabled() {
 }
 
 lfs_t lfs = {0};
+bool fs_mounted = false;
 
 static uint8_t read_buffer[LFS_CACHE_SIZE] = {0};
 static uint8_t prog_buffer[LFS_CACHE_SIZE] = {0};
@@ -226,6 +235,40 @@ static void release_file_handle(fs_file_t *file){
     assert(0);  // Should never reach here.
 }
 
+static void corrupt_filesystem_screen(void){
+    char buf[64];
+    int idle_s = uptime_get();
+
+    draw_error_screen("FILESYSTEM ERROR", "Formatting may result in loss of data.", "Press A+B to format filesystem.");
+
+    while (1)
+    {
+        odroid_gamepad_state_t joystick;
+        wdog_refresh();
+        int steps = uptime_get() - idle_s;
+        sprintf(buf, "%ds to sleep", 600 - steps);
+        odroid_overlay_draw_text_line(4, 29 * 8 - 4, strlen(buf) * 8, buf, C_RED, curr_colors->bg_c);
+
+        lcd_sync();
+        lcd_swap();
+        //lcd_wait_for_vblank();
+        HAL_Delay(10);
+        if (steps >= 600)
+            break;
+        odroid_input_read_gamepad(&joystick);
+        if (joystick.values[ODROID_INPUT_POWER]){
+            break;
+        }
+        else if (joystick.values[ODROID_INPUT_A] && joystick.values[ODROID_INPUT_B]){
+            printf("filesystem formatting...\n");
+            lfs_cfg.block_count = (&__FILESYSTEM_END__ - &__FILESYSTEM_START__) / lfs_cfg.block_size;
+            assert(lfs_format(&lfs, &lfs_cfg) == 0);
+            return;
+        }
+    }
+    app_sleep_logo();
+    GW_EnterDeepSleep();
+}
 
 /*************************
  * Filesystem Public API *
@@ -237,17 +280,19 @@ static void release_file_handle(fs_file_t *file){
 void fs_init(void){
     lfs_cfg.context = &__FILESYSTEM_END__;  // We work "backwards"
     lfs_cfg.block_size = OSPI_GetSmallestEraseSize();
-    lfs_cfg.block_count = (&__FILESYSTEM_END__ - &__FILESYSTEM_START__) / lfs_cfg.block_size;
+    lfs_cfg.block_count = 0;
 
     // reformat if we can't mount the fs
     // this should only happen on the first boot
     if (lfs_mount(&lfs, &lfs_cfg)) {
-        printf("filesystem formatting...\n");
-        assert(lfs_format(&lfs, &lfs_cfg) == 0);
+        corrupt_filesystem_screen();
+        lfs_cfg.block_count = (&__FILESYSTEM_END__ - &__FILESYSTEM_START__) / lfs_cfg.block_size;
+        // If we get here, it means that the user chose to reformat the filesystem.
         assert(lfs_mount(&lfs, &lfs_cfg) == 0);
     }
+    fs_mounted = true;
     printf("filesytem mounted.\n");
-    printf("%ld/%ld blocks allocated (block_size=%ld)\n", lfs_fs_size(&lfs), lfs_cfg.block_count, lfs_cfg.block_size);
+    printf("%ld/%ld blocks allocated (block_size=%ld)\n", lfs_fs_size(&lfs), lfs.block_count, lfs_cfg.block_size);
 }
 
 /**

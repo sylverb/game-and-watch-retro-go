@@ -696,6 +696,7 @@ void retro_loop()
 
 #define ODROID_APPID_LAUNCHER 0
 
+/* Check if external flash has been programmed */
 void app_check_data_loop()
 {
     int idle_s = uptime_get();
@@ -801,7 +802,6 @@ void app_sleep_logo()
 
 void app_main(uint8_t boot_mode)
 {
-
     lcd_set_buffers(framebuffer1, framebuffer2);
     odroid_system_init(ODROID_APPID_LAUNCHER, 32000);
     uint8_t oc = odroid_settings_cpu_oc_level_get();
@@ -816,6 +816,11 @@ void app_main(uint8_t boot_mode)
 
     //check data;
     app_check_data_loop();
+
+    fs_init();
+    // Re-initialize system now that the filesystem is mounted.
+    odroid_system_init(ODROID_APPID_LAUNCHER, 32000);
+
     emulators_init();
 
     app_logo();
