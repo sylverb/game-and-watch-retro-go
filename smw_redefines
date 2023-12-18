@@ -82,3 +82,4 @@ kSpcPlayer_Maps smw__kSpcPlayer_Maps
 last_dma_state smw__last_dma_state
 renderedFrameCtr smw__renderedFrameCtr
 cpu_reset smw__cpu_reset
+Die smw__Die

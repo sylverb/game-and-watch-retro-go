@@ -82,3 +82,4 @@ kSpcPlayer_Maps zelda3__kSpcPlayer_Maps
 last_dma_state zelda3__last_dma_state
 renderedFrameCtr zelda3__renderedFrameCtr
 cpu_reset zelda3__cpu_reset
+Die zelda3__Die

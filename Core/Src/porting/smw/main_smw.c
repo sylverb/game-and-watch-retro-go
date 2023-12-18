@@ -90,7 +90,19 @@ static void LoadAssetsChunk(size_t length, uint8* data) {
   }
 }
 
+static bool VerifyAssetsFile(const uint8 *data, size_t length) {
+  static const char kAssetsSig[] = { kAssets_Sig };
+  if (length < 16 + 32 + 32 + 8 + kNumberOfAssets * 4 ||
+    memcmp(data, kAssetsSig, 48) != 0 ||
+    *(uint32 *)(data + 80) != kNumberOfAssets)
+    return false;
+  return true;
+}
+
 static void LoadAssets() {
+  if (!VerifyAssetsFile(smw_assets, smw_assets_length))
+    Die("Mismatching assets file - Please re run 'python assets/restool.py'");
+
   // Load some assets with assets in extflash
   LoadAssetsChunk(smw_assets_length, smw_assets);
 

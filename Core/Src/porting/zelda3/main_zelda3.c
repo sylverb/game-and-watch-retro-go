@@ -72,6 +72,12 @@ uint32 g_asset_sizes[kNumberOfAssets];
 static odroid_gamepad_state_t joystick;
 
 
+void NORETURN Die(const char *error) {
+  printf("Error: %s\n", error);
+  assert(!"Die in zelda3");
+}
+
+
 static void LoadAssetsChunk(size_t length, uint8* data) {
   uint32 offset = 88 + kNumberOfAssets * 4 + *(uint32 *)(data + 84);
   for (size_t i = 0; i < kNumberOfAssets; i++) {
@@ -86,6 +92,15 @@ static void LoadAssetsChunk(size_t length, uint8* data) {
 }
 
 static void LoadAssets() {
+
+  uint8 *data = zelda_assets;
+  static const char kAssetsSig[] = { kAssets_Sig };
+
+  if (zelda_assets_length < 16 + 32 + 32 + 8 + kNumberOfAssets * 4 ||
+      memcmp(data, kAssetsSig, 48) != 0 ||
+      *(uint32*)(data + 80) != kNumberOfAssets)
+    Die("Invalid assets file");
+
   // Load some assets with assets in extflash
   LoadAssetsChunk(zelda_assets_length, zelda_assets);
 
