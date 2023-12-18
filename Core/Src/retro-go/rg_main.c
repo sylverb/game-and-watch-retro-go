@@ -18,6 +18,7 @@
 #include "rg_rtc.h"
 #include "rg_i18n.h"
 #include "bitmaps.h"
+#include "error_screens.h"
 
 #if !defined(COVERFLOW)
 #define COVERFLOW 0
@@ -697,43 +698,19 @@ void retro_loop()
 
 void app_check_data_loop()
 {
-    static const uint8_t img_error[] = {
-        0x0F, 0xFC, 0x12, 0x4A, 0x12, 0x4A,
-        0x20, 0x02, 0x24, 0x22, 0x4E, 0x72,
-        0x40, 0x02, 0x43, 0xC2, 0x47, 0xE2,
-        0x4C, 0x32, 0x40, 0x02, 0x40, 0x02,
-        0x40, 0x02, 0x3F, 0xFC,
-    };
-
-    char s[22];
     int idle_s = uptime_get();
 
     printf("Flash Magic Check: %x at %p & %x at %p; \n", extflash_magic_sign, &extflash_magic_sign, intflash_magic_sign, &intflash_magic_sign);
     if (extflash_magic_sign != intflash_magic_sign)
     {
         //flash is not compare read;
-        lcd_set_buffers(framebuffer1, framebuffer2);
-        odroid_overlay_draw_fill_rect(0, 0, ODROID_SCREEN_WIDTH, ODROID_SCREEN_HEIGHT, curr_colors->bg_c);
-        for (int y = 0; y < 14; y++)
-        {
-            uint8_t pt = img_error[2 * y];
-            for (int x = 0; x < 8; x++)
-                if (pt & (0x80 >> x))
-                    odroid_overlay_draw_fill_rect((12 + x) * 8, (9 + y) * 8, 8, 8, curr_colors->main_c);
-            pt = img_error[2 * y + 1];
-            for (int x = 0; x < 8; x++)
-                if (pt & (0x80 >> x))
-                    odroid_overlay_draw_fill_rect((20 + x) * 8, (9 + y) * 8, 8, 8, curr_colors->main_c);
-        }
-        
-        odroid_overlay_draw_logo((ODROID_SCREEN_WIDTH - logo_rgo.width) / 2, 42, (retro_logo_image *)(&logo_rgo), curr_colors->sel_c);
-        odroid_overlay_draw_text_line(15 * 8, 20 * 8, 10 * 8, "DATA ERROR", C_RED, curr_colors->bg_c);
-        odroid_overlay_draw_text_line(9 * 8, 24 * 8 - 4, 23 * 8, "It's seemed you need to", curr_colors->dis_c, curr_colors->bg_c);
-        odroid_overlay_draw_text_line(9 * 8, 25 * 8, 23 * 8, "programs external flash", curr_colors->dis_c, curr_colors->bg_c);
-        odroid_overlay_draw_text_line(ODROID_SCREEN_WIDTH - strlen(GIT_HASH) * 8 - 4, 29 * 8 - 4, strlen(GIT_HASH) * 8, GIT_HASH, curr_colors->sel_c, curr_colors->bg_c);
-        odroid_gamepad_state_t joystick;
+        draw_error_screen("DATA ERROR", "It seems you need to", "program external flash.");
+
         while (1)
         {
+            char s[22];
+            odroid_gamepad_state_t joystick;
+
             wdog_refresh();
             int steps = uptime_get() - idle_s;
             sprintf(s, "%ds to sleep", 600 - steps);
