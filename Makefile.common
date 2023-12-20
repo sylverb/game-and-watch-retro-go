@@ -826,6 +826,7 @@ flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin
 flash: CheckTools CheckDirtySubmodules $(BUILD_DIR)/$(TARGET)_intflash.bin $(BUILD_DIR)/$(TARGET)_extflash.bin
 	@$(GNWMANAGER) flash $(INTFLASH_ADDRESS) $(BUILD_DIR)/$(TARGET)_intflash.bin \
 		-- flash ext $(BUILD_DIR)/$(TARGET)_extflash.bin --offset=$(EXTFLASH_OFFSET) \
+		-- format $(FILESYSTEM_SIZE) --offset=$(FILESYSTEM_OFFSET_FROM_END) --only-if-shrinking \
 		-- start $(INTFLASH_ADDRESS) \
 		$(RESET_DBGMCU_CMD)
 .PHONY: flash
