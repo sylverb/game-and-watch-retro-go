@@ -28,8 +28,8 @@
 #include "gw_lcd.h"
 #include "gw_linker.h"
 #include "githash.h"
-#include "flashapp.h"
 #include "bitmaps.h"
+#include "filesystem.h"
 
 #include "odroid_colors.h"
 #include "odroid_system.h"
@@ -52,6 +52,9 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define PERSISTENT(x) __attribute__((used)) __attribute__((section (".persistent_" TOSTRING(x))))
 
 /* USER CODE END PM */
 
@@ -79,13 +82,12 @@ WWDG_HandleTypeDef hwwdg1;
 /* USER CODE BEGIN PV */
 
 #define BOOT_MODE_APP      0
-#define BOOT_MODE_FLASHAPP 1
-#define BOOT_MODE_WARM     2
+#define BOOT_MODE_WARM     1
 
-PERSISTENT char logbuf[1024 * 4]  __attribute__((aligned(4)));
-PERSISTENT volatile uint32_t log_idx;
-PERSISTENT volatile uint32_t boot_magic;
-PERSISTENT volatile uint32_t oc_level;
+PERSISTENT(boot_magic) volatile uint32_t boot_magic;
+PERSISTENT(oc_level) volatile uint32_t oc_level;
+uint32_t log_idx PERSISTENT(log_idx);
+char logbuf[1024 * 4] PERSISTENT(logbuf) __attribute__((aligned(4)));
 
 uint32_t boot_buttons;
 
@@ -231,13 +233,6 @@ void store_erase(const uint8_t *flash_ptr, uint32_t size)
   if (flash_ptr == 0) {
     return;
   }
-  // Only allow addresses in the areas meant for erasing and writing.
-  assert(
-    ((flash_ptr >= &__OFFSAVEFLASH_START__)   && ((flash_ptr + size) <= &__OFFSAVEFLASH_END__)) ||
-    ((flash_ptr >= &__SAVEFLASH_START__)   && ((flash_ptr + size) <= &__SAVEFLASH_END__)) ||
-    ((flash_ptr >= &__configflash_start__) && ((flash_ptr + size) <= &__configflash_end__)) ||
-    ((flash_ptr >= &__fbflash_start__) && ((flash_ptr + size) <= &__fbflash_end__))
-  );
 
   // Convert mem mapped pointer to flash address
   uint32_t save_address = flash_ptr - &__EXTFLASH_BASE__;
@@ -417,9 +412,6 @@ int main(void)
     printf("Boot from watchdog reset!\nboot_magic=0x%08lx\n", boot_magic);
     trigger_wdt_bsod = 1;
     break;
-  case BOOT_MAGIC_FLASHAPP:
-    boot_mode = BOOT_MODE_FLASHAPP;
-    break;
   default:
     if ((boot_magic & BOOT_MAGIC_BSOD_MASK) == BOOT_MAGIC_BSOD) {
       uint16_t fault_idx = boot_magic & 0xffff;
@@ -512,6 +504,9 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  SCB_InvalidateDCache();
+  SCB_InvalidateICache();
+
   SCB_EnableICache();
   SCB_EnableDCache();
 
@@ -543,9 +538,6 @@ int main(void)
     wdog_enable();
     // Launch the emulator
     app_main(boot_mode);
-    break;
-  case BOOT_MODE_FLASHAPP:
-    flashapp_main();
     break;
   default:
     break;

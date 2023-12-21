@@ -37,8 +37,6 @@ ROM_ENTRY_TEMPLATE = """\t{{
 \t\t.img_address = {img_entry},
 \t\t.img_size = {img_size},
 \t\t#endif
-\t\t.save_address = {save_entry},
-\t\t.save_size = {save_size},
 \t\t.system = &{system},
 \t\t.region = {region},
 \t\t.mapper = {mapper},
@@ -79,18 +77,18 @@ const rom_system_t {name} EMU_DATA = {{
 """
 
 SAVE_SIZES = {
-    "nes": 24 * 1024, # only when using nofrendo, elseway it's given by nesmapper script
-    "sms": 60 * 1024,
-    "gg": 60 * 1024,
-    "col": 60 * 1024,
-    "sg": 60 * 1024,
-    "pce": 76 * 1024,
-    "msx": 272 * 1024,
-    "gw": 4 * 1024,
-    "wsv": 28 * 1024,
-    "md": 144 * 1024,
-    "a7800": 36 * 1024,
-    "amstrad": 132 * 1024,
+    "nes": 0,  # 24 * 1024,
+    "sms": 0,  # 60 * 1024,
+    "gg": 0,  # 60 * 1024,
+    "col": 0,  # 60 * 1024,
+    "sg": 0,  # 60 * 1024,
+    "pce": 0,  # 76 * 1024,
+    "msx": 0,  # 272 * 1024,
+    "gw": 0,  # 4 * 1024,
+    "wsv": 0,  # 28 * 1024,
+    "md": 0,  # 144 * 1024,
+    "a7800": 0,  # 36 * 1024,
+    "amstrad": 0,  # 132 * 1024,
 }
 
 
@@ -271,9 +269,7 @@ class ROM:
         self.romdef = romdefs[self.filename]
         self.romdef.setdefault('name', self.filename)
         self.romdef.setdefault('publish', '1')
-        self.romdef.setdefault('enable_save', '0')
         self.publish = (self.romdef['publish'] == '1')
-        self.enable_save = (self.romdef['enable_save'] == '1') or args.save
         self.system_name = system_name
         self.name = self.romdef['name']
         print("Found rom " + self.filename +" will display name as: " + self.romdef['name'])
@@ -534,11 +530,6 @@ class ROMParser:
         rom_files = [r for r in rom_files if r.name.lower().endswith(extension)]
         rom_files.sort()
         found_roms = [ROM(system_name, rom_file, ext, romdefs) for rom_file in rom_files]
-        for rom in found_roms:
-            suffix = "_no_save"
-            if rom.name.endswith(suffix) :
-                rom.name = rom.name[:-len(suffix)]
-                rom.enable_save = False
 
         return found_roms
 
@@ -575,8 +566,6 @@ class ROMParser:
                 rom_entry=rom.symbol,
                 img_size=rom.img_size,
                 img_entry=rom.img_symbol if rom.img_size else "NULL",
-                save_entry=(save_prefix + str(i)) if rom.enable_save else "NULL",
-                save_size=("sizeof(" + save_prefix + str(i) + ")") if rom.enable_save else "0",
                 region=region,
                 extension=rom.ext,
                 system=system,
@@ -698,9 +687,6 @@ class ROMParser:
         template = "extern const uint8_t {name}[];\n"
         return template.format(name=rom.img_symbol)
 
-    def generate_save_entry(self, name: str, save_size: int) -> str:
-        return f'uint8_t {name}[{save_size}]  __attribute__((section (".saveflash"))) __attribute__((aligned(4096)));\n'
-
     def generate_cheat_entry(self, name: str, num: int, cheat_codes_and_descs: []) -> str:
         str = ""
 
@@ -719,50 +705,6 @@ class ROMParser:
 
         return str
 
-    def get_gameboy_save_size(self, file: Path):
-        total_size = 4096
-        file = Path(file)
-
-        if file.suffix in COMPRESSIONS:
-            file = file.with_suffix("")  # Remove compression suffix
-
-        with open(file, "rb") as f:
-            # cgb
-            f.seek(0x143)
-            cgb = ord(f.read(1))
-
-            # 0x80 = Gameboy color but supports old gameboy
-            # 0xc0 = Gameboy color only
-            if cgb & 0x80 or cgb == 0xC0:
-                # Bank 0 + 1-7 for gameboy color work ram
-                total_size += 8 * 4096  # irl
-
-                # Bank 0 + 1 for gameboy color video ram, 2*8KiB
-                total_size += 4 * 4096  # vrl
-            else:
-                # Bank 0 + 1 for gameboy classic work ram
-                total_size += 2 * 4096  # irl
-
-                # Bank 0 only for gameboy classic video ram, 1*8KiB
-                total_size += 2 * 4096  # vrl
-
-            # Cartridge ram size
-            f.seek(0x149)
-            total_size += [1, 1, 1, 4, 16, 8][ord(f.read(1))] * 8 * 1024
-            return total_size
-
-        return 0
-
-    def get_nes_save_size(self, file: Path):
-        file = Path(file)
-
-        if file.suffix in COMPRESSIONS:
-            file = file.with_suffix("")  # Remove compression suffix
-
-        total_size = int(subprocess.check_output([sys.executable, "./fceumm-go/nesmapper.py", "savesize", file]))
-        return total_size
-
-        return 0
     def _compress_rom(self, variable_name, rom, compress_gb_speed=False, compress=None):
         """This will create a compressed rom file next to the original rom."""
         global sms_reserved_flash_size
@@ -956,34 +898,10 @@ class ROMParser:
                 roms += self.find_roms(system_name, folder, e + "." + compress, romdefs)
             return roms
 
-        def find_disks():
-            disks = self.find_roms(system_name, folder, "dsk", romdefs)
-            # If a disk name ends with _no_save then it means that we shouldn't
-            # allocate save space for this disk (to use with multi disks games
-            # as they only need to get a save for the first disk)
-            for disk in disks:
-                suffix = "_no_save"
-                if disk.name.endswith(suffix) :
-                    disk.name = disk.name[:-len(suffix)]
-                    disk.enable_save = False
-            return disks
-
-        def find_cdk_disks():
-            disks = self.find_roms(system_name, folder, "cdk", romdefs)
-            for disk in disks:
-                suffix = "_no_save"
-                if disk.name.endswith(suffix) :
-                    disk.name = disk.name[:-len(suffix)]
-                    disk.enable_save = False
-            return disks
-
         def contains_rom_by_name(rom, roms):
-            for r in roms:
-                if r.name == rom.name:
-                    return True
-            return False
+            return any(r.name == rom.name for r in roms)
 
-        cdk_disks = find_cdk_disks()
+        cdk_disks = self.find_roms(system_name, folder, "cdk", romdefs)
 
         disks_raw = [r for r in roms_raw if not contains_rom_by_name(r, cdk_disks)]
         disks_raw = [r for r in disks_raw if r.ext == "dsk"]
@@ -998,7 +916,7 @@ class ROMParser:
                     r,
                     compress)
             # Re-generate the cdk disks list
-            cdk_disks = find_cdk_disks()
+            cdk_disks = self.find_roms(system_name, folder, "cdk", romdefs)
         #remove .dsk from list
         roms_raw = [r for r in roms_raw if not contains_rom_by_name(r, cdk_disks)]
         #add .cdk disks to list
@@ -1055,7 +973,7 @@ class ROMParser:
 
         if img_max > 18600:
             print(f"Error: {system_name} Cover art image [width:{cover_width} height: {cover_height}] will overflow!")
-            exit(-1)        
+            exit(-1)
 
         with open(file, "w", encoding = args.codepage) as f:
             f.write(SYSTEM_PROTO_TEMPLATE.format(name=variable_name))
@@ -1063,20 +981,9 @@ class ROMParser:
             for i, rom in enumerate(roms):
                 if not (rom.publish):
                     continue
-                if folder == "gb":
-                    save_size = self.get_gameboy_save_size(rom.path)
-                elif folder == "nes" and args.nofrendo == 0:
-                    save_size = self.get_nes_save_size(rom.path)
 
                 # Aligned
                 aligned_size = 4 * 1024
-                if rom.enable_save:
-                    rom_save_size = (
-                        (save_size + aligned_size - 1) // (aligned_size)
-                    ) * aligned_size
-                    total_save_size += rom_save_size
-                    if system_save_size < rom_save_size:
-                        system_save_size = rom_save_size
                 total_rom_size += rom.size
                 if (args.coverflow != 0) :
                     total_img_size += rom.img_size
@@ -1087,8 +994,6 @@ class ROMParser:
                         f.write(self.generate_img_object_file(rom, cover_width, cover_height))
                     except NoArtworkError:
                         pass
-                if rom.enable_save:
-                    f.write(self.generate_save_entry(save_prefix + str(i), save_size))
 
                 cheat_codes_and_descs = rom.get_cheat_codes();
                 if cheat_codes_prefix:
@@ -1181,7 +1086,7 @@ class ROMParser:
         total_rom_size += rom_size
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_GB\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
+        if system_save_size > larger_save_size: larger_save_size = system_save_size
 
         # Delete NES bios/mappers.h file to recreate it
         mappers_file = "build/mappers.h"
@@ -1490,20 +1395,9 @@ class ROMParser:
                 pass
             exit(-1)
 
-        build_config += "#define ROM_COUNT %d\n" % current_id
-        build_config += "#define MAX_CHEAT_CODES %d\n" % MAX_CHEAT_CODES
+        build_config += f"#define ROM_COUNT {current_id}\n"
+        build_config += f"#define MAX_CHEAT_CODES {MAX_CHEAT_CODES}\n"
 
-        self.write_if_changed(
-            "build/saveflash.ld", f"__SAVEFLASH_LENGTH__ = {total_save_size};\n"
-        )
-        if (args.off_saveflash == 1):
-            self.write_if_changed(
-                "build/offsaveflash.ld", f"__OFFSAVEFLASH_LENGTH__ = {larger_save_size};\n"
-            )
-        else:
-            self.write_if_changed(
-                "build/offsaveflash.ld", f"__OFFSAVEFLASH_LENGTH__ = 0;\n"
-            )
         self.write_if_changed(
              "build/cacheflash.ld", f"__CACHEFLASH_LENGTH__ = {sega_larger_rom_size};\n")
         self.write_if_changed("build/config.h", build_config)
@@ -1515,9 +1409,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--flash-size",
         "-s",
-        type=int,
+        type=lambda x: int(x,0),
         default=1024 * 1024,
         help="Size of external SPI flash in bytes.",
+    )
+    parser.add_argument(
+        "--filesystem-size",
+        type=lambda x: int(x,0),
+        default=1 << 20,
+        help="Size of filesystem in bytes.",
     )
     parser.add_argument(
         "--codepage",
@@ -1536,12 +1436,6 @@ if __name__ == "__main__":
         type=int,
         default=90,
         help="skip convert cover art image jpg quality",
-    )
-    parser.add_argument(
-        "--off_saveflash",
-        type=int,
-        default=0,
-        help="set separate flash zone for off/on savestate",
     )
     compression_choices = [t for t in COMPRESSIONS if not t[0] == "."]
     parser.add_argument(
@@ -1568,7 +1462,6 @@ if __name__ == "__main__":
         "--no-compress_gb_speed", dest="compress_gb_speed", action="store_false"
     )
     parser.set_defaults(compress_gb_speed=False)
-    parser.add_argument("--no-save", dest="save", action="store_false")
     parser.add_argument(
         "--verbose",
         action="store_true",

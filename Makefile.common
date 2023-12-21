@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 ######################################
 # building variables
 ######################################
@@ -18,6 +20,8 @@ LARGE_FLASH ?= 0
 # Configure where data is stored in the external flash by
 # setting EXTFLASH_OFFSET. Useful if the first 1MB are to be preserved.
 EXTFLASH_OFFSET ?= 0
+
+SINGLE_FONT ?= 0
 
 # Configure Game & Watch target device mario|zelda
 ifneq ($(findstring flash,$(MAKECMDGOALS)),flash)
@@ -102,22 +106,60 @@ INTFLASH_BANK = 1
 endif
 endif
 
+GNWMANAGER = gnwmanager
+
 # Configure external flash size in MB (Megabytes)
 EXTFLASH_SIZE_MB ?= 1
 BIG_BANK ?= 1
 
 EXTFLASH_SIZE ?= $(shell echo "$$(( $(EXTFLASH_SIZE_MB) * 1024 * 1024 ))")
+EXTFLASH_END = $(shell echo $$(($(EXTFLASH_OFFSET) + $(EXTFLASH_SIZE))))
 
 EXTFLASH_FORCE_SPI ?= 0
 
-# Set to 0 to remove state saving support (uses less space)
-STATE_SAVING ?= 1
-ifeq ($(STATE_SAVING),0)
-	SAVE_PARAM := --no-save
+# Heuristic: if not set; 10% of your extflash should be good for filesystem.
+# Rounded down to the nearest 4096.
+FILESYSTEM_SIZE := $(shell \
+				   if [ -z "$$FILESYSTEM_SIZE" ]; then \
+				       echo $$(($(EXTFLASH_SIZE) / 10 / 4096 * 4096)); \
+				   else \
+				   	   echo $$FILESYSTEM_SIZE; \
+				   fi)
+FILESYSTEM_OFFSET ?= $(shell echo $$(($(EXTFLASH_SIZE) - $(FILESYSTEM_SIZE))))
+FILESYSTEM_END = $(shell echo $$(($(FILESYSTEM_OFFSET) + $(FILESYSTEM_SIZE))))
+FILESYSTEM_OFFSET_FROM_END ?= $(shell echo $$(($(EXTFLASH_SIZE) - $(FILESYSTEM_END))))
+
+
+# Check to see if the filesystem is within specified extflash
+FILESYSTEM_START_IN_EXTFLASH_RANGE := $(shell \
+	if [ $(FILESYSTEM_OFFSET) -ge $(EXTFLASH_OFFSET) \
+		     -a $(FILESYSTEM_OFFSET) -lt $(EXTFLASH_END) ]; then \
+        echo "1"; \
+    else \
+        echo "0"; \
+    fi)
+
+FILESYSTEM_END_IN_EXTFLASH_RANGE := $(shell \
+	if [ $(FILESYSTEM_END) -gt $(EXTFLASH_OFFSET) \
+		     -a $(FILESYSTEM_END) -le $(EXTFLASH_END) ]; then \
+        echo "1"; \
+    else \
+        echo "0"; \
+    fi)
+
+ifneq ($(FILESYSTEM_START_IN_EXTFLASH_RANGE), $(FILESYSTEM_END_IN_EXTFLASH_RANGE))
+$(error Filesystem partition must be completely inside, or outside of EXTFLASH_SIZE.)
+endif
+FILESYSTEM_IN_EXTFLASH_RANGE = $(FILESYSTEM_START_IN_EXTFLASH_RANGE)
+
+# If the filesystem is external, we don't need to include it in size computation.
+ifeq ($(FILESYSTEM_IN_EXTFLASH_RANGE),0)
+EXTFLASH_TOTAL_LENGTH := $(EXTFLASH_SIZE)
+else ifeq ($(FILESYSTEM_START_IN_EXTFLASH_RANGE),1)
+EXTFLASH_TOTAL_LENGTH := $(shell echo $$(($(EXTFLASH_SIZE) - $(FILESYSTEM_SIZE))))
 endif
 
-# Screenshot support allocates 150kB of external flash. Disabled by default.
-ENABLE_SCREENSHOT ?= 0
+ENABLE_SCREENSHOT ?= 1
 # Set to 1 to add game genie support
 CHEAT_CODES ?= 0
 ifeq ($(GAME_GENIE),1)
@@ -136,9 +178,9 @@ endif
 # Set to 0 to keep the clocks running when suspended (makes debugging easier)
 RESET_DBGMCU ?= 1
 ifeq ($(RESET_DBGMCU),1)
-	RESET_DBGMCU_CMD = $(MAKE) reset_dbgmcu
+	RESET_DBGMCU_CMD = -- disable-debug
 else
-	RESET_DBGMCU_CMD = $(MAKE) reset_mcu
+	RESET_DBGMCU_CMD =
 endif
 
 PYTHON3 ?= /usr/bin/env python3
@@ -428,6 +470,7 @@ C_DEFS +=  \
 -DINCLUDED_ZH_TW=$(ZH_TW) \
 -DINCLUDED_KO_KR=$(KO_KR) \
 -DINCLUDED_JA_JP=$(JA_JP) \
+-DSINGLE_FONT=$(SINGLE_FONT) \
 -DLANG=$(LANG) \
 -DCOVERFLOW=$(COVERFLOW) \
 -DEXTFLASH_FORCE_SPI=$(EXTFLASH_FORCE_SPI) \
@@ -437,7 +480,7 @@ C_DEFS +=  \
 -DMINIZ_NO_MALLOC \
 -DMINIZ_NO_ZLIB_APIS \
 -DDEBUG_RG_ALLOC \
--DSTATE_SAVING=$(STATE_SAVING) \
+-DLFS_NO_MALLOC \
 -DENABLE_SCREENSHOT=$(ENABLE_SCREENSHOT) \
 -DGNW_TARGET_MARIO=$(GNW_TARGET_MARIO) \
 -DGNW_TARGET_ZELDA=$(GNW_TARGET_ZELDA) \
@@ -492,7 +535,7 @@ ASFLAGS += $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunct
 CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
 ifeq ($(DEBUG), 1)
-CFLAGS += -g -gdwarf-2
+CFLAGS += -ggdb -gdwarf-2
 endif
 
 CFLAGS += -fstack-usage -Wstack-usage=20480
@@ -501,8 +544,10 @@ CFLAGS += -fstack-usage -Wstack-usage=20480
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
 LDFLAGS += -Wl,--defsym=__EXTFLASH_OFFSET__=$(EXTFLASH_OFFSET)
-LDFLAGS += -Wl,--defsym=__EXTFLASH_TOTAL_LENGTH__=$(EXTFLASH_SIZE)
+LDFLAGS += -Wl,--defsym=__EXTFLASH_TOTAL_LENGTH__=$(EXTFLASH_TOTAL_LENGTH)
 LDFLAGS += -Wl,--defsym=ENABLE_SCREENSHOT=$(ENABLE_SCREENSHOT)
+LDFLAGS += -Wl,--defsym=__FILESYSTEM_OFFSET__=$(FILESYSTEM_OFFSET)
+LDFLAGS += -Wl,--defsym=__FILESYSTEM_LENGTH__=$(FILESYSTEM_SIZE)
 
 LDFLAGS += -Wl,--defsym=__INTFLASH__=$(INTFLASH_ADDRESS)
 
@@ -533,6 +578,7 @@ all: CheckTools CheckDirtySubmodules $(BUILD_DIR) $(BUILD_DIR)/$(TARGET).elf $(B
 #######################################
 # list of objects
 OBJECTS = $(addprefix $(BUILD_DIR)/core/,$(notdir $(C_SOURCES:.c=.o) $(SDK_C_SOURCES:.c=.o)))
+TAMP_OBJECTS = $(addprefix $(BUILD_DIR)/tamp/,$(notdir $(TAMP_C_SOURCES:.c=.o)))
 GNUBOY_OBJECTS = $(addprefix $(BUILD_DIR)/gnuboy/,$(notdir $(GNUBOY_C_SOURCES:.c=.o)))
 NES_OBJECTS = $(addprefix $(BUILD_DIR)/nes/,$(notdir $(NES_C_SOURCES:.c=.o)))
 NES_FCEU_OBJECTS = $(addprefix $(BUILD_DIR)/nes_fceu/,$(notdir $(NES_FCEU_C_SOURCES:.c=.o)))
@@ -545,7 +591,7 @@ MD_OBJECTS = $(addprefix $(BUILD_DIR)/md/,$(notdir $(MD_C_SOURCES:.c=.o)))
 A7800_OBJECTS = $(addprefix $(BUILD_DIR)/a7800/,$(notdir $(A7800_C_SOURCES:.c=.o)))
 AMSTRAD_OBJECTS = $(addprefix $(BUILD_DIR)/amstrad/,$(notdir $(AMSTRAD_C_SOURCES:.c=.o)))
 
-vpath %.c $(sort $(dir $(C_SOURCES) $(NES_C_SOURCES) $(NES_FCEU_C_SOURCES) $(GNUBOY_C_SOURCES) $(SMSPLUSGX_C_SOURCES) $(PCE_C_SOURCES) $(MSX_C_SOURCES) $(GW_C_SOURCES) $(WSV_C_SOURCES) $(MD_C_SOURCES) $(A7800_C_SOURCES) $(AMSTRAD_C_SOURCES) $(SDK_C_SOURCES)))
+vpath %.c $(sort $(dir $(C_SOURCES) $(TAMP_C_SOURCES) $(NES_C_SOURCES) $(NES_FCEU_C_SOURCES) $(GNUBOY_C_SOURCES) $(SMSPLUSGX_C_SOURCES) $(PCE_C_SOURCES) $(MSX_C_SOURCES) $(GW_C_SOURCES) $(WSV_C_SOURCES) $(MD_C_SOURCES) $(A7800_C_SOURCES) $(AMSTRAD_C_SOURCES) $(SDK_C_SOURCES)))
 # list of ASM program objects
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(SDK_ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(SDK_ASM_SOURCES)))
@@ -568,7 +614,6 @@ Core/Inc/githash.h: FORCE | $(BUILD_DIR)
 	$(V)./scripts/update_githash.sh $@
 
 $(BUILD_DIR)/core/main.o: Core/Inc/githash.h
-$(BUILD_DIR)/core/flashapp.o: Core/Inc/githash.h
 $(BUILD_DIR)/core/rg_main.o: Core/Inc/githash.h
 
 # Run parse_roms.py to generate information about the roms
@@ -578,11 +623,18 @@ $(BUILD_DIR)/rom_files.txt: FORCE | $(BUILD_DIR)
 
 $(BUILD_DIR)/roms.a: $(BUILD_DIR)/rom_files.txt parse_roms.py
 	$(V)$(ECHO) [ PYTHON3 ] $(notdir $<)
-	$(V)$(PYTHON3) parse_roms.py --flash-size $(EXTFLASH_SIZE) $(SAVE_PARAM) $(COMPRESS_PARAM) $(CODEPAGE_PARAM) $(COVERFLOW_PARAM) $(JPG_QUALITY_PARAM) $(NOFRENDO_PARAM) --off_saveflash=$(OFF_SAVESTATE)
+	$(V)$(PYTHON3) parse_roms.py \
+		--flash-size=$(EXTFLASH_SIZE) \
+		$(SAVE_PARAM) \
+		$(COMPRESS_PARAM) \
+		$(CODEPAGE_PARAM) \
+		$(COVERFLOW_PARAM) \
+		$(JPG_QUALITY_PARAM) \
+		$(NOFRENDO_PARAM) 
 
-$(BUILD_DIR)/config.h $(BUILD_DIR)/saveflash.ld $(BUILD_DIR)/cacheflash.ld $(BUILD_DIR)/offsaveflash.ld &: $(BUILD_DIR)/roms.a
+$(BUILD_DIR)/config.h $(BUILD_DIR)/cacheflash.ld &: $(BUILD_DIR)/roms.a
 	$(V)/bin/sh -c true
-STM32H7B0VBTx_FLASH.ld: $(BUILD_DIR)/offsaveflash.ld $(BUILD_DIR)/saveflash.ld $(BUILD_DIR)/cacheflash.ld
+STM32H7B0VBTx_FLASH.ld: $(BUILD_DIR)/cacheflash.ld
 
 # rom_manager.c depends on the different *_roms.c files but they only change when roms.a changes
 $(BUILD_DIR)/core/rom_manager.o: Core/Src/retro-go/rom_manager.c $(BUILD_DIR)/roms.a
@@ -642,14 +694,18 @@ $(BUILD_DIR)/%.o: %.s Makefile.common Makefile $(BUILD_DIR)/config.h | $(BUILD_D
 	$(V)$(ECHO) [ AS ] $(notdir $<)
 	$(V)$(AS) -c $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) Makefile.common Makefile $(LDSCRIPT)
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) $(TAMP_OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) Makefile.common Makefile $(LDSCRIPT)
 	$(V)$(ECHO) [ LD ] $(notdir $@)
-	$(V)$(CC) $(OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(LDFLAGS) -o $@
+	$(V)$(CC) $(OBJECTS) $(TAMP_OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(LDFLAGS) -o $@
 	$(V)./scripts/extflash_size.sh $@
 
 $(BUILD_DIR)/core/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
 	$(V)$(ECHO) [ CC core ] $(notdir $<)
 	$(V)$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/core/$(notdir $(<:.c=.lst)) $< -o $@
+
+$(BUILD_DIR)/tamp/%.o: $(TAMP_DIR)/tamp/%.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
+	$(V)$(ECHO) [ CC tamp ] $(notdir $<)
+	$(V)$(CC) -c $(CFLAGS) $(TAMP_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/tamp/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/nes/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
 	$(V)$(ECHO) [ CC nes ] $(notdir $<)
@@ -697,6 +753,7 @@ $(BUILD_DIR)/amstrad/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DI
 
 $(BUILD_DIR):
 	$(V)mkdir $@
+	$(V)mkdir $@/tamp
 	$(V)mkdir $@/core
 	$(V)mkdir $@/nes
 	$(V)mkdir $@/nes_fceu
@@ -714,96 +771,68 @@ $(BUILD_DIR):
 # Flashing
 #######################################
 
-OPENOCD ?= openocd
 ADAPTER ?= stlink
-FLASH_MULTI ?= scripts/flash_multi.sh
-FLASHTEST ?= scripts/flashapp.sh --test
-
-# Starts openocd and attaches to the target. To be used with 'flash_intflash_nc' and 'gdb'
-openocd:
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; halt"
-.PHONY: openocd
 
 reset:
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; reset; exit"
+	@$(GNWMANAGER) start bank1
 .PHONY: reset
 
 erase_intflash_1:
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; halt; flash erase_address 0x08000000 131072; resume; exit"
+	@$(GNWMANAGER) erase bank1
 .PHONY: erase_intflash_1
 
 erase_intflash_2:
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; halt; flash erase_address 0x08100000 131072; resume; exit"
+	@$(GNWMANAGER) erase bank2
 .PHONY: erase_intflash_2
 
-erase_extflash: flash_intflash
-	$(V)./scripts/extflash_erase.sh $(EXTFLASH_SIZE)
+erase_extflash:
+	@echo "Erasing External Flash..."
+	@$(GNWMANAGER) erase ext
+	@echo "Erasing Complete!"
 .PHONY: erase_extflash
 
+erase_all:
+	@echo "Erasing Internal & External Flash..."
+	@$(GNWMANAGER) erase all
+	@echo "Erasing Complete!"
+.PHONY: erase_all
+
+format:
+	@$(GNWMANAGER) format --offset=$(FILESYSTEM_OFFSET_FROM_END)
+
 start_bank_1:
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg \
-		-c 'init; reset halt' \
-		-c 'set MSP 0x[string range [mdw 0x08000000] 12 19]' \
-		-c 'set PC 0x[string range [mdw 0x08000004] 12 19]' \
-		-c 'echo "Setting MSP -> $$MSP"' \
-		-c 'echo "Setting PC -> $$PC"' \
-		-c 'reg msp $$MSP' \
-		-c 'reg pc $$PC' \
-		-c 'resume;exit'
+	$(GNWMANAGER) start bank1
 .PHONY: start_bank_1
 
 start_bank_2:
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg \
-		-c 'init; reset halt' \
-		-c 'set MSP 0x[string range [mdw 0x08100000] 12 19]' \
-		-c 'set PC 0x[string range [mdw 0x08100004] 12 19]' \
-		-c 'echo "Setting MSP -> $$MSP"' \
-		-c 'echo "Setting PC -> $$PC"' \
-		-c 'reg msp $$MSP' \
-		-c 'reg pc $$PC' \
-		-c 'resume;exit'
+	$(GNWMANAGER) start bank2
 .PHONY: start_bank_2
 
 start:  # Start code located at INTFLASH_ADDRESS
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg \
-		-c 'init; reset halt' \
-		-c 'set MSP 0x[string range [mdw $(INTFLASH_ADDRESS)] 12 19]' \
-		-c 'set PC 0x[string range [mdw [format 0x%x [expr {$(INTFLASH_ADDRESS) + 0x4}]]] 12 19]' \
-		-c 'echo "Setting MSP -> $$MSP"' \
-		-c 'echo "Setting PC -> $$PC"' \
-		-c 'reg msp $$MSP' \
-		-c 'reg pc $$PC' \
-		-c 'resume;exit'
+	$(GNWMANAGER) start $(INTFLASH_ADDRESS)
 .PHONY: start
 
 
-# Programs the internal flash using a new OpenOCD instance
 flash_intflash: $(BUILD_DIR)/$(TARGET)_intflash.bin
-	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "program $< $(INTFLASH_ADDRESS) verify reset exit"
+	$(GNWMANAGER) flash $(INTFLASH_ADDRESS) $< -- start $(INTFLASH_ADDRESS)
 .PHONY: flash_intflash
 
-# Flashes using an existing openocd instance
-flash_intflash_nc: $(BUILD_DIR)/$(TARGET)_intflash.bin
-	echo "program $< $(INTFLASH_ADDRESS) verify reset" | nc -c localhost 4444
-.PHONY: flash_intflash_nc
 
 flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin
-	$(FLASH_MULTI) $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
+	@$(GNWMANAGER) flash ext $< --offset=$(EXTFLASH_OFFSET) -- start $(INTFLASH_ADDRESS)
 .PHONY: flash_extflash
 
-flash_test: flash_intflash
-	$(FLASHTEST)
-.PHONY: flash_test
-
 # Programs both the external and internal flash.
-flash: CheckTools CheckDirtySubmodules
-	$(V)$(MAKE) flash_intflash
-	$(V)$(MAKE) flash_extflash
-	$(V)$(RESET_DBGMCU_CMD)
+flash: CheckTools CheckDirtySubmodules $(BUILD_DIR)/$(TARGET)_intflash.bin $(BUILD_DIR)/$(TARGET)_extflash.bin
+	@$(GNWMANAGER) flash $(INTFLASH_ADDRESS) $(BUILD_DIR)/$(TARGET)_intflash.bin \
+		-- flash ext $(BUILD_DIR)/$(TARGET)_extflash.bin --offset=$(EXTFLASH_OFFSET) \
+		-- format $(FILESYSTEM_SIZE) --offset=$(FILESYSTEM_OFFSET_FROM_END) --only-if-shrinking \
+		-- start $(INTFLASH_ADDRESS) \
+		$(RESET_DBGMCU_CMD)
 .PHONY: flash
 
 monitor:
-	$(V)$(PYTHON3) tools/logpoll.py
+	@$(GNWMANAGER) monitor
 .PHONY: monitor
 
 flash-monitor: flash
@@ -814,55 +843,43 @@ flash-monitor: flash
 flash_all: flash
 
 # Transfers save files from the device to the host machine
-flash_saves_backup: $(BUILD_DIR)/$(TARGET).elf
-	$(V)./scripts/saves_backup.sh $<
+flash_saves_backup:
+	mkdir -p backup
+	rm -rf backup/savestate
+	@$(GNWMANAGER) pull savestate backup/savestate
+	@echo "Backup to \"backup/\" complete."
 .PHONY: flash_saves_backup
 
 # Transfers save files from the host machine to the device
-flash_saves_restore: $(BUILD_DIR)/$(TARGET).elf
-	$(V)./scripts/saves_restore.sh $<
+flash_saves_restore:
+	@$(GNWMANAGER) mkdir savestate -- push savestate backup/savestate/*
+	@echo "Restore from \"backup/\" complete."
 .PHONY: flash_saves_restore
 
-# Erases the saveflash area on the device
-flash_saves_erase: $(BUILD_DIR)/$(TARGET).elf
-	$(V)./scripts/saves_erase.sh $<
-.PHONY: flash_saves_erase
-
-size: $(BUILD_DIR)/$(TARGET).elf
+size: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET)_intflash.bin 
+	$(V)printf "Internal Flash Usage (for developers): $(shell cat $(BUILD_DIR)/$(TARGET)_intflash.bin | wc -c) B\n"
 	$(V)./scripts/size.sh $<
 .PHONY: size
-
-reset_dbgmcu:
-	# Reset the DBGMCU configuration register (DBGMCU_CR)
-	$(V)$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; reset halt; mww 0x5C001004 0x00000000; resume; exit;"
-.PHONY: reset_dbgmcu
-
-reset_mcu:
-	$(V)$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; reset run; exit;" 2> $(BUILD_DIR)/openocd.log
-.PHONY: reset_mcu
 
 gdb: $(BUILD_DIR)/$(TARGET).elf
 	$(GDB) $< -ex "target extended-remote :3333"
 .PHONY: gdb
 
 # Flashes intflash *only* and launches gdb afterwards
-gdb_intflash: flash_intflash_nc gdb
+gdb_intflash: $(BUILD_DIR)/$(TARGET)_intflash.bin
+	$(GNWMANAGER) flash $(INTFLASH_ADDRESS) $< -- start $(INTFLASH_ADDRESS) --halt -- gdb
 .PHONY: gdb_intflash
 
-dump_logs: $(BUILD_DIR)/$(TARGET).elf
-	$(V)./scripts/dump_logs.sh
-.PHONY: dump_logs
-
 dump_screenshot:
-	$(V)./tools/screenshot.py
+	@$(GNWMANAGER) screenshot dump
 .PHONY: dump_screenshot
 
 docker_build:
-	$(V)docker build -f Dockerfile --tag kbeckmann/retro-go-builder .
+	$(V)docker build -f Dockerfile --platform linux/amd64 --tag kbeckmann/retro-go-builder .
 .PHONY: docker_build
 
 docker:
-	$(V)docker run --rm -it --privileged --user $(shell id -u):$(shell id -g) -v $(PWD):/opt/workdir -v /dev/bus/usb:/dev/bus/usb kbeckmann/retro-go-builder
+	$(V)docker run --rm -it --privileged --user $(shell id -u):$(shell id -g) --platform linux/amd64 -v $(PWD):/opt/workdir -v /dev/bus/usb:/dev/bus/usb kbeckmann/retro-go-builder
 .PHONY: docker
 
 help:
@@ -872,14 +889,15 @@ help:
 	@echo "  EXTFLASH_FORCE_SPI  - Forces the use of legacy SPI mode for the external flash driver"
 	@echo "  EXTFLASH_SIZE_MB    - Sets the external flash size in megabytes"
 	@echo "  EXTFLASH_SIZE       - Sets the external flash size in bytes (has precedence over EXTFLASH_SIZE_MB)"
+	@echo "  FILESYSTEM_SIZE     - Sets the filesystem flash size in bytes. Defaults to 10% of flash."
+	@echo "  FILESYSTEM_OFFSET   - Places the filesystem at a specified offset in the external flash. "
+	@echo "                        Defaults to placing the filesystem at the end of flash."
 	@echo "  LARGE_FLASH         - Sets the external flash size to 16MB  (deprecated)"
 	@echo "  EXTFLASH_OFFSET     - Places the data at an offset in the external flash (useful for dual boot)"
 	@echo "  INTFLASH_BANK       - Sets the internal flash bank. Valid values {1,2} (default=1)."
 	@echo "  INTFLASH_ADDRESS    - Explicit internal flash address. If not provided, derived from INTFLASH_BANK."
 	@echo "  BIG_BANK            - Use internal flash bank as undocumented 256k.(default=1, set 0 to 128k)."
-	@echo "                        It's required patched OPENOCD to work"
 	@echo "  COMPRESS            - Configures ROM compression, Valid values {0,lzma} (default=lzma)."
-	@echo "  STATE_SAVING        - Set to 0 to disable state saving (default=1)"
 	@echo "  RESET_DBGMCU        - Configures if DBGMCU should be reset after flashing."
 	@echo "                        Set to 0 to disable power saving (default=1)"
 	@echo "  CODEPAGE            - Sets codepage to configures default display language.(default=1252)"
@@ -892,10 +910,12 @@ help:
 	@echo "  IT_IT,ZH_CN,ZH_TW,  "
 	@echo "  KO_KR,JA_JP,DE_DE,  "
 	@echo "  RU_RU               - Set to 1 to include or exclude some other language"
+	@echo "  SINGLE_FONT         - Set to 1 to only include a single default font."
+	@echo "                        Saves a few dozen KB of external flash."
 	@echo "  COVERFLOW           - Set to 1 include cover art with rom (default=0)"
 	@echo "  JPG_QUALITY         - Set convert cover art image jpg quality (default = 90)"
-	@echo "  ENABLE_SCREENSHOT   - Set to 1 to enable screenshot support (default disabled if extflash is 1MB)"
-	@echo "  GNW_TARGET          - Game & Watch target, Valid values {mario,zelda} (default=mario)"
+	@echo "  ENABLE_SCREENSHOT   - Set to 1 to enable screenshot support (default enabled)"
+	@echo "  GNW_TARGET          - Game & Watch target, Valid values {mario,zelda} (default=mario)"makefile.
 	@echo "  GAME_GENIE          - Set to 1 to enable game genie support (deprecated, use CHEAT_CODES instead)"
 	@echo "  CHEAT_CODES         - Set to 1 to enable cheat codes support (default=0)"
 	@echo "  MSX_USE_BANK_2      - Set to 1 to use Internal Bank 2 for MSX performance improvements."
@@ -908,12 +928,12 @@ help:
 	@echo "  EXTFLASH_FORCE_SPI=$(EXTFLASH_FORCE_SPI)"
 	@echo "  EXTFLASH_SIZE_MB=$(EXTFLASH_SIZE_MB)"
 	@echo "  EXTFLASH_SIZE=$(EXTFLASH_SIZE)"
+	@echo "  FILESYSTEM_SIZE=$(FILESYSTEM_SIZE)"
 	@echo "  LARGE_FLASH=$(LARGE_FLASH)"
 	@echo "  EXTFLASH_OFFSET=$(EXTFLASH_OFFSET)"
 	@echo "  INTFLASH_BANK=$(INTFLASH_BANK)"
 	@echo "  BIG_BANK=$(BIG_BANK)"
 	@echo "  COMPRESS=$(COMPRESS)"
-	@echo "  STATE_SAVING=$(STATE_SAVING)"
 	@echo "  RESET_DBGMCU=$(RESET_DBGMCU)"
 	@echo "  ENABLE_SCREENSHOT=$(ENABLE_SCREENSHOT)"
 	@echo "  GNW_TARGET=$(GNW_TARGET)"
@@ -940,17 +960,13 @@ help:
 	@echo "Targets:"
 	@echo "  docker            - Runs a docker container using the image created by docker_build"
 	@echo "  docker_build      - Builds a docker image"
-	@echo "  dump_logs         - Dumps the callstack and logbuf. Starts openocd and gdb under the hood."
 	@echo "  dump_screenshot   - Downloads the stored screenshot."
 	@echo "  flash             - Programs the internal and external flash"
 	@echo "  flash_all         - Alias for 'flash' (deprecated)"
 	@echo "  flash_extflash    - Only programs the external flash"
 	@echo "  flash_intflash    - Only programs the internal flash"
-	@echo "  flash_intflash_nc - Only programs the internal flash and uses an existing openocd server"
-	@echo "  flash_test        - Runs a flash test. Will overwrite data on the external flash!"
-	@echo "  gdb               - Starts gdb and attaches to openocd"
-	@echo "  gdb_intflash      - Runs flash_intflash_nc, then starts gdb and attaches to openocd"
-	@echo "  openocd           - Starts openocd with appropriate config"
+	@echo "  gdb               - Starts gdb and attaches to gdbserver"
+	@echo "  gdb_intflash      - Flashes intflash and then starts gdb and attaches to gdbserver"
 	@echo "  reset_dbgmcu      - Resets the unit and turns off DBGMCU (lowers battery drain)"
 	@echo "  reset_mcu         - Resets the unit"
 	@echo "  romdef            - Dumps all rom info to roms.json in roms directory to custom display name and"

@@ -183,6 +183,7 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_Add_favorite = "★ 添加收藏",
     .s_Delete_save = "□ 删除进度",
     .s_Confiem_del_save = "您确认要删除已保存的游戏进度？",
+    .s_Free_space_alert = "Not enough free space for a new save, please delete some.",
 #if CHEAT_CODES == 1
     .s_Cheat_Codes = "＆ 金手指码",
     .s_Cheat_Codes_Title = "金手指",

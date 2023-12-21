@@ -15,10 +15,8 @@
 #include "gw_lcd.h"
 #include "gw_linker.h"
 #include "rg_i18n.h"
+#include "filesystem.h"
 
-#if ENABLE_SCREENSHOT
-uint16_t framebuffer_capture[GW_LCD_WIDTH * GW_LCD_HEIGHT]  __attribute__((section (".fbflash"))) __attribute__((aligned(4096)));
-#endif
 
 static void set_ingame_overlay(ingame_overlay_t type);
 
@@ -181,7 +179,9 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
                 printf("Capturing screenshot...\n");
                 odroid_audio_mute(true);
                 common_sleep_while_lcd_swap_pending();
-                store_save((uint8_t *) framebuffer_capture, lcd_get_inactive_buffer(), sizeof(framebuffer_capture));
+                fs_file_t *file = fs_open("SCREENSHOT", FS_WRITE, FS_COMPRESS);
+                fs_write(file, lcd_get_inactive_buffer(), sizeof(framebuffer1));
+                fs_close(file);
                 set_ingame_overlay(INGAME_OVERLAY_SC);
                 odroid_audio_mute(false);
                 common_emu_state.startup_frames = 0;
@@ -321,9 +321,9 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
         // Save-state and poweroff
         HAL_SAI_DMAStop(&hsai_BlockA1);
 #if OFF_SAVESTATE==1
-        app->saveState("1");
+        odroid_system_emu_save_state(-1);
 #else
-        app->saveState("0");
+        odroid_system_emu_save_state(0);
 #endif
         odroid_system_sleep();
     }

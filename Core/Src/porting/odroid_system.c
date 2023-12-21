@@ -5,6 +5,7 @@
 #include "gw_linker.h"
 #include "gui.h"
 #include "main.h"
+#include "filesystem.h"
 
 static rg_app_desc_t currentApp;
 static runtime_stats_t statistics;
@@ -56,30 +57,49 @@ rg_app_desc_t *odroid_system_get_app()
 }
 
 
+const char OFF_SAVESTATE_PATH[] = "savestate/common";
+
+static void parse_rom_path(char *path, size_t size, int slot){
+    if (slot == -1) {
+        strcpy(path, OFF_SAVESTATE_PATH);
+    }
+    else {
+        snprintf(path,
+                 size,
+                 "savestate/%s/%s/%d",
+                 ACTIVE_FILE->system->extension,
+                 ACTIVE_FILE->name,
+                 slot
+                 );
+    }
+}
+/* Return true on successful load.
+ * Slot -1 is for the OFF_SAVESTATE
+ * */
 bool odroid_system_emu_load_state(int slot)
 {
-    if (ACTIVE_FILE->save_address == 0) {
+    char path[FS_MAX_PATH_SIZE];
+    if (currentApp.loadState == NULL)
+        return true;
+    parse_rom_path(path, sizeof(path), slot);
+    printf("Attempting to load state from [%s]\n", path);
+    if(!fs_exists(path)){
+        printf("Savestate does not exist.\n");
         return false;
     }
-    if (currentApp.loadState != NULL) {
-        (*currentApp.loadState)("");
-    }
+    (*currentApp.loadState)(path);
     return true;
 };
 
 bool odroid_system_emu_save_state(int slot)
 {
-    if (currentApp.saveState != NULL) {
-#if OFF_SAVESTATE==1
-        if (slot == 0) {
-#endif
-            (*currentApp.saveState)("0");
-#if OFF_SAVESTATE==1
-        } else {
-            (*currentApp.saveState)("1");
-        }
-#endif
-    }
+    char path[FS_MAX_PATH_SIZE];
+    if (currentApp.saveState == NULL)
+        return true;
+
+    parse_rom_path(path, sizeof(path), slot);
+    printf("Savestating to [%s]\n", path);
+    (*currentApp.saveState)(path);
     return true;
 };
 

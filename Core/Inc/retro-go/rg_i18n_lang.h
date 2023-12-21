@@ -148,6 +148,7 @@ typedef struct
     const char *s_Add_favorite;
     const char *s_Delete_save;
     const char *s_Confiem_del_save;
+    const char *s_Free_space_alert;
 #if CHEAT_CODES == 1
     const char *s_Cheat_Codes;
     const char *s_Cheat_Codes_Title;

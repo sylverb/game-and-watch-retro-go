@@ -42,7 +42,10 @@ venv
 
 .vs/*
 .vscode/*
-
+*.bin
+.gdbinit
+screenshot.png
+/backup
 .clang-format
 .idea/
 cmake-build-debug

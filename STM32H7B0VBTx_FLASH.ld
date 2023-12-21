@@ -74,7 +74,6 @@ __AHBRAM_LENGTH__   = 128K;
 __FLASH_LENGTH__    = DEFINED(__FLASH_LENGTH__) ? __FLASH_LENGTH__ : 128k;
 __FLASH2_LENGTH__   = 256K; /* bank2 */
 
-__EXTFLASH_TOTAL_LENGTH__ = DEFINED(__EXTFLASH_TOTAL_LENGTH__) ? __EXTFLASH_TOTAL_LENGTH__ : 1024K;
 __EXTFLASH_OFFSET__ = DEFINED(__EXTFLASH_OFFSET__) ? __EXTFLASH_OFFSET__ : 0;
 __EXTFLASH_BASE__ = 0x90000000;  /* Beginning of addressable extflash addresses */
 __EXTFLASH_START__ = __EXTFLASH_BASE__ + __EXTFLASH_OFFSET__;  /* Beginning of where we're going to store emulator and rom data */
@@ -86,13 +85,7 @@ __RAM_EMU_START__   = __RAM_CORE_START__ + __RAM_CORE_LENGTH__;
 
 __RAM_EMU_END__     = __RAM_EMU_START__ + __RAM_EMU_LENGTH__;
 
-/* saveflash.ld sets __SAVEFLASH_LENGTH__ */
-/* offsaveflash.ld sets __OFFSAVEFLASH_LENGTH__ */
-INCLUDE build/saveflash.ld
 INCLUDE build/cacheflash.ld
-INCLUDE build/offsaveflash.ld
-__CONFIGFLASH_LENGTH__ = 4096;
-__FBFLASH_LENGTH__ = ENABLE_SCREENSHOT ? ((320 * 240 * 2 + 4095) / 4096) * 4096 : 0;
 
 /****
  * External Flash Layout
@@ -107,42 +100,28 @@ __FBFLASH_LENGTH__ = ENABLE_SCREENSHOT ? ((320 * 240 * 2 + 4095) / 4096) * 4096 
  *            |   Executable emulator data and   |
  *            |         constant ROM data        |
  *            |                                  |
+ *            +----------------------------------+
+ *            |                                  |
+ *            |         Possibly Unused          |
+ *            |                                  |
  *            +----------------------------------+  __EXTFLASH_END__ __CACHEFLASH_START__
  *            |                                  |
  *            |          Reserved space          |
  *            |    to decompress Roms not        |
  *            |         fitting in RAM           |
- *            +----------------------------------+  __CACHEFLASH_END__  __OFFSAVEFLASH_START__
+ *            +----------------------------------+  __CACHEFLASH_END__ __FILESYSTEM_START__
  *            |                                  |
- *            |        ON/OFF state save         |
+ *            |            Filesystem            |
  *            |                                  |
- *            +----------------------------------+  __OFFSAVEFLASH_END__  __SAVEFLASH_START__
- *            |                                  |
- *            |          Save States             |
- *            |                                  |
- *            +----------------------------------+  __SAVEFLASH_END__  __CONFIGFLASH_START__
- *            |                                  |
- *            |    Store changable persistent    |
- *            |      retro-go configurations     |
- *            |                                  |
- *            +----------------------------------+  __CONFIGFLASH_END__
- *            |                                  |
- *            | Framebuffer / Screenshot storage |
- *            |                                  |
- *            +----------------------------------+  __FBFLASH_END__
+ *            +----------------------------------+  __FILESYSTEM_END__ __EXTFLASH_END__
  */
-__EXTFLASH_LENGTH__ = __EXTFLASH_TOTAL_LENGTH__ - (__CACHEFLASH_LENGTH__ + __OFFSAVEFLASH_LENGTH__ + __SAVEFLASH_LENGTH__ + __CONFIGFLASH_LENGTH__ + __FBFLASH_LENGTH__);
+__EXTFLASH_LENGTH__ = __EXTFLASH_TOTAL_LENGTH__ - __CACHEFLASH_LENGTH__;
 __EXTFLASH_END__ = __EXTFLASH_START__ + __EXTFLASH_LENGTH__;
 __CACHEFLASH_START__ = __EXTFLASH_END__;
 __CACHEFLASH_END__   = __CACHEFLASH_START__ + __CACHEFLASH_LENGTH__;
-__OFFSAVEFLASH_START__ = __CACHEFLASH_END__;
-__OFFSAVEFLASH_END__   = __OFFSAVEFLASH_START__ + __OFFSAVEFLASH_LENGTH__;
-__SAVEFLASH_START__ = __OFFSAVEFLASH_END__;
-__SAVEFLASH_END__   = __SAVEFLASH_START__ + __SAVEFLASH_LENGTH__;
-__CONFIGFLASH_START__ = __SAVEFLASH_END__;
-__CONFIGFLASH_END__   = __CONFIGFLASH_START__ + __CONFIGFLASH_LENGTH__;
-__FBFLASH_START__ = __CONFIGFLASH_END__;
-__FBFLASH_END__   = __FBFLASH_START__ + __FBFLASH_LENGTH__;
+
+__FILESYSTEM_START__ = __EXTFLASH_BASE__ + __FILESYSTEM_OFFSET__;
+__FILESYSTEM_END__ = __FILESYSTEM_START__ + __FILESYSTEM_LENGTH__;
 
 
 __INTFLASH__ = DEFINED(__INTFLASH__) ? __INTFLASH__ : 0x08000000;
@@ -164,10 +143,7 @@ MEMORY
   FLASH2   (xr ) : ORIGIN = 0x08100000,          LENGTH = __FLASH2_LENGTH__
   EXTFLASH   (xr ) : ORIGIN = __EXTFLASH_START__,  LENGTH = __EXTFLASH_LENGTH__
   CACHEFLASH (xr ) : ORIGIN = __CACHEFLASH_START__,  LENGTH = __CACHEFLASH_LENGTH__
-  OFFSAVEFLASH (xr ) : ORIGIN = __OFFSAVEFLASH_START__, LENGTH = __OFFSAVEFLASH_LENGTH__
-  SAVEFLASH  (xr ) : ORIGIN = __SAVEFLASH_START__, LENGTH = __SAVEFLASH_LENGTH__
-  CONFIGFLASH(xr ) : ORIGIN = __CONFIGFLASH_START__, LENGTH = __CONFIGFLASH_LENGTH__
-  FBFLASH (xr ) : ORIGIN = __FBFLASH_START__, LENGTH = __FBFLASH_LENGTH__
+  FILESYSTEM (xr ) : ORIGIN = __FILESYSTEM_START__, LENGTH = __FILESYSTEM_LENGTH__
 }
 
 
@@ -533,35 +509,13 @@ SECTIONS
     __cacheflash_end__ = .;
   } > CACHEFLASH
 
-  ._offsaveflash (NOLOAD) :
-  {
-    __offsaveflash_start__ = .;
-    *(.offsaveflash)
-    __offsaveflash_end__ = .;
-  } > OFFSAVEFLASH
-
-  ._saveflash (NOLOAD) :
-  {
-    __saveflash_start__ = .;
-    *(.saveflash)
-    __saveflash_end__ = .;
-  } > SAVEFLASH
-
-  ._configflash (NOLOAD):
+  ._filesystem (NOLOAD):
   {
     . = ALIGN(4K);
-    __configflash_start__ = .;
-    *(.configflash)
-    __configflash_end__ = .;
-  } > CONFIGFLASH
-
-  ._fbflash (NOLOAD):
-  {
-    . = ALIGN(4K);
-    __fbflash_start__ = .;
-    *(.fbflash)
-    __fbflash_end__ = .;
-  } > FBFLASH
+    __filesystem_start__ = .;
+    *(.filesystem)
+    __filesystem_end__ = .;
+  } > FILESYSTEM
 
   ._ram (NOLOAD) :
   {
@@ -612,6 +566,9 @@ SECTIONS
     . = ALIGN(4);
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
+    _intflash_logo_start = .;
+    *(.intflash_logo)
+    _intflash_logo_end = .;
     . = ALIGN(4);
   } >FLASH
 
@@ -643,16 +600,27 @@ SECTIONS
     PROVIDE_HIDDEN (__fini_array_end = .);
   } >FLASH
 
+  /* Force some variables at fixed locations for easy OCD interactions without needing ELF file */
+  ._persistent (NOLOAD) :
+  {
+    . = ALIGN(4);
+    __dtcram_start__ = .;
+    *(.persistent_boot_magic)
+    *(.persistent_oc_level)
+    *(.persistent_log_idx)
+    *(.persistent_logbuf)
+    . = ALIGN(4);
+  } >DTCMRAM
+
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);
 
   /* Initialized data sections goes into RAM, load LMA copy after code */
   .data :
   {
-    __dtcram_start__ = .;
-
     . = ALIGN(4);
     _sdata = .;        /* create a global symbol at data start */
+    *(.filesystem_cfg)
     *(.data)           /* .data sections */
     *(.data*)          /* .data* sections */
 
@@ -664,7 +632,7 @@ SECTIONS
   {
     . = ALIGN(4);
     __flash_end__ = .;
-  }
+  } >FLASH
 
   /* put *fast access* MSX read only stuff on the second bank */
   .flash2 :
@@ -689,13 +657,6 @@ SECTIONS
     . = ALIGN(4);
     _ebss = .;         /* define a global symbol at bss end */
     __bss_end__ = _ebss;
-  } >DTCMRAM
-
-  ._persistent (NOLOAD) :
-  {
-    . = ALIGN(8);
-    *(.persistent)
-    . = ALIGN(8);
   } >DTCMRAM
 
   ._user_heap :

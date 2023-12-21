@@ -27,7 +27,7 @@
 static uint samplesPerFrame;
 static uint32_t vsync_wait_ms = 0;
 
-static uint8_t save_slot_load = 0;
+static int8_t save_slot_load = 0;
 
 static bool autoload = false;
 
@@ -526,7 +526,7 @@ void osd_loadstate()
 }
 
 
-int app_main_nes(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
+int app_main_nes(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
     region_t nes_region;
 

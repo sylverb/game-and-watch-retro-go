@@ -57,7 +57,6 @@ Use `make ROMINFOCODE=[ascii|?]` to set charset of rominfo sourcecode to enabled
 
 - Game display title(Set `name` value, title's charset be must your custom language supported)
 - Pack or don't pack rom to firmware (Set `publish` to `1` or `0`)
-- Enable save for single game even `STATE_SAVING=0` (Set `enable_save` to `1`, if `STATE_SAVING=1` all games will be save enabled)
 - Emulator system cover image size(Set `_cover_width` and `_cover_height`, 180>=`_cover_width`>=64 and 136>=`_cover_height`>=64)
 
 `make romdef` is run patched mode for `*emu*.json` if the file already exist, each time only append new rom's information when command execute.
@@ -142,13 +141,11 @@ Holding the `PAUSE/SET` button while pressing other buttons have the following a
 ## Troubleshooting / FAQ
 
 - Run `make help` to get a list of options to configure the build, and targets to perform various actions.
-- Add `STATE_SAVING=0` as a parameter to `make` to disable save state support if more space is required.
 - Do you have any changed files, even if you didn't intentionally change them? Please run `git reset --hard` to ensure an unchanged state.
 - Did you run `git pull` but forgot to update the submodule? Run `git submodule update --init --recursive` to ensure that the submodules are in sync or run `git pull --recurse-submodules` instead.
 - Run `make clean` and then build again. The makefile should handle incremental builds, but please try this first before reporting issues.
 - If you have limited resources on your computer, remove the `-j$(nproc)` flag from the `make` command, i.e. run `make flash`.
 - If you have changed the external flash and are having problems:
-  - Run `make flash_test` to test it. This will erase the flash, write, read and verify the data.
   - If your chip was bought from e.g. ebay, aliexpress or similar places, you might have gotten a fake or bad clone chip. You can set `EXTFLASH_FORCE_SPI=1` to disable quad mode which seems to help for some chips.
 - It is still not working? Try the classic trouble shooting methods: Disconnect power to your debugger and G&W and connect again. Try programming the [Base](https://github.com/ghidraninja/game-and-watch-base) project first to ensure you can actually program your device.
 - Still not working? Ok, head over to #support on the discord and let's see what's going on.
@@ -158,6 +155,7 @@ Holding the `PAUSE/SET` button while pressing other buttons have the following a
 ### Prerequisites
 
 - You will need version 10 or later of [arm-gcc-none-eabi toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads). **10.2.0 and later are known to work well**. Please make sure it's installed either in your PATH, or set the environment variable `GCC_PATH` to the `bin` directory inside the extracted directory (e.g. `/opt/gcc-arm-none-eabi-10-2020-q4-major/bin`, `/Applications/ARM/bin` for macOS).
+- [GnWManager](https://github.com/BrianPugh/gnwmanager) for flashing firmware and managing the filesystem.
 - In order to run this on a Nintendo® Game & Watch™ [you need to first unlock it](https://github.com/ghidraninja/game-and-watch-backup/).
 
 ### Building
@@ -177,7 +175,7 @@ git clone --recurse-submodules https://github.com/sylverb/game-and-watch-retro-g
 
 cd game-and-watch-retro-go
 
-# Install python dependencies, this is optional for basic uses (but recommended!)
+# Install python dependencies
 python3 -m pip install -r requirements.txt
 
 # Place roms in the appropriate folders:
@@ -241,27 +239,23 @@ If you need to change the project settings and generate c-code from stm32cubemx,
 
 ## Backing up and restoring save state files
 
-Save states can be backed up using either `./scripts/saves_backup.sh build/gw_retro_go.elf` or by running `make flash_saves_backup`. Make sure to use the elf file that matches what is running on your device! It is a good idea to keep this elf file in case you want to back up at a later time.
+Save states can be backed up by running `make flash_saves_backup`.
 
-:exclamation: Note the same variables that were used to flash have to be set here as well, i.e. `ADAPTER`, `EXTFLASH_SIZE_MB`, `EXTFLASH_OFFSET`, `INTFLASH_BANK` etc. This is best done with `export VARIABLE=value`.
+:exclamation: Note that `INTFLASH_BANK` or `INTFLASH_ADDRESS` must be the same value as when initially flashed. This is best done with `export VARIABLE=value`. Usually, if you only have retro-go installed, then this doesn't need to be specified. If you are dual-booting, then you probably want to specify `INTFLASH_BANK=2`.
 
-This downloads all save states to the local directory `./save_states`. Each save state will be located in `./save_states/<emu>/<rom name>.save`.
+This downloads all save states to the local directory `./backup/savestate`. Each save state will be located in `./save_states/<emu>/<rom name>/0`.
 
-:exclamation: Make sure to keep a backup of your elf file (`build/gw_retro_go.elf`) if you intend to make backups at a later time. The elf file has to match what's running on the device.
+After this, it is safe to change roms, pull new code and build & flash the device. If just flashing new firmware/roms while keeping other parameters the same, the save states on-device will persist.
 
-After this, it's safe to change roms, pull new code and build & flash the device.
+Save states can be restored by running `make flash_saves_restore`. Again, `INTFLASH_BANK` or `INTFLASH_ADDRESS` must be set appropriately.
 
-Save states can then be programmed to the device using a newer elf file with new code and roms. To do this, run `./scripts/saves_restore.sh build/gw_retro_go.elf` - this time with the _new_ elf file that matches what's running on the device. Save this elf file for backup later on. This can also be achieved with `make flash_saves_restore`.
-
-`saves_restore.sh` will upload all save state files that you have backed up that are also included in the elf file. E.g Let's say you back up saves for rom A, B and C. Later on, you add a new rom D but remove A, then build and flash. When running the script, the save states for B and C will be programmed and nothing else.
-
-You can also erase all of the save slots by running `make flash_saves_erase`.
+You can also erase the filesystem (and thusly all saves) by running `make format` while the device is on.
 
 ## Screenshots
 
-Screenshots can be captured by pressing `PAUSE/SET` + `GAME`. This feature is disabled by default if the external flash is 1MB (stock units), because it takes up 150kB in the external flash.
+Screenshots can be captured by pressing `PAUSE/SET` + `GAME`.
 
-Screenshots can be downloaded by running `make dump_screenshot`, and will be saved as a 24-bit RGB PNG.
+Screenshots can be downloaded by running `make dump_screenshot`, and will be saved as a 24-bit RGB PNG to `./screenshot.png`.
 
 ## Compression support
 
@@ -377,7 +371,7 @@ Mappers compatibility is basically the same as fceumm version from 01/01/2023. T
 
 As Game & Watch CPU is not able to emulate YM2413 at 48kHz, mapper 85 (VRC-7) sound will play at 18kHz instead of 48kHz.
 
-FDS support requires you to put the FDS firmware in roms/nes_bios/disksys.rom file
+FDS support requires you to put the FDS firmware in `roms/nes_bios/disksys.rom` file
 
 Note that you can force nofrendo-go usage instead of fceumm by adding FORCE_NOFRENDO=1 option in your make command
 
@@ -389,7 +383,7 @@ The system needs bios files to be in the roms/msx_bios folder. Check roms/msx_bi
 What is supported :
 - MSX1/2/2+ system are supported. MSX Turbo-R will probably not work on the G&W.
 - ROM cartridges images : roms have to be named with rom, mx1 or mx2 extension.
-- Disks images : disks images have to be named with dsk extension. Due to memory constraints, disks images are read only. Multiple disks games are supported and user can change the current disk using the "Pause/Options/Change Dsk" menu. Note : Savestates on the MSX are taking a lot of space (260kBytes) due to all the system memory to save, and one savestate slot is allocated for each dsk file. In the case of multiple disks games, only the first disk needs to have a savestate allocation, for this reason it is possible to disable savestate allocation for disk2/3/... of a multiple disk game by adding the _no_save suffix to disk name. Example : "SD Snatcher Disk 1.dsk" will have the savestate memory allocated, and "SD Snatcher Disk 2_no_save.dsk" will not have save state memory allocated. To prevent wasting flash memory for savestates that will never be used, it's a good practice to keep original name for first disk of a game (the one you are selecting to start the game) and to add _no_save suffix to other disks of the game.
+- Disks images : disks images have to be named with dsk extension. Due to memory constraints, disks images are read only. Multiple disks games are supported and user can change the current disk using the "Pause/Options/Change Dsk" menu.
 - Cheat codes support (MCF files in old or new format as described [Here](http://www.msxblue.com/manual/trainermcf_c.htm))
 - The file roms/msx_bios/msxromdb.xml contains control profiles for some games, it allows to configure controls in the best way for some games. If a game has no control profile defined in msxromdb.xml, then controls will be configured as joystick emulation mode.
 - Sometimes games require the user to enter his name using the keyboard, and some games like Metal Gear 1/2 are using F1-F5 keys to acces items/radio/... menus. It is possible to virtually press these keys using the "Pause/Options/Press Key" menu.
@@ -402,7 +396,7 @@ Amstrad CPC6128 system is a computer with a keyboard and disk drive.
 
 What is supported :
 - Amstrad CPC6128 system is the only supported system. CPC464 could be added if there is any interest in doing this. Note that CPC464+/6128+ systems are not supported (running a around 40% of their normal speed so it has been removed)
-- Disks images : disks images have to be named with dsk extension. Due to memory constraints, disks images are read only. Multiple disks games are supported and user can change the current disk using the "Pause/Options/Change Dsk" menu. In the case of multiple disks games, only the first disk needs to have a savestate allocation, for this reason it is possible to disable savestate allocation for disk2/3/... of a multiple disk game by adding the _no_save suffix to disk name. To prevent wasting flash memory for savestates that will never be used, it's a good practice to keep original name for first disk of a game (the one you are selecting to start the game) and to add _no_save suffix to other disks of the game. Both standard and extended dsk format are supported, moreover a compression mecanism specific to the G&W has been implemented to reduce the size of disk images. Disk compression is automatically handled during the build process.
+- Disks images : disks images have to be named with dsk extension. Due to memory constraints, disks images are read only. Multiple disks games are supported and user can change the current disk using the "Pause/Options/Change Dsk" menu.  Both standard and extended dsk format are supported, moreover a compression mechanism specific to the G&W has been implemented to reduce the size of disk images. Disk compression is automatically handled during the build process.
 - Normally when the amstrad system starts, it will wait the user to enter a run"file or |CPM command to load the content of the disk. As it's not very friendly, the emulator is detecting the name of the file to run and enter automatically the right commant at startup
 - Sometimes games require the user to enter his name using the keyboard. It is possible to virtually press these keys using the "Pause/Options/Press Key" menu.
 - Amstrad screen resolution is 384x272 pixels while G&W resolution is 320x240. The standard screen mode (with no scaling) will show the screen without the borders which will be ok in most cases, but in some cases games are using borders to show some content. If you want to see the whole Amstrad screen on the G&W, set options/scaling to "fit".

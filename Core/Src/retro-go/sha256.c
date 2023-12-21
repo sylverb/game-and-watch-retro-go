@@ -158,14 +158,19 @@ void sha256_final(SHA256_CTX *ctx, BYTE hash[])
 	}
 }
 
-void sha256_to_string(BYTE hash_str[65], const BYTE data[], size_t len)
-{
-  BYTE hash[32] = {0};
+void sha256(BYTE hash[32], const BYTE data[], size_t len){
   SHA256_CTX sha256 = {0};
   sha256_init(&sha256);
   sha256_update(&sha256, data, len);
   sha256_final(&sha256, hash);
+}
+
+void sha256_to_string(BYTE hash_str[65], const BYTE data[], size_t len)
+{
+  BYTE hash[32] = {0};
+  sha256(hash, data, len);
   for (int i = 0; i < 32; i++) {
     sprintf((char *) &hash_str[i * 2], "%02x", hash[i]);
   }
 }
+

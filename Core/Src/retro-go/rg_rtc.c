@@ -247,6 +247,7 @@ void GW_SetUnixTM(struct tm *tm) {
     UpdateRTC();
 }
 
+
 // Millis since 1st Jan 1970.
 uint64_t GW_GetCurrentMillis(void) {
     ReadRTC();

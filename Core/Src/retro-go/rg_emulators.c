@@ -36,6 +36,9 @@ static int emulators_count = 0;
 const unsigned int intflash_magic_sign = 0xABAB;
 const unsigned int extflash_magic_sign __attribute__((section(".extflash_emu_data"))) = intflash_magic_sign;
 
+// Minimum amount of free blocks in filesystem to ensure correct behavior
+#define MIN_FREE_FS_BLOCKS 30
+
 static retro_emulator_file_t *CHOSEN_FILE = NULL;
 
 retro_emulator_t *file_to_emu(retro_emulator_file_t *file) {
@@ -375,6 +378,16 @@ static bool show_cheat_dialog()
 }
 #endif
 
+static void parse_rom_path(retro_emulator_file_t *file, char *path, size_t size, int slot){
+    snprintf(path,
+                size,
+                "savestate/%s/%s/%d",
+                file->system->extension,
+                file->name,
+                slot
+                );
+}
+
 bool emulator_show_file_menu(retro_emulator_file_t *file)
 {
     CHOSEN_FILE = file;
@@ -384,9 +397,11 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     // bool has_sram = odroid_sdcard_get_filesize(sram_path) > 0;
     // bool is_fav = favorite_find(file) != NULL;
 
-    bool has_save = 1;
+    char path[FS_MAX_PATH_SIZE];
+    bool has_save = 0;
     bool has_sram = 0;
     bool force_redraw = false;
+    uint32_t free_blocks = fs_free_blocks();
 
 #if CHEAT_CODES == 1
     odroid_dialog_choice_t last = ODROID_DIALOG_CHOICE_LAST;
@@ -397,14 +412,17 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     }
 
 #endif
+    parse_rom_path(file, path, sizeof(path), 0);
+
+    has_save = fs_exists(path);
 
     odroid_dialog_choice_t choices[] = {
-        {0, curr_lang->s_Resume_game, "", has_save && (file->save_address != 0), NULL},
+        {0, curr_lang->s_Resume_game, "", has_save, NULL},
         {1, curr_lang->s_New_game, "", 1, NULL},
         ODROID_DIALOG_CHOICE_SEPARATOR,
         //{3, is_fav ? s_Del_favorite : s_Add_favorite, "", 1, NULL},
 		//ODROID_DIALOG_CHOICE_SEPARATOR,
-        {2, curr_lang->s_Delete_save, "", (has_save || has_sram) && (file->save_address != 0), NULL},
+        {2, curr_lang->s_Delete_save, "", (has_save || has_sram), NULL},
 #if CHEAT_CODES == 1
         ODROID_DIALOG_CHOICE_SEPARATOR,
         cheat_choice,
@@ -417,28 +435,27 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
         choices[4] = last;
 #endif
 
-    //Del Some item
-    if (file->save_address == 0)
-    {
-        choices[0] = choices[1];
-#if CHEAT_CODES == 1
-        choices[1] = choices[2];
-        choices[2] = choices[3];
-        choices[3] = choices[6];
-#else
-        choices[1] = choices[4];
-#endif
-    }
-
     int sel = odroid_overlay_dialog(file->name, choices, has_save ? 0 : 1, &gui_redraw_callback);
 
-    if (sel == 0 || sel == 1) {
+    if (sel == 0) { // Resume game
         gui_save_current_tab();
-        emulator_start(file, sel == 0, false, 0);
+        emulator_start(file, true, false, 0);
+    }
+    if (sel == 1) { // New game
+        // To ensure efficient filesystem behavior, we make sure that there
+        // is already a savestate file for this game or that there is enough
+        // free space for a new save state
+        if ((has_save) || (free_blocks >= MIN_FREE_FS_BLOCKS)) {
+            gui_save_current_tab();
+            emulator_start(file, false, false, 0);
+        } else {
+            // Inform that there is not enough free blocks for a new save
+            odroid_overlay_alert(curr_lang->s_Free_space_alert);
+        }
     }
     else if (sel == 2) {
         if (odroid_overlay_confirm(curr_lang->s_Confiem_del_save, false, &gui_redraw_callback) == 1) {
-            store_erase(file->save_address, file->save_size);
+            fs_delete(path);
         }
     }
     else if (sel == 3) {
@@ -462,13 +479,12 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     return force_redraw;
 }
 
-void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_paused, uint8_t save_slot)
+void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_paused, int8_t save_slot)
 {
     printf("Retro-Go: Starting game: %s\n", file->name);
     rom_manager_set_active_file(file);
 
     // odroid_settings_StartAction_set(load_state ? ODROID_START_ACTION_RESUME : ODROID_START_ACTION_NEWGAME);
-    // odroid_settings_RomFilePath_set(path);
     // odroid_settings_commit();
 
     // Reinit AHB & ITC RAM memory allocation

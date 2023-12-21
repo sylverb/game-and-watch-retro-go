@@ -177,6 +177,7 @@ const lang_t lang_pt_pt LANG_DATA = {
     .s_Add_favorite = "Adicionar favorito",
     .s_Delete_save = "Apagar gravação",
     .s_Confiem_del_save = "Apagar gravação?",
+    .s_Free_space_alert = "Not enough free space for a new save, please delete some.",
 #if CHEAT_CODES == 1
     .s_Cheat_Codes = "Código de Batota",
     .s_Cheat_Codes_Title = "Opções de Batota",

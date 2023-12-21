@@ -62,6 +62,8 @@ static const uint8_t IMG_DISKETTE[] = {
     0x7C, 0x00, 0x3E, 0x7C, 0x00, 0x3E, 0x3F, 0xFF, 0xFC, 0x00, 0x00, 0x00,
 };
 
+static char *headerString = "Gene0000";
+
 static void load_rom_from_flash() {
   /* check if it's compressed */
 
@@ -575,58 +577,56 @@ static char VideoUpscaler_str[2];
 static char gwenesis_sync_mode_str[8];
 
 
-void gwenesis_save_local_data(void) {
-  SaveState *state = saveGwenesisStateOpenForWrite("gwenesis");
+void gwenesis_save_local_data(fs_file_t *file) {
+  fs_write(file, &ABCkeys_value, sizeof(int));
+  fs_write(file, &PAD_A_def, 4);
+  fs_write(file, &PAD_B_def, 4);
+  fs_write(file, &PAD_C_def, 4);
 
-
-  saveGwenesisStateSetBuffer(state, "ABCkeys_value", &ABCkeys_value, sizeof(int));
-  saveGwenesisStateSet(state, "PAD_A_def", PAD_A_def);
-  saveGwenesisStateSet(state, "PAD_B_def", PAD_B_def);
-  saveGwenesisStateSet(state, "PAD_C_def", PAD_C_def);
-  
-    // Audio low pass filter "ON or OFF"
-  saveGwenesisStateSetBuffer(state, "AudioFilter_str", &AudioFilter_str, sizeof(int));
-  saveGwenesisStateSet(state, "gwenesis_lpfilter",gwenesis_lpfilter);
+  fs_write(file, &AudioFilter_str, sizeof(int));
+  fs_write(file, &gwenesis_lpfilter, 4);
 }
 
-void gwenesis_load_local_data(void) {
-  SaveState *state = saveGwenesisStateOpenForWrite("gwenesis");
+void gwenesis_load_local_data(fs_file_t *file) {
+  fs_read(file, &ABCkeys_value, sizeof(int));
+  fs_read(file, &PAD_A_def, 4);
+  fs_read(file, &PAD_B_def, 4);
+  fs_read(file, &PAD_C_def, 4);
 
-  // A-B-C keys mapping
-  saveGwenesisStateGetBuffer(state, "ABCkeys_value", &ABCkeys_value, sizeof(int));
-  PAD_A_def = saveGwenesisStateGet(state, "PAD_A_def");
-  PAD_B_def = saveGwenesisStateGet(state, "PAD_B_def");
-  PAD_C_def = saveGwenesisStateGet(state, "PAD_C_def");
-  
-  // Audio low pass filter "ON or OFF"
-  saveGwenesisStateGetBuffer(state, "AudioFilter_str", &AudioFilter_str, sizeof(int));
-  gwenesis_lpfilter = saveGwenesisStateGet(state, "gwenesis_lpfilter");
+  fs_read(file, &AudioFilter_str, sizeof(int));
+  fs_read(file, &gwenesis_lpfilter, 4);
 }
 
 static bool gwenesis_system_SaveState(char *pathName) {
-  int size = 0;
   printf("Saving state...\n");
-#if OFF_SAVESTATE==1
-  if (strcmp(pathName,"1") == 0) {
-    // Save in common save slot (during a power off)
-    size = saveGwenesisState((unsigned char *)&__OFFSAVEFLASH_START__,ACTIVE_FILE->save_size);
-  } else {
-#endif
-    size = saveGwenesisState((unsigned char *)ACTIVE_FILE->save_address,ACTIVE_FILE->save_size);
-#if OFF_SAVESTATE==1
-  }
-#endif
-  printf("Saved state size:%d\n", size);
+  fs_file_t *file;
+  file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
+  fs_write(file, headerString, 8);
+  gwenesis_save_state(file);
+  gwenesis_save_local_data(file);
+  fs_close(file);
   return true;
 }
 
 static bool gwenesis_system_LoadState(char *pathName) {
   printf("Loading state...\n");
-  return loadGwenesisState((unsigned char *)ACTIVE_FILE->save_address);
+  fs_file_t *file;
+  file = fs_open(pathName, FS_READ, FS_COMPRESS);
+  char header[8];
+  fs_read(file, header, sizeof(header));
+
+  // Check for header
+  if (memcmp(headerString, header, 8) == 0) {
+      gwenesis_load_state(file);
+      gwenesis_load_local_data(file);
+  }
+
+  fs_close(file);
+  return true;
 }
 
 /* Main */
-int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
+int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
 
     printf("Genesis start\n");
@@ -669,16 +669,7 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
     volatile unsigned int current_frame;
     
     if (load_state) {
-#if OFF_SAVESTATE==1
-      if (save_slot == 1) {
-        // Load from common save slot if needed
-        loadGwenesisState((unsigned char *)&__OFFSAVEFLASH_START__);
-      } else {
-#endif
-        loadGwenesisState((unsigned char *)ACTIVE_FILE->save_address);
-#if OFF_SAVESTATE==1
-      }
-#endif
+        odroid_system_emu_load_state(save_slot);
     }
 
     /* Start at the same time DMAs audio & video */
