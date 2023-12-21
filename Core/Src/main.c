@@ -40,6 +40,9 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
+#ifdef SALEAE_DEBUG_SIGNALS
+#include "gw_debug.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -318,6 +321,10 @@ uint32_t uptime_get(void)
 
 void GW_EnterDeepSleep(void)
 {
+#ifdef SALEAE_DEBUG_SIGNALS
+    debug_pins_deinit();
+#endif
+
   // Stop SAI DMA (audio)
   audio_stop_playing();
 
@@ -1355,6 +1362,10 @@ static void MX_GPIO_Init(void)
 
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+#ifdef SALEAE_DEBUG_SIGNALS
+  debug_pins_init();
+#endif
 }
 
 /* USER CODE BEGIN 4 */

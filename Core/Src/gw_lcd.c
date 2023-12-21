@@ -3,6 +3,9 @@
 #include "gw_lcd.h"
 #include "stm32h7xx_hal.h"
 #include "main.h"
+#ifdef SALEAE_DEBUG_SIGNALS
+#include "gw_debug.h"
+#endif
 
 #if GW_LCD_MODE_LUT8
 uint8_t framebuffer1[GW_LCD_WIDTH * GW_LCD_HEIGHT];
@@ -140,6 +143,9 @@ void lcd_init(SPI_HandleTypeDef *spi, LTDC_HandleTypeDef *ltdc) {
 }
 
 void HAL_LTDC_ReloadEventCallback (LTDC_HandleTypeDef *hltdc) {
+#ifdef SALEAE_DEBUG_SIGNALS
+    HAL_GPIO_WritePin(DEBUG_PORT_PIN_1, DEBUG_PIN_1, !active_framebuffer);
+#endif
   if (active_framebuffer == 0) {
     HAL_LTDC_SetAddress(hltdc, (uint32_t) fb2, 0);
   } else {
@@ -148,6 +154,9 @@ void HAL_LTDC_ReloadEventCallback (LTDC_HandleTypeDef *hltdc) {
 }
 
 void HAL_LTDC_LineEventCallback (LTDC_HandleTypeDef *hltdc) {
+#ifdef SALEAE_DEBUG_SIGNALS
+    HAL_GPIO_TogglePin(DEBUG_PORT_PIN_2, DEBUG_PIN_2);
+#endif
   frame_counter++;
   HAL_LTDC_ProgramLineEvent(hltdc,  239);
 }
@@ -179,6 +188,9 @@ void lcd_swap(void)
 {
   HAL_LTDC_Reload(&hltdc, LTDC_RELOAD_VERTICAL_BLANKING);
   active_framebuffer = active_framebuffer ? 0 : 1;
+#ifdef SALEAE_DEBUG_SIGNALS
+  HAL_GPIO_WritePin(DEBUG_PORT_PIN_3, DEBUG_PIN_3, active_framebuffer);
+#endif
 }
 
 void lcd_sync(void)
