@@ -515,7 +515,6 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
         supervision_exec((uint16 *)wsv_framebuffer);
         if (drawFrame) {
-            common_sleep_while_lcd_swap_pending();
             blit();
             lcd_swap();
         }

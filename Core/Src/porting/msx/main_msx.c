@@ -1815,7 +1815,6 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
         boardInfo.run(boardInfo.cpuRef);
 
         if (drawFrame) {
-            common_sleep_while_lcd_swap_pending();
             _blit();
             lcd_swap();
         }
