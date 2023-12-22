@@ -141,16 +141,14 @@ uint32_t lcd_is_swap_pending(void)
   return (uint32_t) ((hltdc.Instance->SRCR) & (LTDC_SRCR_VBR | LTDC_SRCR_IMR));
 }
 
-uint32_t lcd_sleep_while_swap_pending(void)
+bool lcd_sleep_while_swap_pending(void)
 {
-  uint32_t pending = lcd_is_swap_pending();
+  uint32_t pending = false;
 
-  if (pending)
+  while (lcd_is_swap_pending())
   {
-    while (lcd_is_swap_pending())
-    {
-      __WFI();
-    }
+    pending = true;
+    __WFI();
   }
 
   return pending;

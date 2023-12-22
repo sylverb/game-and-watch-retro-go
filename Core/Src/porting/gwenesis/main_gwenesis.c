@@ -868,7 +868,7 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
         } else {
           lcd_swap();
           drawFrame = 1;
-          common_sleep_while_lcd_swap_pending();
+          lcd_sleep_while_swap_pending();
         }
 
         /* AUDIO SYNC mode */

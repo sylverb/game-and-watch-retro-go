@@ -180,7 +180,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
 #if ENABLE_SCREENSHOT
                 printf("Capturing screenshot...\n");
                 odroid_audio_mute(true);
-                common_sleep_while_lcd_swap_pending();
+                lcd_sleep_while_swap_pending();
                 store_save((uint8_t *) framebuffer_capture, lcd_get_inactive_buffer(), sizeof(framebuffer_capture));
                 set_ingame_overlay(INGAME_OVERLAY_SC);
                 odroid_audio_mute(false);
@@ -311,7 +311,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
 
     if (clear_frames) {
         clear_frames--;
-        common_sleep_while_lcd_swap_pending();
+        lcd_sleep_while_swap_pending();
 
         // Clear the active screen buffer, caller must repaint it 
         memset(lcd_get_active_buffer(), 0, sizeof(framebuffer1));
@@ -628,14 +628,4 @@ void common_ingame_overlay(void) {
 static void set_ingame_overlay(ingame_overlay_t type){
     common_emu_state.overlay = type;
     common_emu_state.last_overlay_time = get_elapsed_time();
-}
-
-bool common_sleep_while_lcd_swap_pending() {
-    bool pending = false;
-    while (lcd_is_swap_pending()) {
-        pending = true;
-        cpumon_sleep();
-    }
-
-    return pending;
 }
