@@ -703,9 +703,11 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     odroid_dialog_choice_t options[] = {
         {301, curr_lang->s_md_keydefine, ABCkeys_str, 1, &gwenesis_submenu_setABC},
         {302, curr_lang->s_md_AudioFilter, AudioFilter_str, 1, &gwenesis_submenu_setAudioFilter},
-        {303, curr_lang->s_md_VideoUpscaler, VideoUpscaler_str, ENABLE_DEBUG_OPTIONS, &gwenesis_submenu_setVideoUpscaler},
-        {304, curr_lang->s_md_Synchro, gwenesis_sync_mode_str, ENABLE_DEBUG_OPTIONS, &gwenesis_submenu_sync_mode},
-        {310, curr_lang->s_md_Debug_bar, debug_bar_str, ENABLE_DEBUG_OPTIONS, &gwenesis_submenu_debug_bar},
+#if ENABLE_DEBUG_OPTIONS != 0
+        {303, curr_lang->s_md_VideoUpscaler, VideoUpscaler_str, 1, &gwenesis_submenu_setVideoUpscaler},
+        {304, curr_lang->s_md_Synchro, gwenesis_sync_mode_str, 1, &gwenesis_submenu_sync_mode},
+        {310, curr_lang->s_md_Debug_bar, debug_bar_str, 1, &gwenesis_submenu_debug_bar},
+#endif
         //  {320, "+GameGenie", gwenesis_GameGenie_str, 0, &gwenesis_submenu_GameGenie},
         //  {330, "-GameGenie", gwenesis_GameGenie_reverse_str, 0, &gwenesis_submenu_GameGenie_reverse},
 
