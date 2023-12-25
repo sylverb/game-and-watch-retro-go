@@ -643,11 +643,11 @@ void emulators_init()
 #endif
 
 #ifdef ENABLE_HOMEBREW_ZELDA3
-    add_emulator("Zelda3", "zelda3", "zelda3", "zelda3", 0, &pad_amstrad, &header_amstrad); // FIXME &pad_zelda3, &header_zelda3);
+    add_emulator("Zelda3", "zelda3", "zelda3", "zelda3", 0, &pad_snes, &header_zelda3);
 #endif
 
 #ifdef ENABLE_HOMEBREW_SMW
-    add_emulator("SMW", "smw", "smw", "smw", 0, &pad_amstrad, &header_amstrad); // FIXME &pad_smw, &header_smw);
+    add_emulator("SMW", "smw", "smw", "smw", 0, &pad_snes, &header_smw);
 #endif
 
     // add_emulator("ColecoVision", "col", "col", "smsplusgx-go", 0, logo_col, header_col);
