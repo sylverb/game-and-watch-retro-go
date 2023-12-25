@@ -1080,6 +1080,7 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
         common_emu_state.pause_after_frames = 0;
     }
     common_emu_state.frame_time_10us = (uint16_t)(100000 / AMSTRAD_FPS + 0.5f);
+    lcd_set_refresh_rate(AMSTRAD_FPS);
 
     memset(framebuffer1, 0, sizeof(framebuffer1));
     memset(framebuffer2, 0, sizeof(framebuffer2));
@@ -1158,7 +1159,6 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
 
         caprice_retro_loop();
         if (drawFrame) {
-            common_sleep_while_lcd_swap_pending();
             _blit();
             lcd_swap();
         }

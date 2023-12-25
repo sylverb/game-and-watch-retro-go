@@ -528,7 +528,6 @@ void blit() {
 }
 
 void pce_osd_gfx_blit() {
-    common_sleep_while_lcd_swap_pending();
 #ifdef PCE_SHOW_DEBUG
     uint32_t currentTime = HAL_GetTick();
     uint32_t delta = currentTime - lastFPSTime;

@@ -397,7 +397,6 @@ void osd_blitscreen(bitmap_t *bmp)
         lastFPSTime = currentTime;
     }
 
-    common_sleep_while_lcd_swap_pending();
     PROFILING_INIT(t_blit);
     PROFILING_START(t_blit);
 
@@ -551,11 +550,13 @@ int app_main_nes(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
 
     if (ACTIVE_FILE->region == REGION_PAL) {
+        lcd_set_refresh_rate(50);
         nes_region = NES_PAL;
         common_emu_state.frame_time_10us = (uint16_t)(100000 / 50 + 0.5f);
         samplesPerFrame = (AUDIO_SAMPLE_RATE) / 50;
         HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma,  (2 * AUDIO_SAMPLE_RATE) / 50);
     } else {
+        lcd_set_refresh_rate(60);
         nes_region = NES_NTSC;
         common_emu_state.frame_time_10us = (uint16_t)(100000 / 60 + 0.5f);
         //printf("frame_time_10us: %d\n", common_emu_state.frame_time_10us);
