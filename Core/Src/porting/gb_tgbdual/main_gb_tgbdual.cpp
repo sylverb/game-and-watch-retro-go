@@ -499,7 +499,7 @@ void app_main_gb_tgbdual_cpp(uint8_t load_state, uint8_t start_paused, int8_t sa
 #endif
 
     odroid_dialog_choice_t options[] = {
-        {300, curr_lang->s_Palette, (char *)palette_values, g_gb->get_rom()->get_info()->gb_type!=3, &palette_update_cb},
+        {300, curr_lang->s_Palette, (char *)palette_values, (g_gb->get_rom()->get_info()->gb_type!=3)?1:-1, &palette_update_cb},
         ODROID_DIALOG_CHOICE_LAST
     };
 

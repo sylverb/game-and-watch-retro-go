@@ -596,7 +596,7 @@ void app_main_gb(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
         char palette_values[16];
         snprintf(palette_values, sizeof(palette_values), "%s", "7/7");
         odroid_dialog_choice_t options[] = {
-            {300, curr_lang->s_Palette, (char *)palette_values, !hw.cgb, &palette_update_cb},
+            {300, curr_lang->s_Palette, (char *)palette_values, hw.cgb ? -1 : 1, &palette_update_cb},
             // {301, "More...", "", 1, &advanced_settings_cb},
             ODROID_DIALOG_CHOICE_LAST
         };
