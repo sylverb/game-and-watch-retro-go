@@ -1129,8 +1129,8 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
             {302, curr_lang->s_Crop_Horizontal_Overscan,crop_overscan_h_text,1,&crop_overscan_h_cb},
             {302, curr_lang->s_Disable_Sprite_Limit,sprite_limit_text,1,&sprite_limit_cb},
             {302, curr_lang->s_NES_CPU_OC,overclocking_text,1,&overclocking_cb},
-            {302, curr_lang->s_NES_Eject_Insert_FDS,eject_insert_text,GameInfo->type == GIT_FDS,&fds_eject_cb},
-            {302, curr_lang->s_NES_Swap_Side_FDS,next_disk_text,allow_swap_disk,&fds_side_swap_cb},
+            {302, curr_lang->s_NES_Eject_Insert_FDS,eject_insert_text,GameInfo->type == GIT_FDS ? 1 : -1,&fds_eject_cb},
+            {302, curr_lang->s_NES_Swap_Side_FDS,next_disk_text,allow_swap_disk ? 1 : -1,&fds_side_swap_cb},
             ODROID_DIALOG_CHOICE_LAST
         };
 
