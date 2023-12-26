@@ -36,11 +36,7 @@
 #define STRINGIZE(x) #x
 #define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
 
-#if EXTENDED_SCREEN != 0
-static int g_ppu_render_flags = kPpuRenderFlags_NewRenderer | kPpuRenderFlags_Height240;
-#else
 static int g_ppu_render_flags = kPpuRenderFlags_NewRenderer;
-#endif /* EXTENDED_SCREEN */
 
 static uint8 g_gamepad_buttons;
 static int g_input1_state;
@@ -118,23 +114,50 @@ MemBlk FindInAssetArray(int asset, int idx) {
 }
 
 
+int8_t current_scaling = ODROID_DISPLAY_SCALING_COUNT+1;
 static void DrawPpuFrame(uint16_t* framebuffer) {
   wdog_refresh();
-  #if EXTENDED_SCREEN == 2
-  uint8 *pixel_buffer = framebuffer;
-  #elif EXTENDED_SCREEN == 1
-  uint8 *pixel_buffer = framebuffer + 32;    // Start 32 pixels from left
-  #else
-  uint8 *pixel_buffer = framebuffer + 320*8 + 32;    // Start 8 rows from the top, 32 pixels from left
-  #endif /* EXTENDED_SCREEN */
+  odroid_display_scaling_t scaling = odroid_display_get_scaling_mode();
   int pitch = 320 * 2;
-  
-  ZeldaDrawPpuFrame(pixel_buffer, pitch, g_ppu_render_flags);
-
-  // Draw borders
-  #if EXTENDED_SCREEN < 2
-  draw_border_zelda3(framebuffer);
-  #endif /* EXTENDED_SCREEN */
+  uint8 *pixel_buffer;
+  // Transition from SCALING_FULL to SCALING_OFF is causing crash
+  // So we artificially make this transition impossible by
+  // setting SCALING_CUSTOM the same as SCALING_FIT
+  if (current_scaling != scaling) {
+    current_scaling = scaling;
+    switch (current_scaling) {
+      case ODROID_DISPLAY_SCALING_OFF: // default screen size 256x22
+        g_ppu_render_flags = kPpuRenderFlags_NewRenderer;
+        g_zenv.ppu->extraLeftRight = 0;
+        break;
+      case ODROID_DISPLAY_SCALING_FIT: // full-height 256x240
+      case ODROID_DISPLAY_SCALING_CUSTOM:
+        g_ppu_render_flags = kPpuRenderFlags_NewRenderer | kPpuRenderFlags_Height240;
+        g_zenv.ppu->extraLeftRight = 0;
+        break;
+      case ODROID_DISPLAY_SCALING_FULL: // full screen 320x240
+        g_ppu_render_flags = kPpuRenderFlags_NewRenderer | kPpuRenderFlags_Height240;
+        g_zenv.ppu->extraLeftRight = UintMin(32, kPpuExtraLeftRight);
+        break;
+    }
+  }
+  switch (scaling) {
+    case ODROID_DISPLAY_SCALING_OFF:
+      pixel_buffer = (uint8_t *)(framebuffer + 320*8 + 32);    // Start 8 rows from the top, 32 pixels from left
+      ZeldaDrawPpuFrame(pixel_buffer, pitch, g_ppu_render_flags);
+      draw_border_zelda3(framebuffer);
+      break;
+    case ODROID_DISPLAY_SCALING_FIT:
+    case ODROID_DISPLAY_SCALING_CUSTOM:
+      pixel_buffer = (uint8_t *)(framebuffer + 32);    // Start 32 pixels from left
+      ZeldaDrawPpuFrame(pixel_buffer, pitch, g_ppu_render_flags);
+      draw_border_zelda3(framebuffer);
+      break;
+    case ODROID_DISPLAY_SCALING_FULL:
+      pixel_buffer = (uint8_t *)framebuffer;
+      ZeldaDrawPpuFrame(pixel_buffer, pitch, g_ppu_render_flags);
+      break;
+  }
 }
 
 
@@ -298,17 +321,13 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     
   ZeldaInitialize();
 
-  #if EXTENDED_SCREEN == 2
-  g_zenv.ppu->extraLeftRight = UintMin(32, kPpuExtraLeftRight);
-  #else
-  g_zenv.ppu->extraLeftRight = 0;
-  #endif /* EXTENDED_SCREEN */
-
   g_wanted_zelda_features = FEATURES;
 
   ZeldaEnableMsu(false);
   ZeldaSetLanguage(STRINGIZE_VALUE_OF(DIALOGUES_LANGUAGE));
-    
+
+  g_zenv.ppu->extraLeftRight = 0;
+
   if (load_state) {
 #if OFF_SAVESTATE==1
     if (save_slot == 1) {

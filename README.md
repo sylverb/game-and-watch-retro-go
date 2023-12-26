@@ -447,7 +447,6 @@ Some features can be configured with flags:
 | `LIMIT_30FPS` | Limit to 30 fps for improved stability.<br>Enabled by default.<br>Disabling this flag will result in unsteady framerate and stuttering. |
 | `FASTER_UI` | Increase UI speed (item menu, etc.).<br>Enabled by default. |
 | `BATTERY_INDICATOR` | Display battery indicator in item menu.<br>Enabled by default. |
-| `EXTENDED_SCREEN` | Extended screensize (0 for default screen size 256x224, 1 for full-height 256x240, 2 for full screen 320x240).<br>Default value: 1. |
 | `FEATURE_SWITCH_LR` | Item switch on L/R. Also allows reordering of items in inventory by pressing Y+direction.<br>Hold X, L, or R inside of the item selection screen to assign items to those buttons.<br>If X is reassigned, Select opens the map. Push Select while paused to save or quit.<br>When L or R are assigned items, those buttons will no longer cycle items. |
 | `FEATURE_TURN_WHILE_DASHING` | Allow turning while dashing. |
 | `FEATURE_MIRROR_TO_DARK_WORLD` | Allow mirror to be used to warp to the Dark World. |

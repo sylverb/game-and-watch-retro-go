@@ -711,9 +711,6 @@ ZELDA3_FASTER_UI ?= 1
 # Display battery indicator in item menu
 ZELDA3_BATTERY_INDICATOR ?= 1
 
-# Extended screensize (0 for default screen size 256x224, 1 for full-height 256x240, 2 for full screen 320x240)
-ZELDA3_EXTENDED_SCREEN ?= 1
-
 # Item switch on L/R. Also allows reordering of items in inventory by pressing Y+direction.
 # Hold X, L, or R inside of the item selection screen to assign items to those buttons.
 # If X is reassigned, Select opens the map. Push Select while paused to save or quit.
@@ -767,7 +764,6 @@ ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_SWIT
 C_DEFS_ZELDA3 =  \
 -DHEADLESS \
 -DLIMIT_30FPS=$(ZELDA3_LIMIT_30FPS) \
--DEXTENDED_SCREEN=$(ZELDA3_EXTENDED_SCREEN) \
 -DDIALOGUES_LANGUAGE=us \
 -DFEATURES=$(ZELDA3_FEATURES) \
 -DFASTER_UI=$(ZELDA3_FASTER_UI) \
