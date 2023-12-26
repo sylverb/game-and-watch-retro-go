@@ -145,12 +145,10 @@ bool lcd_sleep_while_swap_pending(void)
 {
   uint32_t pending = false;
 
-  if (pending)
+  while (lcd_is_swap_pending())
   {
-    while (lcd_is_swap_pending())
-    {
-      __WFI();
-    }
+    pending = true;
+    __WFI();
   }
 
   return pending;
