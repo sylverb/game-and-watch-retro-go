@@ -89,3 +89,13 @@ extern common_emu_state_t common_emu_state;
  * Drawable stuff over current emulation.
  */
 void common_ingame_overlay(void);
+
+/**
+ * Draw border screen for Zelda 3 when not full screen.
+ */
+void draw_border_zelda3(pixel_t * fb);
+
+/**
+ * Draw border screen for Super Mario World.
+ */
+void draw_border_smw(pixel_t * fb);

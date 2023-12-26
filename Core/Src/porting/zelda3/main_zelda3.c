@@ -29,6 +29,7 @@
 #include "zelda3/types.h"
 #include "zelda3/zelda_rtl.h"
 #include "zelda3/hud.h"
+#include "zelda3/audio.h"
 
 #pragma GCC optimize("Ofast")
 
@@ -44,16 +45,16 @@ static int g_input1_state;
 static uint32 frameCtr = 0;
 static uint32 renderedFrameCtr = 0;
 
-#define AUDIO_SAMPLE_RATE   (16000)   // SAI Sample rate
+#define ZELDA3_AUDIO_SAMPLE_RATE   (16000)   // SAI Sample rate
 #if LIMIT_30FPS != 0
 #define FRAMERATE 30
 #else
 #define FRAMERATE 60
 #endif /* LIMIT_30FPS */
-#define AUDIO_BUFFER_LENGTH 534  // When limited to 30 fps, audio is generated for two frames at once
-#define AUDIO_BUFFER_LENGTH_DMA (2 * AUDIO_BUFFER_LENGTH) // DMA buffer contains 2 frames worth of audio samples in a ring buffer
+#define ZELDA3_AUDIO_BUFFER_LENGTH 534  // When limited to 30 fps, audio is generated for two frames at once
+#define ZELDA3_AUDIO_BUFFER_LENGTH_DMA (2 * ZELDA3_AUDIO_BUFFER_LENGTH) // DMA buffer contains 2 frames worth of audio samples in a ring buffer
 
-int16_t audiobuffer_zelda3[AUDIO_BUFFER_LENGTH];  // FIXME use audioBuffer from common.h instead???
+int16_t audiobuffer_zelda3[ZELDA3_AUDIO_BUFFER_LENGTH];  // FIXME use audioBuffer from common.h instead???
 
 uint8_t savestateBuffer[4096];
 uint16_t bufferCount = 0;
@@ -89,7 +90,7 @@ static void LoadAssetsChunk(size_t length, uint8* data) {
 
 static void LoadAssets() {
 
-  uint8 *data = zelda_assets;
+  uint8 *data = (uint8 *)zelda_assets;
   static const char kAssetsSig[] = { kAssets_Sig };
 
   if (zelda_assets_length < 16 + 32 + 32 + 8 + kNumberOfAssets * 4 ||
@@ -98,7 +99,7 @@ static void LoadAssets() {
     Die("Invalid assets file");
 
   // Load some assets with assets in extflash
-  LoadAssetsChunk(zelda_assets_length, zelda_assets);
+  LoadAssetsChunk(zelda_assets_length, (uint8 *)zelda_assets);
 
   // Make sure all assets were loaded
   for (size_t i = 0; i < kNumberOfAssets; i++) {
@@ -136,6 +137,7 @@ static void DrawPpuFrame(uint16_t* framebuffer) {
         g_zenv.ppu->extraLeftRight = 0;
         break;
       case ODROID_DISPLAY_SCALING_FULL: // full screen 320x240
+      default:
         g_ppu_render_flags = kPpuRenderFlags_NewRenderer | kPpuRenderFlags_Height240;
         g_zenv.ppu->extraLeftRight = UintMin(32, kPpuExtraLeftRight);
         break;
@@ -154,6 +156,7 @@ static void DrawPpuFrame(uint16_t* framebuffer) {
       draw_border_zelda3(framebuffer);
       break;
     case ODROID_DISPLAY_SCALING_FULL:
+    default:
       pixel_buffer = (uint8_t *)framebuffer;
       ZeldaDrawPpuFrame(pixel_buffer, pitch, g_ppu_render_flags);
       break;
@@ -185,13 +188,13 @@ static void HandleCommand(uint32 j, bool pressed) {
 
   if (j == kKeys_Load) {
     // Mute
-    for (int i = 0; i < AUDIO_BUFFER_LENGTH_DMA; i++) {
+    for (int i = 0; i < ZELDA3_AUDIO_BUFFER_LENGTH_DMA; i++) {
         audiobuffer_dma[i] = 0;
     }
     SaveLoadSlot(kSaveLoad_Load, save_address);
   } else if (j == kKeys_Save) {
     // Mute
-    for (int i = 0; i < AUDIO_BUFFER_LENGTH_DMA; i++) {
+    for (int i = 0; i < ZELDA3_AUDIO_BUFFER_LENGTH_DMA; i++) {
         audiobuffer_dma[i] = 0;
     }
     SaveLoadSlot(kSaveLoad_Save, save_address);
@@ -261,6 +264,7 @@ static bool zelda3_system_LoadState(char *pathName) {
   printf("Loading state...\n");
   save_address = (unsigned char *)ACTIVE_FILE->save_address;
   HandleCommand(kKeys_Load, true);
+  return true;
 }
 
 // FIXME no support for SRAM saves ???
@@ -275,21 +279,21 @@ static void zelda3_sound_start()
 {
   memset(audiobuffer_zelda3, 0, sizeof(audiobuffer_zelda3));
   memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-  HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA);
+  HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, ZELDA3_AUDIO_BUFFER_LENGTH_DMA);
 }
 
 static void zelda3_sound_submit() {
   uint8_t volume = odroid_audio_volume_get();
   int16_t factor = volume_tbl[volume];
 
-  size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_BUFFER_LENGTH;
+  size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : ZELDA3_AUDIO_BUFFER_LENGTH;
 
   if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-    for (int i = 0; i < AUDIO_BUFFER_LENGTH; i++) {
+    for (int i = 0; i < ZELDA3_AUDIO_BUFFER_LENGTH; i++) {
       audiobuffer_dma[i + offset] = 0;
     }
   } else {
-    for (int i = 0; i < AUDIO_BUFFER_LENGTH; i++) {
+    for (int i = 0; i < ZELDA3_AUDIO_BUFFER_LENGTH; i++) {
       int32_t sample = audiobuffer_zelda3[i];
       audiobuffer_dma[i + offset] = (sample * factor) >> 8;
     }
@@ -300,7 +304,7 @@ static void zelda3_sound_submit() {
 int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 {
   printf("Zelda3 start\n");
-  odroid_system_init(APPID_ZELDA3, AUDIO_SAMPLE_RATE);
+  odroid_system_init(APPID_ZELDA3, ZELDA3_AUDIO_SAMPLE_RATE);
   odroid_system_emu_init(&zelda3_system_LoadState, &zelda3_system_SaveState, NULL);
   
   if (start_paused) {
@@ -444,18 +448,18 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
     bool drawFrame = common_emu_frame_loop();
 
-    bool is_replay = ZeldaRunFrame(inputs);
+    ZeldaRunFrame(inputs);
 
     frameCtr++;
 
     #if LIMIT_30FPS != 0
     // Render audio to DMA buffer
-    ZeldaRenderAudio(audiobuffer_zelda3, AUDIO_BUFFER_LENGTH / 2, 1);
+    ZeldaRenderAudio(audiobuffer_zelda3, ZELDA3_AUDIO_BUFFER_LENGTH / 2, 1);
     // Render two frames worth of gameplay / audio for each screen render
     ZeldaRunFrame(inputs);
-    ZeldaRenderAudio(audiobuffer_zelda3 + (AUDIO_BUFFER_LENGTH / 2), AUDIO_BUFFER_LENGTH / 2, 1);
+    ZeldaRenderAudio(audiobuffer_zelda3 + (ZELDA3_AUDIO_BUFFER_LENGTH / 2), ZELDA3_AUDIO_BUFFER_LENGTH / 2, 1);
     #else
-    ZeldaRenderAudio(audiobuffer_zelda3, AUDIO_BUFFER_LENGTH, 1);
+    ZeldaRenderAudio(audiobuffer_zelda3, ZELDA3_AUDIO_BUFFER_LENGTH, 1);
     #endif /* LIMIT_30FPS*/
 
 

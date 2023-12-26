@@ -47,16 +47,16 @@ struct SpcPlayer *g_spc_player;
 static uint32 frameCtr = 0;
 static uint32 renderedFrameCtr = 0;
 
-#define AUDIO_SAMPLE_RATE   (16000)   // SAI Sample rate
+#define SMW_AUDIO_SAMPLE_RATE   (16000)   // SAI Sample rate
 #if LIMIT_30FPS != 0
 #define FRAMERATE 30
 #else
 #define FRAMERATE 60
 #endif /* LIMIT_30FPS */
-#define AUDIO_BUFFER_LENGTH 534  // When limited to 30 fps, audio is generated for two frames at once
-#define AUDIO_BUFFER_LENGTH_DMA (2 * AUDIO_BUFFER_LENGTH) // DMA buffer contains 2 frames worth of audio samples in a ring buffer
+#define SMW_AUDIO_BUFFER_LENGTH 534  // When limited to 30 fps, audio is generated for two frames at once
+#define SMW_AUDIO_BUFFER_LENGTH_DMA (2 * SMW_AUDIO_BUFFER_LENGTH) // DMA buffer contains 2 frames worth of audio samples in a ring buffer
 
-int16_t audiobuffer_smw[AUDIO_BUFFER_LENGTH];  // FIXME use audioBuffer from common.h instead???
+int16_t audiobuffer_smw[SMW_AUDIO_BUFFER_LENGTH];  // FIXME use audioBuffer from common.h instead???
 
 uint8_t savestateBuffer[4096];
 uint16_t bufferCount = 0;
@@ -77,7 +77,7 @@ void NORETURN Die(const char *error) {
 }
 
 
-static void LoadAssetsChunk(size_t length, uint8* data) {
+static void LoadAssetsChunk(size_t length, const uint8* data) {
   uint32 offset = 88 + kNumberOfAssets * 4 + *(uint32 *)(data + 84);
   for (size_t i = 0; i < kNumberOfAssets; i++) {
     uint32 size = *(uint32 *)(data + 88 + i * 4);
@@ -130,7 +130,7 @@ void RtlDrawPpuFrame(uint8 *pixel_buffer, size_t pitch, uint32 render_flags) {
 
 static void DrawPpuFrame(uint16_t* framebuffer) {
   wdog_refresh();
-  uint8 *pixel_buffer = framebuffer + 320*8 + 32;    // Start 8 rows from the top, 32 pixels from left
+  uint8 *pixel_buffer = (uint8 *)(framebuffer + 320*8 + 32);    // Start 8 rows from the top, 32 pixels from left
   int pitch = 320 * 2;
 
   PpuBeginDrawing(g_my_ppu, pixel_buffer, pitch, g_ppu_render_flags);
@@ -166,13 +166,13 @@ static void HandleCommand(uint32 j, bool pressed) {
 
   if (j == kKeys_Load) {
     // Mute
-    for (int i = 0; i < AUDIO_BUFFER_LENGTH_DMA; i++) {
+    for (int i = 0; i < SMW_AUDIO_BUFFER_LENGTH_DMA; i++) {
         audiobuffer_dma[i] = 0;
     }
     RtlSaveLoad(kSaveLoad_Load, save_address);
   } else if (j == kKeys_Save) {
     // Mute
-    for (int i = 0; i < AUDIO_BUFFER_LENGTH_DMA; i++) {
+    for (int i = 0; i < SMW_AUDIO_BUFFER_LENGTH_DMA; i++) {
         audiobuffer_dma[i] = 0;
     }
     RtlSaveLoad(kSaveLoad_Save, save_address);
@@ -242,6 +242,7 @@ static bool smw_system_LoadState(char *pathName) {
   printf("Loading state...\n");
   save_address = (unsigned char *)ACTIVE_FILE->save_address;
   HandleCommand(kKeys_Load, true);
+  return true;
 }
 
 // FIXME no support for SRAM saves ???
@@ -256,21 +257,21 @@ static void smw_sound_start()
 {
   memset(audiobuffer_smw, 0, sizeof(audiobuffer_smw));
   memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-  HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA);
+  HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, SMW_AUDIO_BUFFER_LENGTH_DMA);
 }
 
 static void smw_sound_submit() {
   uint8_t volume = odroid_audio_volume_get();
   int16_t factor = volume_tbl[volume];
 
-  size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_BUFFER_LENGTH;
+  size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : SMW_AUDIO_BUFFER_LENGTH;
 
   if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-    for (int i = 0; i < AUDIO_BUFFER_LENGTH; i++) {
+    for (int i = 0; i < SMW_AUDIO_BUFFER_LENGTH; i++) {
       audiobuffer_dma[i + offset] = 0;
     }
   } else {
-    for (int i = 0; i < AUDIO_BUFFER_LENGTH; i++) {
+    for (int i = 0; i < SMW_AUDIO_BUFFER_LENGTH; i++) {
       int32_t sample = audiobuffer_smw[i];
       audiobuffer_dma[i + offset] = (sample * factor) >> 8;
     }
@@ -281,7 +282,7 @@ static void smw_sound_submit() {
 int app_main_smw(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 {
   printf("SMW start\n");
-  odroid_system_init(APPID_SMW, AUDIO_SAMPLE_RATE);
+  odroid_system_init(APPID_SMW, SMW_AUDIO_SAMPLE_RATE);
   odroid_system_emu_init(&smw_system_LoadState, &smw_system_SaveState, NULL);
   
   if (start_paused) {
@@ -300,7 +301,7 @@ int app_main_smw(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
   LoadAssets();
 
-  Snes *snes = SnesInit(NULL, 0);
+  SnesInit(NULL, 0);
     
   g_wanted_features = FEATURES;
 
@@ -413,18 +414,18 @@ int app_main_smw(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
     bool drawFrame = common_emu_frame_loop();
 
-    bool is_replay = RtlRunFrame(inputs);
+    RtlRunFrame(inputs);
 
     frameCtr++;
 
     #if LIMIT_30FPS != 0
     // Render audio to DMA buffer
-    RtlRenderAudio(audiobuffer_smw, AUDIO_BUFFER_LENGTH / 2, 1);
+    RtlRenderAudio(audiobuffer_smw, SMW_AUDIO_BUFFER_LENGTH / 2, 1);
     // Render two frames worth of gameplay / audio for each screen render
     RtlRunFrame(inputs);
-    RtlRenderAudio(audiobuffer_smw + (AUDIO_BUFFER_LENGTH / 2), AUDIO_BUFFER_LENGTH / 2, 1);
+    RtlRenderAudio(audiobuffer_smw + (SMW_AUDIO_BUFFER_LENGTH / 2), SMW_AUDIO_BUFFER_LENGTH / 2, 1);
     #else
-    RtlRenderAudio(audiobuffer_smw, AUDIO_BUFFER_LENGTH, 1);
+    RtlRenderAudio(audiobuffer_smw, SMW_AUDIO_BUFFER_LENGTH, 1);
     #endif /* LIMIT_30FPS*/
 
 
