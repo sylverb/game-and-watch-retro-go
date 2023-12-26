@@ -3,6 +3,7 @@
 #include <odroid_system.h>
 
 #include "main.h"
+#include "gw_lcd.h"
 
 extern SAI_HandleTypeDef hsai_BlockA1;
 extern DMA_HandleTypeDef hdma_sai1_a;
