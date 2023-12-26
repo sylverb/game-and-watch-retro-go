@@ -28,6 +28,8 @@ extern const retro_logo_image header_wsv;
 extern const retro_logo_image header_gen;
 extern const retro_logo_image header_a7800;
 extern const retro_logo_image header_amstrad;
+extern const retro_logo_image header_zelda3;
+extern const retro_logo_image header_smw;
 
 extern const retro_logo_image pad_sg1000;
 extern const retro_logo_image pad_col;
@@ -42,6 +44,7 @@ extern const retro_logo_image pad_wsv;
 extern const retro_logo_image pad_gen;
 extern const retro_logo_image pad_a7800;
 extern const retro_logo_image pad_amstrad;
+extern const retro_logo_image pad_snes;
 
 extern const retro_logo_image logo_coleco;
 extern const retro_logo_image logo_nitendo;
@@ -81,4 +84,7 @@ extern const unsigned char img_clock_07[];
 extern const unsigned char img_clock_08[];
 extern const unsigned char img_clock_09[];
 
+extern const unsigned char IMG_BORDER_ZELDA3[];
+extern const unsigned char IMG_BORDER_LEFT_SMW[];
+extern const unsigned char IMG_BORDER_RIGHT_SMW[];
 

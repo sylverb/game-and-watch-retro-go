@@ -3,6 +3,7 @@
 #include <odroid_system.h>
 
 #include "main.h"
+#include "gw_lcd.h"
 
 extern SAI_HandleTypeDef hsai_BlockA1;
 extern DMA_HandleTypeDef hdma_sai1_a;
@@ -95,3 +96,13 @@ void common_ingame_overlay(void);
  * The LCD controller will generate an interrupt when the swap has been completed.
  */
 bool common_sleep_while_lcd_swap_pending(void);
+
+/**
+ * Draw border screen for Zelda 3 when not full screen.
+ */
+void draw_border_zelda3(pixel_t * fb);
+
+/**
+ * Draw border screen for Super Mario World.
+ */
+void draw_border_smw(pixel_t * fb);

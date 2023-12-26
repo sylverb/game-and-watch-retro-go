@@ -24,6 +24,8 @@
 #include "main_gwenesis.h"
 #include "main_a7800.h"
 #include "main_amstrad.h"
+#include "main_zelda3.h"
+#include "main_smw.h"
 #include "rg_rtc.h"
 #include "heap.hpp"
 
@@ -31,7 +33,7 @@
 #define COVERFLOW 0
 #endif /* COVERFLOW */
 // Increase when adding new emulators
-#define MAX_EMULATORS 13
+#define MAX_EMULATORS 15
 static retro_emulator_t emulators[MAX_EMULATORS];
 static int emulators_count = 0;
 
@@ -589,7 +591,21 @@ void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_pau
       memset(&_OVERLAY_AMSTRAD_BSS_START, 0x0, (size_t)&_OVERLAY_AMSTRAD_BSS_SIZE);
       SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_AMSTRAD_SIZE);
       app_main_amstrad(load_state, start_paused, save_slot);
-  #endif
+#endif
+    } else if(strcmp(emu->system_name, "Zelda3") == 0)  {
+#ifdef ENABLE_HOMEBREW_ZELDA3
+      memcpy(&__RAM_EMU_START__, &_OVERLAY_ZELDA3_LOAD_START, (size_t)&_OVERLAY_ZELDA3_SIZE);
+      memset(&_OVERLAY_ZELDA3_BSS_START, 0x0, (size_t)&_OVERLAY_ZELDA3_BSS_SIZE);
+      SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_ZELDA3_SIZE);
+      app_main_zelda3(load_state, start_paused, save_slot);
+#endif
+    } else if(strcmp(emu->system_name, "SMW") == 0)  {
+#ifdef ENABLE_HOMEBREW_SMW
+      memcpy(&__RAM_EMU_START__, &_OVERLAY_SMW_LOAD_START, (size_t)&_OVERLAY_SMW_SIZE);
+      memset(&_OVERLAY_SMW_BSS_START, 0x0, (size_t)&_OVERLAY_SMW_BSS_SIZE);
+      SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_SMW_SIZE);
+      app_main_smw(load_state, start_paused, save_slot);
+#endif
     }
     
 }
@@ -653,6 +669,14 @@ void emulators_init()
 
 #ifdef ENABLE_EMULATOR_AMSTRAD
     add_emulator("Amstrad CPC", "amstrad", "amstrad", "caprice32", 0, &pad_amstrad, &header_amstrad);
+#endif
+
+#ifdef ENABLE_HOMEBREW_ZELDA3
+    add_emulator("Zelda3", "zelda3", "zelda3", "zelda3", 0, &pad_snes, &header_zelda3);
+#endif
+
+#ifdef ENABLE_HOMEBREW_SMW
+    add_emulator("SMW", "smw", "smw", "smw", 0, &pad_snes, &header_smw);
 #endif
 
     // add_emulator("ColecoVision", "col", "col", "smsplusgx-go", 0, logo_col, header_col);

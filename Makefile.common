@@ -529,6 +529,8 @@ C_INCLUDES +=  \
 -ICore/Inc/porting/gwenesis \
 -ICore/Inc/porting/a7800 \
 -ICore/Inc/porting/amstrad \
+-ICore/Inc/porting/zelda3 \
+-ICore/Inc/porting/smw \
 -ICore/Inc/retro-go \
 -IDrivers/STM32H7xx_HAL_Driver/Inc \
 -IDrivers/STM32H7xx_HAL_Driver/Inc/Legacy \
@@ -613,8 +615,10 @@ WSV_OBJECTS = $(addprefix $(BUILD_DIR)/wsv/,$(notdir $(WSV_C_SOURCES:.c=.o)))
 MD_OBJECTS = $(addprefix $(BUILD_DIR)/md/,$(notdir $(MD_C_SOURCES:.c=.o)))
 A7800_OBJECTS = $(addprefix $(BUILD_DIR)/a7800/,$(notdir $(A7800_C_SOURCES:.c=.o)))
 AMSTRAD_OBJECTS = $(addprefix $(BUILD_DIR)/amstrad/,$(notdir $(AMSTRAD_C_SOURCES:.c=.o)))
+ZELDA3_OBJECTS = $(addprefix $(BUILD_DIR)/zelda3/,$(notdir $(ZELDA3_C_SOURCES:.c=.o)))
+SMW_OBJECTS = $(addprefix $(BUILD_DIR)/smw/,$(notdir $(SMW_C_SOURCES:.c=.o)))
 
-vpath %.c $(sort $(dir $(C_SOURCES) $(TAMP_C_SOURCES) $(NES_C_SOURCES) $(NES_FCEU_C_SOURCES) $(GNUBOY_C_SOURCES) $(TGBDUAL_C_SOURCES) $(TGBDUAL_C_SOURCES) $(SMSPLUSGX_C_SOURCES) $(PCE_C_SOURCES) $(MSX_C_SOURCES) $(GW_C_SOURCES) $(WSV_C_SOURCES) $(MD_C_SOURCES) $(A7800_C_SOURCES) $(AMSTRAD_C_SOURCES) $(SDK_C_SOURCES)))
+vpath %.c $(sort $(dir $(C_SOURCES) $(TAMP_C_SOURCES) $(NES_C_SOURCES) $(NES_FCEU_C_SOURCES) $(GNUBOY_C_SOURCES) $(TGBDUAL_C_SOURCES) $(TGBDUAL_C_SOURCES) $(SMSPLUSGX_C_SOURCES) $(PCE_C_SOURCES) $(MSX_C_SOURCES) $(GW_C_SOURCES) $(WSV_C_SOURCES) $(MD_C_SOURCES) $(A7800_C_SOURCES) $(AMSTRAD_C_SOURCES) $(ZELDA3_C_SOURCES) $(SMW_C_SOURCES) $(SDK_C_SOURCES)))
 
 # CXX
 CXX_OBJECTS =          $(addprefix $(BUILD_DIR)/core/,$(notdir $(CXX_SOURCES:.cpp=.o) ))
@@ -724,9 +728,9 @@ $(BUILD_DIR)/%.o: %.s Makefile.common Makefile $(BUILD_DIR)/config.h | $(BUILD_D
 	$(V)$(ECHO) [ AS ] $(notdir $<)
 	$(V)$(AS) -c $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) $(TAMP_OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(TGBDUAL_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(CXX_OBJECTS) $(TGBDUAL_CXX_OBJECTS) Makefile.common Makefile $(LDSCRIPT)
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) $(TAMP_OBJECTS) $(A7800_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(TGBDUAL_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(CXX_OBJECTS) $(TGBDUAL_CXX_OBJECTS) $(ZELDA3_OBJECTS) $(SMW_OBJECTS) Makefile.common Makefile $(LDSCRIPT)
 	$(V)$(ECHO) [ LD ] $(notdir $@)
-	$(V)$(CC) $(OBJECTS) $(A7800_OBJECTS) $(TAMP_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(TGBDUAL_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(CXX_OBJECTS) $(TGBDUAL_CXX_OBJECTS) $(LDFLAGS) -o $@
+	$(V)$(CC) $(OBJECTS) $(A7800_OBJECTS) $(TAMP_OBJECTS) $(NES_OBJECTS) $(NES_FCEU_OBJECTS) $(GNUBOY_OBJECTS) $(TGBDUAL_OBJECTS) $(SMSPLUSGX_OBJECTS) $(PCE_OBJECTS) $(MSX_OBJECTS) $(GW_OBJECTS) $(WSV_OBJECTS) $(MD_OBJECTS) $(AMSTRAD_OBJECTS) $(CXX_OBJECTS) $(TGBDUAL_CXX_OBJECTS) $(ZELDA3_OBJECTS) $(SMW_OBJECTS) $(LDFLAGS) -o $@
 	$(V)./scripts/extflash_size.sh $@
 
 $(BUILD_DIR)/core/%.o: %.c Makefile.common Makefile $(SDK_HEADERS) $(BUILD_DIR)/config.h | $(BUILD_DIR)
@@ -794,6 +798,134 @@ $(BUILD_DIR)/tgbdual/%.o: %.cpp Makefile Makefile.common $(SDK_HEADERS) $(BUILD_
 	$(V)$(ECHO) [ CXX GB TGB Dual ] $(notdir $<)
 	$(V)$(CXX) -c $(CXXFLAGS) $(TGBDUAL_C_INCLUDES) -Wa,-a,-ad,-alms=$(BUILD_DIR)/tgbdual/$(notdir $(<:.cpp=.lst)) $< -o $@
 
+# Zelda3 configuration
+
+# Limit to 30 fps for improved stability
+ZELDA3_LIMIT_30FPS ?= 1
+
+# Increase UI speed (item menu, etc.)
+ZELDA3_FASTER_UI ?= 1
+
+# Display battery indicator in item menu
+ZELDA3_BATTERY_INDICATOR ?= 1
+
+# Item switch on L/R. Also allows reordering of items in inventory by pressing Y+direction.
+# Hold X, L, or R inside of the item selection screen to assign items to those buttons.
+# If X is reassigned, Select opens the map. Push Select while paused to save or quit.
+# When L or R are assigned items, those buttons will no longer cycle items.
+ZELDA3_FEATURE_SWITCH_LR ?= 0
+# Allow turning while dashing
+ZELDA3_FEATURE_TURN_WHILE_DASHING ?= 0
+# Allow mirror to be used to warp to the Dark World
+ZELDA3_FEATURE_MIRROR_TO_DARK_WORLD ?= 0
+# Collect items (like hearts) with sword instead of having to touch them
+ZELDA3_FEATURE_COLLECT_ITEMS_WITH_SWORD ?= 0
+# Level 2-4 sword can be used to break pots
+ZELDA3_FEATURE_BREAK_POTS_WITH_SWORD ?= 0
+# Disable the low health beep
+ZELDA3_FEATURE_DISABLE_LOW_HEALTH_BEEP ?= 0
+# Avoid waiting too much at the start
+ZELDA3_FEATURE_SKIP_INTRO_ON_KEYPRESS ?= 1
+# Display max rupees/bombs/arrows with orange/yellow color
+ZELDA3_FEATURE_SHOW_MAX_ITEMS_IN_YELLOW ?= 0
+# Allows up to four bombs active at a time instead of two.
+ZELDA3_FEATURE_MORE_ACTIVE_BOMBS ?= 0
+# Can carry 9999 rupees instead of 999
+ZELDA3_FEATURE_CARRY_MORE_RUPEES ?= 0
+# Enable various zelda bug fixes
+ZELDA3_FEATURE_MISC_BUG_FIXES ?= 0
+# Allow bird travel to be cancelled by hitting the X key
+ZELDA3_FEATURE_CANCEL_BIRD_TRAVEL ?= 0
+# Enable some more advanced zelda bugfixes that change game behavior
+ZELDA3_FEATURE_GAME_CHANGING_BUG_FIXES ?= 0
+# Enable this to limit the ItemSwitchLR item cycling to the first 4 items.
+ZELDA3_FEATURE_SWITCH_LR_LIMIT ?= 0
+
+ZELDA3_FEATURES := 0
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_SWITCH_LR) << 1 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_TURN_WHILE_DASHING) << 2 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_MIRROR_TO_DARK_WORLD) << 3 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_COLLECT_ITEMS_WITH_SWORD) << 4 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_BREAK_POTS_WITH_SWORD) << 5 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_DISABLE_LOW_HEALTH_BEEP) << 6 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_SKIP_INTRO_ON_KEYPRESS) << 7 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_SHOW_MAX_ITEMS_IN_YELLOW) << 8 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_MORE_ACTIVE_BOMBS) << 9 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_CARRY_MORE_RUPEES) << 11 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_MISC_BUG_FIXES) << 12 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_CANCEL_BIRD_TRAVEL) << 13 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_GAME_CHANGING_BUG_FIXES) << 14 ))")
+ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_SWITCH_LR_LIMIT) << 15 ))")
+
+
+# C defines for zelda3
+C_DEFS_ZELDA3 =  \
+-DHEADLESS \
+-DLIMIT_30FPS=$(ZELDA3_LIMIT_30FPS) \
+-DDIALOGUES_LANGUAGE=us \
+-DFEATURES=$(ZELDA3_FEATURES) \
+-DFASTER_UI=$(ZELDA3_FASTER_UI) \
+-DBATTERY_INDICATOR=$(ZELDA3_BATTERY_INDICATOR) \
+
+# function used to generate prerequisite rules for zelda3 objects
+define zelda3_obj_prereq_gen
+$$(BUILD_DIR)/zelda3/$(patsubst %.c,%.o,$(notdir $1)): $1 Makefile.common Makefile $$(SDK_HEADERS) $$(BUILD_DIR)/config.h | $$(BUILD_DIR)
+	$$(V)$$(ECHO) [ CC zelda3 CPC ] $$(notdir $$<)
+	$$(V)$$(CC) -c $$(CFLAGS) $$(C_DEFS_ZELDA3) $$(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$$(BUILD_DIR)/zelda3/$$(notdir $$(<:.c=.lst)) $$< -o $$@
+	$$(CP) --redefine-syms=zelda3_redefines $$@
+
+endef
+# note: the blank line above is intentional
+
+# generate all zelda3 object prerequisite rules
+$(eval $(foreach obj,$(ZELDA3_C_SOURCES),$(call zelda3_obj_prereq_gen,$(obj))))
+
+Core/Src/porting/zelda3/zelda_assets.c: scripts/zelda3/update_assets.py zelda3/tables/zelda3_assets.dat | $(BUILD_DIR)
+	$(PYTHON3) ./scripts/zelda3/update_assets.py
+
+zelda3/tables/zelda3_assets.dat: roms/zelda3/zelda3.sfc | $(BUILD_DIR)
+	cp $< zelda3/tables/zelda3.sfc
+	$(MAKE) -C zelda3 tables/zelda3_assets.dat
+
+
+# SMW configuration
+
+# Limit to 30 fps for improved stability
+SMW_LIMIT_30FPS ?= 1
+
+# Save to SRAM after each beaten level (instead of saving after castle is beaten).
+# SRAM save remains valid/compatible with emulators.
+SMW_FEATURE_SAVE_AFTER_EACH_BEATEN_LEVEL ?= 0
+
+SMW_FEATURES := 0
+SMW_FEATURES := $(shell echo "$$(( $(SMW_FEATURES) | $(SMW_FEATURE_SAVE_AFTER_EACH_BEATEN_LEVEL) << 0 ))")
+
+# C defines for smw
+C_DEFS_SMW =  \
+-DHEADLESS \
+-DLIMIT_30FPS=$(SMW_LIMIT_30FPS) \
+-DFEATURES=$(SMW_FEATURES) \
+
+# function used to generate prerequisite rules for smw objects
+define smw_obj_prereq_gen
+$$(BUILD_DIR)/smw/$(patsubst %.c,%.o,$(notdir $1)): $1 Makefile.common Makefile $$(SDK_HEADERS) $$(BUILD_DIR)/config.h | $$(BUILD_DIR)
+	$$(V)$$(ECHO) [ CC smw CPC ] $$(notdir $$<)
+	$$(V)$$(CC) -c $$(CFLAGS) $$(C_DEFS_SMW) $$(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$$(BUILD_DIR)/smw/$$(notdir $$(<:.c=.lst)) $$< -o $$@
+	$$(CP) --redefine-syms=smw_redefines $$@
+
+endef
+# note: the blank line above is intentional
+
+# generate all smw object prerequisite rules
+$(eval $(foreach obj,$(SMW_C_SOURCES),$(call smw_obj_prereq_gen,$(obj))))
+
+Core/Src/porting/smw/smw_assets.c: scripts/smw/update_assets.py smw/smw_assets.dat | $(BUILD_DIR)
+	$(PYTHON3) ./scripts/smw/update_assets.py
+
+smw/smw_assets.dat: roms/smw/smw.sfc | $(BUILD_DIR)
+	cp $< smw/assets/smw.sfc
+	$(MAKE) -C smw smw_assets.dat
+
 $(BUILD_DIR):
 	$(V)mkdir $@
 	$(V)mkdir $@/tamp
@@ -810,6 +942,8 @@ $(BUILD_DIR):
 	$(V)mkdir $@/md
 	$(V)mkdir $@/a7800
 	$(V)mkdir $@/amstrad
+	$(V)mkdir $@/zelda3
+	$(V)mkdir $@/smw
 
 #######################################
 # Flashing
@@ -1047,6 +1181,12 @@ download_sdk: $(SDK_HEADERS) $(SDK_C_SOURCES) $(SDK_ASM_SOURCES)
 clean:
 	$(V)$(ECHO) [ RM ] $(BUILD_DIR)
 	$(V)-rm -fR $(BUILD_DIR)
+	$(V)-rm -fR Core/Src/porting/zelda3/zelda_assets.c
+	$(V)-rm -fR zelda3/tables/zelda3.sfc
+	$(V)$(MAKE) -C zelda3 clean
+	$(V)-rm -fR Core/Src/porting/smw/smw_assets.c
+	$(V)-rm -fR smw/assets/smw.sfc
+	$(V)$(MAKE) -C smw clean
 
 distclean: clean
 	$(V)$(ECHO) [ RM ] $(SDK_DIR)

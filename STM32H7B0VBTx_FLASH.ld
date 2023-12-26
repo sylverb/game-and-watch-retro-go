@@ -238,6 +238,8 @@ SECTIONS
     __extflash_game_rom_start__ = .;
     *(.extflash_game_rom)
     __extflash_game_rom_end__ = .;
+    INCLUDE build/zelda3_extflash.ld
+    INCLUDE build/smw_extflash.ld
   } > EXTFLASH
 
   .overlay_nes __RAM_EMU_START__ : {
@@ -514,6 +516,49 @@ SECTIONS
   }
   _OVERLAY_AMSTRAD_BSS_SIZE = SIZEOF(.overlay_amstrad_bss);
 
+  .overlay_zelda3 __RAM_EMU_START__ : {
+    . = ALIGN(4);
+    __ram_emu_zelda3_start__ = .;
+    build/zelda3/*.o (.data .data* .text .text* .rodata .rodata*)
+    . = ALIGN(4);
+    _OVERLAY_ZELDA3_LOAD_END = .;
+  } AT> EXTFLASH
+  _OVERLAY_ZELDA3_LOAD_START = LOADADDR(.overlay_zelda3);
+  _OVERLAY_ZELDA3_SIZE = SIZEOF(.overlay_zelda3);
+
+  .overlay_zelda3_bss _OVERLAY_ZELDA3_LOAD_END : {
+    . = ALIGN(4);
+    _OVERLAY_ZELDA3_BSS_START = .;
+    build/zelda3/*.o (.bss .bss*)
+    . = ALIGN(4);
+    build/zelda3/*.o (COMMON)
+    __ram_emu_zelda3_end__ = .;
+    _OVERLAY_ZELDA3_BSS_END = .;
+    ASSERT(ABSOLUTE(_OVERLAY_ZELDA3_BSS_END) < __RAM_EMU_END__, "Error: ZELDA3 BSS overflow");
+  }
+  _OVERLAY_ZELDA3_BSS_SIZE = SIZEOF(.overlay_zelda3_bss);
+
+  .overlay_smw __RAM_EMU_START__ : {
+    . = ALIGN(4);
+    __ram_emu_smw_start__ = .;
+    build/smw/*.o (.data .data* .text .text* .rodata .rodata*)
+    . = ALIGN(4);
+    _OVERLAY_SMW_LOAD_END = .;
+  } AT> EXTFLASH
+  _OVERLAY_SMW_LOAD_START = LOADADDR(.overlay_smw);
+  _OVERLAY_SMW_SIZE = SIZEOF(.overlay_smw);
+
+  .overlay_smw_bss _OVERLAY_SMW_LOAD_END : {
+    . = ALIGN(4);
+    _OVERLAY_SMW_BSS_START = .;
+    build/smw/*.o (.bss .bss*)
+    . = ALIGN(4);
+    build/smw/*.o (COMMON)
+    __ram_emu_smw_end__ = .;
+    _OVERLAY_SMW_BSS_END = .;
+    ASSERT(ABSOLUTE(_OVERLAY_SMW_BSS_END) < __RAM_EMU_END__, "Error: SMW BSS overflow");
+  }
+  _OVERLAY_SMW_BSS_SIZE = SIZEOF(.overlay_smw_bss);
 
   /* Place this symbol after the last overlay definition */
   .overlay_end : {

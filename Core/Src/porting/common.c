@@ -639,3 +639,59 @@ bool common_sleep_while_lcd_swap_pending() {
 
     return pending;
 }
+
+#define OVERLAY_COLOR_565 0xFFFF
+#define BORDER_COLOR_565 0x1082  // Dark Dark Gray
+
+#define BORDER_HEIGHT 240
+#define BORDER_WIDTH 32
+
+#define BORDER_Y_OFFSET (((GW_LCD_HEIGHT) - (BORDER_HEIGHT)) / 2)
+
+void draw_border_zelda3(pixel_t * fb){
+    uint32_t start, bit_index;
+    start = 0;
+    bit_index = 0;
+    for(uint16_t i=0; i < BORDER_HEIGHT; i++){
+        uint32_t offset = start + i * GW_LCD_WIDTH;
+        for(uint8_t j=0; j < BORDER_WIDTH; j++){
+            fb[offset + j] = 
+                (IMG_BORDER_ZELDA3[bit_index >> 3] << (bit_index & 0x07)) & 0x80 ? BORDER_COLOR_565 : 0x0000;
+            bit_index++;
+        }
+    }
+    start = 32 + 256;
+    bit_index = 0;
+    for(uint16_t i=0; i < BORDER_HEIGHT; i++){
+        uint32_t offset = start + i * GW_LCD_WIDTH;
+        for(uint8_t j=0; j < BORDER_WIDTH; j++){
+            fb[offset + j] = 
+                (IMG_BORDER_ZELDA3[bit_index >> 3] << (bit_index & 0x07)) & 0x80 ? BORDER_COLOR_565 : 0x0000;
+            bit_index++;
+        }
+    }
+}
+
+void draw_border_smw(pixel_t * fb){
+    uint32_t start, bit_index;
+    start = 0;
+    bit_index = 0;
+    for(uint16_t i=0; i < BORDER_HEIGHT; i++){
+        uint32_t offset = start + i * GW_LCD_WIDTH;
+        for(uint8_t j=0; j < BORDER_WIDTH; j++){
+            fb[offset + j] = 
+                (IMG_BORDER_LEFT_SMW[bit_index >> 3] << (bit_index & 0x07)) & 0x80 ? BORDER_COLOR_565 : 0x0000;
+            bit_index++;
+        }
+    }
+    start = 32 + 256;
+    bit_index = 0;
+    for(uint16_t i=0; i < BORDER_HEIGHT; i++){
+        uint32_t offset = start + i * GW_LCD_WIDTH;
+        for(uint8_t j=0; j < BORDER_WIDTH; j++){
+            fb[offset + j] = 
+                (IMG_BORDER_RIGHT_SMW[bit_index >> 3] << (bit_index & 0x07)) & 0x80 ? BORDER_COLOR_565 : 0x0000;
+            bit_index++;
+        }
+    }
+}

@@ -590,6 +590,75 @@ Core/Src/porting/amstrad/amstrad_video8bpp.c
 
 TAMP_C_INCLUDES += -I$(TAMP_DIR)
 
+ifneq ("$(wildcard roms/zelda3/zelda3.sfc)","")
+ZELDA3_C_SOURCES = \
+zelda3/zelda_rtl.c \
+zelda3/misc.c \
+zelda3/nmi.c \
+zelda3/poly.c \
+zelda3/attract.c \
+zelda3/snes/ppu.c \
+zelda3/snes/dma.c \
+zelda3/spc_player.c \
+zelda3/util.c \
+zelda3/audio.c \
+zelda3/overworld.c \
+zelda3/ending.c \
+zelda3/select_file.c \
+zelda3/dungeon.c \
+zelda3/messaging.c \
+zelda3/hud.c \
+zelda3/load_gfx.c \
+zelda3/ancilla.c \
+zelda3/player.c \
+zelda3/sprite.c \
+zelda3/player_oam.c \
+zelda3/snes/dsp.c \
+zelda3/sprite_main.c \
+zelda3/tagalong.c \
+zelda3/third_party/opus-1.3.1-stripped/opus_decoder_amalgam.c \
+zelda3/tile_detect.c \
+zelda3/overlord.c \
+Core/Src/porting/zelda3/main_zelda3.c \
+Core/Src/porting/zelda3/zelda_assets.c
+else
+ZELDA3_C_SOURCES = 
+endif
+
+ifneq ("$(wildcard roms/smw/smw.sfc)","")
+SMW_C_SOURCES = \
+smw/src/smw_rtl.c \
+smw/src/smw_00.c \
+smw/src/smw_01.c \
+smw/src/smw_02.c \
+smw/src/smw_03.c \
+smw/src/smw_04.c \
+smw/src/smw_05.c \
+smw/src/smw_07.c \
+smw/src/smw_0c.c \
+smw/src/smw_0d.c \
+smw/src/smw_cpu_infra.c \
+smw/src/smw_spc_player.c \
+smw/src/config.c \
+smw/src/common_rtl.c \
+smw/src/common_cpu_infra.c \
+smw/src/util.c \
+smw/src/lm.c \
+smw/src/snes/ppu.c \
+smw/src/snes/dma.c \
+smw/src/snes/dsp.c \
+smw/src/snes/apu.c \
+smw/src/snes/spc.c \
+smw/src/snes/snes.c \
+smw/src/snes/cpu.c \
+smw/src/snes/cart.c \
+smw/src/tracing.c \
+Core/Src/porting/smw/main_smw.c \
+Core/Src/porting/smw/smw_assets.c
+else
+SMW_C_SOURCES = 
+endif
+
 GNUBOY_C_INCLUDES +=  \
 -ICore/Inc \
 -ICore/Src/porting/lib \
@@ -734,12 +803,28 @@ AMSTRAD_C_INCLUDES +=  \
 -Icaprice32-go/cap32 \
 -I./
 
+ZELDA3_C_INCLUDES +=  \
+-ICore/Inc \
+-ICore/Src/porting/lib \
+-ICore/Src/porting/lib/lzma \
+-Iretro-go-stm32/components/odroid \
+-Izelda3/ \
+-I./
+
+SMW_C_INCLUDES +=  \
+-ICore/Inc \
+-ICore/Src/porting/lib \
+-ICore/Src/porting/lib/lzma \
+-Iretro-go-stm32/components/odroid \
+-Ismw/ \
+-I./
+
 include Makefile.common
 
 
 $(BUILD_DIR)/$(TARGET)_extflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)
-	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_tgb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad $< $(BUILD_DIR)/$(TARGET)_extflash.bin
+	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_tgb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 -j .overlay_smw $< $(BUILD_DIR)/$(TARGET)_extflash.bin
 
 $(BUILD_DIR)/$(TARGET)_intflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)
