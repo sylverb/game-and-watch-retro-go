@@ -485,6 +485,7 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
         common_emu_state.pause_after_frames = 0;
     }
     common_emu_state.frame_time_10us = (uint16_t)(100000 / WSV_FPS + 0.5f);
+    lcd_set_refresh_rate(50);
 
     video_frame.buffer = wsv_framebuffer;
     memset(framebuffer1, 0, sizeof(framebuffer1));

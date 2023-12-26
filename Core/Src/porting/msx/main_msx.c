@@ -447,6 +447,7 @@ static bool update_frequency_cb(odroid_dialog_choice_t *option, odroid_dialog_ev
                 vdpSetSyncMode(VDP_SYNC_AUTO);
                 break;
             case FREQUENCY_VDP_50HZ: // Force 50Hz;
+                lcd_set_refresh_rate(FPS_PAL);
                 msx_fps = 50;
                 common_emu_state.frame_time_10us = (uint16_t)(100000 / FPS_PAL + 0.5f);
                 memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
@@ -456,6 +457,7 @@ static bool update_frequency_cb(odroid_dialog_choice_t *option, odroid_dialog_ev
                 vdpSetSyncMode(VDP_SYNC_50HZ);
                 break;
             case FREQUENCY_VDP_60HZ: // Force 60Hz;
+                lcd_set_refresh_rate(FPS_NTSC);
                 msx_fps = 60;
                 common_emu_state.frame_time_10us = (uint16_t)(100000 / FPS_NTSC + 0.5f);
                 memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
@@ -1756,6 +1758,8 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
         if ((selected_frequency_index == FREQUENCY_VDP_AUTO) && (msx_fps != boardInfo.getRefreshRate())) {
             // Update ressources to switch system frequency
             msx_fps = boardInfo.getRefreshRate();
+            lcd_set_refresh_rate(msx_fps);
+
             common_emu_state.frame_time_10us = (uint16_t)(100000 / msx_fps + 0.5f);
             memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
             HAL_SAI_DMAStop(&hsai_BlockA1);

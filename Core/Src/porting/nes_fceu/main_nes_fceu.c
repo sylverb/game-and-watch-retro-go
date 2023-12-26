@@ -1058,9 +1058,11 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
 
     HAL_SAI_DMAStop(&hsai_BlockA1);
     if (FSettings.PAL) {
+        lcd_set_refresh_rate(50);
         common_emu_state.frame_time_10us = (uint16_t)(100000 / 50 + 0.5f);
         samplesPerFrame = sndsamplerate / 50;
     } else {
+        lcd_set_refresh_rate(60);
         common_emu_state.frame_time_10us = (uint16_t)(100000 / 60 + 0.5f);
         samplesPerFrame = sndsamplerate / 60;
     }
