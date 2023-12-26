@@ -1124,7 +1124,6 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
         FCEUI_Emulate(&gfx, &sound, &ssize, !drawFrame);
         if (drawFrame)
         {
-            common_sleep_while_lcd_swap_pending();
             _blit();
             lcd_swap();
         }

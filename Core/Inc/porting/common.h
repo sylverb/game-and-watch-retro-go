@@ -92,12 +92,6 @@ extern common_emu_state_t common_emu_state;
 void common_ingame_overlay(void);
 
 /**
- * Will go to sleep and wait for an interrupt to save power while lcd swap is pending.
- * The LCD controller will generate an interrupt when the swap has been completed.
- */
-bool common_sleep_while_lcd_swap_pending(void);
-
-/**
  * Draw border screen for Zelda 3 when not full screen.
  */
 void draw_border_zelda3(pixel_t * fb);
