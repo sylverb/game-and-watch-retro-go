@@ -22,11 +22,9 @@ static void set_ingame_overlay(ingame_overlay_t type);
 
 cpumon_stats_t cpumon_stats = {0};
 
-uint32_t audioBuffer[AUDIO_BUFFER_LENGTH];
 uint32_t audio_mute;
 
 
-int16_t pendingSamples = 0;
 int16_t audiobuffer_dma[AUDIO_BUFFER_LENGTH * 2] __attribute__((section (".audio")));
 
 dma_transfer_state_t dma_state;
