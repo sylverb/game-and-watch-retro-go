@@ -660,7 +660,7 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, int8_t save_slot) {
         pce_pcm_submit();
 
         if(!common_emu_state.skip_frames){
-            dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
+            static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
             for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
                 while (dma_state == last_dma_state) {
                     cpumon_sleep();
