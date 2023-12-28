@@ -27,6 +27,7 @@
 #include "lzma.h"
 #include "rg_i18n.h"
 #include "filesystem.h"
+#include "gui.h"
 
 //#define PCE_SHOW_DEBUG
 //#define XBUF_WIDTH 	(480 + 32)
@@ -524,11 +525,11 @@ void blit() {
 
 void pce_osd_gfx_blit() {
 #ifdef PCE_SHOW_DEBUG
-    uint32_t currentTime = HAL_GetTick();
-    uint32_t delta = currentTime - lastFPSTime;
     static uint32_t frames = 0;
     static uint32_t lastFPSTime = 0;
     static int framePerSecond=0;
+    uint32_t currentTime = HAL_GetTick();
+    uint32_t delta = currentTime - lastFPSTime;
     frames++;
     if (delta >= 1000) {
         framePerSecond = (10000 * frames) / delta;
@@ -541,9 +542,9 @@ void pce_osd_gfx_blit() {
     blit();
 
 #ifdef PCE_SHOW_DEBUG
-    char debugMsg[100];
+    char debugMsg[200];
     sprintf(debugMsg,"FPS:%d.%d,W:%d,H:%d,L:%s", framePerSecond / 10,framePerSecond % 10,current_width,current_height,pce_log);
-    odroid_overlay_draw_text(0,0, GW_LCD_WIDTH, debugMsg,  curr_colors->sel_c, curr_colors->main_c);
+    odroid_overlay_draw_text(0,0, GW_LCD_WIDTH, debugMsg, curr_colors->sel_c, curr_colors->main_c);
 #endif
     lcd_swap();
 }
