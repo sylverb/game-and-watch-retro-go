@@ -33,7 +33,9 @@
 	url = https://github.com/sylverb/tgbdual-go.git
 [submodule "zelda3"]
 	path = zelda3
-	url = https://github.com/marian-m12l/zelda3.git
+	url = https://github.com/sylverb/zelda3.git
+	branch = filesystem
 [submodule "smw"]
 	path = smw
-	url = https://github.com/marian-m12l/smw.git
+	url = https://github.com/sylverb/smw.git
+	branch = filesystem

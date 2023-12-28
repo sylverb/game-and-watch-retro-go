@@ -870,7 +870,7 @@ C_DEFS_ZELDA3 =  \
 # function used to generate prerequisite rules for zelda3 objects
 define zelda3_obj_prereq_gen
 $$(BUILD_DIR)/zelda3/$(patsubst %.c,%.o,$(notdir $1)): $1 Makefile.common Makefile $$(SDK_HEADERS) $$(BUILD_DIR)/config.h | $$(BUILD_DIR)
-	$$(V)$$(ECHO) [ CC zelda3 CPC ] $$(notdir $$<)
+	$$(V)$$(ECHO) [ CC zelda3 ] $$(notdir $$<)
 	$$(V)$$(CC) -c $$(CFLAGS) $$(C_DEFS_ZELDA3) $$(ZELDA3_C_INCLUDES) -Wa,-a,-ad,-alms=$$(BUILD_DIR)/zelda3/$$(notdir $$(<:.c=.lst)) $$< -o $$@
 	$$(CP) --redefine-syms=zelda3_redefines $$@
 
@@ -909,7 +909,7 @@ C_DEFS_SMW =  \
 # function used to generate prerequisite rules for smw objects
 define smw_obj_prereq_gen
 $$(BUILD_DIR)/smw/$(patsubst %.c,%.o,$(notdir $1)): $1 Makefile.common Makefile $$(SDK_HEADERS) $$(BUILD_DIR)/config.h | $$(BUILD_DIR)
-	$$(V)$$(ECHO) [ CC smw CPC ] $$(notdir $$<)
+	$$(V)$$(ECHO) [ CC smw ] $$(notdir $$<)
 	$$(V)$$(CC) -c $$(CFLAGS) $$(C_DEFS_SMW) $$(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$$(BUILD_DIR)/smw/$$(notdir $$(<:.c=.lst)) $$< -o $$@
 	$$(CP) --redefine-syms=smw_redefines $$@
 

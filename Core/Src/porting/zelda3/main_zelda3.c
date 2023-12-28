@@ -10,7 +10,6 @@
 #include "gw_lcd.h"
 #include "gw_linker.h"
 #include "gw_buttons.h"
-#include "gw_flash.h"
 #include "lzma.h"
 #include "bq24072.h"
 
@@ -56,11 +55,6 @@ static uint32 renderedFrameCtr = 0;
 #define ZELDA3_AUDIO_BUFFER_LENGTH_DMA (2 * ZELDA3_AUDIO_BUFFER_LENGTH) // DMA buffer contains 2 frames worth of audio samples in a ring buffer
 
 int16_t audiobuffer_zelda3[ZELDA3_AUDIO_BUFFER_LENGTH];  // FIXME use audioBuffer from common.h instead???
-
-uint8_t savestateBuffer[4096];
-uint16_t bufferCount = 0;
-uint32_t dstPos = 0;
-uint8_t* save_address;
 
 const uint8 *g_asset_ptrs[kNumberOfAssets];
 uint32 g_asset_sizes[kNumberOfAssets];
@@ -185,111 +179,79 @@ static void HandleCommand(uint32 j, bool pressed) {
     g_turbo = pressed;
     return;
   }*/
-
-
-  if (j == kKeys_Load) {
-    // Mute
-    for (int i = 0; i < ZELDA3_AUDIO_BUFFER_LENGTH_DMA; i++) {
-        audiobuffer_dma[i] = 0;
-    }
-    SaveLoadSlot(kSaveLoad_Load, save_address);
-  } else if (j == kKeys_Save) {
-    // Mute
-    for (int i = 0; i < ZELDA3_AUDIO_BUFFER_LENGTH_DMA; i++) {
-        audiobuffer_dma[i] = 0;
-    }
-    SaveLoadSlot(kSaveLoad_Save, save_address);
-  }
 }
+
+static fs_file_t *savestate_file;
+static char savestate_path[255];
 
 void writeSaveStateInitImpl() {
-  dstPos = 0;
-  bufferCount = 0;
+  savestate_file = fs_open(savestate_path, FS_WRITE, FS_COMPRESS);
 }
 void writeSaveStateImpl(uint8_t* data, size_t size) {
-  uint32_t srcPos = 0;
-  size_t remaining = size;
-  if (bufferCount > 0) {
-    size_t a = 4096 - bufferCount;
-    size_t b = size;
-    size_t bufferPad = a < b ? a : b;
-    memcpy(savestateBuffer + bufferCount, data, bufferPad);
-    bufferCount += bufferPad;
-    remaining -= bufferPad;
-    srcPos += bufferPad;
-    if (bufferCount == 4096) {
-      store_save(save_address + dstPos, savestateBuffer, 4096);
-      dstPos += 4096;
-      bufferCount = 0;
-    }
-  }
-  while (remaining >= 4096) {
-    store_save(save_address + dstPos, data + srcPos, 4096);
-    dstPos += 4096;
-    srcPos += 4096;
-    remaining -= 4096;
-    wdog_refresh();
-  }
-  if (remaining > 0) {
-    memcpy(savestateBuffer, data + srcPos, remaining);
-    bufferCount += remaining;
-  }
+  if (savestate_file)
+    fs_write(savestate_file, data, size);
 }
 void writeSaveStateFinalizeImpl() {
-  if (bufferCount > 0) {
-    store_save(save_address + dstPos, savestateBuffer, bufferCount);
-    dstPos += bufferCount;
-    bufferCount = 0;
+  if (savestate_file) {
+    fs_close(savestate_file);
+    savestate_file = NULL;
   }
-  writeSaveStateInitImpl();
+}
+
+void readSaveStateInitImpl() {
+  savestate_file = fs_open(savestate_path, FS_READ, FS_COMPRESS);
+}
+void readSaveStateImpl(uint8_t* data, size_t size) {
+  if (savestate_file != NULL) {
+    fs_read(savestate_file, data, size);
+  } else {
+    memset(data, 0, size);
+  }
+}
+void readSaveStateFinalizeImpl() {
+  if (savestate_file != NULL) {
+    fs_close(savestate_file);
+    savestate_file = NULL;
+  }
 }
 
 static bool zelda3_system_SaveState(char *pathName) {
   printf("Saving state...\n");
   printf("%s\n",pathName);
-
-#if OFF_SAVESTATE==1
-//  if (strcmp(pathName,"1") == 0) {
-    // Save in common save slot (during a power off)
-//    save_address = (unsigned char *)&__OFFSAVEFLASH_START__;
-//  } else {
-#endif
-//    save_address = (unsigned char *)ACTIVE_FILE->save_address;
-#if OFF_SAVESTATE==1
-//  }
-#endif
-//  HandleCommand(kKeys_Save, true);
+  odroid_audio_mute(true);
+  strcpy(savestate_path, pathName);
+  SaveLoadSlot(kSaveLoad_Save, 0);
   printf("Saved state\n");
   return true;
 }
 
 static bool zelda3_system_LoadState(char *pathName) {
   printf("Loading state...\n");
-//  save_address = (unsigned char *)ACTIVE_FILE->save_address;
-//  HandleCommand(kKeys_Load, true);
+  odroid_audio_mute(true);
+  strcpy(savestate_path, pathName);
+  SaveLoadSlot(kSaveLoad_Load, 0);
   return true;
 }
 
-// FIXME no support for SRAM saves ???
-uint8_t* readSramImpl() {
-  uint8_t *zelda_sram = (uint8_t *)lcd_get_inactive_buffer();
-  char *pathName = "savestate/zelda3/zelda3.srm";
+void readSramImpl(uint8_t* sram) {
+  /*
+  char *pathName = "savestate/zelda3/zelda3/0.srm";
   fs_file_t *file;
-  file = fs_open(pathName, FS_READ, FS_RAW);
+  file = fs_open(pathName, FS_READ, FS_COMPRESS);
   if (file != NULL) {
-    fs_read(file, zelda_sram, 8192);
+    fs_read(file, sram, 8192);
     fs_close(file);
-    return zelda_sram;
   }
-
-  return NULL;
+  */
 }
 void writeSramImpl(uint8_t* sram) {
-  char *pathName = "savestate/zelda3/zelda3.srm";
+  /*
+  char *pathName = "savestate/zelda3/zelda3/0.srm";
   fs_file_t *file;
-  file = fs_open(pathName, FS_WRITE, FS_RAW);
+  file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
   fs_write(file, sram, 8192);
   fs_close(file);
+  */
 }
 
 static void zelda3_sound_start()
