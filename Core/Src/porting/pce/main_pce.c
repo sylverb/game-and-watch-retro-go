@@ -27,6 +27,7 @@
 #include "appid.h"
 #include "lzma.h"
 #include "rg_i18n.h"
+#include "gui.h"
 
 //#define PCE_SHOW_DEBUG
 //#define XBUF_WIDTH 	(480 + 32)
@@ -529,11 +530,11 @@ void blit() {
 
 void pce_osd_gfx_blit() {
 #ifdef PCE_SHOW_DEBUG
-    uint32_t currentTime = HAL_GetTick();
-    uint32_t delta = currentTime - lastFPSTime;
     static uint32_t frames = 0;
     static uint32_t lastFPSTime = 0;
     static int framePerSecond=0;
+    uint32_t currentTime = HAL_GetTick();
+    uint32_t delta = currentTime - lastFPSTime;
     frames++;
     if (delta >= 1000) {
         framePerSecond = (10000 * frames) / delta;
@@ -546,9 +547,9 @@ void pce_osd_gfx_blit() {
     blit();
 
 #ifdef PCE_SHOW_DEBUG
-    char debugMsg[100];
+    char debugMsg[200];
     sprintf(debugMsg,"FPS:%d.%d,W:%d,H:%d,L:%s", framePerSecond / 10,framePerSecond % 10,current_width,current_height,pce_log);
-    odroid_overlay_draw_text(0,0, GW_LCD_WIDTH, debugMsg,  curr_colors->sel_c, curr_colors->main_c);
+    odroid_overlay_draw_text(0,0, GW_LCD_WIDTH, debugMsg, curr_colors->sel_c, curr_colors->main_c);
 #endif
     lcd_swap();
 }
@@ -674,7 +675,7 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, uint8_t save_slot) {
         pce_pcm_submit();
 
         if(!common_emu_state.skip_frames){
-            dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
+            static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
             for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
                 while (dma_state == last_dma_state) {
                     cpumon_sleep();
