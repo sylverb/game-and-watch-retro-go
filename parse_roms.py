@@ -1075,7 +1075,16 @@ class ROMParser:
         romdef.setdefault('wsv', {})
         romdef.setdefault('a7800', {})
         romdef.setdefault('amstrad', {})
-        romdef.setdefault('zelda3', {'zelda3': {'embed': '0'}})
+        romdef.setdefault('zelda3', {
+            'zelda3': {'embed': '0'},
+            'zelda3_de': {'publish': '0'},
+            'zelda3_fr': {'publish': '0'},
+            'zelda3_es': {'publish': '0'},
+            'zelda3_pl': {'publish': '0'},
+            'zelda3_pt': {'publish': '0'},
+            'zelda3_nl': {'publish': '0'},
+            'zelda3_sv': {'publish': '0'},
+        })
         romdef.setdefault('smw', {'smw': {'embed': '0'}})
 
         system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
