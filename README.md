@@ -462,6 +462,20 @@ Some features can be configured with flags:
 | `FEATURE_GAME_CHANGING_BUG_FIXES` | Enable some more advanced zelda bugfixes that change game behavior. |
 | `FEATURE_SWITCH_LR_LIMIT` | Enable this to limit the ItemSwitchLR item cycling to the first 4 items. |
 
+#### Alternate languages
+
+By default, dialogues extracted from the US ROM are in english. You can replace dialogues with another language by adding a localized ROM file. Supported alternate languages are:
+
+| Language | Origin | Naming | SHA1 hash |
+| -------- | ------ | ------ | --------- |
+| German   | Original | zelda3_de.sfc | 2E62494967FB0AFDF5DA1635607F9641DF7C6559 |
+| French   | Original | zelda3_fr.sfc | 229364A1B92A05167CD38609B1AA98F7041987CC |
+| Spanish  | Romhack | zelda3_es.sfc | 461FCBD700D1332009C0E85A7A136E2A8E4B111E |
+| Polish   | Romhack | zelda3_pl.sfc | 3C4D605EEFDA1D76F101965138F238476655B11D |
+| Portuguese | Romhack | zelda3_pt.sfc | D0D09ED41F9C373FE6AFDCCAFBF0DA8C88D3D90D |
+| Dutch    | Romhack | zelda3_nl.sfc | FA8ADFDBA2697C9A54D583A1284A22AC764C7637 |
+| Swedish  | Romhack | zelda3_sv.sfc | 43CD3438469B2C3FE879EA2F410B3EF3CB3F1CA4 |
+
 ### Super Mario World
 
 To enable this port, copy the SNES ROM (US version) to `roms/smw/smw.sfc`.
