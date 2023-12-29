@@ -289,9 +289,10 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
   odroid_system_emu_init(&zelda3_system_LoadState, &zelda3_system_SaveState, NULL);
   
   if (start_paused) {
-      common_emu_state.pause_after_frames = 2;
+    common_emu_state.pause_after_frames = 2;
+    odroid_audio_mute(true);
   } else {
-      common_emu_state.pause_after_frames = 0;
+    common_emu_state.pause_after_frames = 0;
   }
   common_emu_state.frame_time_10us = (uint16_t)(100000 / FRAMERATE + 0.5f);
 

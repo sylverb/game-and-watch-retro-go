@@ -1026,6 +1026,7 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
 
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
+        odroid_audio_mute(true);
     } else {
         common_emu_state.pause_after_frames = 0;
     }
