@@ -858,7 +858,7 @@ ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_GAME
 ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_SWITCH_LR_LIMIT) << 15 ))")
 
 # Support multiple languages
-ZELDA3_LOCALIZED_ROM=$(wildcard roms/zelda3/zelda3_??.sfc)
+ZELDA3_LOCALIZED_ROM=$(wildcard roms/zelda3/zelda3_*.sfc)
 ifneq ("$(ZELDA3_LOCALIZED_ROM)","")
 ZELDA3_DIALOGUES_LANGUAGE="$(patsubst roms/zelda3/zelda3_%.sfc,%,$(ZELDA3_LOCALIZED_ROM))"
 else

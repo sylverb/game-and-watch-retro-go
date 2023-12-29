@@ -481,6 +481,8 @@ By default, dialogues extracted from the US ROM are in english. You can replace 
 | -------- | ------ | ------ | --------- |
 | German   | Original | zelda3_de.sfc | 2E62494967FB0AFDF5DA1635607F9641DF7C6559 |
 | French   | Original | zelda3_fr.sfc | 229364A1B92A05167CD38609B1AA98F7041987CC |
+| French (Canada) | Original | zelda3_fr-c.sfc | C1C6C7F76FFF936C534FF11F87A54162FC0AA100 |
+| English (Europe) | Original | zelda3_en.sfc | 7C073A222569B9B8E8CA5FCB5DFEC3B5E31DA895 |
 | Spanish  | Romhack | zelda3_es.sfc | 461FCBD700D1332009C0E85A7A136E2A8E4B111E |
 | Polish   | Romhack | zelda3_pl.sfc | 3C4D605EEFDA1D76F101965138F238476655B11D |
 | Portuguese | Romhack | zelda3_pt.sfc | D0D09ED41F9C373FE6AFDCCAFBF0DA8C88D3D90D |
