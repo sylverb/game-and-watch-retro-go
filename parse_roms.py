@@ -1176,6 +1176,8 @@ class ROMParser:
             'zelda3': {'embed': '0'},
             'zelda3_de': {'publish': '0'},
             'zelda3_fr': {'publish': '0'},
+            'zelda3_fr-c': {'publish': '0'},
+            'zelda3_en': {'publish': '0'},
             'zelda3_es': {'publish': '0'},
             'zelda3_pl': {'publish': '0'},
             'zelda3_pt': {'publish': '0'},
