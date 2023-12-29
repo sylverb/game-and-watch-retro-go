@@ -39,3 +39,6 @@
 	path = smw
 	url = https://github.com/sylverb/smw.git
 	branch = filesystem
+[submodule "o2em-go"]
+	path = o2em-go
+	url = https://github.com/sylverb/o2em-go.git

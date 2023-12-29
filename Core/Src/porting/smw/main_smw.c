@@ -200,6 +200,7 @@ static bool smw_system_SaveState(char *pathName) {
   odroid_audio_mute(true);
   strcpy(savestate_path, pathName);
   RtlSaveLoad(kSaveLoad_Save, 0);
+  odroid_audio_mute(false);
   printf("Saved state\n");
   return true;
 }
@@ -210,6 +211,7 @@ static bool smw_system_LoadState(char *pathName) {
   odroid_audio_mute(true);
   strcpy(savestate_path, pathName);
   RtlSaveLoad(kSaveLoad_Load, 0);
+  odroid_audio_mute(false);
   return true;
 }
 

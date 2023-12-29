@@ -221,6 +221,7 @@ static bool zelda3_system_SaveState(char *pathName) {
   odroid_audio_mute(true);
   strcpy(savestate_path, pathName);
   SaveLoadSlot(kSaveLoad_Save, 0);
+  odroid_audio_mute(false);
   printf("Saved state\n");
   return true;
 }
@@ -230,6 +231,7 @@ static bool zelda3_system_LoadState(char *pathName) {
   odroid_audio_mute(true);
   strcpy(savestate_path, pathName);
   SaveLoadSlot(kSaveLoad_Load, 0);
+  odroid_audio_mute(false);
   return true;
 }
 
