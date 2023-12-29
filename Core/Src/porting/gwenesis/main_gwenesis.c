@@ -578,30 +578,30 @@ static char gwenesis_sync_mode_str[8];
 
 
 void gwenesis_save_local_data(fs_file_t *file) {
-  fs_write(file, &ABCkeys_value, sizeof(int));
-  fs_write(file, &PAD_A_def, 4);
-  fs_write(file, &PAD_B_def, 4);
-  fs_write(file, &PAD_C_def, 4);
+  fs_write(file, (unsigned char *)&ABCkeys_value, sizeof(int));
+  fs_write(file, (unsigned char *)&PAD_A_def, 4);
+  fs_write(file, (unsigned char *)&PAD_B_def, 4);
+  fs_write(file, (unsigned char *)&PAD_C_def, 4);
 
-  fs_write(file, &AudioFilter_str, sizeof(int));
-  fs_write(file, &gwenesis_lpfilter, 4);
+  fs_write(file, (unsigned char *)&AudioFilter_str, sizeof(int));
+  fs_write(file, (unsigned char *)&gwenesis_lpfilter, 4);
 }
 
 void gwenesis_load_local_data(fs_file_t *file) {
-  fs_read(file, &ABCkeys_value, sizeof(int));
-  fs_read(file, &PAD_A_def, 4);
-  fs_read(file, &PAD_B_def, 4);
-  fs_read(file, &PAD_C_def, 4);
+  fs_read(file, (unsigned char *)&ABCkeys_value, sizeof(int));
+  fs_read(file, (unsigned char *)&PAD_A_def, 4);
+  fs_read(file, (unsigned char *)&PAD_B_def, 4);
+  fs_read(file, (unsigned char *)&PAD_C_def, 4);
 
-  fs_read(file, &AudioFilter_str, sizeof(int));
-  fs_read(file, &gwenesis_lpfilter, 4);
+  fs_read(file, (unsigned char *)&AudioFilter_str, sizeof(int));
+  fs_read(file, (unsigned char *)&gwenesis_lpfilter, 4);
 }
 
 static bool gwenesis_system_SaveState(char *pathName) {
   printf("Saving state...\n");
   fs_file_t *file;
   file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
-  fs_write(file, headerString, 8);
+  fs_write(file, (unsigned char *)headerString, 8);
   gwenesis_save_state(file);
   gwenesis_save_local_data(file);
   fs_close(file);
@@ -613,7 +613,7 @@ static bool gwenesis_system_LoadState(char *pathName) {
   fs_file_t *file;
   file = fs_open(pathName, FS_READ, FS_COMPRESS);
   char header[8];
-  fs_read(file, header, sizeof(header));
+  fs_read(file, (unsigned char *)header, sizeof(header));
 
   // Check for header
   if (memcmp(headerString, header, 8) == 0) {

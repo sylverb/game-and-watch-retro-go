@@ -280,7 +280,7 @@ bool saveAmstradState(char *pathName) {
 
     fs_file_t *file;
     file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
-    fs_write(file, headerString, 8);
+    fs_write(file, (unsigned char *)headerString, 8);
     cap32_save_state(file);
     fs_write(file, (unsigned char *)&selected_palette_index, 4);
     fs_write(file, (unsigned char *)&selected_disk_index, 4);
