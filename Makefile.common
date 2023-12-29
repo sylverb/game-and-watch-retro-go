@@ -759,12 +759,19 @@ ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_CANC
 ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_GAME_CHANGING_BUG_FIXES) << 14 ))")
 ZELDA3_FEATURES := $(shell echo "$$(( $(ZELDA3_FEATURES) | $(ZELDA3_FEATURE_SWITCH_LR_LIMIT) << 15 ))")
 
+# Support multiple languages
+ZELDA3_LOCALIZED_ROM=$(wildcard roms/zelda3/zelda3_*.sfc)
+ifneq ("$(ZELDA3_LOCALIZED_ROM)","")
+ZELDA3_DIALOGUES_LANGUAGE="$(patsubst roms/zelda3/zelda3_%.sfc,%,$(ZELDA3_LOCALIZED_ROM))"
+else
+ZELDA3_DIALOGUES_LANGUAGE=us
+endif
 
 # C defines for zelda3
 C_DEFS_ZELDA3 =  \
 -DHEADLESS \
 -DLIMIT_30FPS=$(ZELDA3_LIMIT_30FPS) \
--DDIALOGUES_LANGUAGE=us \
+-DDIALOGUES_LANGUAGE=$(ZELDA3_DIALOGUES_LANGUAGE) \
 -DFEATURES=$(ZELDA3_FEATURES) \
 -DFASTER_UI=$(ZELDA3_FASTER_UI) \
 -DBATTERY_INDICATOR=$(ZELDA3_BATTERY_INDICATOR) \
@@ -785,9 +792,17 @@ $(eval $(foreach obj,$(ZELDA3_C_SOURCES),$(call zelda3_obj_prereq_gen,$(obj))))
 Core/Src/porting/zelda3/zelda_assets.c: scripts/zelda3/update_assets.py zelda3/tables/zelda3_assets.dat | $(BUILD_DIR)
 	$(PYTHON3) ./scripts/zelda3/update_assets.py
 
+ifneq ("$(ZELDA3_LOCALIZED_ROM)","")
+zelda3/tables/zelda3_assets.dat: roms/zelda3/zelda3.sfc $(ZELDA3_LOCALIZED_ROM) | $(BUILD_DIR)
+	$(ECHO) "Extracting dialogues from localized ROM: $<"
+	cd zelda3/tables; $(PYTHON3) restool.py --extract-dialogue -r ../../$(ZELDA3_LOCALIZED_ROM)
+	$(ECHO) "Extracting game resources"
+	cd zelda3/tables; $(PYTHON3) restool.py --extract-from-rom --languages=$(ZELDA3_DIALOGUES_LANGUAGE) -r ../../roms/zelda3/zelda3.sfc
+else
 zelda3/tables/zelda3_assets.dat: roms/zelda3/zelda3.sfc | $(BUILD_DIR)
-	cp $< zelda3/tables/zelda3.sfc
-	$(MAKE) -C zelda3 tables/zelda3_assets.dat
+	$(ECHO) "Extracting game resources"
+	cd zelda3/tables; $(PYTHON3) restool.py --extract-from-rom -r ../../$<
+endif
 
 
 # SMW configuration
