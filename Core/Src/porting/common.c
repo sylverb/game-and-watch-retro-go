@@ -3,12 +3,6 @@
 #include <odroid_overlay.h>
 
 #include <string.h>
-#include <nofrendo.h>
-#include <nes.h>
-#include <nes_input.h>
-#include <nes_state.h>
-#include <nes_input.h>
-#include <osd.h>
 #include "main.h"
 #include "bitmaps.h"
 #include "gw_buttons.h"

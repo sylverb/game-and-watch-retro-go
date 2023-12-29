@@ -6,7 +6,6 @@
 #include "main.h"
 #include "rg_i18n.h"
 #include "appid.h"
-#include "game_genie.h"
 #include "gui.h"
 #include "rom_manager.h"
 #include "filesystem.h"

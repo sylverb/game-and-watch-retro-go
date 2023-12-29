@@ -301,7 +301,7 @@ bool saveAmstradState(char *pathName) {
 bool loadAmstradState(char *pathName) {
     fs_file_t *file;
     file = fs_open(pathName, FS_READ, FS_COMPRESS);
-    char readin_header[8] = {0};
+    unsigned char readin_header[8] = {0};
     fs_read(file, readin_header, 8);
 
     // Check for header
@@ -313,12 +313,12 @@ bool loadAmstradState(char *pathName) {
         fs_read(file, (unsigned char *)&selected_controls_index, 4);
         fs_read(file, (unsigned char *)&selected_key_index, 4);
 
-        fs_read(file, (unsigned char *)&amstrade_button_a_key, 4);
-        fs_read(file, (unsigned char *)&amstrade_button_b_key, 4);
-        fs_read(file, (unsigned char *)&amstrade_button_game_key, 4);
-        fs_read(file, (unsigned char *)&amstrade_button_time_key, 4);
-        fs_read(file, (unsigned char *)&amstrade_button_start_key, 4);
-        fs_read(file, (unsigned char *)&amstrade_button_select_key, 4);
+        fs_read(file, (unsigned char *)&amstrad_button_a_key, 4);
+        fs_read(file, (unsigned char *)&amstrad_button_b_key, 4);
+        fs_read(file, (unsigned char *)&amstrad_button_game_key, 4);
+        fs_read(file, (unsigned char *)&amstrad_button_time_key, 4);
+        fs_read(file, (unsigned char *)&amstrad_button_start_key, 4);
+        fs_read(file, (unsigned char *)&amstrad_button_select_key, 4);
     }
     fs_close(file);
     return true;

@@ -744,13 +744,7 @@ C_INCLUDES +=  \
 -ICore/Src/porting/lib/lzma \
 -ICore/Src/porting/lib/littlefs/ \
 -ICore/Src/porting/lib/tamp/tamp/_c_src \
--Iretro-go-stm32/nofrendo-go/components/nofrendo/cpu \
--Iretro-go-stm32/nofrendo-go/components/nofrendo/mappers \
--Iretro-go-stm32/nofrendo-go/components/nofrendo/nes \
--Iretro-go-stm32/nofrendo-go/components/nofrendo \
 -Iretro-go-stm32/components/odroid \
--Iretro-go-stm32/gnuboy-go/components \
--Iretro-go-stm32/smsplusgx-go/components/smsplus \
 -I./
 
 MSX_C_INCLUDES += \

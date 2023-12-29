@@ -3,7 +3,6 @@
 #ifdef ENABLE_EMULATOR_PCE
 #include <odroid_system.h>
 #include <string.h>
-#include "shared.h"
 
 // shared.h includes sms.h which defined CYCLES_PER_LINE.
 // pce.h defines it to the desired value.
@@ -34,8 +33,10 @@
 //#define XBUF_HEIGHT	(242 + 32)
 //#define GW_LCD_WIDTH  (320)
 //#define GW_LCD_HEIGHT (240)
+#define FPS_NTSC 60
+
 #define FB_INTERNAL_OFFSET (((XBUF_HEIGHT - current_height) / 2 + 16) * XBUF_WIDTH + (XBUF_WIDTH - current_width) / 2)
-#define AUDIO_BUFFER_LENGTH_PCE  (PCE_SAMPLE_RATE / 60)
+#define AUDIO_BUFFER_LENGTH_PCE  (PCE_SAMPLE_RATE / FPS_NTSC)
 #define JOY_A       0x01
 #define JOY_B       0x02
 #define JOY_SELECT  0x04
