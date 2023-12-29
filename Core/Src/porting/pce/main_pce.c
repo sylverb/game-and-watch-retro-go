@@ -569,6 +569,9 @@ void pce_pcm_submit() {
 
 int app_main_pce(uint8_t load_state, uint8_t start_paused, int8_t save_slot) {
 
+    // Allocate the maximum samples count for a frame on PC Engine
+    odroid_set_audio_dma_size(AUDIO_BUFFER_LENGTH_PCE);
+
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
         odroid_audio_mute(true);
@@ -591,7 +594,6 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, int8_t save_slot) {
     printf("Graphics initialized\n");
 
     // Init Sound
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_PCE * 2 );
     pce_snd_init();
     printf("Sound initialized\n");

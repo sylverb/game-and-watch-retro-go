@@ -1024,6 +1024,9 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     memset(framebuffer1, 0x0, sizeof(framebuffer1));
     memset(framebuffer2, 0x0, sizeof(framebuffer2));
 
+    // Allocate the maximum samples count for a frame on NES
+    odroid_set_audio_dma_size((NES_FREQUENCY_48K) / 50);
+
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
         odroid_audio_mute(true);
@@ -1055,7 +1058,6 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     // Init Sound
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
 
     HAL_SAI_DMAStop(&hsai_BlockA1);
     if (FSettings.PAL) {

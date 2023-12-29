@@ -156,12 +156,11 @@ unsigned int gw_get_buttons()
 
 static void gw_sound_init()
 {
+    // Allocate the maximum samples count for a frame on G&W
+    odroid_set_audio_dma_size(GW_AUDIO_BUFFER_LENGTH);
 
     /* init emulator sound system with shared audio buffer */
     gw_system_sound_init();
-
-    /* clear DMA audio buffer */
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
 
     /* Start SAI DMA */
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, GW_AUDIO_BUFFER_LENGTH_DMA);

@@ -528,6 +528,9 @@ int app_main_nes(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
     odroid_system_init(APPID_NES, AUDIO_SAMPLE_RATE);
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
+    // Allocate the maximum samples count for a frame on NES
+    odroid_set_audio_dma_size((AUDIO_SAMPLE_RATE) / 50);
+
     if (start_paused) {
         common_emu_state.pause_after_frames = 4;
         odroid_audio_mute(true);
@@ -538,8 +541,6 @@ int app_main_nes(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
     autoload = load_state;
 
     printf("Nofrendo start!\n");
-
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
 
     if (ACTIVE_FILE->region == REGION_PAL) {
         lcd_set_refresh_rate(50);

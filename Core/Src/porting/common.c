@@ -10,7 +10,7 @@
 #include "gw_linker.h"
 #include "rg_i18n.h"
 #include "filesystem.h"
-
+#include "gw_malloc.h"
 
 static void set_ingame_overlay(ingame_overlay_t type);
 
@@ -19,7 +19,8 @@ cpumon_stats_t cpumon_stats = {0};
 uint32_t audio_mute;
 
 
-int16_t audiobuffer_dma[AUDIO_BUFFER_LENGTH * 2] __attribute__((section (".audio")));
+int16_t *audiobuffer_dma;
+static size_t audiobuffer_dma_length;
 
 dma_transfer_state_t dma_state;
 uint32_t dma_counter;
@@ -55,11 +56,17 @@ bool odroid_netplay_quick_start(void)
     return true;
 }
 
+void odroid_set_audio_dma_size(size_t frame_sample_count)
+{
+    audiobuffer_dma_length = 2*frame_sample_count;
+    audiobuffer_dma = ahb_calloc(audiobuffer_dma_length, sizeof(uint16_t));
+}
+
 // TODO: Move to own file
 void odroid_audio_mute(bool mute)
 {
     if (mute) {
-        for (int i = 0; i < sizeof(audiobuffer_dma) / sizeof(audiobuffer_dma[0]); i++) {
+        for (int i = 0; i < audiobuffer_dma_length; i++) {
             audiobuffer_dma[i] = 0;
         }
     }

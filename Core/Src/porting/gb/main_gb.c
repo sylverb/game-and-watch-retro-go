@@ -558,7 +558,6 @@ rg_app_desc_t * init(uint8_t load_state, int8_t save_slot)
     pcm.buf = (n16*)audiobuffer_emulator;
     pcm.pos = 0;
 
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_GB);
 
     rg_app_desc_t *app = odroid_system_get_app();
@@ -576,6 +575,9 @@ rg_app_desc_t * init(uint8_t load_state, int8_t save_slot)
 
 void app_main_gb(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
+    // Allocate the maximum samples count for a frame on GB
+    odroid_set_audio_dma_size(AUDIO_BUFFER_LENGTH_GB);
+
     init(load_state, save_slot);
     odroid_gamepad_state_t joystick;
 

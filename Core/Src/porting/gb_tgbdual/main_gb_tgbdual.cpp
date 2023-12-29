@@ -459,6 +459,9 @@ void app_main_gb_tgbdual_cpp(uint8_t load_state, uint8_t start_paused, int8_t sa
     char palette_values[16];
     odroid_gamepad_state_t joystick;
 
+    // Allocate the maximum samples count for a frame on GB
+    odroid_set_audio_dma_size(AUDIO_BUFFER_LENGTH_GB);
+
     if (start_paused) {
         common_emu_state.pause_after_frames = 3;
         odroid_audio_mute(true);
@@ -506,7 +509,6 @@ void app_main_gb_tgbdual_cpp(uint8_t load_state, uint8_t start_paused, int8_t sa
     memset(framebuffer1, 0, sizeof(framebuffer1));
     memset(framebuffer2, 0, sizeof(framebuffer2));
 
-    memset(audiobuffer_dma, 0x00, sizeof(audiobuffer_dma));
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_GB);
 
     while (true)

@@ -259,7 +259,10 @@ void writeSramImpl(uint8_t* sram) {
 static void zelda3_sound_start()
 {
   memset(audiobuffer_zelda3, 0, sizeof(audiobuffer_zelda3));
-  memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
+
+  // Allocate the maximum samples count for a frame on SMW
+  odroid_set_audio_dma_size(ZELDA3_AUDIO_BUFFER_LENGTH);
+
   HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, ZELDA3_AUDIO_BUFFER_LENGTH_DMA);
 }
 

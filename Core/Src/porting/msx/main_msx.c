@@ -450,7 +450,7 @@ static bool update_frequency_cb(odroid_dialog_choice_t *option, odroid_dialog_ev
                 lcd_set_refresh_rate(FPS_PAL);
                 msx_fps = 50;
                 common_emu_state.frame_time_10us = (uint16_t)(100000 / FPS_PAL + 0.5f);
-                memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
+                memset(audiobuffer_dma, 0, 2 * sizeof(int16_t) * AUDIO_MSX_SAMPLE_RATE / msx_fps);
                 HAL_SAI_DMAStop(&hsai_BlockA1);
                 HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, (2 * AUDIO_MSX_SAMPLE_RATE / msx_fps));
                 emulatorRestartSound();
@@ -460,7 +460,7 @@ static bool update_frequency_cb(odroid_dialog_choice_t *option, odroid_dialog_ev
                 lcd_set_refresh_rate(FPS_NTSC);
                 msx_fps = 60;
                 common_emu_state.frame_time_10us = (uint16_t)(100000 / FPS_NTSC + 0.5f);
-                memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
+                memset(audiobuffer_dma, 0, 2 * sizeof(int16_t) * AUDIO_MSX_SAMPLE_RATE / msx_fps);
                 HAL_SAI_DMAStop(&hsai_BlockA1);
                 HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, (2 * AUDIO_MSX_SAMPLE_RATE / msx_fps));
                 emulatorRestartSound();
@@ -1714,6 +1714,9 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
                          ((i&0x3)*31/3);
     }
 
+    // Allocate the maximum samples count for a frame on MSX
+    odroid_set_audio_dma_size(AUDIO_MSX_SAMPLE_RATE/FPS_PAL);
+
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
         odroid_audio_mute(true);
@@ -1762,7 +1765,7 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
             lcd_set_refresh_rate(msx_fps);
 
             common_emu_state.frame_time_10us = (uint16_t)(100000 / msx_fps + 0.5f);
-            memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
+            memset(audiobuffer_dma, 0, 2 * sizeof(int16_t) * AUDIO_MSX_SAMPLE_RATE / msx_fps);
             HAL_SAI_DMAStop(&hsai_BlockA1);
             HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, (2 * AUDIO_MSX_SAMPLE_RATE / msx_fps));
             emulatorRestartSound();
@@ -1837,8 +1840,6 @@ static Int32 soundWrite(void* dummy, Int16 *buffer, UInt32 count)
 
 void archSoundCreate(Mixer* mixer, UInt32 sampleRate, UInt32 bufferSize, Int16 channels) {
     // Init Sound
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-
     HAL_SAI_DMAStop(&hsai_BlockA1);
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, 2*(AUDIO_MSX_SAMPLE_RATE / msx_fps));
 

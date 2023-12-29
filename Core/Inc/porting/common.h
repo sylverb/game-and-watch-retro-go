@@ -28,7 +28,7 @@ extern uint32_t dma_counter;
 extern uint32_t audio_mute;
 
 
-extern int16_t audiobuffer_dma[AUDIO_BUFFER_LENGTH * 2] __attribute__((section (".audio")));
+extern int16_t *audiobuffer_dma;
 
 extern const uint8_t volume_tbl[ODROID_AUDIO_VOLUME_MAX + 1];
 
@@ -83,6 +83,11 @@ typedef struct {
 
 extern common_emu_state_t common_emu_state;
 
+/**
+ * Set size of the audio DMA buffer dynamically.
+ * frame_sample_count : count of 16 bits samples in a single frame.
+ */
+void odroid_set_audio_dma_size(size_t frame_sample_count);
 
 /**
  * Drawable stuff over current emulation.
