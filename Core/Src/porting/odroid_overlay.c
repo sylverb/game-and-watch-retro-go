@@ -1274,8 +1274,8 @@ int odroid_overlay_game_menu(odroid_dialog_choice_t *extra_options, void_callbac
 #else
     odroid_dialog_choice_t choices[] = {
         // {0, "Continue", "",  1, NULL},
-        {10, curr_lang->s_Save_Cont, "", (ACTIVE_FILE->save_address != 0), NULL},
-        {20, curr_lang->s_Save_Quit, "", (ACTIVE_FILE->save_address != 0), NULL},
+        {10, curr_lang->s_Save_Cont, "", (ACTIVE_FILE->save_address != 0) ? 1 : -1, NULL},
+        {20, curr_lang->s_Save_Quit, "", (ACTIVE_FILE->save_address != 0) ? 1 : -1, NULL},
         ODROID_DIALOG_CHOICE_SEPARATOR,
         {30, curr_lang->s_Reload, "", 1, NULL},
         {40, curr_lang->s_Options, "", 1, NULL},
