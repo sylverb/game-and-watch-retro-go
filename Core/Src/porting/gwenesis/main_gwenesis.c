@@ -520,8 +520,20 @@ static bool gwenesis_submenu_setABC(odroid_dialog_choice_t *option, odroid_dialo
     return event == ODROID_DIALOG_ENTER;
 }
 
-// Some options using submenu
+static bool gwenesis_submenu_setAudioFilter(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
+    gwenesis_lpfilter = gwenesis_lpfilter == 0 ? 1 : 0;
+    }
+
+    if (gwenesis_lpfilter == 0) strcpy(option->value, curr_lang->s_md_Option_OFF);
+    if (gwenesis_lpfilter == 1) strcpy(option->value, curr_lang->s_md_Option_ON);
+
+    return event == ODROID_DIALOG_ENTER;
+}
+
 #if ENABLE_DEBUG_OPTIONS != 0
+
 static bool gwenesis_submenu_debug_bar(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
   if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
@@ -532,21 +544,7 @@ static bool gwenesis_submenu_debug_bar(odroid_dialog_choice_t *option, odroid_di
 
     return event == ODROID_DIALOG_ENTER;
 }
-#endif
 
-static bool gwenesis_submenu_setAudioFilter(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
-{
-  if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
-    gwenesis_lpfilter = gwenesis_lpfilter == 0 ? 1 : 0;
-  }
-
-    if (gwenesis_lpfilter == 0) strcpy(option->value, curr_lang->s_md_Option_OFF);
-    if (gwenesis_lpfilter == 1) strcpy(option->value, curr_lang->s_md_Option_ON);
-
-    return event == ODROID_DIALOG_ENTER;
-}
-
-#if ENABLE_DEBUG_OPTIONS != 0
 static bool gwenesis_submenu_setVideoUpscaler(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
   if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
@@ -570,15 +568,13 @@ static bool gwenesis_submenu_sync_mode(odroid_dialog_choice_t *option, odroid_di
 
     return event == ODROID_DIALOG_ENTER;
 }
-#endif
 
-static char AudioFilter_str[2];
-#if ENABLE_DEBUG_OPTIONS != 0
 static char debug_bar_str[2];
 static char VideoUpscaler_str[2];
 static char gwenesis_sync_mode_str[8];
 #endif
 
+static char AudioFilter_str[2];
 void gwenesis_save_local_data(fs_file_t *file) {
   fs_write(file, (unsigned char *)&ABCkeys_value, sizeof(int));
   fs_write(file, (unsigned char *)&PAD_A_def, 4);
