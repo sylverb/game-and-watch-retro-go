@@ -649,6 +649,8 @@ FORCE:
 Core/Inc/githash.h: FORCE | $(BUILD_DIR)
 	$(V)./scripts/update_githash.sh $@
 
+$(BUILD_DIR)/core/error_screens.o: Core/Inc/githash.h
+$(BUILD_DIR)/core/filesystem.o: Core/Inc/githash.h
 $(BUILD_DIR)/core/main.o: Core/Inc/githash.h
 $(BUILD_DIR)/core/rg_main.o: Core/Inc/githash.h
 
