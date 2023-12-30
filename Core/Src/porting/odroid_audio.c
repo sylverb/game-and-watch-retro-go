@@ -164,6 +164,15 @@ static void set_audio_frequency(uint32_t frequency)
         PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
         PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
         PeriphClkInitStruct.PLL2.PLL2FRACN = 66;
+    } else if (frequency == 63360) {
+        PeriphClkInitStruct.PLL2.PLL2M = 37;
+        PeriphClkInitStruct.PLL2.PLL2N = 75;
+        PeriphClkInitStruct.PLL2.PLL2P = 1;
+        PeriphClkInitStruct.PLL2.PLL2Q = 2;
+        PeriphClkInitStruct.PLL2.PLL2R = 5;
+        PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
+        PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+        PeriphClkInitStruct.PLL2.PLL2FRACN = 149;
 
         /* config to get 48KHz and multiple */
         /* SAI mode is in standard frequency mode */
@@ -233,6 +242,7 @@ static void set_audio_frequency(uint32_t frequency)
         /* check from the different possible values */
         if ((frequency == SAI_AUDIO_FREQUENCY_192K) ||
             (frequency == SAI_AUDIO_FREQUENCY_96K) ||
+            (frequency == 63360) ||
             (frequency == SAI_AUDIO_FREQUENCY_48K) ||
             (frequency == SAI_AUDIO_FREQUENCY_44K) ||
             (frequency == SAI_AUDIO_FREQUENCY_32K) ||

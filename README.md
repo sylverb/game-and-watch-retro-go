@@ -81,6 +81,7 @@ Supported emulators:
 - Sega Genesis / Megadrive (md)
 - Sega Master System (sms)
 - Sega SG-1000 (sg)
+- Videopac / Odyssey2 (videopac)
 - Watara Supervision (wsv)
 
 Supported SNES game _ports_:
@@ -429,6 +430,11 @@ What is supported :
 Tape support has not been ported, if there is any interest in adding this, it could be considered.
 
 Note that the Amstrad CPC6128 support is done using caprice32 emulator, any game that is not working correctly using this emulator will not work on the Game & Watch. To fit in the G&W, a some features have been removed, so it's possible that some games running on caprice32 will not work in the G&W port. The emulator port is still in progress, consider it as a preview version.
+
+## Vectrex/Odyssey2 Emulator
+Vectrex/Odyssey2 is provided by a modified version of o2em emulator.
+Support is currently in development so it's unstable, has lots of bugs and it's not really playable.
+To play, you need a bios file, for now rename your bios file to bios.bin and put it in the roms/vectrex folder
 
 ## SNES game ports
 

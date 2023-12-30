@@ -588,6 +588,25 @@ Core/Src/porting/amstrad/amstrad_format.c \
 Core/Src/porting/amstrad/amstrad_loader.c \
 Core/Src/porting/amstrad/amstrad_video8bpp.c
 
+VIDEOPAC_C_SOURCES = \
+o2em-go/src/o2em_audio.c \
+o2em-go/src/o2em_cpu.c \
+o2em-go/src/o2em_cset.c \
+o2em-go/src/o2em_keyboard.c \
+o2em-go/src/o2em_score.c \
+o2em-go/src/o2em_table.c \
+o2em-go/src/o2em_vdc.c \
+o2em-go/src/o2em_vmachine.c \
+o2em-go/src/o2em_voice.c \
+o2em-go/src/o2em_vpp.c \
+o2em-go/src/o2em_vpp_cset.c \
+o2em-go/allegrowrapper/wrapalleg.c \
+o2em-go/src/vkeyb/ui.c \
+o2em-go/src/vkeyb/vkeyb.c \
+o2em-go/src/vkeyb/vkeyb_config.c \
+o2em-go/src/vkeyb/vkeyb_layout.c \
+Core/Src/porting/videopac/main_videopac.c
+
 TAMP_C_INCLUDES += -I$(TAMP_DIR)
 
 ifneq ("$(wildcard roms/zelda3/zelda3.sfc)","")
@@ -797,6 +816,16 @@ AMSTRAD_C_INCLUDES +=  \
 -Icaprice32-go/cap32 \
 -I./
 
+VIDEOPAC_C_INCLUDES +=  \
+-ICore/Inc \
+-ICore/Src/porting/lib \
+-ICore/Src/porting/lib/lzma \
+-Iretro-go-stm32/components/odroid \
+-Io2em-go/src \
+-Io2em-go/libretro-common/include \
+-Io2em-go/allegrowrapper \
+-I./
+
 ZELDA3_C_INCLUDES +=  \
 -ICore/Inc \
 -ICore/Src/porting/lib \
@@ -818,7 +847,7 @@ include Makefile.common
 
 $(BUILD_DIR)/$(TARGET)_extflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)
-	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_tgb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 -j .overlay_smw $< $(BUILD_DIR)/$(TARGET)_extflash.bin
+	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_tgb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 -j .overlay_smw -j .overlay_videopac $< $(BUILD_DIR)/$(TARGET)_extflash.bin
 
 $(BUILD_DIR)/$(TARGET)_intflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)

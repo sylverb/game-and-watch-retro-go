@@ -560,6 +560,28 @@ SECTIONS
   }
   _OVERLAY_SMW_BSS_SIZE = SIZEOF(.overlay_smw_bss);
 
+  .overlay_videopac __RAM_EMU_START__ : {
+    . = ALIGN(4);
+    __ram_emu_videopac_start__ = .;
+    build/videopac/*.o (.data .data* .text .text* .rodata .rodata*)
+    . = ALIGN(4);
+    _OVERLAY_VIDEOPAC_LOAD_END = .;
+  } AT> EXTFLASH
+  _OVERLAY_VIDEOPAC_LOAD_START = LOADADDR(.overlay_videopac);
+  _OVERLAY_VIDEOPAC_SIZE = SIZEOF(.overlay_videopac);
+
+  .overlay_videopac_bss _OVERLAY_VIDEOPAC_LOAD_END : {
+    . = ALIGN(4);
+    _OVERLAY_VIDEOPAC_BSS_START = .;
+    build/videopac/*.o (.bss .bss*)
+    . = ALIGN(4);
+    build/videopac/*.o (COMMON)
+    __ram_emu_videopac_end__ = .;
+    _OVERLAY_VIDEOPAC_BSS_END = .;
+    ASSERT(ABSOLUTE(_OVERLAY_VIDEOPAC_BSS_END) < __RAM_EMU_END__, "Error: VIDEOPAC BSS overflow");
+  }
+  _OVERLAY_VIDEOPAC_BSS_SIZE = SIZEOF(.overlay_videopac_bss);
+
   /* Place this symbol after the last overlay definition */
   .overlay_end : {
     __extflash_end__ = .;

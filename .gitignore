@@ -32,9 +32,11 @@ Core/Src/retro-go/zelda3_roms.c
 Core/Src/porting/zelda3/zelda_assets.c
 Core/Src/retro-go/smw_roms.c
 Core/Src/porting/smw/smw_assets.c
+Core/Src/retro-go/videopac_roms.c
 
 linux/loaded_gb_rom.c
 linux/loaded_nes_rom.c
+linux/loaded_o2em_rom.c
 
 save_states
 

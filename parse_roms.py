@@ -99,6 +99,7 @@ MAX_COMPRESSED_WSV_SIZE = 0x00080000
 MAX_COMPRESSED_SG_COL_SIZE = 60 * 1024
 MAX_COMPRESSED_A7800_SIZE = 131200
 MAX_COMPRESSED_MSX_SIZE = 136*1024
+MAX_COMPRESSED_VIDEOPAC_SIZE = 136*1024
 
 """
 All ``compress_*`` functions must be decorated ``@COMPRESSIONS`` and have the
@@ -768,6 +769,14 @@ class ROMParser:
                 return
             compressed_data = compress(data)
             output_file.write_bytes(compressed_data)
+        elif "videopac_system" in variable_name:  # Videopac/Odyssey2
+            if rom.path.stat().st_size > MAX_COMPRESSED_VIDEOPAC_SIZE:
+                print(
+                    f"INFO: {rom.name} is too large to compress, skipping compression!"
+                )
+                return
+            compressed_data = compress(data)
+            output_file.write_bytes(compressed_data)
         elif variable_name in ["col_system","sg1000_system"] :  # COL or SG
             if rom.path.stat().st_size > MAX_COMPRESSED_SG_COL_SIZE:
                 print(
@@ -1088,6 +1097,7 @@ class ROMParser:
             'zelda3_sv': {'publish': '0'},
         })
         romdef.setdefault('smw', {'smw': {'embed': '0'}})
+        romdef.setdefault('videopac', {})
 
         system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/gb_roms.c",
@@ -1470,6 +1480,23 @@ class ROMParser:
             self.write_if_changed(
                 "build/smw_extflash.ld",""
             )
+
+        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+            "Core/Src/retro-go/videopac_roms.c",
+            "Philips Vectrex",
+            "videopac_system",
+            "videopac",
+            ["bin"],
+            "SAVE_VIDEOPAC_",
+            romdef["videopac"],
+            None,
+            current_id,
+            args.compress
+        )
+        total_save_size += save_size
+        total_rom_size += rom_size
+        build_config += "#define ENABLE_EMULATOR_VIDEOPAC\n" if rom_size > 0 else ""
+        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
         total_size = total_save_size + total_rom_size + total_img_size
         #total_size +=sega_larger_rom_size
