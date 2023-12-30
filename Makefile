@@ -10,6 +10,22 @@ ifneq ($(strip $(VERBOSE)),1)
 V = @
 endif
 
+ROMS_A7800 := $(filter-out roms/a7800/.keep, $(wildcard roms/a7800/*))
+ROMS_AMSTRAD := $(filter-out roms/amstrad/.keep, $(wildcard roms/amstrad/*))
+ROMS_GB := $(filter-out roms/gb/.keep, $(wildcard roms/gb/*))
+ROMS_GW := $(filter-out roms/gw/.keep, $(wildcard roms/gw/*))
+ROMS_MD := $(filter-out roms/md/.keep, $(wildcard roms/md/*))
+ROMS_NES := $(filter-out roms/nes/.keep, $(wildcard roms/nes/*))
+ROMS_MSX := $(filter-out roms/msx/.keep, $(wildcard roms/msx/*))
+ROMS_PCE := $(filter-out roms/pce/.keep, $(wildcard roms/pce/*))
+ROMS_VIDEOPAC := $(filter-out roms/videopac/.keep, $(wildcard roms/videopac/*))
+ROMS_WSV := $(filter-out roms/wsv/.keep, $(wildcard roms/wsv/*))
+
+ROMS_COL := $(filter-out roms/col/.keep, $(wildcard roms/col/*))
+ROMS_GG := $(filter-out roms/gg/.keep, $(wildcard roms/gg/*))
+ROMS_SG := $(filter-out roms/sg/.keep, $(wildcard roms/sg/*))
+ROMS_SMS := $(filter-out roms/sms/.keep, $(wildcard roms/sms/*))
+
 ######################################
 # source
 ######################################
@@ -20,7 +36,6 @@ Core/Src/gw_buttons.c \
 Core/Src/gw_flash.c \
 Core/Src/gw_lcd.c \
 Core/Src/gw_malloc.c \
-Core/Src/game_genie.c \
 Core/Src/error_screens.c \
 Core/Src/main.c \
 Core/Src/sha256.c \
@@ -50,7 +65,17 @@ $(TAMP_DIR)/tamp/common.c \
 $(TAMP_DIR)/tamp/compressor.c \
 $(TAMP_DIR)/tamp/decompressor.c
 
-GNUBOY_C_SOURCES = \
+# Add common C++ sources here
+CXX_SOURCES = \
+Core/Src/heap.cpp \
+
+GNUBOY_C_SOURCES = 
+TGBDUAL_C_SOURCES = 
+TGBDUAL_CXX_SOURCES = 
+
+ifeq ($(FORCE_GNUBOY),1)
+ifneq ($(strip $(ROMS_GB)),)
+GNUBOY_C_SOURCES += \
 Core/Src/porting/gb/main_gb.c \
 retro-go-stm32/gnuboy-go/components/gnuboy/cpu.c \
 retro-go-stm32/gnuboy-go/components/gnuboy/debug.c \
@@ -60,9 +85,28 @@ retro-go-stm32/gnuboy-go/components/gnuboy/lcd.c \
 retro-go-stm32/gnuboy-go/components/gnuboy/loader.c \
 retro-go-stm32/gnuboy-go/components/gnuboy/mem.c \
 retro-go-stm32/gnuboy-go/components/gnuboy/rtc.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/sound.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/sound.c
+endif
+else
+ifneq ($(strip $(ROMS_GB)),)
+TGBDUAL_CXX_SOURCES += \
+Core/Src/porting/gb_tgbdual/main_gb_tgbdual.cpp \
+Core/Src/porting/gb_tgbdual/gw_renderer.cpp \
+tgbdual-go/gb_core/tgbdual_apu.cpp \
+tgbdual-go/gb_core/tgbdual_cheat.cpp \
+tgbdual-go/gb_core/tgbdual_cpu.cpp \
+tgbdual-go/gb_core/tgbdual_gb.cpp \
+tgbdual-go/gb_core/tgbdual_lcd.cpp \
+tgbdual-go/gb_core/tgbdual_mbc.cpp \
+tgbdual-go/gb_core/tgbdual_rom.cpp
+endif
+endif
 
-NES_C_SOURCES = \
+NES_C_SOURCES = 
+
+ifeq ($(FORCE_NOFRENDO),1)
+ifneq ($(strip $(ROMS_NES)),)
+NES_C_SOURCES += \
 Core/Src/porting/nes/main_nes.c \
 Core/Src/porting/nes/nofrendo_stm32.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/cpu/dis6502.c \
@@ -127,6 +171,7 @@ retro-go-stm32/nofrendo-go/components/nofrendo/mappers/map231.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/mappers/map252.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/mappers/map253.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/nes/nes_apu.c \
+retro-go-stm32/nofrendo-go/components/nofrendo/nes/game_genie.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/nes/nes_input.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/nes/nes_mem.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/nes/nes_mmc.c \
@@ -134,8 +179,11 @@ retro-go-stm32/nofrendo-go/components/nofrendo/nes/nes_ppu.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/nes/nes_rom.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/nes/nes_state.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/nes/nes.c
-
-NES_FCEU_C_SOURCES = \
+endif
+else
+NES_FCEU_C_SOURCES = 
+ifneq ($(strip $(ROMS_NES)),)
+NES_FCEU_C_SOURCES += \
 Core/Src/porting/nes_fceu/main_nes_fceu.c \
 fceumm-go/src/boards/09-034a.c \
 fceumm-go/src/boards/3d-block.c \
@@ -408,9 +456,14 @@ fceumm-go/src/nsf.c \
 fceumm-go/src/palette.c \
 fceumm-go/src/ppu.c \
 fceumm-go/src/video.c \
-fceumm-go/src/x6502.c \
+fceumm-go/src/x6502.c
+endif
+endif
 
-SMSPLUSGX_C_SOURCES = \
+SMSPLUSGX_C_SOURCES = 
+
+ifneq ($(strip $(ROMS_COL)$(ROMS_GG)$(ROMS_SG)$(ROMS_SMS)),)
+SMSPLUSGX_C_SOURCES += \
 retro-go-stm32/smsplusgx-go/components/smsplus/loadrom.c \
 retro-go-stm32/smsplusgx-go/components/smsplus/render.c \
 retro-go-stm32/smsplusgx-go/components/smsplus/sms.c \
@@ -427,18 +480,26 @@ retro-go-stm32/smsplusgx-go/components/smsplus/sound/sn76489.c \
 retro-go-stm32/smsplusgx-go/components/smsplus/sound/sms_sound.c \
 retro-go-stm32/smsplusgx-go/components/smsplus/sound/ym2413.c \
 Core/Src/porting/smsplusgx/main_smsplusgx.c
+endif
 
-PCE_C_SOURCES = \
+PCE_C_SOURCES = 
+
+ifneq ($(strip $(ROMS_PCE)),)
+PCE_C_SOURCES += \
 retro-go-stm32/pce-go/components/pce-go/gfx.c \
 retro-go-stm32/pce-go/components/pce-go/h6280.c \
 retro-go-stm32/pce-go/components/pce-go/pce.c \
 Core/Src/porting/pce/sound_pce.c \
 Core/Src/porting/pce/main_pce.c
+endif
 
+MSX_C_SOURCES = 
+
+ifneq ($(strip $(ROMS_MSX)),)
 CORE_MSX = blueMSX-go
 LIBRETRO_COMM_DIR  = $(CORE_MSX)/libretro-common
 
-MSX_C_SOURCES = \
+MSX_C_SOURCES += \
 $(CORE_MSX)/Src/Libretro/Timer.c \
 $(CORE_MSX)/Src/Libretro/Emulator.c \
 $(CORE_MSX)/Src/Bios/Patch.c \
@@ -504,8 +565,12 @@ $(CORE_MSX)/Src/Board/MSX.c \
 $(CORE_MSX)/Src/Input/InputEvent.c \
 Core/Src/porting/msx/main_msx.c \
 Core/Src/porting/msx/save_msx.c
+endif
 
-GW_C_SOURCES = \
+GW_C_SOURCES = 
+
+ifneq ($(strip $(ROMS_GW)),)
+GW_C_SOURCES += \
 Core/Src/porting/lib/lz4_depack.c \
 LCD-Game-Emulator/src/cpus/sm500op.c \
 LCD-Game-Emulator/src/cpus/sm510op.c \
@@ -518,8 +583,12 @@ LCD-Game-Emulator/src/gw_sys/gw_romloader.c \
 LCD-Game-Emulator/src/gw_sys/gw_graphic.c \
 LCD-Game-Emulator/src/gw_sys/gw_system.c \
 Core/Src/porting/gw/main_gw.c
+endif
 
-WSV_C_SOURCES = \
+WSV_C_SOURCES = 
+
+ifneq ($(strip $(ROMS_WSV)),)
+WSV_C_SOURCES += \
 potator/common/controls.c \
 potator/common/gpu.c \
 potator/common/m6502/m6502.c \
@@ -528,8 +597,12 @@ potator/common/timer.c \
 potator/common/watara.c \
 potator/common/wsv_sound.c \
 Core/Src/porting/wsv/main_wsv.c
+endif
 
-MD_C_SOURCES = \
+MD_C_SOURCES = 
+
+ifneq ($(strip $(ROMS_MD)),)
+MD_C_SOURCES += \
 gwenesis/src/cpus/M68K/m68kcpu.c \
 gwenesis/src/cpus/Z80/Z80.c \
 gwenesis/src/sound/z80inst.c \
@@ -541,8 +614,12 @@ gwenesis/src/vdp/gwenesis_vdp_mem.c \
 gwenesis/src/vdp/gwenesis_vdp_gfx.c \
 gwenesis/src/savestate/gwenesis_savestate.c \
 Core/Src/porting/gwenesis/main_gwenesis.c
+endif
 
-A7800_C_SOURCES = \
+A7800_C_SOURCES = 
+
+ifneq ($(strip $(ROMS_A7800)),)
+A7800_C_SOURCES += \
 prosystem-go/core/Bios.c \
 prosystem-go/core/Cartridge.c \
 prosystem-go/core/Database.c \
@@ -557,8 +634,12 @@ prosystem-go/core/Riot.c \
 prosystem-go/core/Sally.c \
 prosystem-go/core/Tia.c \
 Core/Src/porting/a7800/main_a7800.c
+endif
 
-AMSTRAD_C_SOURCES = \
+AMSTRAD_C_SOURCES = 
+
+ifneq ($(strip $(ROMS_AMSTRAD)),)
+AMSTRAD_C_SOURCES += \
 caprice32-go/cap32/cap32.c \
 caprice32-go/cap32/crtc.c \
 caprice32-go/cap32/fdc.c \
@@ -571,8 +652,101 @@ Core/Src/porting/amstrad/amstrad_catalog.c \
 Core/Src/porting/amstrad/amstrad_format.c \
 Core/Src/porting/amstrad/amstrad_loader.c \
 Core/Src/porting/amstrad/amstrad_video8bpp.c
+endif
+
+VIDEOPAC_C_SOURCES = 
+
+ifneq ($(strip $(ROMS_VIDEOPAC)),)
+VIDEOPAC_C_SOURCES += \
+o2em-go/src/o2em_audio.c \
+o2em-go/src/o2em_cpu.c \
+o2em-go/src/o2em_cset.c \
+o2em-go/src/o2em_keyboard.c \
+o2em-go/src/o2em_score.c \
+o2em-go/src/o2em_table.c \
+o2em-go/src/o2em_vdc.c \
+o2em-go/src/o2em_vmachine.c \
+o2em-go/src/o2em_voice.c \
+o2em-go/src/o2em_vpp.c \
+o2em-go/src/o2em_vpp_cset.c \
+o2em-go/allegrowrapper/wrapalleg.c \
+o2em-go/src/vkeyb/ui.c \
+o2em-go/src/vkeyb/vkeyb.c \
+o2em-go/src/vkeyb/vkeyb_config.c \
+o2em-go/src/vkeyb/vkeyb_layout.c \
+Core/Src/porting/videopac/main_videopac.c
+endif
 
 TAMP_C_INCLUDES += -I$(TAMP_DIR)
+
+ZELDA3_C_SOURCES = 
+
+ifneq ("$(wildcard roms/zelda3/zelda3.sfc)","")
+ZELDA3_C_SOURCES + = \
+zelda3/zelda_rtl.c \
+zelda3/misc.c \
+zelda3/nmi.c \
+zelda3/poly.c \
+zelda3/attract.c \
+zelda3/snes/ppu.c \
+zelda3/snes/dma.c \
+zelda3/spc_player.c \
+zelda3/util.c \
+zelda3/audio.c \
+zelda3/overworld.c \
+zelda3/ending.c \
+zelda3/select_file.c \
+zelda3/dungeon.c \
+zelda3/messaging.c \
+zelda3/hud.c \
+zelda3/load_gfx.c \
+zelda3/ancilla.c \
+zelda3/player.c \
+zelda3/sprite.c \
+zelda3/player_oam.c \
+zelda3/snes/dsp.c \
+zelda3/sprite_main.c \
+zelda3/tagalong.c \
+zelda3/third_party/opus-1.3.1-stripped/opus_decoder_amalgam.c \
+zelda3/tile_detect.c \
+zelda3/overlord.c \
+Core/Src/porting/zelda3/main_zelda3.c \
+Core/Src/porting/zelda3/zelda_assets.c
+endif
+
+SMW_C_SOURCES = 
+
+ifneq ("$(wildcard roms/smw/smw.sfc)","")
+SMW_C_SOURCES + = \
+smw/src/smw_rtl.c \
+smw/src/smw_00.c \
+smw/src/smw_01.c \
+smw/src/smw_02.c \
+smw/src/smw_03.c \
+smw/src/smw_04.c \
+smw/src/smw_05.c \
+smw/src/smw_07.c \
+smw/src/smw_0c.c \
+smw/src/smw_0d.c \
+smw/src/smw_cpu_infra.c \
+smw/src/smw_spc_player.c \
+smw/src/config.c \
+smw/src/common_rtl.c \
+smw/src/common_cpu_infra.c \
+smw/src/util.c \
+smw/src/lm.c \
+smw/src/snes/ppu.c \
+smw/src/snes/dma.c \
+smw/src/snes/dsp.c \
+smw/src/snes/apu.c \
+smw/src/snes/spc.c \
+smw/src/snes/snes.c \
+smw/src/snes/cpu.c \
+smw/src/snes/cart.c \
+smw/src/tracing.c \
+Core/Src/porting/smw/main_smw.c \
+Core/Src/porting/smw/smw_assets.c
+endif
 
 GNUBOY_C_INCLUDES +=  \
 -ICore/Inc \
@@ -580,6 +754,15 @@ GNUBOY_C_INCLUDES +=  \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
 -Iretro-go-stm32/gnuboy-go/components \
+
+TGBDUAL_C_INCLUDES +=  \
+-ICore/Inc \
+-ICore/Inc/porting/gb_tgbdual \
+-ICore/Src/porting/lib \
+-ICore/Src/porting/lib/lzma \
+-Itgbdual-go \
+-Itgbdual-go/gb_core \
+-Itgbdual-go/libretro \
 -I./
 
 NES_C_INCLUDES +=  \
@@ -606,7 +789,6 @@ SMSPLUSGX_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Iretro-go-stm32/gnuboy-go/components \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus/cpu \
 -Iretro-go-stm32/smsplusgx-go/components/smsplus/sound \
@@ -617,11 +799,7 @@ PCE_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Iretro-go-stm32/gnuboy-go/components \
 -Iretro-go-stm32/pce-go/components/pce-go \
--Iretro-go-stm32/smsplusgx-go/components/smsplus \
--Iretro-go-stm32/smsplusgx-go/components/smsplus/cpu \
--Iretro-go-stm32/smsplusgx-go/components/smsplus/sound \
 -I./
 
 GW_C_INCLUDES +=  \
@@ -655,13 +833,7 @@ C_INCLUDES +=  \
 -ICore/Src/porting/lib/lzma \
 -ICore/Src/porting/lib/littlefs/ \
 -ICore/Src/porting/lib/tamp/tamp/_c_src \
--Iretro-go-stm32/nofrendo-go/components/nofrendo/cpu \
--Iretro-go-stm32/nofrendo-go/components/nofrendo/mappers \
--Iretro-go-stm32/nofrendo-go/components/nofrendo/nes \
--Iretro-go-stm32/nofrendo-go/components/nofrendo \
 -Iretro-go-stm32/components/odroid \
--Iretro-go-stm32/gnuboy-go/components \
--Iretro-go-stm32/smsplusgx-go/components/smsplus \
 -I./
 
 MSX_C_INCLUDES += \
@@ -714,12 +886,38 @@ AMSTRAD_C_INCLUDES +=  \
 -Icaprice32-go/cap32 \
 -I./
 
+VIDEOPAC_C_INCLUDES +=  \
+-ICore/Inc \
+-ICore/Src/porting/lib \
+-ICore/Src/porting/lib/lzma \
+-Iretro-go-stm32/components/odroid \
+-Io2em-go/src \
+-Io2em-go/libretro-common/include \
+-Io2em-go/allegrowrapper \
+-I./
+
+ZELDA3_C_INCLUDES +=  \
+-ICore/Inc \
+-ICore/Src/porting/lib \
+-ICore/Src/porting/lib/lzma \
+-Iretro-go-stm32/components/odroid \
+-Izelda3/ \
+-I./
+
+SMW_C_INCLUDES +=  \
+-ICore/Inc \
+-ICore/Src/porting/lib \
+-ICore/Src/porting/lib/lzma \
+-Iretro-go-stm32/components/odroid \
+-Ismw/ \
+-I./
+
 include Makefile.common
 
 
 $(BUILD_DIR)/$(TARGET)_extflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)
-	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad $< $(BUILD_DIR)/$(TARGET)_extflash.bin
+	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_tgb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 -j .overlay_smw -j .overlay_videopac $< $(BUILD_DIR)/$(TARGET)_extflash.bin
 
 $(BUILD_DIR)/$(TARGET)_intflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)

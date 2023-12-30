@@ -3,12 +3,6 @@
 #include <odroid_overlay.h>
 
 #include <string.h>
-#include <nofrendo.h>
-#include <nes.h>
-#include <nes_input.h>
-#include <nes_state.h>
-#include <nes_input.h>
-#include <osd.h>
 #include "main.h"
 #include "bitmaps.h"
 #include "gw_buttons.h"
@@ -16,18 +10,17 @@
 #include "gw_linker.h"
 #include "rg_i18n.h"
 #include "filesystem.h"
-
+#include "gw_malloc.h"
 
 static void set_ingame_overlay(ingame_overlay_t type);
 
 cpumon_stats_t cpumon_stats = {0};
 
-uint32_t audioBuffer[AUDIO_BUFFER_LENGTH];
 uint32_t audio_mute;
 
 
-int16_t pendingSamples = 0;
-int16_t audiobuffer_dma[AUDIO_BUFFER_LENGTH * 2] __attribute__((section (".audio")));
+int16_t *audiobuffer_dma;
+static size_t audiobuffer_dma_length;
 
 dma_transfer_state_t dma_state;
 uint32_t dma_counter;
@@ -63,11 +56,17 @@ bool odroid_netplay_quick_start(void)
     return true;
 }
 
+void odroid_set_audio_dma_size(size_t frame_sample_count)
+{
+    audiobuffer_dma_length = 2*frame_sample_count;
+    audiobuffer_dma = ahb_calloc(audiobuffer_dma_length, sizeof(uint16_t));
+}
+
 // TODO: Move to own file
 void odroid_audio_mute(bool mute)
 {
     if (mute) {
-        for (int i = 0; i < sizeof(audiobuffer_dma) / sizeof(audiobuffer_dma[0]); i++) {
+        for (int i = 0; i < audiobuffer_dma_length; i++) {
             audiobuffer_dma[i] = 0;
         }
     }
@@ -178,7 +177,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
 #if ENABLE_SCREENSHOT
                 printf("Capturing screenshot...\n");
                 odroid_audio_mute(true);
-                common_sleep_while_lcd_swap_pending();
+                lcd_sleep_while_swap_pending();
                 fs_file_t *file = fs_open("SCREENSHOT", FS_WRITE, FS_COMPRESS);
                 fs_write(file, lcd_get_inactive_buffer(), sizeof(framebuffer1));
                 fs_close(file);
@@ -311,7 +310,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
 
     if (clear_frames) {
         clear_frames--;
-        common_sleep_while_lcd_swap_pending();
+        lcd_sleep_while_swap_pending();
 
         // Clear the active screen buffer, caller must repaint it 
         memset(lcd_get_active_buffer(), 0, sizeof(framebuffer1));
@@ -630,12 +629,58 @@ static void set_ingame_overlay(ingame_overlay_t type){
     common_emu_state.last_overlay_time = get_elapsed_time();
 }
 
-bool common_sleep_while_lcd_swap_pending() {
-    bool pending = false;
-    while (lcd_is_swap_pending()) {
-        pending = true;
-        cpumon_sleep();
-    }
+#define OVERLAY_COLOR_565 0xFFFF
+#define BORDER_COLOR_565 0x1082  // Dark Dark Gray
 
-    return pending;
+#define BORDER_HEIGHT 240
+#define BORDER_WIDTH 32
+
+#define BORDER_Y_OFFSET (((GW_LCD_HEIGHT) - (BORDER_HEIGHT)) / 2)
+
+void draw_border_zelda3(pixel_t * fb){
+    uint32_t start, bit_index;
+    start = 0;
+    bit_index = 0;
+    for(uint16_t i=0; i < BORDER_HEIGHT; i++){
+        uint32_t offset = start + i * GW_LCD_WIDTH;
+        for(uint8_t j=0; j < BORDER_WIDTH; j++){
+            fb[offset + j] = 
+                (IMG_BORDER_ZELDA3[bit_index >> 3] << (bit_index & 0x07)) & 0x80 ? BORDER_COLOR_565 : 0x0000;
+            bit_index++;
+        }
+    }
+    start = 32 + 256;
+    bit_index = 0;
+    for(uint16_t i=0; i < BORDER_HEIGHT; i++){
+        uint32_t offset = start + i * GW_LCD_WIDTH;
+        for(uint8_t j=0; j < BORDER_WIDTH; j++){
+            fb[offset + j] = 
+                (IMG_BORDER_ZELDA3[bit_index >> 3] << (bit_index & 0x07)) & 0x80 ? BORDER_COLOR_565 : 0x0000;
+            bit_index++;
+        }
+    }
+}
+
+void draw_border_smw(pixel_t * fb){
+    uint32_t start, bit_index;
+    start = 0;
+    bit_index = 0;
+    for(uint16_t i=0; i < BORDER_HEIGHT; i++){
+        uint32_t offset = start + i * GW_LCD_WIDTH;
+        for(uint8_t j=0; j < BORDER_WIDTH; j++){
+            fb[offset + j] = 
+                (IMG_BORDER_LEFT_SMW[bit_index >> 3] << (bit_index & 0x07)) & 0x80 ? BORDER_COLOR_565 : 0x0000;
+            bit_index++;
+        }
+    }
+    start = 32 + 256;
+    bit_index = 0;
+    for(uint16_t i=0; i < BORDER_HEIGHT; i++){
+        uint32_t offset = start + i * GW_LCD_WIDTH;
+        for(uint8_t j=0; j < BORDER_WIDTH; j++){
+            fb[offset + j] = 
+                (IMG_BORDER_RIGHT_SMW[bit_index >> 3] << (bit_index & 0x07)) & 0x80 ? BORDER_COLOR_565 : 0x0000;
+            bit_index++;
+        }
+    }
 }

@@ -22,6 +22,7 @@
 #include <assert.h>
 #include  "miniz.h"
 #include "lzma.h"
+#include "filesystem.h"
 #include "appid.h"
 
 static uint samplesPerFrame;
@@ -44,17 +45,12 @@ static bool SaveState(char *pathName)
 {
     printf("Saving state...\n");
 
-    nes_state_save(nes_save_buffer, 24000);
-#if OFF_SAVESTATE==1
-    if (strcmp(pathName,"1") == 0) {
-        // Save in common save slot (during a power off)
-        store_save((uint8_t *) &__OFFSAVEFLASH_START__, nes_save_buffer, sizeof(nes_save_buffer));
-    } else {
-#endif
-        store_save((uint8_t *) ACTIVE_FILE->save_address, nes_save_buffer, sizeof(nes_save_buffer));
-#if OFF_SAVESTATE==1
-    }
-#endif
+    nes_state_save(nes_save_buffer, sizeof(nes_save_buffer));
+
+    fs_file_t *file;
+    file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
+    fs_write(file, nes_save_buffer, sizeof(nes_save_buffer));
+    fs_close(file);
 
     return 0;
 }
@@ -64,7 +60,13 @@ extern int nes_state_load(uint8_t* flash_ptr, size_t size);
 
 static bool LoadState(char *pathName)
 {
-    nes_state_load((uint8_t *) ACTIVE_FILE->save_address, ACTIVE_FILE->save_size);
+    fs_file_t *file;
+    file = fs_open(pathName, FS_READ, FS_COMPRESS);
+    fs_read(file, nes_save_buffer, sizeof(nes_save_buffer));
+    fs_close(file);
+
+    nes_state_load((uint8_t *) nes_save_buffer, sizeof(nes_save_buffer));
+
     return true;
 }
 
@@ -348,7 +350,7 @@ static void blit_5to6(bitmap_t *bmp, uint16_t *framebuffer) {
 
 static void blit(bitmap_t *bmp)
 {
-    uint16_t *framebuffer = lcd_get_active_buffer()
+    uint16_t *framebuffer = lcd_get_active_buffer();
     odroid_display_scaling_t scaling = odroid_display_get_scaling_mode();
     odroid_display_filter_t filtering = odroid_display_get_filter_mode();
 
@@ -397,7 +399,6 @@ void osd_blitscreen(bitmap_t *bmp)
         lastFPSTime = currentTime;
     }
 
-    common_sleep_while_lcd_swap_pending();
     PROFILING_INIT(t_blit);
     PROFILING_START(t_blit);
 
@@ -511,17 +512,7 @@ void osd_loadstate()
 {
     if(autoload) {
         autoload = false;
-
-#if OFF_SAVESTATE==1
-        if (save_slot_load == 1) {
-            // Load from common save slot if needed
-            nes_state_load((uint8_t *)&__OFFSAVEFLASH_START__, ACTIVE_FILE->save_size);
-        } else {
-#endif
-            LoadState("");
-#if OFF_SAVESTATE==1
-        }
-#endif
+        odroid_system_emu_load_state(save_slot_load);
     }
 }
 
@@ -537,6 +528,9 @@ int app_main_nes(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
     odroid_system_init(APPID_NES, AUDIO_SAMPLE_RATE);
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
+    // Allocate the maximum samples count for a frame on NES
+    odroid_set_audio_dma_size((AUDIO_SAMPLE_RATE) / 50);
+
     if (start_paused) {
         common_emu_state.pause_after_frames = 4;
         odroid_audio_mute(true);
@@ -548,14 +542,14 @@ int app_main_nes(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 
     printf("Nofrendo start!\n");
 
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-
     if (ACTIVE_FILE->region == REGION_PAL) {
+        lcd_set_refresh_rate(50);
         nes_region = NES_PAL;
         common_emu_state.frame_time_10us = (uint16_t)(100000 / 50 + 0.5f);
         samplesPerFrame = (AUDIO_SAMPLE_RATE) / 50;
         HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma,  (2 * AUDIO_SAMPLE_RATE) / 50);
     } else {
+        lcd_set_refresh_rate(60);
         nes_region = NES_NTSC;
         common_emu_state.frame_time_10us = (uint16_t)(100000 / 60 + 0.5f);
         //printf("frame_time_10us: %d\n", common_emu_state.frame_time_10us);

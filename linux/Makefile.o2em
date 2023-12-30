@@ -1,0 +1,92 @@
+TARGET = retro-go-o2em
+
+DEBUG = 1
+#OPT = -Og -ggdb
+OPT = -O0 -ggdb3
+
+BUILD_DIR = build
+
+
+C_SOURCES =  \
+o2em/main.c \
+odroid_input.c \
+odroid_netplay.c \
+odroid_overlay.c \
+odroid_sdcard.c \
+odroid_system.c \
+odroid_display.c \
+odroid_audio.c \
+gw_lcd.c \
+crc32.c \
+porting.c \
+loaded_o2em_rom.c \
+../o2em-go/src/o2em_audio.c \
+../o2em-go/src/o2em_cpu.c \
+../o2em-go/src/o2em_cset.c \
+../o2em-go/src/o2em_keyboard.c \
+../o2em-go/src/o2em_score.c \
+../o2em-go/src/o2em_table.c \
+../o2em-go/src/o2em_vdc.c \
+../o2em-go/src/o2em_vmachine.c \
+../o2em-go/src/o2em_voice.c \
+../o2em-go/src/o2em_vpp.c \
+../o2em-go/src/o2em_vpp_cset.c \
+../o2em-go/allegrowrapper/wrapalleg.c \
+../o2em-go/src/vkeyb/ui.c \
+../o2em-go/src/vkeyb/vkeyb.c \
+../o2em-go/src/vkeyb/vkeyb_config.c \
+../o2em-go/src/vkeyb/vkeyb_layout.c
+
+
+PREFIX = 
+
+CC = $(PREFIX)gcc
+AS = $(PREFIX)gcc -x assembler-with-cpp
+CP = $(PREFIX)objcopy
+SZ = $(PREFIX)size
+
+HEX = $(CP) -O ihex
+BIN = $(CP) -O binary -S
+
+C_DEFS =  \
+-DTARGET_GNW \
+-DIS_LITTLE_ENDIAN \
+-D__LIBRETRO__
+# -DHAVE_VOICE -DHAVE_RWAV
+
+C_INCLUDES =  \
+-I. \
+-I../o2em-go/src \
+-I../o2em-go/libretro-common/include \
+-I../o2em-go/allegrowrapper \
+-I../retro-go-stm32/components/odroid
+
+
+ASFLAGS = $(AS_DEFS) $(AS_INCLUDES) $(OPT) -fdata-sections -ffunction-sections
+CFLAGS  = $(C_DEFS) $(C_INCLUDES) `sdl2-config --cflags` $(OPT) -fdata-sections -ffunction-sections
+CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
+
+#LIBS = -lm `sdl2-config --libs`
+LIBS = -lm `sdl2-config --libs`
+LDFLAGS = $(LIBS)
+
+all: $(BUILD_DIR)/$(TARGET).elf
+
+OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
+vpath %.c $(sort $(dir $(C_SOURCES)))
+
+
+$(BUILD_DIR)/%.o: %.c Makefile.o2em | $(BUILD_DIR) 
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile.o2em
+	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+	$(SZ) $@
+
+$(BUILD_DIR):
+	mkdir $@
+
+clean:
+	-rm -fR $(BUILD_DIR)
+
+-include $(wildcard $(BUILD_DIR)/*.d)

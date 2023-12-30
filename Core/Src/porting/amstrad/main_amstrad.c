@@ -22,6 +22,7 @@
 
 #define AMSTRAD_FPS 50
 #define AMSTRAD_SAMPLE_RATE 22050
+#define AUDIO_BUFFER_LENGTH_AMSTRAD  (AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS)
 
 #define AMSTRAD_DISK_EXTENSION "cdk"
 
@@ -245,7 +246,7 @@ static const uint8_t IMG_DISKETTE[] = {
 };
 
 static bool auto_key = false;
-static int16_t soundBuffer[AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS];
+static int16_t soundBuffer[AUDIO_BUFFER_LENGTH_AMSTRAD];
 extern void amstrad_set_volume(uint8_t volume);
 static const uint8_t volume_table[ODROID_AUDIO_VOLUME_MAX + 1] = {
     0,
@@ -280,7 +281,7 @@ bool saveAmstradState(char *pathName) {
 
     fs_file_t *file;
     file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
-    fs_write(file, headerString, 8);
+    fs_write(file, (unsigned char *)headerString, 8);
     cap32_save_state(file);
     fs_write(file, (unsigned char *)&selected_palette_index, 4);
     fs_write(file, (unsigned char *)&selected_disk_index, 4);
@@ -301,7 +302,7 @@ bool saveAmstradState(char *pathName) {
 bool loadAmstradState(char *pathName) {
     fs_file_t *file;
     file = fs_open(pathName, FS_READ, FS_COMPRESS);
-    char readin_header[8] = {0};
+    unsigned char readin_header[8] = {0};
     fs_read(file, readin_header, 8);
 
     // Check for header
@@ -313,12 +314,12 @@ bool loadAmstradState(char *pathName) {
         fs_read(file, (unsigned char *)&selected_controls_index, 4);
         fs_read(file, (unsigned char *)&selected_key_index, 4);
 
-        fs_read(file, (unsigned char *)&amstrade_button_a_key, 4);
-        fs_read(file, (unsigned char *)&amstrade_button_b_key, 4);
-        fs_read(file, (unsigned char *)&amstrade_button_game_key, 4);
-        fs_read(file, (unsigned char *)&amstrade_button_time_key, 4);
-        fs_read(file, (unsigned char *)&amstrade_button_start_key, 4);
-        fs_read(file, (unsigned char *)&amstrade_button_select_key, 4);
+        fs_read(file, (unsigned char *)&amstrad_button_a_key, 4);
+        fs_read(file, (unsigned char *)&amstrad_button_b_key, 4);
+        fs_read(file, (unsigned char *)&amstrad_button_game_key, 4);
+        fs_read(file, (unsigned char *)&amstrad_button_time_key, 4);
+        fs_read(file, (unsigned char *)&amstrad_button_start_key, 4);
+        fs_read(file, (unsigned char *)&amstrad_button_select_key, 4);
     }
     fs_close(file);
     return true;
@@ -956,8 +957,8 @@ void amstrad_pcm_submit()
     // update sound volume in emulator
     amstrad_set_volume(volume_table[odroid_audio_volume_get()]);
 
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS;
-    memcpy(&audiobuffer_dma[offset],soundBuffer,2 * AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS);
+    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_BUFFER_LENGTH_AMSTRAD;
+    memcpy(&audiobuffer_dma[offset],soundBuffer, AUDIO_BUFFER_LENGTH_AMSTRAD * sizeof(int16_t));
 }
 
 bool amstrad_is_cpm;
@@ -1056,6 +1057,9 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, int8_t save_slot
                         ((i & 0x3) * 31 / 3);
     }
 
+    // Allocate the maximum samples count for a frame on Amstrad
+    odroid_set_audio_dma_size(AUDIO_BUFFER_LENGTH_AMSTRAD);
+
     if (start_paused)
     {
         common_emu_state.pause_after_frames = 2;
@@ -1066,6 +1070,7 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, int8_t save_slot
         common_emu_state.pause_after_frames = 0;
     }
     common_emu_state.frame_time_10us = (uint16_t)(100000 / AMSTRAD_FPS + 0.5f);
+    lcd_set_refresh_rate(AMSTRAD_FPS);
 
     memset(framebuffer1, 0, sizeof(framebuffer1));
     memset(framebuffer2, 0, sizeof(framebuffer2));
@@ -1074,11 +1079,10 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     odroid_system_emu_init(&loadAmstradState, &saveAmstradState, NULL);
 
     // Init Sound
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS * 2);
+    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_AMSTRAD * 2);
 
     capmain(0, NULL);
-    amstrad_set_audio_buffer((int8_t *)soundBuffer, AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS * 2);
+    amstrad_set_audio_buffer((int8_t *)soundBuffer, AUDIO_BUFFER_LENGTH_AMSTRAD * sizeof(int16_t));
 
     if (0 == strcmp(ACTIVE_FILE->ext, AMSTRAD_DISK_EXTENSION))
     {
@@ -1134,12 +1138,11 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, int8_t save_slot
 
         caprice_retro_loop();
         if (drawFrame) {
-            common_sleep_while_lcd_swap_pending();
             _blit();
             lcd_swap();
         }
         amstrad_pcm_submit();
-        amstrad_set_audio_buffer((int8_t *)soundBuffer, AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS * 2);
+        amstrad_set_audio_buffer((int8_t *)soundBuffer, AUDIO_BUFFER_LENGTH_AMSTRAD * sizeof(int16_t));
 
         if (!common_emu_state.skip_frames)
         {

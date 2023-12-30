@@ -1024,8 +1024,12 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     memset(framebuffer1, 0x0, sizeof(framebuffer1));
     memset(framebuffer2, 0x0, sizeof(framebuffer2));
 
+    // Allocate the maximum samples count for a frame on NES
+    odroid_set_audio_dma_size((NES_FREQUENCY_48K) / 50);
+
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
+        odroid_audio_mute(true);
     } else {
         common_emu_state.pause_after_frames = 0;
     }
@@ -1054,13 +1058,14 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     // Init Sound
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
 
     HAL_SAI_DMAStop(&hsai_BlockA1);
     if (FSettings.PAL) {
+        lcd_set_refresh_rate(50);
         common_emu_state.frame_time_10us = (uint16_t)(100000 / 50 + 0.5f);
         samplesPerFrame = sndsamplerate / 50;
     } else {
+        lcd_set_refresh_rate(60);
         common_emu_state.frame_time_10us = (uint16_t)(100000 / 60 + 0.5f);
         samplesPerFrame = sndsamplerate / 60;
     }
@@ -1103,8 +1108,8 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
             {302, curr_lang->s_Crop_Horizontal_Overscan,crop_overscan_h_text,1,&crop_overscan_h_cb},
             {302, curr_lang->s_Disable_Sprite_Limit,sprite_limit_text,1,&sprite_limit_cb},
             {302, curr_lang->s_NES_CPU_OC,overclocking_text,1,&overclocking_cb},
-            {302, curr_lang->s_NES_Eject_Insert_FDS,eject_insert_text,GameInfo->type == GIT_FDS,&fds_eject_cb},
-            {302, curr_lang->s_NES_Swap_Side_FDS,next_disk_text,allow_swap_disk,&fds_side_swap_cb},
+            {302, curr_lang->s_NES_Eject_Insert_FDS,eject_insert_text,GameInfo->type == GIT_FDS ? 1 : -1,&fds_eject_cb},
+            {302, curr_lang->s_NES_Swap_Side_FDS,next_disk_text,allow_swap_disk ? 1 : -1,&fds_side_swap_cb},
             ODROID_DIALOG_CHOICE_LAST
         };
 
@@ -1124,7 +1129,6 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
         FCEUI_Emulate(&gfx, &sound, &ssize, !drawFrame);
         if (drawFrame)
         {
-            common_sleep_while_lcd_swap_pending();
             _blit();
             lcd_swap();
         }

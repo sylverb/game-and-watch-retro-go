@@ -99,6 +99,7 @@ MAX_COMPRESSED_WSV_SIZE = 0x00080000
 MAX_COMPRESSED_SG_COL_SIZE = 60 * 1024
 MAX_COMPRESSED_A7800_SIZE = 131200
 MAX_COMPRESSED_MSX_SIZE = 136*1024
+MAX_COMPRESSED_VIDEOPAC_SIZE = 136*1024
 
 """
 All ``compress_*`` functions must be decorated ``@COMPRESSIONS`` and have the
@@ -270,19 +271,25 @@ class ROM:
         self.romdef.setdefault('name', self.filename)
         self.romdef.setdefault('publish', '1')
         self.publish = (self.romdef['publish'] == '1')
+        self.romdef.setdefault('embed', '1')
+        self.embed = (self.romdef['embed'] == '1')
         self.system_name = system_name
         self.name = self.romdef['name']
         print("Found rom " + self.filename +" will display name as: " + self.romdef['name'])
         if not (self.publish):
             print("& will not Publish !")
+        if not (self.embed):
+            print("& will not embed !")
+            self.symbol = "0"
         obj_name = "".join([i if i.isalnum() else "_" for i in self.path.name])
         self.obj_path = "build/roms/" + obj_name + ".o"
         symbol_path = str(self.path.parent) + "/" + obj_name
-        self.symbol = (
-            "_binary_"
-            + "".join([i if i.isalnum() else "_" for i in symbol_path])
-            + "_start"
-        )
+        if (self.embed):
+            self.symbol = (
+                "_binary_"
+                + "".join([i if i.isalnum() else "_" for i in symbol_path])
+                + "_start"
+            )
 
         self.img_path = self.path.parent / (self.filename + ".img")
         obj_name = "".join([i if i.isalnum() else "_" for i in self.img_path.name])
@@ -762,6 +769,14 @@ class ROMParser:
                 return
             compressed_data = compress(data)
             output_file.write_bytes(compressed_data)
+        elif "videopac_system" in variable_name:  # Videopac/Odyssey2
+            if rom.path.stat().st_size > MAX_COMPRESSED_VIDEOPAC_SIZE:
+                print(
+                    f"INFO: {rom.name} is too large to compress, skipping compression!"
+                )
+                return
+            compressed_data = compress(data)
+            output_file.write_bytes(compressed_data)
         elif variable_name in ["col_system","sg1000_system"] :  # COL or SG
             if rom.path.stat().st_size > MAX_COMPRESSED_SG_COL_SIZE:
                 print(
@@ -988,7 +1003,8 @@ class ROMParser:
                 if (args.coverflow != 0) :
                     total_img_size += rom.img_size
 
-                f.write(self.generate_object_file((rom),system_name))
+                if (rom.embed):
+                    f.write(self.generate_object_file((rom),system_name))
                 if (args.coverflow != 0) :
                     try:
                         f.write(self.generate_img_object_file(rom, cover_width, cover_height))
@@ -1068,6 +1084,20 @@ class ROMParser:
         romdef.setdefault('wsv', {})
         romdef.setdefault('a7800', {})
         romdef.setdefault('amstrad', {})
+        romdef.setdefault('zelda3', {
+            'zelda3': {'embed': '0'},
+            'zelda3_de': {'publish': '0'},
+            'zelda3_fr': {'publish': '0'},
+            'zelda3_fr-c': {'publish': '0'},
+            'zelda3_en': {'publish': '0'},
+            'zelda3_es': {'publish': '0'},
+            'zelda3_pl': {'publish': '0'},
+            'zelda3_pt': {'publish': '0'},
+            'zelda3_nl': {'publish': '0'},
+            'zelda3_sv': {'publish': '0'},
+        })
+        romdef.setdefault('smw', {'smw': {'embed': '0'}})
+        romdef.setdefault('videopac', {})
 
         system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/gb_roms.c",
@@ -1077,7 +1107,7 @@ class ROMParser:
             ["gb", "gbc"],
             "SAVE_GB_",
             romdef["gb"],
-            None,
+            "GG_GB_",
             current_id,
             args.compress,
             args.compress_gb_speed,
@@ -1368,6 +1398,104 @@ class ROMParser:
         total_save_size += save_size
         total_rom_size += rom_size
         build_config += "#define ENABLE_EMULATOR_AMSTRAD\n" if rom_size > 0 else ""
+        if system_save_size > larger_save_size : larger_save_size = system_save_size
+
+        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+            "Core/Src/retro-go/zelda3_roms.c",
+            "Zelda3",
+            "zelda3_system",
+            "zelda3",
+            ["sfc"],
+            "SAVE_ZELDA3_",
+            romdef["zelda3"],
+            None,
+            current_id
+        )
+        total_save_size += save_size
+        total_rom_size += rom_size
+        build_config += "#define ENABLE_HOMEBREW_ZELDA3\n" if rom_size > 0 else ""
+        if system_save_size > larger_save_size : larger_save_size = system_save_size
+        if rom_size > 0:
+            self.write_if_changed(
+                "build/zelda3_extflash.ld",
+                """
+                . = ALIGN(4K);
+                __extflash_zelda3_start__ = .;
+                build/zelda3/ancilla.o (.text .text* .rodata .rodata*)
+                build/zelda3/attract.o (.text .text* .rodata .rodata*)
+                build/zelda3/audio.o (.text .text* .rodata .rodata*)
+                build/zelda3/dungeon.o (.text .text* .rodata .rodata*)
+                build/zelda3/ending.o (.text .text* .rodata .rodata*)
+                build/zelda3/misc.o (.text .text* .rodata .rodata*)
+                build/zelda3/overlord.o (.text .text* .rodata .rodata*)
+                build/zelda3/opus_decoder_amalgam.o (.text .text* .rodata .rodata*)
+                build/zelda3/util.o (.text .text* .rodata .rodata*)
+                build/zelda3/select_file.o (.text .text* .rodata .rodata*)
+                build/zelda3/tagalong.o (.text .text* .rodata .rodata*)
+                __extflash_zelda3_end__ = .;
+                """
+            )
+        else:
+            self.write_if_changed(
+                "build/zelda3_extflash.ld",""
+            )
+
+        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+            "Core/Src/retro-go/smw_roms.c",
+            "SMW",
+            "smw_system",
+            "smw",
+            ["sfc"],
+            "SAVE_SMW_",
+            romdef["smw"],
+            None,
+            current_id
+        )
+        total_save_size += save_size
+        total_rom_size += rom_size
+        build_config += "#define ENABLE_HOMEBREW_SMW\n" if rom_size > 0 else ""
+        if system_save_size > larger_save_size : larger_save_size = system_save_size
+        if rom_size > 0:
+            self.write_if_changed(
+                "build/smw_extflash.ld",
+                """
+                . = ALIGN(4K);
+                __extflash_smw_start__ = .;
+                build/smw/apu.o (.text .text* .rodata .rodata*)
+                build/smw/cart.o (.text .text* .rodata .rodata*)
+                build/smw/common_cpu_infra.o (.text .text* .rodata .rodata*)
+                build/smw/common_rtl.o (.text .text* .rodata .rodata*)
+                build/smw/config.o (.text .text* .rodata .rodata*)
+                build/smw/cpu.o (.text .text* .rodata .rodata*)
+                build/smw/lm.o (.text .text* .rodata .rodata*)
+                build/smw/smw_cpu_infra.o (.text .text* .rodata .rodata*)
+                build/smw/snes.o (.text .text* .rodata .rodata*)
+                build/smw/spc.o (.text .text* .rodata .rodata*)
+                build/smw/tracing.o (.text .text* .rodata .rodata*)
+                build/smw/util.o (.text .text* .rodata .rodata*)
+                __extflash_smw_end__ = .;
+                """
+            )
+        else:
+            self.write_if_changed(
+                "build/smw_extflash.ld",""
+            )
+
+        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+            "Core/Src/retro-go/videopac_roms.c",
+            "Philips Vectrex",
+            "videopac_system",
+            "videopac",
+            ["bin"],
+            "SAVE_VIDEOPAC_",
+            romdef["videopac"],
+            None,
+            current_id,
+            args.compress
+        )
+        total_save_size += save_size
+        total_rom_size += rom_size
+        build_config += "#define ENABLE_EMULATOR_VIDEOPAC\n" if rom_size > 0 else ""
         if system_save_size > larger_save_size : larger_save_size = system_save_size
 
         total_size = total_save_size + total_rom_size + total_img_size

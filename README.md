@@ -81,7 +81,13 @@ Supported emulators:
 - Sega Genesis / Megadrive (md)
 - Sega Master System (sms)
 - Sega SG-1000 (sg)
+- Videopac / Odyssey2 (videopac)
 - Watara Supervision (wsv)
+
+Supported SNES game _ports_:
+
+- The Legend of Zelda: A Link to the Past
+- Super Mario World
 
 ## Table of Contents
 - [NewUI howto](#newui-howto)
@@ -105,11 +111,15 @@ Supported emulators:
   - [Compression support](#compression-support)
   - [Cheat codes](#cheat-codes)
     - [Cheat codes on NES System](#cheat-codes-on-nes-system)
+    - [Cheat codes on GB System](#cheat-codes-on-gb-system)
     - [Cheat codes on PCE System](#cheat-codes-on-pce-system)
     - [Cheat codes on MSX System](#cheat-codes-on-msx-system)
   - [Upgrading the flash](#upgrading-the-flash)
   - [Advanced Flash Examples](#advanced-flash-examples)
     - [Custom Firmware (CFW)](#custom-firmware-cfw)
+  - [SNES game ports](#snes-game-ports)
+    - [The Legend of Zelda: A Link to the Past](#the-legend-of-zelda-a-link-to-the-past)
+    - [Super Mario World](#super-mario-world)
   - [Discord, support and discussion](#discord-support-and-discussion)
   - [LICENSE](#license)
 
@@ -301,6 +311,22 @@ When you re-flash, you can enable / disable each of your codes in the game selec
 
 A collection of codes can be found here: [https://github.com/martaaay/game-and-watch-retro-go-game-genie-codes](https://github.com/martaaay/game-and-watch-retro-go-game-genie-codes).
 
+### Cheat codes on GB System
+
+To add Game Genie/Game Shark codes, create a file ending in .ggcodes in the same directory as your rom with the same name as your rom. For instance, for
+"roms/gb/Wario Land 3.gb" make a file called "roms/gb/Wario Land 3.ggcodes". In that file, each line can have several Game Genie / Game Shark codes
+(separate them using a +) and a maximum of 16 lines of active codes. Each line can also have a description (up to 25 characters long).
+You can comment out a line by prefixing with # or //. For example:
+```
+SXIOPO, Inf lives
+APZLGG+APZLTG+GAZUAG, Mega jump
+YSAOPE+YEAOZA+YEAPYA, Start on World 8-1
+YSAOPE+YEAOZA+LXAPYA, Start on World -1
+GOZSXX, Invincibility
+# TVVOAE, Circus music
+```
+When you re-flash, you can enable / disable each of your codes in the game selection screen or during game.
+
 ### Cheat codes on PCE System
 
 Now you can define rom patch for PCE Roms. You can found patch info from [Here](https://krikzz.com/forum/index.php?topic=1004.0).
@@ -404,6 +430,92 @@ What is supported :
 Tape support has not been ported, if there is any interest in adding this, it could be considered.
 
 Note that the Amstrad CPC6128 support is done using caprice32 emulator, any game that is not working correctly using this emulator will not work on the Game & Watch. To fit in the G&W, a some features have been removed, so it's possible that some games running on caprice32 will not work in the G&W port. The emulator port is still in progress, consider it as a preview version.
+
+## Vectrex/Odyssey2 Emulator
+Vectrex/Odyssey2 is provided by a modified version of o2em emulator.
+Support is currently in development so it's unstable, has lots of bugs and it's not really playable.
+To play, you need a bios file, for now rename your bios file to bios.bin and put it in the roms/vectrex folder
+
+## SNES game ports
+
+Some SNES game have been _ported_ to the G&W.
+
+### The Legend of Zelda: A Link to the Past
+
+To enable this port, copy the SNES ROM (US version) to `roms/zelda3/zelda3.sfc`.
+
+Due to the limited set of buttons (especially on the Mario console), the controls are peculiar:
+
+| Description | Binding on Mario units | Binding on Zelda units |
+| ----------- | ---------------------- | ---------------------- |
+| `A` button (Pegasus Boots / Interacting) | `A` | `A` |
+| `B` button (Sword) | `B` | `B` |
+| `X` button (Show Map) | `GAME + B` | `TIME` |
+| `Y` button (Use Item) | `TIME` | `SELECT` |
+| `Select` button (Save Screen) | `GAME + TIME` | `GAME + TIME` |
+| `Start` button (Item Selection Screen) | `GAME + A` | `START` |
+| `L` button (Quick-swapping, if enabled) | `-` | `GAME + B` |
+| `R` button (Quick-swapping, if enabled) | `-` | `GAME + A` |
+
+Some features can be configured with flags:
+
+| Build flag    | Description |
+| ------------- | ------------- |
+| `LIMIT_30FPS` | Limit to 30 fps for improved stability.<br>Enabled by default.<br>Disabling this flag will result in unsteady framerate and stuttering. |
+| `FASTER_UI` | Increase UI speed (item menu, etc.).<br>Enabled by default. |
+| `BATTERY_INDICATOR` | Display battery indicator in item menu.<br>Enabled by default. |
+| `FEATURE_SWITCH_LR` | Item switch on L/R. Also allows reordering of items in inventory by pressing Y+direction.<br>Hold X, L, or R inside of the item selection screen to assign items to those buttons.<br>If X is reassigned, Select opens the map. Push Select while paused to save or quit.<br>When L or R are assigned items, those buttons will no longer cycle items. |
+| `FEATURE_TURN_WHILE_DASHING` | Allow turning while dashing. |
+| `FEATURE_MIRROR_TO_DARK_WORLD` | Allow mirror to be used to warp to the Dark World. |
+| `FEATURE_COLLECT_ITEMS_WITH_SWORD` | Collect items (like hearts) with sword instead of having to touch them. |
+| `FEATURE_BREAK_POTS_WITH_SWORD` | Level 2-4 sword can be used to break pots. |
+| `FEATURE_DISABLE_LOW_HEALTH_BEEP` | Disable the low health beep. |
+| `FEATURE_SKIP_INTRO_ON_KEYPRESS` | Avoid waiting too much at the start.<br>Enabled by default. |
+| `FEATURE_SHOW_MAX_ITEMS_IN_YELLOW` | Display max rupees/bombs/arrows with orange/yellow color. |
+| `FEATURE_MORE_ACTIVE_BOMBS` | Allows up to four bombs active at a time instead of two. |
+| `FEATURE_CARRY_MORE_RUPEES` | Can carry 9999 rupees instead of 999. |
+| `FEATURE_MISC_BUG_FIXES` | Enable various zelda bug fixes. |
+| `FEATURE_CANCEL_BIRD_TRAVEL` | Allow bird travel to be cancelled by hitting the X key. |
+| `FEATURE_GAME_CHANGING_BUG_FIXES` | Enable some more advanced zelda bugfixes that change game behavior. |
+| `FEATURE_SWITCH_LR_LIMIT` | Enable this to limit the ItemSwitchLR item cycling to the first 4 items. |
+
+#### Alternate languages
+
+By default, dialogues extracted from the US ROM are in english. You can replace dialogues with another language by adding a localized ROM file. Supported alternate languages are:
+
+| Language | Origin | Naming | SHA1 hash |
+| -------- | ------ | ------ | --------- |
+| German   | Original | zelda3_de.sfc | 2E62494967FB0AFDF5DA1635607F9641DF7C6559 |
+| French   | Original | zelda3_fr.sfc | 229364A1B92A05167CD38609B1AA98F7041987CC |
+| French (Canada) | Original | zelda3_fr-c.sfc | C1C6C7F76FFF936C534FF11F87A54162FC0AA100 |
+| English (Europe) | Original | zelda3_en.sfc | 7C073A222569B9B8E8CA5FCB5DFEC3B5E31DA895 |
+| Spanish  | Romhack | zelda3_es.sfc | 461FCBD700D1332009C0E85A7A136E2A8E4B111E |
+| Polish   | Romhack | zelda3_pl.sfc | 3C4D605EEFDA1D76F101965138F238476655B11D |
+| Portuguese | Romhack | zelda3_pt.sfc | D0D09ED41F9C373FE6AFDCCAFBF0DA8C88D3D90D |
+| Dutch    | Romhack | zelda3_nl.sfc | FA8ADFDBA2697C9A54D583A1284A22AC764C7637 |
+| Swedish  | Romhack | zelda3_sv.sfc | 43CD3438469B2C3FE879EA2F410B3EF3CB3F1CA4 |
+
+### Super Mario World
+
+To enable this port, copy the SNES ROM (US version) to `roms/smw/smw.sfc`.
+
+Due to the limited set of buttons (especially on the Mario console), the controls are peculiar:
+
+| Description | Binding on Mario units | Binding on Zelda units |
+| ----------- | ---------------------- | ---------------------- |
+| `A` button (Spin Jump) | `A` | `A` |
+| `B` button (Regular Jump) | `B` | `B` |
+| `X`/`Y` button (Dash/Shoot) | `TIME` | `SELECT` or `START` |
+| `Select` button (Use Reserve Item) | `GAME + A` | `TIME` |
+| `Start` button (Pause Game) | `GAME + TIME` | `GAME + TIME` |
+| `L` button (Scroll Screen Left) | `-` | `GAME + B` |
+| `R` button (Scroll Screen Right) | `-` | `GAME + A` |
+
+Some features can be configured with flags:
+
+| Build flag    | Description |
+| ------------- | ------------- |
+| `LIMIT_30FPS` | Limit to 30 fps for improved stability.<br>Enabled by default.<br>Disabling this flag will result in unsteady framerate and stuttering. |
 
 ## Discord, support and discussion 
 

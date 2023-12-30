@@ -31,9 +31,9 @@ static uint8_t wsv_framebuffer[WSV_WIDTH*WSV_HEIGHT*2];
 static odroid_video_frame_t video_frame = {WSV_WIDTH, WSV_HEIGHT, WSV_WIDTH * 2, 2, 0xFF, -1, NULL, NULL, 0, {}};
 
 #define WSV_FPS 50 // Real hardware is 50.81fps
-#define WSV_AUDIO_BUFFER_LENGTH (SV_SAMPLE_RATE / WSV_FPS)
-#define AUDIO_BUFFER_LENGTH_DMA_WSV (2 * WSV_AUDIO_BUFFER_LENGTH)
-static int8 audioBuffer_wsv[WSV_AUDIO_BUFFER_LENGTH*2]; // *2 as emulator is filling stereo buffer
+#define AUDIO_BUFFER_LENGTH_WSV (SV_SAMPLE_RATE / WSV_FPS)
+#define AUDIO_BUFFER_LENGTH_DMA_WSV (2 * AUDIO_BUFFER_LENGTH_WSV)
+static int8 audioBuffer_wsv[AUDIO_BUFFER_LENGTH_WSV*2]; // *2 as emulator is filling stereo buffer
 #define WSV_ROM_BUFF_LENGTH 0x80000 // Largest Watara Supervision Rom is 512kB (Journey to the West)
 // Memory to handle compressed roms
 static uint8 wsv_rom_memory[WSV_ROM_BUFF_LENGTH];
@@ -67,14 +67,14 @@ void wsv_pcm_submit() {
     uint8_t volume = odroid_audio_volume_get();
     int32_t factor = volume_tbl[volume]/2; // Divide by 2 to prevent overflow in stereo mixing
 
-    supervision_update_sound((uint8 *)audioBuffer_wsv,WSV_AUDIO_BUFFER_LENGTH*2);
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : WSV_AUDIO_BUFFER_LENGTH;
+    supervision_update_sound((uint8 *)audioBuffer_wsv,AUDIO_BUFFER_LENGTH_WSV*2);
+    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_BUFFER_LENGTH_WSV;
     if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-        for (int i = 0; i < WSV_AUDIO_BUFFER_LENGTH; i++) {
+        for (int i = 0; i < AUDIO_BUFFER_LENGTH_WSV; i++) {
             audiobuffer_dma[offset + i] = 0;
         }
     } else {
-        for (int i = 0; i < WSV_AUDIO_BUFFER_LENGTH; i++) {
+        for (int i = 0; i < AUDIO_BUFFER_LENGTH_WSV; i++) {
             /* mix left & right */
             int32_t sample = audioBuffer_wsv[2*i] + audioBuffer_wsv[2*i+1];
             audiobuffer_dma[offset + i] = (sample * factor);
@@ -478,6 +478,9 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
         ODROID_DIALOG_CHOICE_LAST
     };
 
+    // Allocate the maximum samples count for a frame on WSV
+    odroid_set_audio_dma_size(AUDIO_BUFFER_LENGTH_WSV);
+
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
         odroid_audio_mute(true);
@@ -485,6 +488,7 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
         common_emu_state.pause_after_frames = 0;
     }
     common_emu_state.frame_time_10us = (uint16_t)(100000 / WSV_FPS + 0.5f);
+    lcd_set_refresh_rate(50);
 
     video_frame.buffer = wsv_framebuffer;
     memset(framebuffer1, 0, sizeof(framebuffer1));
@@ -494,7 +498,6 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
     odroid_system_emu_init(&LoadState, &SaveState, &netplay_callback);
 
     // Init Sound
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_WSV );
 
     supervision_set_color_scheme(SV_COLOR_SCHEME_DEFAULT);
@@ -527,7 +530,6 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 
         supervision_exec((uint16 *)wsv_framebuffer);
         if (drawFrame) {
-            common_sleep_while_lcd_swap_pending();
             blit();
             lcd_swap();
         }

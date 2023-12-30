@@ -250,9 +250,6 @@ static void gwenesis_system_init() {
 
   gwenesis_audio_pll_sync = 0;
 
-  /* clear DMA audio buffer */
-  memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma ));
-
 //  memset(audiobuffer_emulator, 0, sizeof(audiobuffer_emulator));
 
  // if (mode_pal) {
@@ -578,30 +575,30 @@ static char gwenesis_sync_mode_str[8];
 
 
 void gwenesis_save_local_data(fs_file_t *file) {
-  fs_write(file, &ABCkeys_value, sizeof(int));
-  fs_write(file, &PAD_A_def, 4);
-  fs_write(file, &PAD_B_def, 4);
-  fs_write(file, &PAD_C_def, 4);
+  fs_write(file, (unsigned char *)&ABCkeys_value, sizeof(int));
+  fs_write(file, (unsigned char *)&PAD_A_def, 4);
+  fs_write(file, (unsigned char *)&PAD_B_def, 4);
+  fs_write(file, (unsigned char *)&PAD_C_def, 4);
 
-  fs_write(file, &AudioFilter_str, sizeof(int));
-  fs_write(file, &gwenesis_lpfilter, 4);
+  fs_write(file, (unsigned char *)&AudioFilter_str, sizeof(int));
+  fs_write(file, (unsigned char *)&gwenesis_lpfilter, 4);
 }
 
 void gwenesis_load_local_data(fs_file_t *file) {
-  fs_read(file, &ABCkeys_value, sizeof(int));
-  fs_read(file, &PAD_A_def, 4);
-  fs_read(file, &PAD_B_def, 4);
-  fs_read(file, &PAD_C_def, 4);
+  fs_read(file, (unsigned char *)&ABCkeys_value, sizeof(int));
+  fs_read(file, (unsigned char *)&PAD_A_def, 4);
+  fs_read(file, (unsigned char *)&PAD_B_def, 4);
+  fs_read(file, (unsigned char *)&PAD_C_def, 4);
 
-  fs_read(file, &AudioFilter_str, sizeof(int));
-  fs_read(file, &gwenesis_lpfilter, 4);
+  fs_read(file, (unsigned char *)&AudioFilter_str, sizeof(int));
+  fs_read(file, (unsigned char *)&gwenesis_lpfilter, 4);
 }
 
 static bool gwenesis_system_SaveState(char *pathName) {
   printf("Saving state...\n");
   fs_file_t *file;
   file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
-  fs_write(file, headerString, 8);
+  fs_write(file, (unsigned char *)headerString, 8);
   gwenesis_save_state(file);
   gwenesis_save_local_data(file);
   fs_close(file);
@@ -613,7 +610,7 @@ static bool gwenesis_system_LoadState(char *pathName) {
   fs_file_t *file;
   file = fs_open(pathName, FS_READ, FS_COMPRESS);
   char header[8];
-  fs_read(file, header, sizeof(header));
+  fs_read(file, (unsigned char *)header, sizeof(header));
 
   // Check for header
   if (memcmp(headerString, header, 8) == 0) {
@@ -633,6 +630,9 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     odroid_system_init(APPID_MD, GWENESIS_AUDIO_FREQ_NTSC);
     odroid_system_emu_init(&gwenesis_system_LoadState, &gwenesis_system_SaveState, NULL);
    // rg_app_desc_t *app = odroid_system_get_app();
+
+    // Allocate the maximum samples count for a frame on Genesis
+    odroid_set_audio_dma_size(GWENESIS_AUDIO_BUFFER_LENGTH_PAL);
 
     common_emu_state.frame_time_10us = (uint16_t)(100000 / 60.0 + 0.5f);
 
@@ -703,9 +703,11 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     odroid_dialog_choice_t options[] = {
         {301, curr_lang->s_md_keydefine, ABCkeys_str, 1, &gwenesis_submenu_setABC},
         {302, curr_lang->s_md_AudioFilter, AudioFilter_str, 1, &gwenesis_submenu_setAudioFilter},
-        {303, curr_lang->s_md_VideoUpscaler, VideoUpscaler_str, ENABLE_DEBUG_OPTIONS, &gwenesis_submenu_setVideoUpscaler},
-        {304, curr_lang->s_md_Synchro, gwenesis_sync_mode_str, ENABLE_DEBUG_OPTIONS, &gwenesis_submenu_sync_mode},
-        {310, curr_lang->s_md_Debug_bar, debug_bar_str, ENABLE_DEBUG_OPTIONS, &gwenesis_submenu_debug_bar},
+#if ENABLE_DEBUG_OPTIONS != 0
+        {303, curr_lang->s_md_VideoUpscaler, VideoUpscaler_str, 1, &gwenesis_submenu_setVideoUpscaler},
+        {304, curr_lang->s_md_Synchro, gwenesis_sync_mode_str, 1, &gwenesis_submenu_sync_mode},
+        {310, curr_lang->s_md_Debug_bar, debug_bar_str, 1, &gwenesis_submenu_debug_bar},
+#endif
         //  {320, "+GameGenie", gwenesis_GameGenie_str, 0, &gwenesis_submenu_GameGenie},
         //  {330, "-GameGenie", gwenesis_GameGenie_reverse_str, 0, &gwenesis_submenu_GameGenie_reverse},
 
@@ -859,7 +861,7 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot
         } else {
           lcd_swap();
           drawFrame = 1;
-          common_sleep_while_lcd_swap_pending();
+          lcd_sleep_while_swap_pending();
         }
 
         /* AUDIO SYNC mode */

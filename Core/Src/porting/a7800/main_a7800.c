@@ -30,6 +30,7 @@
 #include "Memory.h"
 
 #define ROM_BUFF_LENGTH 131200 // 128kB + header
+#define TIA_MAX_LENGTH 624
 // Memory to handle compressed roms
 static uint8_t rom_memory[ROM_BUFF_LENGTH];
 
@@ -219,8 +220,12 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
         ODROID_DIALOG_CHOICE_LAST
     };
 
+    // Allocate the maximum samples count for a frame on A7800
+    odroid_set_audio_dma_size(TIA_MAX_LENGTH);
+
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
+        odroid_audio_mute(true);
     } else {
         common_emu_state.pause_after_frames = 0;
     }
@@ -262,7 +267,6 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     // Init Sound
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, 2*tia_size);
 
     if (load_state) {
@@ -299,7 +303,6 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
         prosystem_ExecuteFrame(keyboard_data);
 
         if (drawFrame) {
-            common_sleep_while_lcd_swap_pending();
             blit();
             lcd_swap();
         }

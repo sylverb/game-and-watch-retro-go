@@ -364,9 +364,6 @@ static void blit(void)
 
 static void blit_and_swap(void)
 {
-    // Temporary disabled as it causes sound jitter/issues (Verified in Super Mario Land 2.0 rom hack)
-    // common_sleep_while_lcd_swap_pending();
-
     blit();
     lcd_swap();
 }
@@ -561,7 +558,6 @@ rg_app_desc_t * init(uint8_t load_state, int8_t save_slot)
     pcm.buf = (n16*)audiobuffer_emulator;
     pcm.pos = 0;
 
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_GB);
 
     rg_app_desc_t *app = odroid_system_get_app();
@@ -579,6 +575,9 @@ rg_app_desc_t * init(uint8_t load_state, int8_t save_slot)
 
 void app_main_gb(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
+    // Allocate the maximum samples count for a frame on GB
+    odroid_set_audio_dma_size(AUDIO_BUFFER_LENGTH_GB);
+
     init(load_state, save_slot);
     odroid_gamepad_state_t joystick;
 
@@ -599,7 +598,7 @@ void app_main_gb(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
         char palette_values[16];
         snprintf(palette_values, sizeof(palette_values), "%s", "7/7");
         odroid_dialog_choice_t options[] = {
-            {300, curr_lang->s_Palette, (char *)palette_values, !hw.cgb, &palette_update_cb},
+            {300, curr_lang->s_Palette, (char *)palette_values, hw.cgb ? -1 : 1, &palette_update_cb},
             // {301, "More...", "", 1, &advanced_settings_cb},
             ODROID_DIALOG_CHOICE_LAST
         };

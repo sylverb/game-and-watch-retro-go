@@ -13,6 +13,7 @@
 #include "gw_lcd.h"
 #include "main.h"
 #include "main_gb.h"
+#include "main_gb_tgbdual.h"
 #include "main_nes.h"
 #include "main_nes_fceu.h"
 #include "main_smsplusgx.h"
@@ -23,13 +24,17 @@
 #include "main_gwenesis.h"
 #include "main_a7800.h"
 #include "main_amstrad.h"
+#include "main_zelda3.h"
+#include "main_smw.h"
+#include "main_videopac.h"
 #include "rg_rtc.h"
+#include "heap.hpp"
 
 #if !defined(COVERFLOW)
 #define COVERFLOW 0
 #endif /* COVERFLOW */
 // Increase when adding new emulators
-#define MAX_EMULATORS 13
+#define MAX_EMULATORS 16
 static retro_emulator_t emulators[MAX_EMULATORS];
 static int emulators_count = 0;
 
@@ -417,12 +422,12 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     has_save = fs_exists(path);
 
     odroid_dialog_choice_t choices[] = {
-        {0, curr_lang->s_Resume_game, "", has_save, NULL},
+        {0, curr_lang->s_Resume_game, "", has_save ? 1 : -1, NULL},
         {1, curr_lang->s_New_game, "", 1, NULL},
         ODROID_DIALOG_CHOICE_SEPARATOR,
         //{3, is_fav ? s_Del_favorite : s_Add_favorite, "", 1, NULL},
 		//ODROID_DIALOG_CHOICE_SEPARATOR,
-        {2, curr_lang->s_Delete_save, "", (has_save || has_sram), NULL},
+        {2, curr_lang->s_Delete_save, "", (has_save || has_sram) ? 1 : -1, NULL},
 #if CHEAT_CODES == 1
         ODROID_DIALOG_CHOICE_SEPARATOR,
         cheat_choice,
@@ -496,10 +501,21 @@ void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_pau
     // TODO: Make this cleaner
     if(strcmp(emu->system_name, "Nintendo Gameboy") == 0) {
 #ifdef ENABLE_EMULATOR_GB
+#if FORCE_GNUBOY == 1
         memcpy(&__RAM_EMU_START__, &_OVERLAY_GB_LOAD_START, (size_t)&_OVERLAY_GB_SIZE);
         memset(&_OVERLAY_GB_BSS_START, 0x0, (size_t)&_OVERLAY_GB_BSS_SIZE);
         SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_GB_SIZE);
         app_main_gb(load_state, start_paused, save_slot);
+#else
+        memcpy(&__RAM_EMU_START__, &_OVERLAY_TGB_LOAD_START, (size_t)&_OVERLAY_TGB_SIZE);
+        memset(&_OVERLAY_TGB_BSS_START, 0x0, (size_t)&_OVERLAY_TGB_BSS_SIZE);
+        SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_TGB_SIZE);
+
+        // Initializes the heap used by new and new[]
+        cpp_heap_init((size_t) &_OVERLAY_TGB_BSS_END);
+
+        app_main_gb_tgbdual(load_state, start_paused, save_slot);
+#endif
 #endif
     } else if(strcmp(emu->system_name, "Nintendo Entertainment System") == 0) {
 #ifdef ENABLE_EMULATOR_NES
@@ -576,21 +592,42 @@ void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_pau
       memset(&_OVERLAY_AMSTRAD_BSS_START, 0x0, (size_t)&_OVERLAY_AMSTRAD_BSS_SIZE);
       SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_AMSTRAD_SIZE);
       app_main_amstrad(load_state, start_paused, save_slot);
-  #endif
+#endif
+    } else if(strcmp(emu->system_name, "Zelda3") == 0)  {
+#ifdef ENABLE_HOMEBREW_ZELDA3
+      memcpy(&__RAM_EMU_START__, &_OVERLAY_ZELDA3_LOAD_START, (size_t)&_OVERLAY_ZELDA3_SIZE);
+      memset(&_OVERLAY_ZELDA3_BSS_START, 0x0, (size_t)&_OVERLAY_ZELDA3_BSS_SIZE);
+      SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_ZELDA3_SIZE);
+      app_main_zelda3(load_state, start_paused, save_slot);
+#endif
+    } else if(strcmp(emu->system_name, "SMW") == 0)  {
+#ifdef ENABLE_HOMEBREW_SMW
+      memcpy(&__RAM_EMU_START__, &_OVERLAY_SMW_LOAD_START, (size_t)&_OVERLAY_SMW_SIZE);
+      memset(&_OVERLAY_SMW_BSS_START, 0x0, (size_t)&_OVERLAY_SMW_BSS_SIZE);
+      SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_SMW_SIZE);
+      app_main_smw(load_state, start_paused, save_slot);
+#endif
+    } else if(strcmp(emu->system_name, "Philips Vectrex") == 0)  {
+#ifdef ENABLE_EMULATOR_VIDEOPAC
+      memcpy(&__RAM_EMU_START__, &_OVERLAY_VIDEOPAC_LOAD_START, (size_t)&_OVERLAY_VIDEOPAC_SIZE);
+      memset(&_OVERLAY_VIDEOPAC_BSS_START, 0x0, (size_t)&_OVERLAY_VIDEOPAC_BSS_SIZE);
+      SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_VIDEOPAC_SIZE);
+      app_main_videopac(load_state, start_paused, save_slot);
+#endif
     }
     
 }
 
 void emulators_init()
 {
-#if !( defined(ENABLE_EMULATOR_GB) || defined(ENABLE_EMULATOR_NES) || defined(ENABLE_EMULATOR_SMS) || defined(ENABLE_EMULATOR_GG) || defined(ENABLE_EMULATOR_COL) || defined(ENABLE_EMULATOR_SG1000) || defined(ENABLE_EMULATOR_PCE) || defined(ENABLE_EMULATOR_GW) || defined(ENABLE_EMULATOR_MSX) || defined(ENABLE_EMULATOR_WSV) || defined(ENABLE_EMULATOR_MD) || defined(ENABLE_EMULATOR_A7800) || defined(ENABLE_EMULATOR_AMSTRAD))
+#if !( defined(ENABLE_EMULATOR_GB) || defined(ENABLE_EMULATOR_NES) || defined(ENABLE_EMULATOR_SMS) || defined(ENABLE_EMULATOR_GG) || defined(ENABLE_EMULATOR_COL) || defined(ENABLE_EMULATOR_SG1000) || defined(ENABLE_EMULATOR_PCE) || defined(ENABLE_EMULATOR_GW) || defined(ENABLE_EMULATOR_MSX) || defined(ENABLE_EMULATOR_WSV) || defined(ENABLE_EMULATOR_MD) || defined(ENABLE_EMULATOR_A7800) || defined(ENABLE_EMULATOR_AMSTRAD) || defined(ENABLE_EMULATOR_VIDEOPAC))
     // Add gameboy as a placeholder in case no emulator is built.
-    add_emulator("Nintendo Gameboy", "gb", "gb", "gnuboy-go", 0, &pad_gb, &header_gb);
+    add_emulator("Nintendo Gameboy", "gb", "gb", "tgbdual-go", 0, &pad_gb, &header_gb);
 #endif
 
 
 #ifdef ENABLE_EMULATOR_GB
-    add_emulator("Nintendo Gameboy", "gb", "gb", "gnuboy-go", 0, &pad_gb, &header_gb);
+    add_emulator("Nintendo Gameboy", "gb", "gb", "tgbdual-go", 0, &pad_gb, &header_gb);
     // add_emulator("Nintendo Gameboy Color", "gbc", "gbc", "gnuboy-go", 0, logo_gbc, header_gbc);
 #endif
 
@@ -640,6 +677,18 @@ void emulators_init()
 
 #ifdef ENABLE_EMULATOR_AMSTRAD
     add_emulator("Amstrad CPC", "amstrad", "amstrad", "caprice32", 0, &pad_amstrad, &header_amstrad);
+#endif
+
+#ifdef ENABLE_HOMEBREW_ZELDA3
+    add_emulator("Zelda3", "zelda3", "zelda3", "zelda3", 0, &pad_snes, &header_zelda3);
+#endif
+
+#ifdef ENABLE_HOMEBREW_SMW
+    add_emulator("SMW", "smw", "smw", "smw", 0, &pad_snes, &header_smw);
+#endif
+
+#ifdef ENABLE_EMULATOR_VIDEOPAC
+    add_emulator("Philips Vectrex", "videopac", "bin", "o2em-go", 0, &pad_gb, &header_gb); // TODO Sylver : change graphics
 #endif
 
     // add_emulator("ColecoVision", "col", "col", "smsplusgx-go", 0, logo_col, header_col);

@@ -401,7 +401,6 @@ static void sms_draw_frame()
                           ((0b0000000000011111 & p));
   }
 
-  common_sleep_while_lcd_swap_pending();
   blit();
   lcd_swap();
 }
@@ -459,6 +458,9 @@ static void sms_update_keys( odroid_gamepad_state_t* joystick )
 int
 app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, int8_t save_slot, uint8_t is_coleco)
 {
+    // Allocate the maximum samples count for a frame on SMS
+    odroid_set_audio_dma_size(AUDIO_BUFFER_LENGTH_SMS);
+
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
         odroid_audio_mute(true);
@@ -495,7 +497,6 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, int8_t save_slot, u
     system_init2();
     system_reset();
 
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_SMS);
 
     consoleIsSMS = sms.console == CONSOLE_SMS || sms.console == CONSOLE_SMS2;

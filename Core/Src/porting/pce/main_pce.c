@@ -3,7 +3,6 @@
 #ifdef ENABLE_EMULATOR_PCE
 #include <odroid_system.h>
 #include <string.h>
-#include "shared.h"
 
 // shared.h includes sms.h which defined CYCLES_PER_LINE.
 // pce.h defines it to the desired value.
@@ -28,14 +27,17 @@
 #include "lzma.h"
 #include "rg_i18n.h"
 #include "filesystem.h"
+#include "gui.h"
 
 //#define PCE_SHOW_DEBUG
 //#define XBUF_WIDTH 	(480 + 32)
 //#define XBUF_HEIGHT	(242 + 32)
 //#define GW_LCD_WIDTH  (320)
 //#define GW_LCD_HEIGHT (240)
+#define FPS_NTSC 60
+
 #define FB_INTERNAL_OFFSET (((XBUF_HEIGHT - current_height) / 2 + 16) * XBUF_WIDTH + (XBUF_WIDTH - current_width) / 2)
-#define AUDIO_BUFFER_LENGTH_PCE  (PCE_SAMPLE_RATE / 60)
+#define AUDIO_BUFFER_LENGTH_PCE  (PCE_SAMPLE_RATE / FPS_NTSC)
 #define JOY_A       0x01
 #define JOY_B       0x02
 #define JOY_SELECT  0x04
@@ -522,13 +524,12 @@ void blit() {
 }
 
 void pce_osd_gfx_blit() {
-    common_sleep_while_lcd_swap_pending();
 #ifdef PCE_SHOW_DEBUG
-    uint32_t currentTime = HAL_GetTick();
-    uint32_t delta = currentTime - lastFPSTime;
     static uint32_t frames = 0;
     static uint32_t lastFPSTime = 0;
     static int framePerSecond=0;
+    uint32_t currentTime = HAL_GetTick();
+    uint32_t delta = currentTime - lastFPSTime;
     frames++;
     if (delta >= 1000) {
         framePerSecond = (10000 * frames) / delta;
@@ -541,9 +542,9 @@ void pce_osd_gfx_blit() {
     blit();
 
 #ifdef PCE_SHOW_DEBUG
-    char debugMsg[100];
+    char debugMsg[200];
     sprintf(debugMsg,"FPS:%d.%d,W:%d,H:%d,L:%s", framePerSecond / 10,framePerSecond % 10,current_width,current_height,pce_log);
-    odroid_overlay_draw_text(0,0, GW_LCD_WIDTH, debugMsg,  curr_colors->sel_c, curr_colors->main_c);
+    odroid_overlay_draw_text(0,0, GW_LCD_WIDTH, debugMsg, curr_colors->sel_c, curr_colors->main_c);
 #endif
     lcd_swap();
 }
@@ -568,6 +569,9 @@ void pce_pcm_submit() {
 
 int app_main_pce(uint8_t load_state, uint8_t start_paused, int8_t save_slot) {
 
+    // Allocate the maximum samples count for a frame on PC Engine
+    odroid_set_audio_dma_size(AUDIO_BUFFER_LENGTH_PCE);
+
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
         odroid_audio_mute(true);
@@ -590,7 +594,6 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, int8_t save_slot) {
     printf("Graphics initialized\n");
 
     // Init Sound
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_PCE * 2 );
     pce_snd_init();
     printf("Sound initialized\n");
@@ -660,7 +663,7 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, int8_t save_slot) {
         pce_pcm_submit();
 
         if(!common_emu_state.skip_frames){
-            dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
+            static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
             for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
                 while (dma_state == last_dma_state) {
                     cpumon_sleep();

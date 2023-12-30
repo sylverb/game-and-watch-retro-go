@@ -44,6 +44,11 @@ extern void * _OVERLAY_GB_LOAD_START[];
 extern uint8_t _OVERLAY_GB_SIZE;
 extern void * _OVERLAY_GB_BSS_START[];
 extern uint8_t _OVERLAY_GB_BSS_SIZE;
+extern void * _OVERLAY_TGB_LOAD_START[];
+extern uint8_t _OVERLAY_TGB_SIZE;
+extern void * _OVERLAY_TGB_BSS_START[];
+extern void * _OVERLAY_TGB_BSS_END[];
+extern uint8_t _OVERLAY_TGB_BSS_SIZE;
 extern void * _OVERLAY_SMS_LOAD_START[];
 extern uint8_t _OVERLAY_SMS_SIZE;
 extern void * _OVERLAY_SMS_BSS_START[];
@@ -76,6 +81,18 @@ extern void * _OVERLAY_AMSTRAD_LOAD_START[];
 extern uint8_t _OVERLAY_AMSTRAD_SIZE;
 extern void * _OVERLAY_AMSTRAD_BSS_START[];
 extern uint8_t _OVERLAY_AMSTRAD_BSS_SIZE;
+extern void * _OVERLAY_ZELDA3_LOAD_START[];
+extern uint8_t _OVERLAY_ZELDA3_SIZE;
+extern void * _OVERLAY_ZELDA3_BSS_START[];
+extern uint8_t _OVERLAY_ZELDA3_BSS_SIZE;
+extern void * _OVERLAY_SMW_LOAD_START[];
+extern uint8_t _OVERLAY_SMW_SIZE;
+extern void * _OVERLAY_SMW_BSS_START[];
+extern uint8_t _OVERLAY_SMW_BSS_SIZE;
+extern void * _OVERLAY_VIDEOPAC_LOAD_START[];
+extern uint8_t _OVERLAY_VIDEOPAC_SIZE;
+extern void * _OVERLAY_VIDEOPAC_BSS_START[];
+extern uint8_t _OVERLAY_VIDEOPAC_BSS_SIZE;
 
 extern uint8_t *_NES_ROM_UNPACK_BUFFER;
 extern uint8_t _NES_ROM_UNPACK_BUFFER_SIZE;
@@ -88,3 +105,5 @@ extern uint8_t _GB_ROM_UNPACK_BUFFER_SIZE;
 
 extern uint8_t *_PCE_ROM_UNPACK_BUFFER;
 extern uint8_t _PCE_ROM_UNPACK_BUFFER_SIZE;
+
+extern void * __RAM_END__[];
