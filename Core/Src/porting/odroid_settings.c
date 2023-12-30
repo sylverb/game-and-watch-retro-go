@@ -151,7 +151,7 @@ persistent_config_t persistent_config_ram;
 
 void odroid_settings_init()
 {
-    if(fs_exists("CONFIG")){
+    if(fs_mounted && fs_exists("CONFIG")){
         fs_file_t *file = fs_open("CONFIG", FS_READ, FS_COMPRESS);
         fs_read(file, &persistent_config_ram, sizeof(persistent_config_t));
         fs_close(file);
@@ -196,9 +196,11 @@ void odroid_settings_commit()
     persistent_config_ram.crc32 = 0;
     persistent_config_ram.crc32 = crc32_le(0, (unsigned char *) &persistent_config_ram, sizeof(persistent_config_t));
 
-    fs_file_t *file = fs_open("CONFIG", FS_WRITE, FS_COMPRESS);
-    fs_write(file, &persistent_config_ram, sizeof(persistent_config_t));
-    fs_close(file);
+    if(fs_mounted){
+        fs_file_t *file = fs_open("CONFIG", FS_WRITE, FS_COMPRESS);
+        fs_write(file, &persistent_config_ram, sizeof(persistent_config_t));
+        fs_close(file);
+    }
 }
 
 void odroid_settings_reset()

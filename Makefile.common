@@ -1026,6 +1026,7 @@ flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin
 flash: CheckTools CheckDirtySubmodules $(BUILD_DIR)/$(TARGET)_intflash.bin $(BUILD_DIR)/$(TARGET)_extflash.bin
 	@$(GNWMANAGER) flash $(INTFLASH_ADDRESS) $(BUILD_DIR)/$(TARGET)_intflash.bin \
 		-- flash ext $(BUILD_DIR)/$(TARGET)_extflash.bin --offset=$(EXTFLASH_OFFSET) \
+		-- format $(FILESYSTEM_SIZE) --offset=$(FILESYSTEM_OFFSET_FROM_END) --only-if-shrinking \
 		-- start $(INTFLASH_ADDRESS) \
 		$(RESET_DBGMCU_CMD)
 .PHONY: flash
@@ -1088,7 +1089,7 @@ help:
 	@echo "  EXTFLASH_FORCE_SPI  - Forces the use of legacy SPI mode for the external flash driver"
 	@echo "  EXTFLASH_SIZE_MB    - Sets the external flash size in megabytes"
 	@echo "  EXTFLASH_SIZE       - Sets the external flash size in bytes (has precedence over EXTFLASH_SIZE_MB)"
-	@echo "  FILESYSTEM_SIZE     - Sets the filesystem flash size in bytes."
+	@echo "  FILESYSTEM_SIZE     - Sets the filesystem flash size in bytes. Defaults to 10% of flash."
 	@echo "  FILESYSTEM_OFFSET   - Places the filesystem at a specified offset in the external flash. "
 	@echo "                        Defaults to placing the filesystem at the end of flash."
 	@echo "  LARGE_FLASH         - Sets the external flash size to 16MB  (deprecated)"

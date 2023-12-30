@@ -29,6 +29,8 @@ void fs_close(fs_file_t *file);
 bool fs_exists(const char *path);
 uint32_t fs_free_blocks();
 
+extern bool fs_mounted;
+
 #ifdef __cplusplus
 }
 #endif
