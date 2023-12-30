@@ -682,7 +682,7 @@ TAMP_C_INCLUDES += -I$(TAMP_DIR)
 ZELDA3_C_SOURCES = 
 
 ifneq ("$(wildcard roms/zelda3/zelda3.sfc)","")
-ZELDA3_C_SOURCES + = \
+ZELDA3_C_SOURCES += \
 zelda3/zelda_rtl.c \
 zelda3/misc.c \
 zelda3/nmi.c \
@@ -717,7 +717,7 @@ endif
 SMW_C_SOURCES = 
 
 ifneq ("$(wildcard roms/smw/smw.sfc)","")
-SMW_C_SOURCES + = \
+SMW_C_SOURCES += \
 smw/src/smw_rtl.c \
 smw/src/smw_00.c \
 smw/src/smw_01.c \
