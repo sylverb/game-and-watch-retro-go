@@ -521,6 +521,19 @@ static bool gwenesis_submenu_setABC(odroid_dialog_choice_t *option, odroid_dialo
     return event == ODROID_DIALOG_ENTER;
 }
 
+static bool gwenesis_submenu_setAudioFilter(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
+    gwenesis_lpfilter = gwenesis_lpfilter == 0 ? 1 : 0;
+    }
+
+    if (gwenesis_lpfilter == 0) strcpy(option->value, curr_lang->s_md_Option_OFF);
+    if (gwenesis_lpfilter == 1) strcpy(option->value, curr_lang->s_md_Option_ON);
+
+    return event == ODROID_DIALOG_ENTER;
+}
+
+#if ENABLE_DEBUG_OPTIONS != 0
 // Some options using submenu
 static bool gwenesis_submenu_debug_bar(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
@@ -529,18 +542,6 @@ static bool gwenesis_submenu_debug_bar(odroid_dialog_choice_t *option, odroid_di
     }
     if (gwenesis_show_debug_bar == 0) strcpy(option->value, curr_lang->s_md_Option_OFF);
     if (gwenesis_show_debug_bar == 1) strcpy(option->value, curr_lang->s_md_Option_ON);
-
-    return event == ODROID_DIALOG_ENTER;
-}
-
-static bool gwenesis_submenu_setAudioFilter(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
-{
-  if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
-    gwenesis_lpfilter = gwenesis_lpfilter == 0 ? 1 : 0;
-  }
-
-    if (gwenesis_lpfilter == 0) strcpy(option->value, curr_lang->s_md_Option_OFF);
-    if (gwenesis_lpfilter == 1) strcpy(option->value, curr_lang->s_md_Option_ON);
 
     return event == ODROID_DIALOG_ENTER;
 }
@@ -570,11 +571,12 @@ static bool gwenesis_submenu_sync_mode(odroid_dialog_choice_t *option, odroid_di
 }
 
 static char debug_bar_str[2];
-static char AudioFilter_str[2];
 static char VideoUpscaler_str[2];
 static char gwenesis_sync_mode_str[8];
+#endif
 
 
+static char AudioFilter_str[2];
 void gwenesis_save_local_data(void) {
   SaveState *state = saveGwenesisStateOpenForWrite("gwenesis");
 
