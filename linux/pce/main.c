@@ -241,13 +241,13 @@ static void netplay_callback(netplay_event_t event, void *arg)
     // Where we're going we don't need netplay!
 }
 
-static bool LoadStateStm(char *name)
+static bool LoadState(char *savePathName, char *sramPathName)
 {
-    printf("Loading state from %s...\n", name);
+    printf("Loading state from %s...\n", savePathName);
 
 	char buffer[512];
 
-	FILE *fp = fopen(name, "rb");
+	FILE *fp = fopen(savePathName, "rb");
 	if (fp == NULL)
 		return -1;
 
@@ -280,11 +280,11 @@ static bool LoadStateStm(char *name)
 	return 0;
 }
 
-static bool SaveStateStm(char *name)
+static bool SaveState(char *savePathName, char *sramPathName)
 {
-    printf("Saving state to %s...\n", name);
+    printf("Saving state to %s...\n", savePathName);
 
-	FILE *fp = fopen(name, "wb");
+	FILE *fp = fopen(savePathName, "wb");
 	if (fp == NULL)
 		return -1;
 
@@ -446,7 +446,7 @@ void init(void)
 {
     printf("init()\n");
     odroid_system_init(APP_ID, AUDIO_SAMPLE_RATE);
-    odroid_system_emu_init(&LoadStateStm, &SaveStateStm, &netplay_callback);
+    odroid_system_emu_init(&LoadState, &SaveState, &netplay_callback);
 
     // Hack: Use the same buffer twice
     update1.buffer = fb_data;
@@ -608,11 +608,11 @@ void odroid_input_read_gamepad_pce(odroid_gamepad_state_t* out_state)
                 break;
             case SDLK_F1:
                 if (last_down_event.key.keysym.sym == SDLK_F1)
-                    SaveStateStm("save_pce.bin");
+                    SaveState("save_pce.bin","");
                 break;
             case SDLK_F4:
                 if (last_down_event.key.keysym.sym == SDLK_F4)
-                    LoadStateStm("save_pce.bin");
+                    LoadState("save_pce.bin","");
                 break;                
             default:
                 break;

@@ -201,13 +201,13 @@ static void netplay_callback(netplay_event_t event, void *arg)
 extern uint32 glob_bp_lut[0x10000];
 #define SAVE_STATE_BUFFER_SIZE (60 * 1024)
 
-static bool SaveState(char *pathName)
+static bool SaveState(char *savePathName, char *sramPathName)
 {
     uint8_t *state_save_buffer = (uint8_t *)glob_bp_lut;
     system_save_state(state_save_buffer);
 
     fs_file_t *file;
-    file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
+    file = fs_open(savePathName, FS_WRITE, FS_COMPRESS);
     fs_write(file, state_save_buffer, SAVE_STATE_BUFFER_SIZE);
     fs_close(file);
 
@@ -216,12 +216,12 @@ static bool SaveState(char *pathName)
     return false;
 }
 
-static bool LoadState(char *pathName)
+static bool LoadState(char *savePathName, char *sramPathName)
 {
     uint8_t *state_save_buffer = (uint8_t *)glob_bp_lut;
 
     fs_file_t *file;
-    file = fs_open(pathName, FS_READ, FS_COMPRESS);
+    file = fs_open(savePathName, FS_READ, FS_COMPRESS);
     fs_read(file, state_save_buffer, SAVE_STATE_BUFFER_SIZE);
     fs_close(file);
 

@@ -189,7 +189,7 @@ void FCEU_gfree(void *ptr)
 
 /*-------------------------------*/
 
-static bool SaveState(char *pathName)
+static bool SaveState(char *savePathName, char *sramPathName)
 {
     FILE* pFile;
     uint64_t size = 0;
@@ -210,7 +210,7 @@ static bool SaveState(char *pathName)
     return true;
 }
 
-static bool LoadState(char *pathName)
+static bool LoadState(char *savePathName, char *sramPathName)
 {
     FILE* pFile;
     uint64_t size = 0;
@@ -274,10 +274,10 @@ void input_read_gamepad()
                 FCEU_FDSSelect();
                 break;
             case SDLK_F3:
-                SaveState("");
+                SaveState("", "");
                 break;
             case SDLK_F4:
-                LoadState("");
+                LoadState("", "");
                 break;
             default:
                 break;

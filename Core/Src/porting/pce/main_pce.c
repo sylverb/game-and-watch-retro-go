@@ -166,7 +166,7 @@ static void netplay_callback(netplay_event_t event, void *arg) {
 
 #define SAVE_STATE_BUFFER_SIZE (76*1024)
 
-static bool SaveStateStm(char *pathName) {
+static bool SaveState(char *savePathName, char *sramPathName) {
     int pos=0;
     uint8_t *pce_save_buf = pce_framebuffer;
     memset(pce_save_buf, 0x00, SAVE_STATE_BUFFER_SIZE); // 76K save size
@@ -190,7 +190,7 @@ static bool SaveStateStm(char *pathName) {
     assert(pos<SAVE_STATE_BUFFER_SIZE);
 
     fs_file_t *file;
-    file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
+    file = fs_open(savePathName, FS_WRITE, FS_COMPRESS);
     fs_write(file, pce_save_buf, SAVE_STATE_BUFFER_SIZE);
     fs_close(file);
 
@@ -199,11 +199,11 @@ static bool SaveStateStm(char *pathName) {
     return false;
 }
 
-static bool LoadStateStm(char *pathName) {
+static bool LoadState(char *savePathName, char *sramPathName) {
     uint8_t *pce_save_buf = pce_framebuffer;
 
     fs_file_t *file;
-    file = fs_open(pathName, FS_READ, FS_COMPRESS);
+    file = fs_open(savePathName, FS_READ, FS_COMPRESS);
     fs_read(file, pce_save_buf, SAVE_STATE_BUFFER_SIZE);
     fs_close(file);
 
@@ -580,7 +580,7 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, int8_t save_slot) {
     }
 
     odroid_system_init(APPID_PCE, PCE_SAMPLE_RATE);
-    odroid_system_emu_init(&LoadStateStm, &SaveStateStm, &netplay_callback);
+    odroid_system_emu_init(&LoadState, &SaveState, &netplay_callback);
     pce_log[0]=0;
 
     // Init Graphics

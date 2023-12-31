@@ -215,45 +215,39 @@ void readSaveStateFinalizeImpl() {
   }
 }
 
-static bool zelda3_system_SaveState(char *pathName) {
+static bool zelda3_system_SaveState(char *savePathName, char *sramPathName) {
   printf("Saving state...\n");
-  printf("%s\n",pathName);
   odroid_audio_mute(true);
-  strcpy(savestate_path, pathName);
+  strcpy(savestate_path, savePathName);
   SaveLoadSlot(kSaveLoad_Save, 0);
+
+  // Save sram
+  fs_file_t *file = fs_open(sramPathName, FS_WRITE, FS_COMPRESS);
+  fs_write(file, ZeldaGetSram(), 8192);
+  fs_close(file);
+
   odroid_audio_mute(false);
   printf("Saved state\n");
   return true;
 }
 
-static bool zelda3_system_LoadState(char *pathName) {
+static bool zelda3_system_LoadState(char *savePathName, char *sramPathName) {
   printf("Loading state...\n");
   odroid_audio_mute(true);
-  strcpy(savestate_path, pathName);
+
+  strcpy(savestate_path, savePathName);
   SaveLoadSlot(kSaveLoad_Load, 0);
+
+  // Load sram
+  fs_file_t *file = fs_open(sramPathName, FS_READ, FS_COMPRESS);
+  if (file != NULL) {
+    fs_read(file, ZeldaGetSram(), 8192);
+    fs_close(file);
+    ZeldaApplySram();
+  }
+
   odroid_audio_mute(false);
   return true;
-}
-
-void readSramImpl(uint8_t* sram) {
-  /*
-  char *pathName = "savestate/zelda3/zelda3/0.srm";
-  fs_file_t *file;
-  file = fs_open(pathName, FS_READ, FS_COMPRESS);
-  if (file != NULL) {
-    fs_read(file, sram, 8192);
-    fs_close(file);
-  }
-  */
-}
-void writeSramImpl(uint8_t* sram) {
-  /*
-  char *pathName = "savestate/zelda3/zelda3/0.srm";
-  fs_file_t *file;
-  file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
-  fs_write(file, sram, 8192);
-  fs_close(file);
-  */
 }
 
 static void zelda3_sound_start()
@@ -317,7 +311,6 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 
   g_zenv.ppu->extraLeftRight = 0;
 
-  ZeldaReadSram();
   if (load_state) {
     odroid_system_emu_load_state(save_slot);
   }

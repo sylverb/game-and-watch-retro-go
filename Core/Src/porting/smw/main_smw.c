@@ -195,46 +195,40 @@ void readSaveStateFinalizeImpl() {
   }
 }
 
-static bool smw_system_SaveState(char *pathName) {
+static bool smw_system_SaveState(char *savePathName, char *sramPathName) {
   printf("Saving state...\n");
   odroid_audio_mute(true);
-  strcpy(savestate_path, pathName);
+
+  // Save state
+  strcpy(savestate_path, savePathName);
   RtlSaveLoad(kSaveLoad_Save, 0);
+
+  // Save sram
+  fs_file_t *file = fs_open(sramPathName, FS_WRITE, FS_COMPRESS);
+  fs_write(file, RtlGetSram(), 2048);
+  fs_close(file);
+
   odroid_audio_mute(false);
   printf("Saved state\n");
   return true;
 }
 
-static bool smw_system_LoadState(char *pathName) {
+static bool smw_system_LoadState(char *savePathName, char *sramPathName) {
   printf("Loading state...\n");
 
   odroid_audio_mute(true);
-  strcpy(savestate_path, pathName);
+  strcpy(savestate_path, savePathName);
   RtlSaveLoad(kSaveLoad_Load, 0);
-  odroid_audio_mute(false);
-  return true;
-}
 
-void readSramImpl(uint8_t* sram) {
-  /*
-  char *pathName = "savestate/smw/smw/0.srm";
-  fs_file_t *file;
-  file = fs_open(pathName, FS_READ, FS_COMPRESS);
+  // Load sram
+  fs_file_t *file = fs_open(sramPathName, FS_READ, FS_COMPRESS);
   if (file != NULL) {
-    fs_read(file, sram, 2048);
+    fs_read(file, RtlGetSram(), 2048);
     fs_close(file);
   }
-  */
-}
 
-void writeSramImpl(uint8_t* sram) {
-  /*
-  char *pathName = "savestate/smw/smw/0.srm";
-  fs_file_t *file;
-  file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
-  fs_write(file, sram, 2048);
-  fs_close(file);
-  */
+  odroid_audio_mute(false);
+  return true;
 }
 
 static void smw_sound_start()
@@ -296,7 +290,6 @@ int app_main_smw(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
   g_spc_player = SmwSpcPlayer_Create();
   g_spc_player->initialize(g_spc_player);
 
-  RtlReadSram();
   if (load_state) {
     odroid_system_emu_load_state(save_slot);
   }

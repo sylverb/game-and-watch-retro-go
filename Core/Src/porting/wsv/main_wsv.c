@@ -44,20 +44,20 @@ static void netplay_callback(netplay_event_t event, void *arg) {
 
 #define STATE_SAVE_BUFFER_LENGTH (1024 * 28)
 
-static bool LoadState(char *pathName) {
+static bool LoadState(char *savePathName, char *sramPathName) {
     fs_file_t *file;
-    file = fs_open(pathName, FS_READ, FS_COMPRESS);
+    file = fs_open(savePathName, FS_READ, FS_COMPRESS);
     fs_read(file, wsv_framebuffer, STATE_SAVE_BUFFER_LENGTH);
     fs_close(file);
     supervision_load_state(wsv_framebuffer);
     return 0;
 }
-static bool SaveState(char *pathName) {
+static bool SaveState(char *savePathName, char *sramPathName) {
     int size = supervision_save_state(wsv_framebuffer);
     assert(size<STATE_SAVE_BUFFER_LENGTH);
 
     fs_file_t *file;
-    file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
+    file = fs_open(savePathName, FS_WRITE, FS_COMPRESS);
     fs_write(file, wsv_framebuffer, size);
     fs_close(file);
     return 0;

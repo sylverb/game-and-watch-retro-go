@@ -477,18 +477,15 @@ void FCEUD_Message(char *s)
     printf("%s", s);
 }
 
-static bool SaveState(char *pathName)
+static bool SaveState(char *savePathName, char *sramPathName)
 {
-    FCEUSS_Save_Fs(pathName);
+    FCEUSS_Save_Fs(savePathName);
     return 0;
 }
 
-// TODO: Expose properly
-extern int nes_state_load(uint8_t* flash_ptr, size_t size);
-
-static bool LoadState(char *pathName)
+static bool LoadState(char *savePathName, char *sramPathName)
 {
-    FCEUSS_Load_Fs(pathName);
+    FCEUSS_Load_Fs(savePathName);
     return true;
 }
 

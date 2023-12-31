@@ -58,6 +58,7 @@ rg_app_desc_t *odroid_system_get_app()
 
 
 const char OFF_SAVESTATE_PATH[] = "savestate/common";
+const char OFF_SRAM_PATH[] = "savestate/common.srm";
 
 static void parse_rom_path(char *path, size_t size, int slot){
     if (slot == -1) {
@@ -73,33 +74,61 @@ static void parse_rom_path(char *path, size_t size, int slot){
                  );
     }
 }
+
+static void parse_sram_path(char *path, size_t size, int slot){
+    if (slot == -1) {
+        strcpy(path, OFF_SRAM_PATH);
+    }
+    else {
+        snprintf(path,
+                 size,
+                 "savestate/%s/%s/%d.srm",
+                 ACTIVE_FILE->system->extension,
+                 ACTIVE_FILE->name,
+                 slot
+                 );
+    }
+}
 /* Return true on successful load.
  * Slot -1 is for the OFF_SAVESTATE
  * */
 bool odroid_system_emu_load_state(int slot)
 {
-    char path[FS_MAX_PATH_SIZE];
+    char savePath[FS_MAX_PATH_SIZE];
+    char sramPath[FS_MAX_PATH_SIZE];
     if (currentApp.loadState == NULL)
         return true;
-    parse_rom_path(path, sizeof(path), slot);
-    printf("Attempting to load state from [%s]\n", path);
-    if(!fs_exists(path)){
+    parse_rom_path(savePath, sizeof(savePath), slot);
+    parse_sram_path(sramPath, sizeof(sramPath), slot);
+    printf("Attempting to load state from [%s]\n", savePath);
+    if(!fs_exists(savePath) && !fs_exists(sramPath)){
         printf("Savestate does not exist.\n");
         return false;
     }
-    (*currentApp.loadState)(path);
+    (*currentApp.loadState)(savePath, sramPath);
+    if (slot == -1) {
+        // Delete save files as it's not useful anymore
+        if(fs_exists(savePath)) {
+            fs_delete(savePath);
+        }
+        if(fs_exists(sramPath)) {
+            fs_delete(sramPath);
+        }
+    }
     return true;
 };
 
 bool odroid_system_emu_save_state(int slot)
 {
-    char path[FS_MAX_PATH_SIZE];
+    char savePath[FS_MAX_PATH_SIZE];
+    char sramPath[FS_MAX_PATH_SIZE];
     if (currentApp.saveState == NULL)
         return true;
 
-    parse_rom_path(path, sizeof(path), slot);
-    printf("Savestating to [%s]\n", path);
-    (*currentApp.saveState)(path);
+    parse_rom_path(savePath, sizeof(savePath), slot);
+    parse_sram_path(sramPath, sizeof(sramPath), slot);
+    printf("Savestating to [%s]\n", savePath);
+    (*currentApp.saveState)(savePath, sramPath);
     return true;
 };
 

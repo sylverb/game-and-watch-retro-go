@@ -63,8 +63,6 @@ dstPos zelda3__dstPos
 bufferCount zelda3__bufferCount
 savestateBuffer zelda3__savestateBuffer
 save_address zelda3__save_address
-readSramImpl zelda3__readSramImpl
-writeSramImpl zelda3__writeSramImpl
 PpuDrawBackground_4bpp zelda3__PpuDrawBackground_4bpp
 PpuDrawSprites zelda3__PpuDrawSprites
 WriteVolumeToDsp zelda3__WriteVolumeToDsp

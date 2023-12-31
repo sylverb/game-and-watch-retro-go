@@ -393,6 +393,16 @@ static void parse_rom_path(retro_emulator_file_t *file, char *path, size_t size,
                 );
 }
 
+static void parse_sram_path(retro_emulator_file_t *file, char *path, size_t size, int slot){
+    snprintf(path,
+                size,
+                "savestate/%s/%s/%d.srm",
+                file->system->extension,
+                file->name,
+                slot
+                );
+}
+
 bool emulator_show_file_menu(retro_emulator_file_t *file)
 {
     CHOSEN_FILE = file;
@@ -402,7 +412,8 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     // bool has_sram = odroid_sdcard_get_filesize(sram_path) > 0;
     // bool is_fav = favorite_find(file) != NULL;
 
-    char path[FS_MAX_PATH_SIZE];
+    char savePath[FS_MAX_PATH_SIZE];
+    char sramPath[FS_MAX_PATH_SIZE];
     bool has_save = 0;
     bool has_sram = 0;
     bool force_redraw = false;
@@ -417,9 +428,11 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     }
 
 #endif
-    parse_rom_path(file, path, sizeof(path), 0);
+    parse_rom_path(file, savePath, sizeof(savePath), 0);
+    parse_sram_path(file, sramPath, sizeof(sramPath), 0);
 
-    has_save = fs_exists(path);
+    has_save = fs_exists(savePath);
+    has_sram = fs_exists(sramPath);
 
     odroid_dialog_choice_t choices[] = {
         {0, curr_lang->s_Resume_game, "", has_save ? 1 : -1, NULL},
@@ -460,7 +473,12 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     }
     else if (sel == 2) {
         if (odroid_overlay_confirm(curr_lang->s_Confiem_del_save, false, &gui_redraw_callback) == 1) {
-            fs_delete(path);
+            if (has_save) {
+                fs_delete(savePath);
+            }
+            if (has_sram) {
+                fs_delete(sramPath);
+            }
         }
     }
     else if (sel == 3) {

@@ -70,7 +70,7 @@ void odroid_display_force_refresh(void)
 }
 
 
-static bool SaveState(char *pathName)
+static bool SaveState(char *savePathName, char *sramPathName)
 {
     uint8_t nes_save_buffer[24000];
 
@@ -78,7 +78,7 @@ static bool SaveState(char *pathName)
 
     nes_state_save(nes_save_buffer, 24000);
 
-    FILE *fp = fopen(pathName, "wb");
+    FILE *fp = fopen(savePathName, "wb");
     assert(fp);
     fwrite(nes_save_buffer, 1, sizeof(nes_save_buffer), fp);
     fclose(fp);
@@ -86,13 +86,13 @@ static bool SaveState(char *pathName)
     return true;
 }
 
-static bool LoadState(char *pathName)
+static bool LoadState(char *savePathName, char *sramPathName)
 {
     uint8_t nes_save_buffer[24000];
 
     memset(nes_save_buffer, 0, sizeof(nes_save_buffer));
 
-    FILE *fp = fopen(pathName, "rb");
+    FILE *fp = fopen(savePathName, "rb");
     assert(fp);
     fread(nes_save_buffer, 1, sizeof(nes_save_buffer), fp);
     fclose(fp);
@@ -245,11 +245,11 @@ void osd_getinput(void)
                 break;
             case SDLK_F1:
                 if (last_down_event.key.keysym.sym == SDLK_F1)
-                    SaveState("save_nes.bin");
+                    SaveState("save_nes.bin", NULL);
                 break;
             case SDLK_F4:
                 if (last_down_event.key.keysym.sym == SDLK_F4)
-                    LoadState("save_nes.bin");
+                    LoadState("save_nes.bin", NULL);
                 break;
             default:
                 break;
@@ -291,7 +291,7 @@ uint osd_getromcrc()
 void osd_loadstate()
 {
     if (autoload) {
-        LoadState(autoload_name);
+        LoadState(autoload_name, NULL);
     }
 }
 

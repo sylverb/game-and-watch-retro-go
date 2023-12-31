@@ -63,8 +63,6 @@ dstPos smw__dstPos
 bufferCount smw__bufferCount
 savestateBuffer smw__savestateBuffer
 save_address smw__save_address
-readSramImpl smw__readSramImpl
-writeSramImpl smw__writeSramImpl
 PpuDrawBackground_4bpp smw__PpuDrawBackground_4bpp
 PpuDrawSprites smw__PpuDrawSprites
 WriteVolumeToDsp smw__WriteVolumeToDsp

@@ -203,7 +203,7 @@ int init_window(int width, int height)
     return 0;
 }
 
-static bool SaveState(char *pathName)
+static bool SaveState(char *savePathName, char *sramPathName)
 {
     int total_size = g_gb->get_state_size();
     printf("SaveState %d\n",total_size);
@@ -219,7 +219,7 @@ static bool SaveState(char *pathName)
     return 0;
 }
 
-static bool LoadState(char *pathName)
+static bool LoadState(char *savePathName, char *sramPathName)
 {
     FILE* pFile;
     int size = g_gb->get_state_size();
@@ -278,10 +278,10 @@ int input_read_gamepad()
                 run_loop = false;
                 break;
             case SDLK_F3:
-                SaveState(NULL);
+                SaveState(NULL, NULL);
                 break;
             case SDLK_F4:
-                LoadState(NULL);
+                LoadState(NULL, NULL);
                 break;
             case SDLK_p:
                 index_palette++;

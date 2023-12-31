@@ -135,12 +135,12 @@ static void netplay_callback(netplay_event_t event, void *arg)
     // Where we're going we don't need netplay!
 }
 
-static bool SaveState(char *pathName)
+static bool SaveState(char *savePathName, char *sramPathName)
 {
     return 0;
 }
 
-static bool LoadState(char *pathName)
+static bool LoadState(char *savePathName, char *sramPathName)
 {
     return true;
 }

@@ -60,7 +60,7 @@ bool tgb_drawFrame;
 
 // --- MAIN
 
-static bool SaveState(char *pathName)
+static bool SaveState(char *savePathName, char *sramPathName)
 {
     size_t size = g_gb->get_state_size();
 
@@ -69,20 +69,20 @@ static bool SaveState(char *pathName)
     g_gb->save_state_mem((void *)data);
 
     fs_file_t *file;
-    file = fs_open(pathName, FS_WRITE, FS_COMPRESS);
+    file = fs_open(savePathName, FS_WRITE, FS_COMPRESS);
     fs_write(file, data, size);
     fs_close(file);
     return true;
 }
 
-static bool LoadState(char *pathName)
+static bool LoadState(char *savePathName, char *sramPathName)
 {
     // We store data in the not visible framebuffer
     unsigned char *data = (unsigned char *)lcd_get_active_buffer();
     size_t size = g_gb->get_state_size();
 
     fs_file_t *file;
-    file = fs_open(pathName, FS_READ, FS_COMPRESS);
+    file = fs_open(savePathName, FS_READ, FS_COMPRESS);
     fs_read(file, data, size);
     fs_close(file);
 
