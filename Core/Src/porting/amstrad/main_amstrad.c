@@ -1149,10 +1149,12 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
         }
 
         caprice_retro_loop();
+
         if (drawFrame) {
             _blit();
             lcd_swap();
         }
+
         amstrad_pcm_submit();
         amstrad_set_audio_buffer((int8_t *)soundBuffer, AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS * 2);
 

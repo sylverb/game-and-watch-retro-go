@@ -592,9 +592,8 @@ void app_main_gb(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     {
         wdog_refresh();
 
-        odroid_input_read_gamepad(&joystick);
-
         bool drawFrame = common_emu_frame_loop();
+
         char palette_values[16];
         snprintf(palette_values, sizeof(palette_values), "%s", "7/7");
         odroid_dialog_choice_t options[] = {
@@ -602,6 +601,8 @@ void app_main_gb(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
             // {301, "More...", "", 1, &advanced_settings_cb},
             ODROID_DIALOG_CHOICE_LAST
         };
+
+        odroid_input_read_gamepad(&joystick);
         common_emu_input_loop(&joystick, options, &blit);
         common_emu_input_loop_handle_turbo(&joystick);
 

@@ -499,6 +499,7 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     while(1)
     {
         wdog_refresh();
+
         bool drawFrame = common_emu_frame_loop();
 
         odroid_input_read_gamepad(&joystick);
@@ -508,11 +509,14 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
         wsv_input_read(&joystick);
 
         supervision_exec((uint16 *)wsv_framebuffer);
+
         if (drawFrame) {
             blit();
             lcd_swap();
         }
+
         wsv_pcm_submit();
+
         common_emu_sound_sync(false);
     }
 

@@ -519,18 +519,18 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, 
 #endif
     }
 
+    odroid_gamepad_state_t joystick;
+    odroid_dialog_choice_t options[] = {
+            ODROID_DIALOG_CHOICE_LAST
+    };
     while (true)
     {
         wdog_refresh();
 
-        odroid_gamepad_state_t joystick;
-        odroid_input_read_gamepad(&joystick);
-        odroid_dialog_choice_t options[] = {
-            ODROID_DIALOG_CHOICE_LAST
-        };
-        common_emu_input_loop(&joystick, options, &blit);
-
         bool drawFrame = common_emu_frame_loop();
+
+        odroid_input_read_gamepad(&joystick);
+        common_emu_input_loop(&joystick, options, &blit);
         common_emu_input_loop_handle_turbo(&joystick);
 
         sms_update_keys( &joystick );
@@ -540,6 +540,7 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, 
         if (drawFrame) {
             sms_draw_frame();
         }
+
         sms_pcm_submit();
 
         common_emu_sound_sync(false);
