@@ -334,6 +334,25 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
     }
 }
 
+void common_emu_sound_sync(bool use_nops) {
+    if (!common_emu_state.skip_frames) {
+        static uint32_t last_dma_counter = 0;
+        if (last_dma_counter == 0) {
+            last_dma_counter = dma_counter;
+        }
+        for (uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
+            while (dma_counter == last_dma_counter) {
+                if (use_nops) {
+                    __NOP();
+                } else {
+                    cpumon_sleep();
+                }
+            }
+            last_dma_counter = dma_counter;
+        }
+    }
+}
+
 static void cpumon_common(bool sleep){
     uint t0 = get_elapsed_time();
     if(cpumon_stats.last_busy){

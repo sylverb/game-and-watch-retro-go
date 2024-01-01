@@ -577,23 +577,11 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
         /* get how many cycles have been spent to process everything */
         end_cycles = get_dwt_cycles();
 
-        if (!common_emu_state.skip_frames)
-        {
-            for (uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++)
-            {
-                static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
-                while (dma_state == last_dma_state)
-                {
 #ifdef GW_EMU_DEBUG_OVERLAY
-                    __NOP();
+        common_emu_sound_sync(true);
 #else
-                    cpumon_sleep();
+        common_emu_sound_sync(false);
 #endif
-                }
-                last_dma_state = dma_state;
-            }
-        }
-
         /* get how cycles have been spent inside this loop */
         loop_cycles = get_dwt_cycles();
 

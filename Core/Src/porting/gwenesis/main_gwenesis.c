@@ -880,18 +880,10 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
       } else {
 
         lcd_swap();
-        //  if (!common_emu_state.skip_frames) {
-        // odroid_audio_submit(pcm.buf, pcm.pos >> 1);
-        // handled in pcm_submit instead.
-        static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
-        //  for (uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
-        while (dma_state == last_dma_state) {
-          if (gwenesis_show_debug_bar)
-            __NOP();
-          else
-            cpumon_sleep();
-        }
-        last_dma_state = dma_state;
+
+        common_emu_state.pause_frames = 0;
+        common_emu_state.skip_frames = 0;
+        common_emu_sound_sync(gwenesis_show_debug_bar);
       }
       // Get current line LCD position to check A/V synchronization
       gwenesis_lcd_current_line = 0xFFFF & lcd_get_pixel_position();

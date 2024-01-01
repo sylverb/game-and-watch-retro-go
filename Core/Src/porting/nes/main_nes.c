@@ -137,17 +137,9 @@ void osd_vsync()
 
     nes_getptr()->drawframe = draw_frame;
 
-    // Wait until the audio buffer has been transmitted
-    static uint32_t last_dma_counter = 0;
     t0 = get_elapsed_time();
-    if(!common_emu_state.skip_frames){
-        for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
-            while (dma_counter == last_dma_counter) {
-                cpumon_sleep();
-            }
-            last_dma_counter = dma_counter;
-        }
-    }
+    // Wait until the audio buffer has been transmitted
+    common_emu_sound_sync(false);
 
     vsync_wait_ms += get_elapsed_time_since(t0);
 }

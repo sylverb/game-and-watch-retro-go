@@ -1709,7 +1709,6 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 {
     odroid_dialog_choice_t options[10];
     bool drawFrame;
-    dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
 
     show_disk_icon = false;
     selected_disk_index = -1;
@@ -1822,14 +1821,7 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
         // Render audio
         mixerSyncGNW(mixer,(AUDIO_MSX_SAMPLE_RATE/msx_fps));
 
-        if(!common_emu_state.skip_frames) {
-            for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
-                while (dma_state == last_dma_state) {
-                    cpumon_sleep();
-                }
-                last_dma_state = dma_state;
-            }
-        }
+        common_emu_sound_sync(false);
     }
 }
 
