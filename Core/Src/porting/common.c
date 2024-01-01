@@ -364,6 +364,34 @@ void common_emu_sound_sync(bool use_nops) {
     }
 }
 
+/* DWT counter used to measure time execution */
+volatile unsigned int *DWT_CONTROL = (unsigned int *)0xE0001000;
+volatile unsigned int *DWT_CYCCNT = (unsigned int *)0xE0001004;
+volatile unsigned int *DEMCR = (unsigned int *)0xE000EDFC;
+volatile unsigned int *LAR = (unsigned int *)0xE0001FB0; // <-- lock access register
+
+void common_emu_enable_dwt_cycles()
+{
+    /* Use DWT cycle counter to get precision time elapsed during loop.
+       The DWT cycle counter is cleared on every loop.
+       It may crash if the DWT is used during trace profiling */
+
+    *DEMCR = *DEMCR | 0x01000000;    // enable trace
+    *LAR = 0xC5ACCE55;               // <-- added unlock access to DWT (ITM, etc.)registers
+    *DWT_CYCCNT = 0;                 // clear DWT cycle counter
+    *DWT_CONTROL = *DWT_CONTROL | 1; // enable DWT cycle counter
+}
+
+inline __attribute__((always_inline))
+unsigned int common_emu_get_dwt_cycles() {
+    return *DWT_CYCCNT;
+}
+
+inline __attribute__((always_inline))
+void common_emu_clear_dwt_cycles() {
+    *DWT_CYCCNT = 0;
+}
+
 static void cpumon_common(bool sleep){
     uint t0 = get_elapsed_time();
     if(cpumon_stats.last_busy){

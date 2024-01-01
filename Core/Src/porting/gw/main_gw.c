@@ -222,30 +222,6 @@ static void gw_sound_submit()
 
 static unsigned int loop_cycles = 1, end_cycles = 1, proc_cycles = 1, blit_cycles = 1;
 
-/* DWT counter used to measure time execution */
-volatile unsigned int *DWT_CONTROL = (unsigned int *)0xE0001000;
-volatile unsigned int *DWT_CYCCNT = (unsigned int *)0xE0001004;
-volatile unsigned int *DEMCR = (unsigned int *)0xE000EDFC;
-volatile unsigned int *LAR = (unsigned int *)0xE0001FB0; // <-- lock access register
-
-#define get_dwt_cycles() *DWT_CYCCNT
-#define clear_dwt_cycles() *DWT_CYCCNT = 0
-
-#ifdef GW_EMU_DEBUG_OVERLAY
-static void enable_dwt_cycles()
-{
-
-    /* Use DWT cycle counter to get precision time elapsed during loop.
-    The DWT cycle counter is cleared on every loop
-    it may crash if the DWT is used during trace profiling */
-
-    *DEMCR = *DEMCR | 0x01000000;    // enable trace
-    *LAR = 0xC5ACCE55;               // <-- added unlock access to DWT (ITM, etc.)registers
-    *DWT_CYCCNT = 0;                 // clear DWT cycle counter
-    *DWT_CONTROL = *DWT_CONTROL | 1; // enable DWT cycle counter
-}
-#endif
-
 static void gw_debug_bar()
 {
 
@@ -257,7 +233,7 @@ static void gw_debug_bar()
 
     if (!debug_init_done)
     {
-        enable_dwt_cycles();
+        common_emu_enable_dwt_cycles();
         debug_init_done = true;
     }
 
@@ -510,12 +486,10 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
     /*** Main emulator loop */
     printf("Main emulator loop start\n");
 
-    clear_dwt_cycles();
-
     while (true)
     {
         /* clear DWT counter used to monitor performances */
-        clear_dwt_cycles();
+        common_emu_clear_dwt_cycles();
 
         wdog_refresh();
 
@@ -553,7 +527,7 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
         gw_system_run(GW_SYSTEM_CYCLES);
 
         /* get how many cycles have been spent in the emulator */
-        proc_cycles = get_dwt_cycles();
+        proc_cycles = common_emu_get_dwt_cycles();
 
         /* update the screen only if there is no pending frame to render */
         if (!lcd_is_swap_pending() && drawFrame)
@@ -564,7 +538,7 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
             lcd_swap();
 
             /* get how many cycles have been spent in graphics rendering */
-            blit_cycles = get_dwt_cycles() - proc_cycles;
+            blit_cycles = common_emu_get_dwt_cycles() - proc_cycles;
         }
         /****************************************************************************/
 
@@ -575,7 +549,7 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
         }
 
         /* get how many cycles have been spent to process everything */
-        end_cycles = get_dwt_cycles();
+        end_cycles = common_emu_get_dwt_cycles();
 
 #ifdef GW_EMU_DEBUG_OVERLAY
         common_emu_sound_sync(true);
@@ -583,7 +557,7 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
         common_emu_sound_sync(false);
 #endif
         /* get how cycles have been spent inside this loop */
-        loop_cycles = get_dwt_cycles();
+        loop_cycles = common_emu_get_dwt_cycles();
 
     } // end of loop
 }
