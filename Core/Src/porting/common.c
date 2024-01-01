@@ -335,6 +335,17 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
     }
 }
 
+void common_emu_input_loop_handle_turbo(odroid_gamepad_state_t *joystick) {
+    uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
+    bool turbo_a = (joystick->values[ODROID_INPUT_A] && (turbo_buttons & 1));
+    bool turbo_b = (joystick->values[ODROID_INPUT_B] && (turbo_buttons & 2));
+    bool turbo_button = odroid_button_turbos();
+    if (turbo_a)
+        joystick->values[ODROID_INPUT_A] = turbo_button;
+    if (turbo_b)
+        joystick->values[ODROID_INPUT_B] = !turbo_button;
+}
+
 void common_emu_sound_sync(bool use_nops) {
     if (!common_emu_state.skip_frames) {
         static uint32_t last_dma_counter = 0;
