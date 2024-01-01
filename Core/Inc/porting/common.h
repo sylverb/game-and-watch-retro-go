@@ -91,6 +91,12 @@ extern common_emu_state_t common_emu_state;
  */
 void odroid_set_audio_dma_size(size_t frame_sample_count);
 
+// DWT start
+void common_emu_enable_dwt_cycles(void);
+unsigned int common_emu_get_dwt_cycles(void);
+void common_emu_clear_dwt_cycles(void);
+// DWT end
+
 /**
  * Drawable stuff over current emulation.
  */

@@ -369,27 +369,8 @@ static void gwenesis_sound_submit() {
     */
 
 static unsigned int loop_cycles = 1,end_cycles = 1;
-/* DWT counter used to measure time execution */
-volatile unsigned int *GWENESIS_DWT_CONTROL = (unsigned int *)0xE0001000;
-volatile unsigned int *GWENESIS_DWT_CYCCNT = (unsigned int *)0xE0001004;
-volatile unsigned int *GWENESIS_DEMCR = (unsigned int *)0xE000EDFC;
-volatile unsigned int *GWENESIS_LAR = (unsigned int *)0xE0001FB0; // <-- lock access register
 
-#define get_dwt_cycles() *GWENESIS_DWT_CYCCNT
-#define clear_dwt_cycles() *GWENESIS_DWT_CYCCNT = 0
 static unsigned int overflow_count = 0;
-
-static void enable_dwt_cycles()
-{
-    /* Use DWT cycle counter to get precision time elapsed during loop.
-    The DWT cycle counter is cleared on every loop
-    it may crash if the DWT is used during trace profiling */
-
-    *GWENESIS_DEMCR = *GWENESIS_DEMCR | 0x01000000;    // enable trace
-    *GWENESIS_LAR = 0xC5ACCE55;                  // <-- added unlock access to DWT (ITM, etc.)registers
-    *GWENESIS_DWT_CYCCNT = 0;                    // clear DWT cycle counter
-    *GWENESIS_DWT_CONTROL = *GWENESIS_DWT_CONTROL | 1; // enable DWT cycle counter
-}
 
 static void gwenesis_debug_bar()
 {
@@ -402,7 +383,7 @@ static void gwenesis_debug_bar()
   static bool debug_init_done = false;
 
   if (!debug_init_done) {
-    enable_dwt_cycles();
+    common_emu_enable_dwt_cycles();
     debug_init_done = true;
   }
 
@@ -686,7 +667,7 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot
       current_frame = frame_counter;
 
       /* clear DWT counter used to monitor performances */
-      clear_dwt_cycles();
+      common_emu_clear_dwt_cycles();
 
       /* reset watchdog */
       wdog_refresh();
@@ -838,7 +819,7 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot
       if (drawFrame)
         common_ingame_overlay();
 
-      end_cycles = get_dwt_cycles();
+      end_cycles = common_emu_get_dwt_cycles();
 
       /* VSYNC mode */
       if (gwenesis_vsync_mode) {
@@ -879,7 +860,7 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot
         gwenesis_audio_pll_center();
 
       /* get how cycles have been spent inside this loop */
-      loop_cycles = get_dwt_cycles();
+      loop_cycles = common_emu_get_dwt_cycles();
 
     } // end of loop
 }
