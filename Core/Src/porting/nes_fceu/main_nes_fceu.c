@@ -1100,10 +1100,12 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
         }
     }
 #endif
+
     void _blit()
     {
         blit(nes_framebuffer, lcd_get_active_buffer());
     }
+
     while(1) {
         odroid_dialog_choice_t options[] = {
             // {101, "More...", "", 1, &advanced_settings_cb},
@@ -1119,18 +1121,23 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
         };
 
         wdog_refresh();
+
+        drawFrame = common_emu_frame_loop();
+
         odroid_input_read_gamepad(&joystick);
         common_emu_input_loop(&joystick, options, &_blit);
         common_emu_input_loop_handle_turbo(&joystick);
 
-        drawFrame = common_emu_frame_loop();
         nesInputUpdate(&joystick);
+
         FCEUI_Emulate(&gfx, &sound, &ssize, !drawFrame);
+
         if (drawFrame)
         {
             _blit();
             lcd_swap();
         }
+
         update_sound_nes(sound,ssize);
 
         common_emu_sound_sync(false);

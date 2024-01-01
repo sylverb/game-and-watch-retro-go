@@ -1128,10 +1128,12 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, int8_t save_slot
         }
 
         caprice_retro_loop();
+
         if (drawFrame) {
             _blit();
             lcd_swap();
         }
+
         amstrad_pcm_submit();
         amstrad_set_audio_buffer((int8_t *)soundBuffer, AUDIO_BUFFER_LENGTH_AMSTRAD * sizeof(int16_t));
 

@@ -1711,6 +1711,7 @@ size_t msx_getromdata(uint8_t **data, uint8_t *src_data, size_t src_size, const 
 
 void app_main_msx(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
+    odroid_gamepad_state_t joystick;
     odroid_dialog_choice_t options[10];
     bool drawFrame;
 
@@ -1782,10 +1783,11 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
             HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, (2 * AUDIO_MSX_SAMPLE_RATE / msx_fps));
             emulatorRestartSound();
         }
+
         wdog_refresh();
+
         drawFrame = common_emu_frame_loop();
-        odroid_gamepad_state_t joystick;
-        odroid_input_read_gamepad(&joystick);
+
         void _blit()
         {
             // If current MSX screen mode is 10 or 12, data has been directly written into
@@ -1796,6 +1798,8 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
             }
             common_ingame_overlay();
         }
+
+        odroid_input_read_gamepad(&joystick);
         common_emu_input_loop(&joystick, options, &_blit);
         common_emu_input_loop_handle_turbo(&joystick);
 

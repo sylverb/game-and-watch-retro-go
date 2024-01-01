@@ -632,15 +632,15 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, int8_t save_slot) {
     // Main emulator loop
     printf("Main emulator loop start\n");
     odroid_gamepad_state_t joystick = {0};
-
+    odroid_dialog_choice_t options[] = {
+            ODROID_DIALOG_CHOICE_LAST
+    };
     while (true) {
         wdog_refresh();
-        bool drawFrame = common_emu_frame_loop();
-        odroid_input_read_gamepad(&joystick);
 
-        odroid_dialog_choice_t options[] = {
-            ODROID_DIALOG_CHOICE_LAST
-        };
+        bool drawFrame = common_emu_frame_loop();
+
+        odroid_input_read_gamepad(&joystick);
         common_emu_input_loop(&joystick, options, &blit);
         common_emu_input_loop_handle_turbo(&joystick);
 
@@ -653,6 +653,7 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, int8_t save_slot) {
         if (drawFrame) {
             pce_osd_gfx_blit();
         }
+
         pce_pcm_submit();
 
         common_emu_sound_sync(false);
