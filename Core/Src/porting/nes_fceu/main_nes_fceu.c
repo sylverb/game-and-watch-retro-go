@@ -1021,7 +1021,6 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
 
     uint32_t sndsamplerate = NES_FREQUENCY_48K;
     odroid_gamepad_state_t joystick;
-    dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
 
     crop_overscan_v = false;
     crop_overscan_h = false;
@@ -1140,14 +1139,7 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
         }
         update_sound_nes(sound,ssize);
 
-        if(!common_emu_state.skip_frames) {
-            for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
-                while (dma_state == last_dma_state) {
-                    cpumon_sleep();
-                }
-                last_dma_state = dma_state;
-            }
-        }
+        common_emu_sound_sync(false);
     }
 
     return 0;

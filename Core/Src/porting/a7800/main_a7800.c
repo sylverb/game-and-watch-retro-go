@@ -214,7 +214,6 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
     uint32_t rom_length = 0;
     uint8_t *rom_ptr = NULL;
 
-    static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
     odroid_gamepad_state_t joystick;
     odroid_dialog_choice_t options[] = {
         ODROID_DIALOG_CHOICE_LAST
@@ -311,14 +310,7 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 
         sound_store(&audiobuffer_dma[offset]);
 
-        if(!common_emu_state.skip_frames){
-            for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
-                while (dma_state == last_dma_state) {
-                    cpumon_sleep();
-                }
-                last_dma_state = dma_state;
-            }
-        }
+        common_emu_sound_sync(false);
     }
 
     return 0;

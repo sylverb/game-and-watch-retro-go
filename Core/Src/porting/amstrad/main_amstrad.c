@@ -1040,7 +1040,6 @@ void _blit()
 
 void app_main_amstrad(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
-    static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
     odroid_gamepad_state_t joystick;
     odroid_dialog_choice_t options[11];
     int disk_load_result = 0;
@@ -1144,17 +1143,7 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, int8_t save_slot
         amstrad_pcm_submit();
         amstrad_set_audio_buffer((int8_t *)soundBuffer, AUDIO_BUFFER_LENGTH_AMSTRAD * sizeof(int16_t));
 
-        if (!common_emu_state.skip_frames)
-        {
-            for (uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++)
-            {
-                while (dma_state == last_dma_state)
-                {
-                    cpumon_sleep();
-                }
-                last_dma_state = dma_state;
-            }
-        }
+        common_emu_sound_sync(false);
     }
 }
 #endif
