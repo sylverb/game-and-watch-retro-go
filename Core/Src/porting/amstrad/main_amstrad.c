@@ -218,8 +218,10 @@ int amstrad_button_select_key = CPC_RETURN;
 
 static char game_button_name[10];
 static char time_button_name[10];
+#if GNW_TARGET_ZELDA != 0
 static char start_button_name[10];
 static char select_button_name[10];
+#endif
 static char a_button_name[10];
 static char b_button_name[10];
 
@@ -453,6 +455,7 @@ static bool update_time_button_cb(odroid_dialog_choice_t *option, odroid_dialog_
     return event == ODROID_DIALOG_ENTER;
 }
 
+#if GNW_TARGET_ZELDA != 0
 static bool update_start_button_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
     int max_index = sizeof(amstrad_keyboard) / sizeof(amstrad_keyboard[0]) - 1;
@@ -502,6 +505,7 @@ static bool update_select_button_cb(odroid_dialog_choice_t *option, odroid_dialo
     strcpy(option->value, amstrad_keyboard[amstrad_button_key_index].name);
     return event == ODROID_DIALOG_ENTER;
 }
+#endif
 
 static bool update_a_button_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
