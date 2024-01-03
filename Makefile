@@ -20,7 +20,6 @@ Core/Src/gw_buttons.c \
 Core/Src/gw_flash.c \
 Core/Src/gw_lcd.c \
 Core/Src/gw_malloc.c \
-Core/Src/game_genie.c \
 Core/Src/main.c \
 Core/Src/sha256.c \
 Core/Src/flashapp.c \
@@ -117,6 +116,7 @@ retro-go-stm32/nofrendo-go/components/nofrendo/mappers/map229.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/mappers/map231.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/mappers/map252.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/mappers/map253.c \
+retro-go-stm32/nofrendo-go/components/nofrendo/nes/game_genie.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/nes/nes_apu.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/nes/nes_input.c \
 retro-go-stm32/nofrendo-go/components/nofrendo/nes/nes_mem.c \
