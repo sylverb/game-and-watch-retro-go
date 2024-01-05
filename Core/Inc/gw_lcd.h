@@ -25,6 +25,9 @@ extern uint32_t frame_counter;
 
 void lcd_deinit(SPI_HandleTypeDef *spi);
 void lcd_init(SPI_HandleTypeDef *spi, LTDC_HandleTypeDef *ltdc);
+void lcd_clear_active_buffer();
+void lcd_clear_inactive_buffer();
+void lcd_clear_buffers();
 void lcd_backlight_set(uint8_t brightness);
 void lcd_backlight_on();
 void lcd_backlight_off();

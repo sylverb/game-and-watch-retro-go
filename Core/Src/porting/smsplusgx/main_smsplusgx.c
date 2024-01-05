@@ -107,7 +107,7 @@ load_rom_from_flash(uint8_t emu_engine)
             {
                 wdog_refresh();
                 memcpy(&lzma_bank_size, &ROM_DATA[8 + 4 * i], sizeof(lzma_bank_size));
-                memset((uint8 *)lcd_get_inactive_buffer(),0x0,320*240*2);
+                lcd_clear_inactive_buffer();
 
                 uint16_t *dest = lcd_get_inactive_buffer();
 
@@ -498,8 +498,7 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, 
     }
 
     // Video
-    memset(framebuffer1, 0, sizeof(framebuffer1));
-    memset(framebuffer2, 0, sizeof(framebuffer2));
+    lcd_clear_buffers();
 
     if (load_state) {
 #if OFF_SAVESTATE==1

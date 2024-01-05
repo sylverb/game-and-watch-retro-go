@@ -312,7 +312,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
         lcd_sleep_while_swap_pending();
 
         // Clear the active screen buffer, caller must repaint it 
-        memset(lcd_get_active_buffer(), 0, sizeof(framebuffer1));
+        lcd_clear_active_buffer();
     }
 
     if (joystick->values[ODROID_INPUT_POWER]) {

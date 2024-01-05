@@ -585,8 +585,7 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, uint8_t save_slot) {
     init_color_pals();
     const int refresh_rate = FPS_NTSC;
     sprintf(pce_log,"%d",refresh_rate);
-    memset(framebuffer1, 0, sizeof(framebuffer1));
-    memset(framebuffer2, 0, sizeof(framebuffer2));
+    lcd_clear_buffers();
 
     gfx_init();
     printf("Graphics initialized\n");

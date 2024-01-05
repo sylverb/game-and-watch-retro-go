@@ -515,8 +515,7 @@ int app_main_nes(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
     save_slot_load = save_slot;
 
-    memset(framebuffer1, 0x0, sizeof(framebuffer1));
-    memset(framebuffer2, 0x0, sizeof(framebuffer2));
+    lcd_clear_buffers();
     odroid_system_init(APPID_NES, AUDIO_SAMPLE_RATE);
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
 

@@ -1035,8 +1035,7 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
     crop_overscan_v = false;
     crop_overscan_h = false;
 
-    memset(framebuffer1, 0x0, sizeof(framebuffer1));
-    memset(framebuffer2, 0x0, sizeof(framebuffer2));
+    lcd_clear_buffers();
 
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
