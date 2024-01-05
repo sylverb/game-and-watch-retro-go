@@ -59,11 +59,6 @@ void update_joy(void)
 // --- MAIN
 
 
-static void netplay_callback(netplay_event_t event, void *arg)
-{
-    // Where we're going we don't need netplay!
-}
-
 static void blit() {
 
 }
@@ -184,7 +179,7 @@ static void videopac_input_update(odroid_gamepad_state_t *joystick)
 static rg_app_desc_t * init(uint8_t load_state, int8_t save_slot)
 {
     odroid_system_init(APPID_GB, AUDIO_SAMPLE_RATE_VIDEOPAC);
-    odroid_system_emu_init(&LoadState, &SaveState, &netplay_callback);
+    odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     // Load ROM
 

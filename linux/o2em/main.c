@@ -129,11 +129,6 @@ int init_window(int width, int height)
     return 0;
 }
 
-static void netplay_callback(netplay_event_t event, void *arg)
-{
-    // Where we're going we don't need netplay!
-}
-
 static bool LoadState(char *savePathName, char *sramPathName)
 {
     printf("Loading state from %s...\n", savePathName);
@@ -157,7 +152,7 @@ void init(void)
 {
     printf("init()\n");
     odroid_system_init(APP_ID, AUDIO_SAMPLE_RATE);
-    odroid_system_emu_init(&LoadState, &SaveState, &netplay_callback);
+    odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     // Video
     memset(fb_data, 0, sizeof(fb_data));

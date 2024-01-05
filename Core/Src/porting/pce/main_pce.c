@@ -160,10 +160,6 @@ void osd_log(int type, const char *format, ...) {
     va_end(ap);
 }
 
-static void netplay_callback(netplay_event_t event, void *arg) {
-    // Where we're going we don't need netplay!
-}
-
 #define SAVE_STATE_BUFFER_SIZE (76*1024)
 
 static bool SaveState(char *savePathName, char *sramPathName) {
@@ -580,7 +576,7 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, int8_t save_slot) {
     }
 
     odroid_system_init(APPID_PCE, PCE_SAMPLE_RATE);
-    odroid_system_emu_init(&LoadState, &SaveState, &netplay_callback);
+    odroid_system_emu_init(&LoadState, &SaveState, NULL);
     pce_log[0]=0;
 
     // Init Graphics

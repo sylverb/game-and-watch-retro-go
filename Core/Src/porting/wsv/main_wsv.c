@@ -38,10 +38,6 @@ static int8 audioBuffer_wsv[AUDIO_BUFFER_LENGTH_WSV*2]; // *2 as emulator is fil
 // Memory to handle compressed roms
 static uint8 wsv_rom_memory[WSV_ROM_BUFF_LENGTH];
 
-static void netplay_callback(netplay_event_t event, void *arg) {
-    // Where we're going we don't need netplay!
-}
-
 #define STATE_SAVE_BUFFER_LENGTH (1024 * 28)
 
 static bool LoadState(char *savePathName, char *sramPathName) {
@@ -495,7 +491,7 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
     memset(framebuffer2, 0, sizeof(framebuffer2));
 
     odroid_system_init(APPID_WSV, SV_SAMPLE_RATE);
-    odroid_system_emu_init(&LoadState, &SaveState, &netplay_callback);
+    odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     // Init Sound
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_WSV );
