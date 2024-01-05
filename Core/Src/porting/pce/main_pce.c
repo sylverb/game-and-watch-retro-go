@@ -158,10 +158,6 @@ void osd_log(int type, const char *format, ...) {
     va_end(ap);
 }
 
-static void netplay_callback(netplay_event_t event, void *arg) {
-    // Where we're going we don't need netplay!
-}
-
 static bool SaveStateStm(char *pathName) {
     int pos=0;
     uint8_t *pce_save_buf = pce_framebuffer;
@@ -582,7 +578,7 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, uint8_t save_slot) {
     }
 
     odroid_system_init(APPID_PCE, PCE_SAMPLE_RATE);
-    odroid_system_emu_init(&LoadStateStm, &SaveStateStm, &netplay_callback);
+    odroid_system_emu_init(&LoadStateStm, &SaveStateStm, NULL);
     pce_log[0]=0;
 
     // Init Graphics

@@ -192,11 +192,6 @@ load_rom_from_flash(uint8_t emu_engine)
     return 1;
 }
 
-static void netplay_callback(netplay_event_t event, void *arg)
-{
-    // Where we're going we don't need netplay!
-}
-
 extern uint32 glob_bp_lut[0x10000];
 
 static bool SaveState(char *pathName)
@@ -459,7 +454,7 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, 
     }
 
     odroid_system_init(APPID_SMS, AUDIO_SAMPLE_RATE);
-    odroid_system_emu_init(&LoadState, &SaveState, &netplay_callback);
+    odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     system_reset_config();
     load_rom_from_flash( is_coleco );

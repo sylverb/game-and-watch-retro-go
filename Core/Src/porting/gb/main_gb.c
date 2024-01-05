@@ -43,12 +43,6 @@ static uint8_t gb_framebuffer[GB_WIDTH*GB_HEIGHT*sizeof(uint16_t)];
 
 // --- MAIN
 
-
-static void netplay_callback(netplay_event_t event, void *arg)
-{
-    // Where we're going we don't need netplay!
-}
-
 #define WIDTH 320
 
 
@@ -512,7 +506,7 @@ void pcm_submit() {
 rg_app_desc_t * init(uint8_t load_state, uint8_t save_slot)
 {
     odroid_system_init(APPID_GB, AUDIO_SAMPLE_RATE);
-    odroid_system_emu_init(&LoadState, &SaveState, &netplay_callback);
+    odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     // bzhxx : fix LCD glitch at the start by cleaning up the buffer emulator
     memset(gb_framebuffer, 0x0, sizeof(gb_framebuffer));
