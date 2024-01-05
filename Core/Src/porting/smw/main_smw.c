@@ -285,8 +285,7 @@ int app_main_smw(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
   common_emu_state.frame_time_10us = (uint16_t)(100000 / FRAMERATE + 0.5f);
 
   /* clear the screen before rendering */
-  memset(lcd_get_inactive_buffer(), 0, 320 * 240 * 2);
-  memset(lcd_get_active_buffer(), 0, 320 * 240 * 2);
+  lcd_clear_buffers();
 
   unsigned short *screen = 0;
   screen = lcd_get_active_buffer();

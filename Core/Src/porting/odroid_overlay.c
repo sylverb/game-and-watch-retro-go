@@ -686,7 +686,7 @@ int odroid_overlay_dialog(const char *header, odroid_dialog_choice_t *options, i
     {
         wdog_refresh();
         lcd_sleep_while_swap_pending();
-        memset(lcd_get_active_buffer(), 0, sizeof(framebuffer1));
+        lcd_clear_active_buffer();
 
         // Repaint background (if enabled)
         if (repaint != NULL)

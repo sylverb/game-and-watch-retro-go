@@ -86,7 +86,7 @@ static void load_rom_from_flash() {
     for (int i = 0; i < nb_banks; i++) {
       wdog_refresh();
       memcpy(&lzma_bank_size, &ROM_DATA[8 + 4 * i], sizeof(lzma_bank_size));
-      memset((uint8_t *)lcd_get_inactive_buffer(), 0x0, 320 * 240 * 2);
+      lcd_clear_inactive_buffer();
 
       uint16_t *dest = lcd_get_inactive_buffer();
 
@@ -635,8 +635,7 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     reset_emulation();
 
     /* clear the screen before rendering */
-    memset(lcd_get_inactive_buffer(), 0, 320 * 240 * 2);
-    memset(lcd_get_active_buffer(), 0, 320 * 240 * 2);
+    lcd_clear_buffers();
 
     unsigned short *screen = 0;
 

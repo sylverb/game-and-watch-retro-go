@@ -387,6 +387,7 @@ static void blit(void)
     common_ingame_overlay();
 }
 
+//TODO: Could this be optimized ?
 void wsv_render_image() {
     // WSV image is 160x160
     int y;
@@ -487,8 +488,7 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
     lcd_set_refresh_rate(50);
 
     video_frame.buffer = wsv_framebuffer;
-    memset(framebuffer1, 0, sizeof(framebuffer1));
-    memset(framebuffer2, 0, sizeof(framebuffer2));
+    lcd_clear_buffers();
 
     odroid_system_init(APPID_WSV, SV_SAMPLE_RATE);
     odroid_system_emu_init(&LoadState, &SaveState, NULL);

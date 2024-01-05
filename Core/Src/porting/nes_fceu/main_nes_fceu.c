@@ -1025,8 +1025,7 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     crop_overscan_v = false;
     crop_overscan_h = false;
 
-    memset(framebuffer1, 0x0, sizeof(framebuffer1));
-    memset(framebuffer2, 0x0, sizeof(framebuffer2));
+    lcd_clear_buffers();
 
     // Allocate the maximum samples count for a frame on NES
     odroid_set_audio_dma_size((NES_FREQUENCY_48K) / 50);

@@ -184,8 +184,7 @@ static rg_app_desc_t * init(uint8_t load_state, int8_t save_slot)
     // Load ROM
 
     // Video
-    memset(framebuffer1, 0, sizeof(framebuffer1));
-    memset(framebuffer2, 0, sizeof(framebuffer2));
+    lcd_clear_buffers();
 
     // Audio
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_VIDEOPAC);

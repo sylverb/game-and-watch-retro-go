@@ -1745,8 +1745,7 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
     image_buffer_current_width =  image_buffer_base_width;
     image_buffer_height        =  240;
 
-    memset(lcd_get_active_buffer(), 0, sizeof(framebuffer1));
-    memset(lcd_get_inactive_buffer(), 0, sizeof(framebuffer1));
+    lcd_clear_buffers();
     memset(msx_framebuffer, 0, sizeof(msx_framebuffer));
     
     memset(audiobuffer_dma, 0, 2*(AUDIO_MSX_SAMPLE_RATE/FPS_PAL)*sizeof(Int16));
