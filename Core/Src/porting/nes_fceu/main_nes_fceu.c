@@ -730,23 +730,18 @@ static void blit(uint8_t *src, uint16_t *framebuffer)
 }
 
 static void update_sound_nes(int32_t *sound, uint16_t size) {
-    uint8_t volume = odroid_audio_volume_get();
-    int32_t factor = volume_tbl[volume];
-    int32_t sample;
-
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : samplesPerFrame;
-
-    if (volume == ODROID_AUDIO_VOLUME_MIN) {
-        // mute
-        for (int i = 0; i < samplesPerFrame; i++) {
-            audiobuffer_dma[i + offset] = 0;
-        }
+    if (common_emu_sound_loop_is_muted()) {
         return;
     }
 
-    for (int i=0; i < samplesPerFrame; i++) {
-        sample = sound[i];
-        audiobuffer_dma[offset+i] = ((sample * factor) >> 8) & 0xFFFF;
+    int32_t factor = common_emu_sound_get_volume();
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
+
+    // Write to DMA buffer and lower the volume accordingly
+    for (int i = 0; i < sound_buffer_length; i++) {
+        int32_t sample = sound[i];
+        sound_buffer[i] = ((sample * factor) >> 8) & 0xFFFF;
     }
 }
 
@@ -1027,9 +1022,6 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
 
     lcd_clear_buffers();
 
-    // Allocate the maximum samples count for a frame on NES
-    odroid_set_audio_dma_size((NES_FREQUENCY_48K) / 50);
-
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
         odroid_audio_mute(true);
@@ -1060,9 +1052,6 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     odroid_system_init(APPID_NES, sndsamplerate);
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
-    // Init Sound
-
-    HAL_SAI_DMAStop(&hsai_BlockA1);
     if (FSettings.PAL) {
         lcd_set_refresh_rate(50);
         common_emu_state.frame_time_10us = (uint16_t)(100000 / 50 + 0.5f);
@@ -1072,7 +1061,9 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, int8_t save_slot
         common_emu_state.frame_time_10us = (uint16_t)(100000 / 60 + 0.5f);
         samplesPerFrame = sndsamplerate / 60;
     }
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma, 2 * samplesPerFrame);
+
+    // Init Sound
+    audio_start_playing(samplesPerFrame);
 
     AddExState(&gnw_save_data, ~0, 0, 0);
 

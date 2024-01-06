@@ -32,7 +32,6 @@ extern void __libc_init_array(void);
 
 // Use 60Hz for GB
 #define AUDIO_BUFFER_LENGTH_GB (int)(GB_AUDIO_FREQUENCY / VIDEO_REFRESH_RATE)
-#define AUDIO_BUFFER_LENGTH_DMA_GB ((2 * GB_AUDIO_FREQUENCY) / VIDEO_REFRESH_RATE)
 
 #include "heap.hpp"
 
@@ -92,19 +91,17 @@ static bool LoadState(char *savePathName, char *sramPathName)
 }
 
 void gb_pcm_submit(int16_t *stream, int samples) {
-    uint8_t volume = odroid_audio_volume_get();
-    int32_t factor = volume_tbl[volume];
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_BUFFER_LENGTH_GB;
+    if (common_emu_sound_loop_is_muted()) {
+        return;
+    }
 
-    if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_GB; i++) {
-            audiobuffer_dma[i + offset] = 0;
-        }
-    } else {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_GB; i++) {
-            int32_t sample = ((int32_t)stream[i*2]+(int32_t)stream[i*2+1])/2;
-            audiobuffer_dma[i + offset] = (sample * factor) >> 8;
-        }
+    int32_t factor = common_emu_sound_get_volume();
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
+    
+    for (int i = 0; i < sound_buffer_length; i++) {
+        int32_t sample = ((int32_t)stream[i*2]+(int32_t)stream[i*2+1])/2;
+        sound_buffer[i] = (sample * factor) >> 8;
     }
 }
 
@@ -459,9 +456,6 @@ void app_main_gb_tgbdual_cpp(uint8_t load_state, uint8_t start_paused, int8_t sa
     char palette_values[16];
     odroid_gamepad_state_t joystick;
 
-    // Allocate the maximum samples count for a frame on GB
-    odroid_set_audio_dma_size(AUDIO_BUFFER_LENGTH_GB);
-
     if (start_paused) {
         common_emu_state.pause_after_frames = 3;
         odroid_audio_mute(true);
@@ -506,9 +500,7 @@ void app_main_gb_tgbdual_cpp(uint8_t load_state, uint8_t start_paused, int8_t sa
         ODROID_DIALOG_CHOICE_LAST
     };
 
-    lcd_clear_buffers();
-
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_GB);
+    audio_start_playing(AUDIO_BUFFER_LENGTH_GB);
 
     while (true)
     {

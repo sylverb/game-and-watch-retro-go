@@ -1,6 +1,6 @@
 #include "odroid_system.h"
 #include "odroid_audio.h"
-#include "common.h"
+#include "gw_audio.h"
 #include <assert.h>
 
 #include "stm32h7xx_hal.h"

@@ -36,8 +36,6 @@
 
 // Use 60Hz for Videopac
 #define AUDIO_SAMPLE_RATE_VIDEOPAC 63360
-#define AUDIO_BUFFER_LENGTH_VIDEOPAC (AUDIO_SAMPLE_RATE_VIDEOPAC / 60)
-#define AUDIO_BUFFER_LENGTH_DMA_VIDEOPAC ((2 * AUDIO_SAMPLE_RATE_VIDEOPAC) / 60)
 static bool low_pass_enabled  = true;
 static int32_t low_pass_range = (60 * 0x10000) / 100;
 static int32_t low_pass_prev  = 0;
@@ -187,7 +185,7 @@ static rg_app_desc_t * init(uint8_t load_state, int8_t save_slot)
     lcd_clear_buffers();
 
     // Audio
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_VIDEOPAC);
+    audio_start_playing(SOUND_BUFFER_LEN);
 
     rg_app_desc_t *app = odroid_system_get_app();
 
@@ -232,8 +230,7 @@ static bool load_bios()
         return false;
     }
 
-   bios_size = videopac_getromdata(rom_file, &bios_data,VIDEOPAC_BIOS_BUFF_LENGTH);
-
+    bios_size = videopac_getromdata(rom_file, &bios_data,VIDEOPAC_BIOS_BUFF_LENGTH);
 
     if (bios_size != 1024)
     {
@@ -425,7 +422,7 @@ void load_data()
     app_data.scanlines = 0;
     app_data.voice = 1;
     /* Internal audio filter is worthless,
-        * disable it and use our own */
+     * disable it and use our own */
     app_data.filter = 0;
     app_data.exrom = 0;
     app_data.three_k = 0;
@@ -440,70 +437,68 @@ void load_data()
     app_data.megaxrom = 0;
 
     init_audio();
-   if (!load_bios())
-      return;
-   rom_size = videopac_getromdata(ACTIVE_FILE, &rom_data, VIDEOPAC_ROM_BUFF_LENGTH);
-   if (!load_cart(rom_data, rom_size))
-      return;
+    if (!load_bios())
+        return;
+    rom_size = videopac_getromdata(ACTIVE_FILE, &rom_data, VIDEOPAC_ROM_BUFF_LENGTH);
+    if (!load_cart(rom_data, rom_size))
+        return;
 }
 
 static void pcm_submit() {
     size_t i;
 
-    uint8_t volume = odroid_audio_volume_get();
-    int32_t factor = volume_tbl[volume];
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_BUFFER_LENGTH_VIDEOPAC;
+    if (common_emu_sound_loop_is_muted()) {
+        return;
+    }
 
-    uint8_t *audio_samples_ptr = soundBuffer;
-    int16_t *audio_out_ptr     = &audiobuffer_dma[offset];
+    int32_t factor = common_emu_sound_get_volume();
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
 
-    if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_VIDEOPAC; i++) {
-            audio_out_ptr[i] = 0;
-        }
-    } else {
-        /* Convert 8u mono to 16s stereo */
-        if (low_pass_enabled)
+    uint8_t *audio_in_ptr  = soundBuffer;
+    int16_t *audio_out_ptr = sound_buffer;
+
+    /* Convert 8u mono to 16s stereo */
+    if (low_pass_enabled)
+    {
+        /* Restore previous sample */
+        int32_t low_pass = low_pass_prev;
+        /* Single-pole low-pass filter (6 dB/octave) */
+        int32_t factor_a = low_pass_range;
+        int32_t factor_b = 0x10000 - factor_a;
+
+        for(i = 1; i <= sound_buffer_length; i++)
         {
-            /* Restore previous sample */
-            int32_t low_pass = low_pass_prev;
-            /* Single-pole low-pass filter (6 dB/octave) */
-            int32_t factor_a = low_pass_range;
-            int32_t factor_b = 0x10000 - factor_a;
+            int32_t sample16;
 
-            for(i = 1; i <= SOUND_BUFFER_LEN; i++)
-            {
-                int32_t sample16;
+            /* Get current sample */
+            sample16  = ((((*(audio_in_ptr++) * factor) /
+                256) - 128) << 8) + 32768;
 
-                /* Get current sample */
-                sample16  = ((((*(audio_samples_ptr++) * factor) /
-                    256) - 128) << 8) + 32768;
+            /* Apply low-pass filter */
+            low_pass = (low_pass * factor_a) + (sample16 * factor_b);
 
-                /* Apply low-pass filter */
-                low_pass = (low_pass * factor_a) + (sample16 * factor_b);
+            /* 16.16 fixed point */
+            low_pass >>= 16;
 
-                /* 16.16 fixed point */
-                low_pass >>= 16;
-
-                /* Update output buffer */
-                *(audio_out_ptr++) = (int16_t)low_pass;
-            }
-
-            /* Save last sample for next frame */
-            low_pass_prev = low_pass;
+            /* Update output buffer */
+            *(audio_out_ptr++) = (int16_t)low_pass;
         }
-        else
+
+        /* Save last sample for next frame */
+        low_pass_prev = low_pass;
+    }
+    else
+    {
+        for(i = 1; i <= sound_buffer_length; i++)
         {
-            for(i = 1; i <= SOUND_BUFFER_LEN; i++)
-            {
-                int32_t sample16;
+            int32_t sample16;
 
-                /* Get current sample */
-                sample16  = ((((*(audio_samples_ptr++) * factor) /
-                    256) - 128) << 8) + 32768;
+            /* Get current sample */
+            sample16  = ((((*(audio_in_ptr++) * factor) /
+                256) - 128) << 8) + 32768;
 
-                *(audio_out_ptr++) = (int16_t)sample16;
-            }
+            *(audio_out_ptr++) = (int16_t)sample16;
         }
     }
 }
@@ -512,14 +507,14 @@ void gnw_videopack_blit(uint8_t *input, APALETTE *palette) {
     int i,j;
     unsigned char ind;
     uint16_t *outp = (uint16_t *)lcd_get_inactive_buffer();
-    for(i=0;i<240;i++)
+    for(i=0;i<HEIGHT;i++)
     {
-        for(j=0;j<320;j++)
+        for(j=0;j<WIDTH;j++)
         {
             ind=input[i*340 + j + 10];
             (*outp++) = RGB565(palette[ind].r, palette[ind].g, palette[ind].b);
         }
-//		outp+=	320;
+//		outp+=	WIDTH;
     }
     common_ingame_overlay();
 }
@@ -529,9 +524,6 @@ void app_main_videopac(uint8_t load_state, uint8_t start_paused, int8_t save_slo
     odroid_dialog_choice_t options[] = {
         ODROID_DIALOG_CHOICE_LAST
     };
-
-    // Allocate the maximum samples count for a frame on Videopac
-    odroid_set_audio_dma_size(AUDIO_BUFFER_LENGTH_VIDEOPAC);
 
     init(load_state, save_slot);
     odroid_gamepad_state_t joystick;

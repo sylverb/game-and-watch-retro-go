@@ -33,7 +33,6 @@
 #define PAL_SHIFT_MASK 0x80
 
 #define AUDIO_BUFFER_LENGTH_SMS (AUDIO_SAMPLE_RATE / 60)
-#define AUDIO_BUFFER_LENGTH_DMA_SMS ((2 * AUDIO_SAMPLE_RATE) / 60)
 
 static uint16_t palette[32];
 static uint32_t palette_spaced[32];
@@ -347,19 +346,18 @@ blit_sms(bitmap_t *bmp, uint16_t *framebuffer) {	/* 256 x 192 -> 320 x 230 */
 }
 
 void sms_pcm_submit() {
-    uint8_t volume = odroid_audio_volume_get();
-    int32_t factor = volume_tbl[volume] / 2; // Divide by 2 to prevent overflow in stereo mixing
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_BUFFER_LENGTH_SMS;
-    if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_SMS; i++) {
-            audiobuffer_dma[i + offset] = 0;
-        }
-    } else {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_SMS; i++) {
-            /* mix left & right */
-            int32_t sample = (sms_snd.output[0][i] + sms_snd.output[1][i]);
-            audiobuffer_dma[i + offset] = (sample * factor) >> 8;
-        }
+    if (common_emu_sound_loop_is_muted()) {
+        return;
+    }
+
+    int32_t factor = common_emu_sound_get_volume() / 2; // Divide by 2 to prevent overflow in stereo mixing
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
+
+    for (int i = 0; i < sound_buffer_length; i++) {
+        /* mix left & right */
+        int32_t sample = (sms_snd.output[0][i] + sms_snd.output[1][i]);
+        sound_buffer[i] = (sample * factor) >> 8;
     }
 }
 
@@ -453,9 +451,6 @@ static void sms_update_keys( odroid_gamepad_state_t* joystick )
 int
 app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, int8_t save_slot, uint8_t is_coleco)
 {
-    // Allocate the maximum samples count for a frame on SMS
-    odroid_set_audio_dma_size(AUDIO_BUFFER_LENGTH_SMS);
-
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
         odroid_audio_mute(true);
@@ -492,7 +487,7 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, int8_t save_slot, u
     system_init2();
     system_reset();
 
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_SMS);
+    audio_start_playing(AUDIO_BUFFER_LENGTH_SMS);
 
     consoleIsSMS = sms.console == CONSOLE_SMS || sms.console == CONSOLE_SMS2;
     consoleIsGG  = sms.console == CONSOLE_GG || sms.console == CONSOLE_GGMS;

@@ -168,7 +168,7 @@ void update_joystick(odroid_gamepad_state_t *joystick) {
 
 }
 
-static void sound_store(int16_t *audio_out_buf)
+static void sound_store()
 {
     uint8_t *tia_samples_buf = tia_buffer;
     size_t j;
@@ -188,28 +188,23 @@ static void sound_store(int16_t *audio_out_buf)
         tia_samples_buf = pokeyMixBuffer;
     }
 
-    // MUST shift with at least 1 place, or it will brownout.
-    uint8_t volume = odroid_audio_volume_get();
-    int32_t factor = volume_tbl[volume];
-
-    if (audio_mute || (volume == ODROID_AUDIO_VOLUME_MIN)) {
-        // mute
-        for (int i = 0; i < tia_size; i++) {
-            audio_out_buf[i] = 0;
-        }
+    if (common_emu_sound_loop_is_muted()) {
         return;
     }
 
-    // Write to DMA buffer and lower the volume accordingly
-    for (int i = 0; i < tia_size; i++) {
+    int32_t factor = common_emu_sound_get_volume();
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
+
+    // Write to sound buffer and lower the volume accordingly
+    for (int i = 0; i < sound_buffer_length; i++) {
         int32_t sample = *(tia_samples_buf++) << 8;
-        audio_out_buf[i] = (sample * factor) >> 8;
+        sound_buffer[i] = (sample * factor) >> 8;
     }
 }
 
 int app_main_a7800(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
-    size_t offset;
     const uint8_t *buffer = NULL;
     uint32_t rom_length = 0;
     uint8_t *rom_ptr = NULL;
@@ -218,9 +213,6 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
     odroid_dialog_choice_t options[] = {
         ODROID_DIALOG_CHOICE_LAST
     };
-
-    // Allocate the maximum samples count for a frame on A7800
-    odroid_set_audio_dma_size(TIA_MAX_LENGTH);
 
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
@@ -265,7 +257,7 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     // Init Sound
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, 2*tia_size);
+    audio_start_playing(tia_size);
 
     if (load_state) {
         odroid_system_emu_load_state(save_slot);
@@ -299,9 +291,7 @@ int app_main_a7800(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
             lcd_swap();
         }
 
-        offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : tia_size;
-
-        sound_store(&audiobuffer_dma[offset]);
+        sound_store();
 
         common_emu_sound_sync(false);
     }

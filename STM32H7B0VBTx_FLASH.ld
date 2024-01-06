@@ -640,6 +640,7 @@ SECTIONS
   {
     __ahbram_start__ = .;
     . = ALIGN(4);
+    *(.audio)
     *(.ahb)
     . = ALIGN(4);
     __ahbram_end__ = .;

@@ -26,6 +26,7 @@
 #include "gw_buttons.h"
 #include "gw_flash.h"
 #include "gw_lcd.h"
+#include "gw_audio.h"
 #include "gw_linker.h"
 #include "githash.h"
 #include "bitmaps.h"
@@ -313,7 +314,7 @@ uint32_t uptime_get(void)
 void GW_EnterDeepSleep(void)
 {
   // Stop SAI DMA (audio)
-  HAL_SAI_DMAStop(&hsai_BlockA1);
+  audio_stop_playing();
 
   // Enable wakup by PIN1, the power button
   HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1_LOW);

@@ -39,7 +39,7 @@ uint8_t nes_save_buffer[24000];
 // TODO: Expose properly
 extern int nes_state_save(uint8_t *flash_ptr, size_t size);
 
-void nes_audio_submit(int16_t *buffer, int audioSamples);
+void nes_audio_submit(int16_t *buffer);
 
 static bool SaveState(char *savePathName, char *sramPathName)
 {
@@ -135,7 +135,7 @@ void osd_vsync()
     uint32_t t0;
     bool draw_frame = common_emu_frame_loop();
 
-    nes_audio_submit(nes_getptr()->apu->buffer, nes_getptr()->apu->samples_per_frame);
+    nes_audio_submit(nes_getptr()->apu->buffer);
 
     nes_getptr()->drawframe = draw_frame;
 
@@ -146,31 +146,23 @@ void osd_vsync()
     vsync_wait_ms += get_elapsed_time_since(t0);
 }
 
-void nes_audio_submit(int16_t *buffer, int audioSamples)
+void nes_audio_submit(int16_t *buffer)
 {
     // apu_process(audiobuffer_emulator, audioSamples, false); //get audio data
-
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : audioSamples;
-
-    // MUST shift with at least 1 place, or it will brownout.
-    uint8_t volume = odroid_audio_volume_get();
-    int32_t factor = volume_tbl[volume];
-
-    if (audio_mute || (volume == ODROID_AUDIO_VOLUME_MIN)) {
-        // mute
-        for (int i = 0; i < audioSamples; i++) {
-            audiobuffer_dma[i + offset] = 0;
-        }
+    if (common_emu_sound_loop_is_muted()) {
         return;
     }
 
+    int32_t factor = common_emu_sound_get_volume();
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
+
     // Write to DMA buffer and lower the volume accordingly
-    for (int i = 0; i < audioSamples; i++) {
+    for (int i = 0; i < sound_buffer_length; i++) {
         int32_t sample = buffer[i];
-        audiobuffer_dma[i + offset] = (sample * factor) >> 8;
+        sound_buffer[i] = (sample * factor) >> 8;
     }
 }
-
 
 #ifdef GW_LCD_MODE_LUT8
 static inline void blit_normal(bitmap_t *bmp, uint8_t *framebuffer) {
@@ -511,9 +503,6 @@ int app_main_nes(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
     odroid_system_init(APPID_NES, AUDIO_SAMPLE_RATE);
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
-    // Allocate the maximum samples count for a frame on NES
-    odroid_set_audio_dma_size((AUDIO_SAMPLE_RATE) / 50);
-
     if (start_paused) {
         common_emu_state.pause_after_frames = 4;
         odroid_audio_mute(true);
@@ -530,15 +519,15 @@ int app_main_nes(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
         nes_region = NES_PAL;
         common_emu_state.frame_time_10us = (uint16_t)(100000 / 50 + 0.5f);
         samplesPerFrame = (AUDIO_SAMPLE_RATE) / 50;
-        HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma,  (2 * AUDIO_SAMPLE_RATE) / 50);
     } else {
         lcd_set_refresh_rate(60);
         nes_region = NES_NTSC;
         common_emu_state.frame_time_10us = (uint16_t)(100000 / 60 + 0.5f);
         //printf("frame_time_10us: %d\n", common_emu_state.frame_time_10us);
         samplesPerFrame = (AUDIO_SAMPLE_RATE) / 60;
-        HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma, (2 * AUDIO_SAMPLE_RATE) / 60);
     }
+
+    audio_start_playing(samplesPerFrame);
 
     int cheat_count = 0;
     const char **active_cheat_codes = NULL;

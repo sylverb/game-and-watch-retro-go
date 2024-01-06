@@ -546,28 +546,24 @@ void pce_osd_gfx_blit() {
 }
 
 void pce_pcm_submit() {
-    uint8_t volume = odroid_audio_volume_get();
-    int32_t factor = volume_tbl[volume] / 2; // Divide by 2 to prevent overflow in stereo mixing
-    pce_snd_update(audioBuffer_pce, AUDIO_BUFFER_LENGTH_PCE );
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_BUFFER_LENGTH_PCE;
-    if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_PCE; i++) {
-            audiobuffer_dma[offset + i] = 0;
-        }
-    } else {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_PCE; i++) {
-            /* mix left & right */
-            int32_t sample = (audioBuffer_pce[i*2] + audioBuffer_pce[i*2+1]);
-            audiobuffer_dma[offset + i] = (sample * factor) >> 8;
-        }
+    pce_snd_update(audioBuffer_pce, AUDIO_BUFFER_LENGTH_PCE);
+
+    if (common_emu_sound_loop_is_muted()) {
+        return;
+    }
+
+    int32_t factor = common_emu_sound_get_volume() / 2; // Divide by 2 to prevent overflow in stereo mixing
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
+
+    for (int i = 0; i < sound_buffer_length; i++) {
+        /* mix left & right */
+        int32_t sample = (audioBuffer_pce[i*2] + audioBuffer_pce[i*2+1]);
+        sound_buffer[i] = (sample * factor) >> 8;
     }
 }
 
 int app_main_pce(uint8_t load_state, uint8_t start_paused, int8_t save_slot) {
-
-    // Allocate the maximum samples count for a frame on PC Engine
-    odroid_set_audio_dma_size(AUDIO_BUFFER_LENGTH_PCE);
-
     if (start_paused) {
         common_emu_state.pause_after_frames = 2;
         odroid_audio_mute(true);
@@ -589,7 +585,7 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, int8_t save_slot) {
     printf("Graphics initialized\n");
 
     // Init Sound
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_PCE * 2 );
+    audio_start_playing(AUDIO_BUFFER_LENGTH_PCE);
     pce_snd_init();
     printf("Sound initialized\n");
 

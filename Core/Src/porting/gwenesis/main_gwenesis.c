@@ -152,7 +152,6 @@ static unsigned int gwenesis_show_debug_bar = 0;
 
 unsigned int gwenesis_audio_freq;
 unsigned int gwenesis_audio_buffer_lenght;
-unsigned int gwenesis_audio_buffer_lenght_DMA;
 static int gwenesis_vsync_mode = 0;
 unsigned int gwenesis_refresh_rate;
 
@@ -238,7 +237,7 @@ void gwenesis_io_get_buttons()
                     host_joystick.values[PAD_B_def] << PAD_B |
                     host_joystick.values[PAD_C_def] << PAD_C |
                     host_joystick.values[ODROID_INPUT_START] << PAD_S;
-                  
+
   button_state[0] = ~ button_state[0];
 
 }
@@ -250,20 +249,19 @@ static void gwenesis_system_init() {
 
   gwenesis_audio_pll_sync = 0;
 
+
 //  memset(audiobuffer_emulator, 0, sizeof(audiobuffer_emulator));
 
  // if (mode_pal) {
 
   //  gwenesis_audio_freq = GWENESIS_AUDIO_FREQ_PAL;
   //  gwenesis_audio_buffer_lenght = GWENESIS_AUDIO_BUFFER_LENGTH_PAL;
-  //  gwenesis_audio_buffer_lenght_DMA = 2 * GWENESIS_AUDIO_BUFFER_LENGTH_PAL;
   //  gwenesis_refresh_rate = GWENESIS_REFRESH_RATE_PAL;
 
  // } else {
 
     gwenesis_audio_freq = GWENESIS_AUDIO_FREQ_NTSC;
     gwenesis_audio_buffer_lenght = GWENESIS_AUDIO_BUFFER_LENGTH_NTSC;
-    gwenesis_audio_buffer_lenght_DMA = 2 * GWENESIS_AUDIO_BUFFER_LENGTH_NTSC;
     gwenesis_refresh_rate = GWENESIS_REFRESH_RATE_NTSC;
  // }
     memset(gwenesis_sn76489_buffer,0,sizeof(gwenesis_sn76489_buffer));
@@ -272,11 +270,10 @@ static void gwenesis_system_init() {
   odroid_audio_init(gwenesis_audio_freq);
   lcd_set_refresh_rate(gwenesis_refresh_rate);
 }
+
 static void gwenesis_sound_start()
 {
-     /* Start SAI DMA */
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, gwenesis_audio_buffer_lenght_DMA);
-
+  audio_start_playing(gwenesis_audio_buffer_lenght);
 }
 
 /* PLL Audio controller to synchonize with video clock */
@@ -301,6 +298,7 @@ static void gwenesis_audio_pll_stepdown() {
   __HAL_RCC_PLL2FRACN_ENABLE();
   gwenesis_audio_pll_sync = 0;
 }
+
 static void gwenesis_audio_pll_stepup() {
 
   __HAL_RCC_PLL2FRACN_DISABLE();
@@ -323,36 +321,29 @@ const uint32_t factora  = 0x1000; // todo as UI parameter
 const uint32_t factorb  = 0x10000 - factora;
 
 static void gwenesis_sound_submit() {
-  uint8_t volume = odroid_audio_volume_get();
-  int16_t factor = volume_tbl[volume];
+  if (common_emu_sound_loop_is_muted()) {
+    return;
+  }
 
+  int16_t factor = common_emu_sound_get_volume();
+  int16_t* sound_buffer = audio_get_active_buffer();
+  uint16_t sound_buffer_length = audio_get_buffer_length();
   static int16_t gwenesis_audio_out = 0;
 
-  size_t offset;
-  offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : gwenesis_audio_buffer_lenght;
-
-  if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-    for (int i = 0; i < gwenesis_audio_buffer_lenght; i++) {
-      audiobuffer_dma[i + offset] = 0;
+  if (gwenesis_lpfilter) {
+    // filter on
+    for (int i = 0; i < sound_buffer_length; i++) {
+      // low pass filter
+      int32_t gwenesis_audio_tmp = gwenesis_audio_out * factorb + (gwenesis_ym2612_buffer[i] + gwenesis_sn76489_buffer[i]) * factora;
+      gwenesis_audio_out = gwenesis_audio_tmp >> 16;
+      sound_buffer[i] = ((gwenesis_audio_out) * factor ) / 128;
     }
   } else {
-    // filter on
-    if (gwenesis_lpfilter) {
-      for (int i = 0; i < gwenesis_audio_buffer_lenght; i++) {
-
-        // low pass filter
-        int32_t gwenesis_audio_tmp = gwenesis_audio_out * factorb + (gwenesis_ym2612_buffer[i] + gwenesis_sn76489_buffer[i]) * factora;
-        gwenesis_audio_out = gwenesis_audio_tmp >> 16;
-        audiobuffer_dma[i + offset] = ((gwenesis_audio_out) * factor ) / 128;
-      }
     // filter off
-    } else {
-      for (int i = 0; i < gwenesis_audio_buffer_lenght; i++) {
-
-        // single mone left or right
-       // audiobuffer_dma[i + offset] = ((gwenesis_ym2612_buffer[i]) * factor) / 256;
-        audiobuffer_dma[i + offset] = ((gwenesis_ym2612_buffer[i] + gwenesis_sn76489_buffer[i]) * factor) / 512;
-      }
+    for (int i = 0; i < sound_buffer_length; i++) {
+      // single mone left or right
+      // sound_buffer[i] = ((gwenesis_ym2612_buffer[i]) * factor) / 256;
+      sound_buffer[i] = ((gwenesis_ym2612_buffer[i] + gwenesis_sn76489_buffer[i]) * factor) / 512;
     }
   }
 }
@@ -613,9 +604,6 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     odroid_system_emu_init(&gwenesis_system_LoadState, &gwenesis_system_SaveState, NULL);
    // rg_app_desc_t *app = odroid_system_get_app();
 
-    // Allocate the maximum samples count for a frame on Genesis
-    odroid_set_audio_dma_size(GWENESIS_AUDIO_BUFFER_LENGTH_PAL);
-
     common_emu_state.frame_time_10us = (uint16_t)(100000 / 60.0 + 0.5f);
 
     if (start_paused) {
@@ -648,7 +636,7 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     int hint_counter;
     extern int hint_pending;
     volatile unsigned int current_frame;
-    
+
     if (load_state) {
         odroid_system_emu_load_state(save_slot);
     }

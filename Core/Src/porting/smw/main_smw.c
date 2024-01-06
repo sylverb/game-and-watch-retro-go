@@ -54,9 +54,8 @@ static uint32 renderedFrameCtr = 0;
 #define FRAMERATE 60
 #endif /* LIMIT_30FPS */
 #define SMW_AUDIO_BUFFER_LENGTH 534  // When limited to 30 fps, audio is generated for two frames at once
-#define SMW_AUDIO_BUFFER_LENGTH_DMA (2 * SMW_AUDIO_BUFFER_LENGTH) // DMA buffer contains 2 frames worth of audio samples in a ring buffer
 
-int16_t audiobuffer_smw[SMW_AUDIO_BUFFER_LENGTH];  // FIXME use audioBuffer from common.h instead???
+int16_t audiobuffer_smw[SMW_AUDIO_BUFFER_LENGTH];
 
 const uint8 *g_asset_ptrs[kNumberOfAssets];
 uint32 g_asset_sizes[kNumberOfAssets];
@@ -235,28 +234,21 @@ static bool smw_system_LoadState(char *savePathName, char *sramPathName) {
 static void smw_sound_start()
 {
   memset(audiobuffer_smw, 0, sizeof(audiobuffer_smw));
-
-  // Allocate the maximum samples count for a frame on SMW
-  odroid_set_audio_dma_size(SMW_AUDIO_BUFFER_LENGTH);
-
-  HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, SMW_AUDIO_BUFFER_LENGTH_DMA);
+  audio_start_playing(SMW_AUDIO_BUFFER_LENGTH);
 }
 
 static void smw_sound_submit() {
-  uint8_t volume = odroid_audio_volume_get();
-  int16_t factor = volume_tbl[volume];
+  if (common_emu_sound_loop_is_muted()) {
+    return;
+  }
 
-  size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : SMW_AUDIO_BUFFER_LENGTH;
+  int16_t factor = common_emu_sound_get_volume();
+  int16_t* sound_buffer = audio_get_active_buffer();
+  uint16_t sound_buffer_length = audio_get_buffer_length();
 
-  if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-    for (int i = 0; i < SMW_AUDIO_BUFFER_LENGTH; i++) {
-      audiobuffer_dma[i + offset] = 0;
-    }
-  } else {
-    for (int i = 0; i < SMW_AUDIO_BUFFER_LENGTH; i++) {
-      int32_t sample = audiobuffer_smw[i];
-      audiobuffer_dma[i + offset] = (sample * factor) >> 8;
-    }
+  for (int i = 0; i < sound_buffer_length; i++) {
+    int32_t sample = audiobuffer_smw[i];
+    sound_buffer[i] = (sample * factor) >> 8;
   }
 }
 

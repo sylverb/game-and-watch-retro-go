@@ -7,7 +7,9 @@
 #include "bitmaps.h"
 #include "gw_buttons.h"
 #include "gw_lcd.h"
+#include "gw_audio.h"
 #include "gw_linker.h"
+#include "odroid_audio.h"
 #include "rg_i18n.h"
 #include "filesystem.h"
 #include "gw_malloc.h"
@@ -15,15 +17,6 @@
 static void set_ingame_overlay(ingame_overlay_t type);
 
 cpumon_stats_t cpumon_stats = {0};
-
-uint32_t audio_mute;
-
-
-int16_t *audiobuffer_dma;
-static size_t audiobuffer_dma_length;
-
-dma_transfer_state_t dma_state;
-uint32_t dma_counter;
 
 const uint8_t volume_tbl[ODROID_AUDIO_VOLUME_MAX + 1] = {
     (uint8_t)(UINT8_MAX * 0.00f),
@@ -38,37 +31,16 @@ const uint8_t volume_tbl[ODROID_AUDIO_VOLUME_MAX + 1] = {
     (uint8_t)(UINT8_MAX * 1.00f),
 };
 
-void HAL_SAI_TxHalfCpltCallback(SAI_HandleTypeDef *hsai)
-{
-    dma_counter++;
-    dma_state = DMA_TRANSFER_STATE_HF;
-}
-
-void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai)
-{
-    dma_counter++;
-    dma_state = DMA_TRANSFER_STATE_TC;
-}
-
-
 bool odroid_netplay_quick_start(void)
 {
     return true;
-}
-
-void odroid_set_audio_dma_size(size_t frame_sample_count)
-{
-    audiobuffer_dma_length = 2*frame_sample_count;
-    audiobuffer_dma = ahb_calloc(audiobuffer_dma_length, sizeof(uint16_t));
 }
 
 // TODO: Move to own file
 void odroid_audio_mute(bool mute)
 {
     if (mute) {
-        for (int i = 0; i < audiobuffer_dma_length; i++) {
-            audiobuffer_dma[i] = 0;
-        }
+        audio_clear_buffers();
     }
 
     audio_mute = mute;
@@ -170,7 +142,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
             if (joystick->values[ODROID_INPUT_POWER]){
                 // Do NOT save-state and then poweroff
                 last_key = ODROID_INPUT_POWER;
-                HAL_SAI_DMAStop(&hsai_BlockA1);
+                audio_stop_playing();
                 odroid_system_sleep();
             }
             else if(joystick->values[ODROID_INPUT_START]){ // GAME button
@@ -318,7 +290,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
 
     if (joystick->values[ODROID_INPUT_POWER]) {
         // Save-state and poweroff
-        HAL_SAI_DMAStop(&hsai_BlockA1);
+        audio_stop_playing();
 #if OFF_SAVESTATE==1
         odroid_system_emu_save_state(-1);
 #else
@@ -363,6 +335,18 @@ void common_emu_sound_sync(bool use_nops) {
             last_dma_counter = dma_counter;
         }
     }
+}
+
+bool common_emu_sound_loop_is_muted() {
+    if (audio_mute || odroid_audio_volume_get() == ODROID_AUDIO_VOLUME_MIN) {
+        audio_clear_active_buffer();
+        return true;
+    }
+    return false;
+}
+
+uint8_t common_emu_sound_get_volume() {
+    return volume_tbl[odroid_audio_volume_get()];
 }
 
 /* DWT counter used to measure time execution */
