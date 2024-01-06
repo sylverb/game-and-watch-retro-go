@@ -428,6 +428,12 @@ static bool update_disk_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t
     return event == ODROID_DIALOG_ENTER;
 }
 
+static void gw_sound_restart()
+{
+    audio_stop_playing();
+    audio_start_playing(AUDIO_MSX_SAMPLE_RATE / msx_fps);
+}
+
 static bool update_frequency_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
     int max_index = 2;
@@ -458,20 +464,16 @@ static bool update_frequency_cb(odroid_dialog_choice_t *option, odroid_dialog_ev
                 vdpSetSyncMode(VDP_SYNC_AUTO);
                 break;
             case FREQUENCY_VDP_50HZ: // Force 50Hz;
-                msx_fps = 50;
-                common_emu_state.frame_time_10us = (uint16_t)(100000 / FPS_PAL + 0.5f);
-                memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-                HAL_SAI_DMAStop(&hsai_BlockA1);
-                HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, (2 * AUDIO_MSX_SAMPLE_RATE / msx_fps));
+                msx_fps = FPS_PAL;
+                common_emu_state.frame_time_10us = (uint16_t)(100000 / msx_fps + 0.5f);
+                gw_sound_restart();
                 emulatorRestartSound();
                 vdpSetSyncMode(VDP_SYNC_50HZ);
                 break;
             case FREQUENCY_VDP_60HZ: // Force 60Hz;
-                msx_fps = 60;
-                common_emu_state.frame_time_10us = (uint16_t)(100000 / FPS_NTSC + 0.5f);
-                memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-                HAL_SAI_DMAStop(&hsai_BlockA1);
-                HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, (2 * AUDIO_MSX_SAMPLE_RATE / msx_fps));
+                msx_fps = FPS_NTSC;
+                common_emu_state.frame_time_10us = (uint16_t)(100000 / msx_fps + 0.5f);
+                gw_sound_restart();
                 emulatorRestartSound();
                 vdpSetSyncMode(VDP_SYNC_60HZ);
                 break;
@@ -1752,7 +1754,7 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     lcd_clear_buffers();
     memset(msx_framebuffer, 0, sizeof(msx_framebuffer));
     
-    memset(audiobuffer_dma, 0, 2*(AUDIO_MSX_SAMPLE_RATE/FPS_PAL)*sizeof(Int16));
+    audio_clear_buffers();
 
     setupEmulatorRessources(selected_msx_index);
 
@@ -1777,9 +1779,7 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
             // Update ressources to switch system frequency
             msx_fps = boardInfo.getRefreshRate();
             common_emu_state.frame_time_10us = (uint16_t)(100000 / msx_fps + 0.5f);
-            memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-            HAL_SAI_DMAStop(&hsai_BlockA1);
-            HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, (2 * AUDIO_MSX_SAMPLE_RATE / msx_fps));
+            gw_sound_restart();
             emulatorRestartSound();
         }
 
@@ -1822,7 +1822,6 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 
 static Int32 soundWrite(void* dummy, Int16 *buffer, UInt32 count)
 {
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : (AUDIO_MSX_SAMPLE_RATE/msx_fps);
     uint8_t volume = odroid_audio_volume_get();
     if (volume != currentVolume) {
         if (volume == 0) {
@@ -1834,17 +1833,13 @@ static Int32 soundWrite(void* dummy, Int16 *buffer, UInt32 count)
         currentVolume = volume;
     }
 
-    memcpy(&audiobuffer_dma[offset],buffer,(AUDIO_MSX_SAMPLE_RATE/msx_fps)*sizeof(Int16));
+    memcpy(audio_get_active_buffer(), buffer, audio_get_buffer_size());
     return 0;
 }
 
 void archSoundCreate(Mixer* mixer, UInt32 sampleRate, UInt32 bufferSize, Int16 channels) {
     // Init Sound
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-
-    HAL_SAI_DMAStop(&hsai_BlockA1);
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, 2*(AUDIO_MSX_SAMPLE_RATE / msx_fps));
-
+    gw_sound_restart();
     mixerSetStereo(mixer, 0);
     mixerSetWriteCallback(mixer, soundWrite, NULL, (AUDIO_MSX_SAMPLE_RATE/msx_fps));
 }

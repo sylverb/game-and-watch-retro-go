@@ -247,7 +247,8 @@ static const uint8_t IMG_DISKETTE[] = {
 };
 
 static bool auto_key = false;
-static int16_t soundBuffer[AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS];
+#define AUDIO_BUFFER_LENGTH_AM (AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS)
+static int16_t soundBuffer[AUDIO_BUFFER_LENGTH_AM];
 extern void amstrad_set_volume(uint8_t volume);
 static const uint8_t volume_table[ODROID_AUDIO_VOLUME_MAX + 1] = {
     0,
@@ -961,8 +962,7 @@ void amstrad_pcm_submit()
     // update sound volume in emulator
     amstrad_set_volume(volume_table[odroid_audio_volume_get()]);
 
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS;
-    memcpy(&audiobuffer_dma[offset],soundBuffer,2 * AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS);
+    memcpy(audio_get_active_buffer(), soundBuffer, audio_get_buffer_size());
 }
 
 bool amstrad_is_cpm;
@@ -1091,11 +1091,10 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
     odroid_system_emu_init(&amstrad_system_loadState, &amstrad_system_saveState, NULL);
 
     // Init Sound
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS * 2);
+    audio_start_playing(AUDIO_BUFFER_LENGTH_AM);
 
     capmain(0, NULL);
-    amstrad_set_audio_buffer((int8_t *)soundBuffer, AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS * 2);
+    amstrad_set_audio_buffer((int8_t *)soundBuffer, sizeof(soundBuffer));
 
     if (0 == strcmp(ACTIVE_FILE->ext, AMSTRAD_DISK_EXTENSION))
     {
@@ -1159,7 +1158,7 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
         }
 
         amstrad_pcm_submit();
-        amstrad_set_audio_buffer((int8_t *)soundBuffer, AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS * 2);
+        amstrad_set_audio_buffer((int8_t *)soundBuffer, sizeof(soundBuffer));
 
         common_emu_sound_sync(false);
     }

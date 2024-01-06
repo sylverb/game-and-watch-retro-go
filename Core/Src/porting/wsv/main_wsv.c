@@ -31,7 +31,6 @@ static odroid_video_frame_t video_frame = {WSV_WIDTH, WSV_HEIGHT, WSV_WIDTH * 2,
 
 #define WSV_FPS 50 // Real hardware is 50.81fps
 #define WSV_AUDIO_BUFFER_LENGTH (SV_SAMPLE_RATE / WSV_FPS)
-#define AUDIO_BUFFER_LENGTH_DMA_WSV (2 * WSV_AUDIO_BUFFER_LENGTH)
 static int8 audioBuffer_wsv[WSV_AUDIO_BUFFER_LENGTH*2]; // *2 as emulator is filling stereo buffer
 #define WSV_ROM_BUFF_LENGTH 0x80000 // Largest Watara Supervision Rom is 512kB (Journey to the West)
 // Memory to handle compressed roms
@@ -49,21 +48,20 @@ static bool SaveState(char *pathName) {
 }
 
 void wsv_pcm_submit() {
-    uint8_t volume = odroid_audio_volume_get();
-    int32_t factor = volume_tbl[volume]/2; // Divide by 2 to prevent overflow in stereo mixing
-
     supervision_update_sound((uint8 *)audioBuffer_wsv,WSV_AUDIO_BUFFER_LENGTH*2);
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : WSV_AUDIO_BUFFER_LENGTH;
-    if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-        for (int i = 0; i < WSV_AUDIO_BUFFER_LENGTH; i++) {
-            audiobuffer_dma[offset + i] = 0;
-        }
-    } else {
-        for (int i = 0; i < WSV_AUDIO_BUFFER_LENGTH; i++) {
-            /* mix left & right */
-            int32_t sample = audioBuffer_wsv[2*i] + audioBuffer_wsv[2*i+1];
-            audiobuffer_dma[offset + i] = (sample * factor);
-        }
+
+    if (common_emu_sound_loop_is_muted()) {
+        return;
+    }
+
+    int32_t factor = common_emu_sound_get_volume() / 2; // Divide by 2 to prevent overflow in stereo mixing
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
+
+    for (int i = 0; i < sound_buffer_length; i++) {
+        /* mix left & right */
+        int32_t sample = audioBuffer_wsv[2 * i] + audioBuffer_wsv[2 * i + 1];
+        sound_buffer[i] = (sample * factor);
     }
 }
 
@@ -480,8 +478,7 @@ int app_main_wsv(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     // Init Sound
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_WSV );
+    audio_start_playing(WSV_AUDIO_BUFFER_LENGTH);
 
     supervision_set_color_scheme(SV_COLOR_SCHEME_DEFAULT);
 

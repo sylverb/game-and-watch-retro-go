@@ -34,9 +34,6 @@
 
 #define ODROID_APPID_GW 6
 
-/* Audio buffer length */
-#define GW_AUDIO_BUFFER_LENGTH_DMA ((2 * GW_AUDIO_FREQ) / GW_REFRESH_RATE)
-
 /* keys inpus (hw & sw) */
 static odroid_gamepad_state_t joystick;
 static bool softkey_time_pressed = 0;
@@ -159,18 +156,12 @@ static void gw_sound_init()
     /* init emulator sound system with shared audio buffer */
     gw_system_sound_init();
 
-    /* clear DMA audio buffer */
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-
-    /* Start SAI DMA */
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, GW_AUDIO_BUFFER_LENGTH_DMA);
+    /* Start playing */
+    audio_start_playing(GW_AUDIO_BUFFER_LENGTH);
 }
 
 static void gw_sound_submit()
 {
-
-    uint8_t volume = odroid_audio_volume_get();
-    int16_t factor = volume_tbl[volume];
 
     /** Enables the following code to track audio rendering issues **/
     /*
@@ -185,21 +176,18 @@ static void gw_sound_submit()
     }
     */
 
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : GW_AUDIO_BUFFER_LENGTH;
-
-    if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN)
-    {
-        for (int i = 0; i < GW_AUDIO_BUFFER_LENGTH; i++)
-        {
-            audiobuffer_dma[i + offset] = 0;
-        }
+    if (common_emu_sound_loop_is_muted()) {
+        return;
     }
-    else
+
+    int16_t factor = common_emu_sound_get_volume();
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
+
+    // Write to sound buffer and lower the volume accordingly
+    for (int i = 0; i < sound_buffer_length; i++)
     {
-        for (int i = 0; i < GW_AUDIO_BUFFER_LENGTH; i++)
-        {
-            audiobuffer_dma[i + offset] = (factor) * (gw_audio_buffer[i] << 4);
-        }
+        sound_buffer[i] = (factor) * (gw_audio_buffer[i] << 4);
     }
 
     gw_audio_buffer_copied = true;

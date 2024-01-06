@@ -29,7 +29,6 @@
 
 // Use 60Hz for GB
 #define AUDIO_BUFFER_LENGTH_GB (AUDIO_SAMPLE_RATE / 60)
-#define AUDIO_BUFFER_LENGTH_DMA_GB ((2 * AUDIO_SAMPLE_RATE) / 60)
 static int16_t *audiobuffer_emulator;
 
 static odroid_video_frame_t update1 = {GB_WIDTH, GB_HEIGHT, GB_WIDTH * 2, 2, 0xFF, -1, NULL, NULL, 0, {}};
@@ -487,19 +486,18 @@ static bool advanced_settings_cb(odroid_dialog_choice_t *option, odroid_dialog_e
 }*/
 
 void pcm_submit() {
-    uint8_t volume = odroid_audio_volume_get();
-    int32_t factor = volume_tbl[volume];
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_BUFFER_LENGTH_GB;
+    if (common_emu_sound_loop_is_muted()) {
+        return;
+    }
 
-    if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_GB; i++) {
-            audiobuffer_dma[i + offset] = 0;
-        }
-    } else {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_GB; i++) {
-            int32_t sample = pcm.buf[i];
-            audiobuffer_dma[i + offset] = (sample * factor) >> 8;
-        }
+    int32_t factor = common_emu_sound_get_volume();
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
+
+    // Write to sound buffer and lower the volume accordingly
+    for (int i = 0; i < sound_buffer_length; i++) {
+        int32_t sample = pcm.buf[i];
+        sound_buffer[i] = (sample * factor) >> 8;
     }
 }
 
@@ -544,8 +542,7 @@ rg_app_desc_t * init(uint8_t load_state, uint8_t save_slot)
     pcm.buf = (n16*)audiobuffer_emulator;
     pcm.pos = 0;
 
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_GB);
+    audio_start_playing(AUDIO_BUFFER_LENGTH_GB);
 
     rg_app_desc_t *app = odroid_system_get_app();
 
