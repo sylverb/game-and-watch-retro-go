@@ -22,7 +22,7 @@ void fs_init(void);
 
 typedef struct {
     char        name[100];
-    char        size[10];
+    char        size[11];
     bool        is_folder;
     bool        has_savestate;
     bool        has_sram;

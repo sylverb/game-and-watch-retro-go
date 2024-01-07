@@ -153,7 +153,7 @@ void odroid_settings_init()
 {
     if(fs_mounted && fs_exists("CONFIG")){
         fs_file_t *file = fs_open("CONFIG", FS_READ, FS_COMPRESS);
-        fs_read(file, &persistent_config_ram, sizeof(persistent_config_t));
+        fs_read(file, (unsigned char *)&persistent_config_ram, sizeof(persistent_config_t));
         fs_close(file);
     }
     else{
@@ -198,7 +198,7 @@ void odroid_settings_commit()
 
     if(fs_mounted){
         fs_file_t *file = fs_open("CONFIG", FS_WRITE, FS_COMPRESS);
-        fs_write(file, &persistent_config_ram, sizeof(persistent_config_t));
+        fs_write(file, (unsigned char *)&persistent_config_ram, sizeof(persistent_config_t));
         fs_close(file);
     }
 }

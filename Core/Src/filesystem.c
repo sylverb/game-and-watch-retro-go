@@ -9,6 +9,7 @@
 #include "tamp/decompressor.h"
 #include "stm32h7xx.h"
 
+#include "main.h"
 #include "bitmaps.h"
 #include "odroid_colors.h"
 #include "odroid_overlay.h"
@@ -16,6 +17,7 @@
 #include "githash.h"
 #include "config.h"
 #include "gui.h"
+#include "error_screens.h"
 
 #define LFS_CACHE_SIZE 256
 #define LFS_LOOKAHEAD_SIZE 16
@@ -87,8 +89,8 @@ static int littlefs_api_prog(const struct lfs_config *c, lfs_block_t block,
     uint32_t address = (uint32_t)c->context - ((block+1) * c->block_size) + off;
     
     if(toggle_dcache){
-        SCB_CleanDCache_by_Addr(address, size);
-        SCB_InvalidateDCache_by_Addr(address, size);
+        SCB_CleanDCache_by_Addr((uint32_t *)address, size);
+        SCB_InvalidateDCache_by_Addr((uint32_t *)address, size);
         SCB_DisableDCache();
     }
 
@@ -97,7 +99,7 @@ static int littlefs_api_prog(const struct lfs_config *c, lfs_block_t block,
     OSPI_EnableMemoryMappedMode();
 
     if(toggle_dcache){
-        SCB_InvalidateDCache_by_Addr(address, size);
+        SCB_InvalidateDCache_by_Addr((uint32_t *)address, size);
         SCB_EnableDCache();
     }
 
@@ -110,8 +112,8 @@ static int littlefs_api_erase(const struct lfs_config *c, lfs_block_t block) {
     assert((address & (4*1024 - 1)) == 0);
 
     if(toggle_dcache){
-        SCB_CleanDCache_by_Addr(address, c->block_size);
-        SCB_InvalidateDCache_by_Addr(address, c->block_size);
+        SCB_CleanDCache_by_Addr((uint32_t *)address, c->block_size);
+        SCB_InvalidateDCache_by_Addr((uint32_t *)address, c->block_size);
         SCB_DisableDCache();
     }
 
@@ -120,7 +122,7 @@ static int littlefs_api_erase(const struct lfs_config *c, lfs_block_t block) {
     OSPI_EnableMemoryMappedMode();
 
     if(toggle_dcache){
-        SCB_InvalidateDCache_by_Addr(address, c->block_size);
+        SCB_InvalidateDCache_by_Addr((uint32_t *)address, c->block_size);
         SCB_EnableDCache();
     }
 
