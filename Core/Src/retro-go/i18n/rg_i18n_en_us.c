@@ -176,14 +176,21 @@ const lang_t lang_en_us LANG_DATA = {
     .s_Del_favorite = "Del favorite",
     .s_Add_favorite = "Add favorite",
     .s_Delete_save = "Delete save",
-    .s_Confiem_del_save = "Delete save file?",
+    .s_Confirm_del_save = "Delete save file?",
+    .s_Confirm_del_sram = "Delete SRAM file?",
     .s_Free_space_alert = "Not enough free space for a new save, please delete some.",
 #if CHEAT_CODES == 1
     .s_Cheat_Codes = "Cheat Codes",
     .s_Cheat_Codes_Title = "Cheat Options",
     .s_Cheat_Codes_ON = "\x6",
     .s_Cheat_Codes_OFF = "\x5",
-#endif        
+#endif
+    //=====================================================================
+
+    // Core\Src\save_manager.c =============================================
+    .s_Save_manager = "Save Manager",
+    .s_Next = "Next",
+    .s_Previous = "Previous",
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================

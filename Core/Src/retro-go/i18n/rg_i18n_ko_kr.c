@@ -180,7 +180,8 @@ const lang_t lang_ko_kr LANG_DATA = {
     .s_Del_favorite = "즐겨찾기 삭제",
     .s_Add_favorite = "즐겨찾기 추가",
     .s_Delete_save = "저장데이터 삭제",
-    .s_Confiem_del_save = "저장 데이터를 삭제하시겠습니까?",
+    .s_Confirm_del_save = "저장 데이터를 삭제하시겠습니까?",
+    .s_Confirm_del_sram = "Delete SRAM file?",
     .s_Free_space_alert = "Not enough free space for a new save, please delete some.",
 #if CHEAT_CODES == 1
     .s_Cheat_Codes = "Cheat Codes",
@@ -188,6 +189,12 @@ const lang_t lang_ko_kr LANG_DATA = {
     .s_Cheat_Codes_ON = "\x6",
     .s_Cheat_Codes_OFF = "\x5",
 #endif
+
+    // Core\Src\save_manager.c =============================================
+    .s_Save_manager = "Save Manager",
+    .s_Next = "Next",
+    .s_Previous = "Previous",
+    //=====================================================================
 
     //=====================================================================
 

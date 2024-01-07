@@ -147,7 +147,8 @@ typedef struct
     const char *s_Del_favorite;
     const char *s_Add_favorite;
     const char *s_Delete_save;
-    const char *s_Confiem_del_save;
+    const char *s_Confirm_del_save;
+    const char *s_Confirm_del_sram;
     const char *s_Free_space_alert;
 #if CHEAT_CODES == 1
     const char *s_Cheat_Codes;
@@ -155,6 +156,11 @@ typedef struct
     const char *s_Cheat_Codes_ON;
     const char *s_Cheat_Codes_OFF;
 #endif    
+    //=====================================================================
+    // Core\Src\save_manager.c =============================================
+    const char *s_Save_manager;
+    const char *s_Next;
+    const char *s_Previous;
     //=====================================================================
     // Core\Src\retro-go\rg_main.c =========================================
     const char *s_CPU_Overclock;

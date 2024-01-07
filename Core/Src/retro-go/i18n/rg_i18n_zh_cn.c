@@ -182,7 +182,8 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_Del_favorite = "☆ 移除收藏",
     .s_Add_favorite = "★ 添加收藏",
     .s_Delete_save = "□ 删除进度",
-    .s_Confiem_del_save = "您确认要删除已保存的游戏进度？",
+    .s_Confirm_del_save = "您确认要删除已保存的游戏进度？",
+    .s_Confirm_del_sram = "Delete SRAM file?",
     .s_Free_space_alert = "Not enough free space for a new save, please delete some.",
 #if CHEAT_CODES == 1
     .s_Cheat_Codes = "＆ 金手指码",
@@ -191,6 +192,12 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_Cheat_Codes_OFF = "\x5",
 #endif
 
+    //=====================================================================
+
+    // Core\Src\save_manager.c =============================================
+    .s_Save_manager = "Save Manager",
+    .s_Next = "Next",
+    .s_Previous = "Previous",
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================

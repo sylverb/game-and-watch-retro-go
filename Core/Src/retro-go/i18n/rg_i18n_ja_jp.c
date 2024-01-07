@@ -178,7 +178,8 @@ const lang_t lang_ja_jp LANG_DATA = {
     .s_Del_favorite = "お気に入り削除",
     .s_Add_favorite = "お気に入り追加",
     .s_Delete_save = "セーブを削除",
-    .s_Confiem_del_save = "セーブを消す？",
+    .s_Confirm_del_save = "セーブを消す？",
+    .s_Confirm_del_sram = "Delete SRAM file?",
     .s_Free_space_alert = "Not enough free space for a new save, please delete some.",
 #if CHEAT_CODES == 1
     .s_Cheat_Codes = "チートコード",
@@ -187,6 +188,12 @@ const lang_t lang_ja_jp LANG_DATA = {
     .s_Cheat_Codes_OFF = "\x5",
 #endif
 
+    //=====================================================================
+
+    // Core\Src\save_manager.c =============================================
+    .s_Save_manager = "Save Manager",
+    .s_Next = "Next",
+    .s_Previous = "Previous",
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================

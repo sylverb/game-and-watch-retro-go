@@ -11,7 +11,6 @@
 #include "rg_emulators.h"
 #include "gui.h"
 #include "githash.h"
-#include "main.h"
 #include "gw_lcd.h"
 #include "gw_buttons.h"
 #include "gw_flash.h"
@@ -19,6 +18,8 @@
 #include "rg_i18n.h"
 #include "bitmaps.h"
 #include "error_screens.h"
+#include "filesystem.h"
+#include "save_manager.h"
 
 #if !defined(COVERFLOW)
 #define COVERFLOW 0
@@ -282,6 +283,15 @@ bool date_display_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event
     return event == ODROID_DIALOG_ENTER;
 }
 
+bool main_menu_save_manager_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    if (event == ODROID_DIALOG_ENTER) {
+        handle_save_manager_menu();
+    }
+
+    return event == ODROID_DIALOG_ENTER;
+}
+
 static inline bool tab_enabled(tab_t *tab)
 {
     int disabled_tabs = 0;
@@ -462,6 +472,8 @@ static void handle_options_menu()
         {0, curr_lang->s_Idle_power_off, timeout_value, 1, &main_menu_timeout_cb},
         ODROID_DIALOG_CHOICE_SEPARATOR,
         {0, curr_lang->s_CPU_Overclock, ov_value, 1, &main_menu_cpu_oc_cb},
+        ODROID_DIALOG_CHOICE_SEPARATOR,
+        {0, curr_lang->s_Save_manager, "", 1, &main_menu_save_manager_cb},
 #if INTFLASH_BANK == 2
     //{9, curr_lang->s_Reboot, curr_lang->s_Original_system, 1, NULL},
 #endif

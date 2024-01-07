@@ -60,7 +60,7 @@ rg_app_desc_t *odroid_system_get_app()
 const char OFF_SAVESTATE_PATH[] = "savestate/common";
 const char OFF_SRAM_PATH[] = "savestate/common.srm";
 
-static void parse_rom_path(char *path, size_t size, int slot){
+static void parse_save_path(char *path, size_t size, int slot){
     if (slot == -1) {
         strcpy(path, OFF_SAVESTATE_PATH);
     }
@@ -98,7 +98,7 @@ bool odroid_system_emu_load_state(int slot)
     char sramPath[FS_MAX_PATH_SIZE];
     if (currentApp.loadState == NULL)
         return true;
-    parse_rom_path(savePath, sizeof(savePath), slot);
+    parse_save_path(savePath, sizeof(savePath), slot);
     parse_sram_path(sramPath, sizeof(sramPath), slot);
     printf("Attempting to load state from [%s]\n", savePath);
     if(!fs_exists(savePath) && !fs_exists(sramPath)){
@@ -125,7 +125,7 @@ bool odroid_system_emu_save_state(int slot)
     if (currentApp.saveState == NULL)
         return true;
 
-    parse_rom_path(savePath, sizeof(savePath), slot);
+    parse_save_path(savePath, sizeof(savePath), slot);
     parse_sram_path(sramPath, sizeof(sramPath), slot);
     printf("Savestating to [%s]\n", savePath);
     (*currentApp.saveState)(savePath, sramPath);

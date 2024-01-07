@@ -176,7 +176,8 @@ const lang_t lang_ru_ru LANG_DATA = {
     .s_Del_favorite = "Удалить избранное",
     .s_Add_favorite = "Добавить избранное",
     .s_Delete_save = "Удалить сохранение",
-    .s_Confiem_del_save = "Удалить файл сохранения?",
+    .s_Confirm_del_save = "Удалить файл сохранения?",
+    .s_Confirm_del_sram = "Delete SRAM file?",
     .s_Free_space_alert = "Not enough free space for a new save, please delete some.",
 #if CHEAT_CODES == 1
     .s_Cheat_Codes = "Game Genie Коды",
@@ -184,6 +185,12 @@ const lang_t lang_ru_ru LANG_DATA = {
     .s_Cheat_Codes_ON = "\x6",
     .s_Cheat_Codes_OFF = "\x5",
 #endif
+    //=====================================================================
+
+    // Core\Src\save_manager.c =============================================
+    .s_Save_manager = "Save Manager",
+    .s_Next = "Next",
+    .s_Previous = "Previous",
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================

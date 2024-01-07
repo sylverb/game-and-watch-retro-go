@@ -176,7 +176,8 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_Del_favorite = "Retirer des favoris",
     .s_Add_favorite = "Ajouter aux favoris",
     .s_Delete_save = "Supprimer la sauvegarde",
-    .s_Confiem_del_save = "Supprimer la sauvegarde ?",
+    .s_Confirm_del_save = "Supprimer la sauvegarde ?",
+    .s_Confirm_del_sram = "Supprimer la SRAM ?",
     .s_Free_space_alert = "Pas assez d'espace pour une nouvelle sauvegarde, merci d'en supprimer.",
 #if CHEAT_CODES == 1
     .s_Cheat_Codes = "Codes de triche",
@@ -184,6 +185,12 @@ const lang_t lang_fr_fr LANG_DATA = {
     .s_Cheat_Codes_ON = "\x6",
     .s_Cheat_Codes_OFF = "\x5",
 #endif
+    //=====================================================================
+
+    // Core\Src\save_manager.c =============================================
+    .s_Save_manager = "Gestionnaire de sauvegarde",
+    .s_Next = "Suivant",
+    .s_Previous = "Précédent",
     //=====================================================================
 
     // Core\Src\retro-go\rg_main.c =========================================

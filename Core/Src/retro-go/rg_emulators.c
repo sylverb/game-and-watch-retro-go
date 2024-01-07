@@ -383,7 +383,16 @@ static bool show_cheat_dialog()
 }
 #endif
 
-static void parse_rom_path(retro_emulator_file_t *file, char *path, size_t size, int slot){
+static void parse_save_folder_path(retro_emulator_file_t *file, char *path, size_t size){
+    snprintf(path,
+                size,
+                "savestate/%s/%s",
+                file->system->extension,
+                file->name
+                );
+}
+
+static void parse_save_path(retro_emulator_file_t *file, char *path, size_t size, int slot){
     snprintf(path,
                 size,
                 "savestate/%s/%s/%d",
@@ -412,6 +421,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     // bool has_sram = odroid_sdcard_get_filesize(sram_path) > 0;
     // bool is_fav = favorite_find(file) != NULL;
 
+    char saveFolderPath[FS_MAX_PATH_SIZE];
     char savePath[FS_MAX_PATH_SIZE];
     char sramPath[FS_MAX_PATH_SIZE];
     bool has_save = 0;
@@ -428,14 +438,15 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
     }
 
 #endif
-    parse_rom_path(file, savePath, sizeof(savePath), 0);
+    parse_save_folder_path(file, saveFolderPath, sizeof(saveFolderPath));
+    parse_save_path(file, savePath, sizeof(savePath), 0);
     parse_sram_path(file, sramPath, sizeof(sramPath), 0);
 
     has_save = fs_exists(savePath);
     has_sram = fs_exists(sramPath);
 
     odroid_dialog_choice_t choices[] = {
-        {0, curr_lang->s_Resume_game, "", has_save ? 1 : -1, NULL},
+        {0, curr_lang->s_Resume_game, "", (has_save || has_sram) ? 1 : -1, NULL},
         {1, curr_lang->s_New_game, "", 1, NULL},
         ODROID_DIALOG_CHOICE_SEPARATOR,
         //{3, is_fav ? s_Del_favorite : s_Add_favorite, "", 1, NULL},
@@ -453,7 +464,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
         choices[4] = last;
 #endif
 
-    int sel = odroid_overlay_dialog(file->name, choices, has_save ? 0 : 1, &gui_redraw_callback);
+    int sel = odroid_overlay_dialog(file->name, choices, (has_save || has_sram) ? 0 : 1, &gui_redraw_callback);
 
     if (sel == 0) { // Resume game
         gui_save_current_tab();
@@ -472,21 +483,24 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
         }
     }
     else if (sel == 2) {
-        if (odroid_overlay_confirm(curr_lang->s_Confiem_del_save, false, &gui_redraw_callback) == 1) {
-            if (has_save) {
+        if (has_save) {
+            if (odroid_overlay_confirm(curr_lang->s_Confirm_del_save, false, &gui_redraw_callback) == 1) {
                 fs_delete(savePath);
             }
-            if (has_sram) {
+        }
+        if (has_sram) {
+            if (odroid_overlay_confirm(curr_lang->s_Confirm_del_sram, false, &gui_redraw_callback) == 1) {
                 fs_delete(sramPath);
             }
         }
+        fs_delete(saveFolderPath);
     }
-    else if (sel == 3) {
+/*    else if (sel == 3) {
         // if (is_fav)
         //     favorite_remove(file);
         // else
         //     favorite_add(file);
-    }
+    }*/
     else if (sel == 4) {
 #if CHEAT_CODES == 1
         if (CHOSEN_FILE->cheat_count != 0)

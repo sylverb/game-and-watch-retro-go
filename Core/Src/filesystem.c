@@ -65,6 +65,8 @@ static inline bool is_dcache_enabled() {
 }
 
 lfs_t lfs = {0};
+lfs_dir_t dir[2]; // Allow to open 2 folders in parallel
+
 bool fs_mounted = false;
 
 static uint8_t read_buffer[LFS_CACHE_SIZE] = {0};
@@ -476,4 +478,35 @@ bool fs_exists(const char *path){
 
 uint32_t fs_free_blocks() {
     return (uint32_t)lfs_cfg.block_count - (uint32_t)lfs_fs_size(&lfs);
+}
+
+void convertFileSize(size_t size, char *result) {
+    const char *suffix = "B";
+
+    if (size >= 1024) {
+        size /= 1024;
+        suffix = "KB";
+    }
+
+    sprintf(result, "%d %s", size, suffix);
+}
+
+int fs_dir_open(uint8_t dir_index, const char *path) {
+    return lfs_dir_open(&lfs, &dir[dir_index], path);
+}
+
+int fs_dir_read(uint8_t dir_index, fs_folder_entry *entry) {
+    struct lfs_info info;
+    int ret;
+    ret = lfs_dir_read(&lfs, &dir[dir_index], &info);
+    if (ret) {
+        strcpy(entry->name, info.name);
+        convertFileSize(info.size,entry->size);
+        entry->is_folder = info.type == LFS_TYPE_DIR;
+    }
+    return ret;
+}
+
+int fs_dir_close(uint8_t dir_index) {
+    return lfs_dir_close(&lfs, &dir[dir_index]);
 }

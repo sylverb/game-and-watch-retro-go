@@ -38,6 +38,7 @@ Core/Src/gw_lcd.c \
 Core/Src/gw_malloc.c \
 Core/Src/error_screens.c \
 Core/Src/main.c \
+Core/Src/save_manager.c \
 Core/Src/sha256.c \
 Core/Src/bq24072.c \
 Core/Src/filesystem.c \
