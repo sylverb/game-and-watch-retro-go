@@ -888,7 +888,7 @@ $$(BUILD_DIR)/zelda3/$(patsubst %.c,%.o,$(notdir $1)): $1 Makefile.common Makefi
 	$$(V)$$(ECHO) [ CC zelda3 ] $$(notdir $$<)
 	$$(V)$$(CC) -c $$(CFLAGS) $$(C_DEFS_ZELDA3) $$(ZELDA3_C_INCLUDES)-Wa,-a,-ad,-alms=$$(BUILD_DIR)/zelda3/$$(notdir $$(<:.c=.lst)) $$< -o $$@ \
 	-Wno-parentheses -Wno-unknown-pragmas -Wno-incompatible-pointer-types -Wno-unused-const-variable -Wno-strict-aliasing -Wno-comment -Wno-unused-function -Wno-stack-usage -Wno-int-in-bool-context -Wno-unused-variable -Wno-unused-but-set-variable
-	$$(CP) --redefine-syms=zelda3_redefines $$@
+	$$(V)$$(CP) --redefine-syms=zelda3_redefines $$@
 
 endef
 # note: the blank line above is intentional
@@ -936,7 +936,7 @@ $$(BUILD_DIR)/smw/$(patsubst %.c,%.o,$(notdir $1)): $1 Makefile.common Makefile 
 	$$(V)$$(ECHO) [ CC smw ] $$(notdir $$<)
 	$$(V)$$(CC) -c $$(CFLAGS) $$(C_DEFS_SMW) $$(SMW_C_INCLUDES) -Wa,-a,-ad,-alms=$$(BUILD_DIR)/smw/$$(notdir $$(<:.c=.lst)) $$< -o $$@ \
 	-Wno-parentheses -Wno-unknown-pragmas -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-const-variable -Wno-int-in-bool-context -Wno-unused-value -Wno-unused-function -Wno-incompatible-pointer-types -Wno-implicit-function-declaration -Wno-format -Wno-array-bounds -Wno-strict-aliasing -Wno-maybe-uninitialized
-	$$(CP) --redefine-syms=smw_redefines $$@
+	$$(V)$$(CP) --redefine-syms=smw_redefines $$@
 
 endef
 # note: the blank line above is intentional
