@@ -521,6 +521,7 @@ static bool gwenesis_submenu_setABC(odroid_dialog_choice_t *option, odroid_dialo
 }
 
 // Some options using submenu
+#if ENABLE_DEBUG_OPTIONS != 0
 static bool gwenesis_submenu_debug_bar(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
   if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
@@ -531,6 +532,7 @@ static bool gwenesis_submenu_debug_bar(odroid_dialog_choice_t *option, odroid_di
 
     return event == ODROID_DIALOG_ENTER;
 }
+#endif
 
 static bool gwenesis_submenu_setAudioFilter(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
@@ -544,6 +546,7 @@ static bool gwenesis_submenu_setAudioFilter(odroid_dialog_choice_t *option, odro
     return event == ODROID_DIALOG_ENTER;
 }
 
+#if ENABLE_DEBUG_OPTIONS != 0
 static bool gwenesis_submenu_setVideoUpscaler(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
   if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
@@ -567,12 +570,14 @@ static bool gwenesis_submenu_sync_mode(odroid_dialog_choice_t *option, odroid_di
 
     return event == ODROID_DIALOG_ENTER;
 }
+#endif
 
-static char debug_bar_str[2];
 static char AudioFilter_str[2];
+#if ENABLE_DEBUG_OPTIONS != 0
+static char debug_bar_str[2];
 static char VideoUpscaler_str[2];
 static char gwenesis_sync_mode_str[8];
-
+#endif
 
 void gwenesis_save_local_data(fs_file_t *file) {
   fs_write(file, (unsigned char *)&ABCkeys_value, sizeof(int));
