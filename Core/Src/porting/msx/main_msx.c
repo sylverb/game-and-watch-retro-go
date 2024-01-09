@@ -155,13 +155,13 @@ void msxLedSetFdd1(int state) {
     show_disk_icon = state;
 }
 
-static bool msx_system_LoadState(char *pathName)
+static bool msx_system_LoadState(char *savePathName, char *sramPathName)
 {
-    loadMsxState(pathName);  // internally calls load_gnw_msx_data
+    loadMsxState(savePathName);  // internally calls load_gnw_msx_data
     return true;
 }
 
-static bool msx_system_SaveState(char *pathName)
+static bool msx_system_SaveState(char *savePathName, char *sramPathName)
 {
     // Show disk icon when saving state
     uint16_t *dest = lcd_get_inactive_buffer();
@@ -174,7 +174,7 @@ static bool msx_system_SaveState(char *pathName)
         idx++;
         }
     }
-    saveMsxState(pathName); // internally calls save_gnw_msx_data
+    saveMsxState(savePathName); // internally calls save_gnw_msx_data
     return true;
 }
 
