@@ -19,7 +19,7 @@ fi
 
 mkdir -p "$OUTDIR"
 
-for emu in gb gg gw nes pce sms msx wsv md a7800 amstrad zelda3 smw; do
+for emu in gb gg gw nes pce sms msx wsv md a7800 amstrad zelda3 smw tama; do
     mkdir -p "${OUTDIR}/${emu}"
     COUNT=$(get_number_of_saves SAVE_$(echo ${emu} | awk '{print toupper($0)}')_)
     for (( i = 0; i < COUNT; i++ )); do

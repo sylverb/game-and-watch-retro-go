@@ -569,6 +569,13 @@ Core/Src/porting/amstrad/amstrad_format.c \
 Core/Src/porting/amstrad/amstrad_loader.c \
 Core/Src/porting/amstrad/amstrad_video8bpp.c
 
+TAMA_C_SOURCES = \
+tamalib/tamalib_cpu.c \
+tamalib/tamalib_hw.c \
+tamalib/tamalib.c \
+Core/Src/porting/tama/state_tama.c \
+Core/Src/porting/tama/main_tama.c
+
 ifneq ("$(wildcard roms/zelda3/zelda3.sfc)","")
 ZELDA3_C_SOURCES = \
 zelda3/zelda_rtl.c \
@@ -800,12 +807,19 @@ SMW_C_INCLUDES +=  \
 -Ismw/ \
 -I./
 
+TAMA_C_INCLUDES +=  \
+-ICore/Inc \
+-ICore/Src/porting/lib \
+-Iretro-go-stm32/components/odroid \
+-Itamalib \
+-I./
+
 include Makefile.common
 
 
 $(BUILD_DIR)/$(TARGET)_extflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)
-	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 -j .overlay_smw $< $(BUILD_DIR)/$(TARGET)_extflash.bin
+	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 -j .overlay_smw  -j .overlay_tama $< $(BUILD_DIR)/$(TARGET)_extflash.bin
 
 $(BUILD_DIR)/$(TARGET)_intflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)

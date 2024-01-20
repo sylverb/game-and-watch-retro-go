@@ -27,6 +27,7 @@ retro_emulator_file_t *ACTIVE_FILE = NULL;
 #include "amstrad_roms.c"
 #include "zelda3_roms.c"
 #include "smw_roms.c"
+#include "tama_roms.c"
 
 const rom_system_t *systems[] = {
     &nes_system,
@@ -46,6 +47,7 @@ const rom_system_t *systems[] = {
     &amstrad_system,
     &zelda3_system,
     &smw_system,
+    &tama_system,
 };
 
 const rom_manager_t rom_mgr = {

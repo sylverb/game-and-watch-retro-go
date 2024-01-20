@@ -1,0 +1,460 @@
+#include "build/config.h"
+
+#ifdef ENABLE_EMULATOR_TAMA
+#if OFF_SAVESTATE == 1
+#include <gw_linker.h>
+#endif
+#include <odroid_system.h>
+#include <rom_manager.h>
+
+#include "appid.h"
+#include "common.h"
+#include "gui.h"
+#include "main.h"
+#include "rg_rtc.h"
+
+#include "icons_tama.h"
+#include "main_tama.h"
+#include "state_tama.h"
+#include "tamalib.h"
+
+// TODO: BUG: Fast save and reload gives CRC error on reload
+// TODO: BUG: Fix set audio changes lcd refresh rate to 50 and also search order of init and set audio calls in all emulators
+// TODO: BUG: The LCD flickers a bit at the bottom as the LCD refresh rate is a bit slower than the sound and since we get active buffer and clears it with memset causing it to write to inactive buffer during swap ever 2,x sec
+// TODO: WISH: add GW rtc -> Tamagotchi rtc (for P1 rom only, not test rom. Might use CRC32 rom value check to enable feature)
+// TODO: WISH: mb a cpu_reset menu option ???
+// TODO: WISH: Tone icons down if not on ???
+// TODO: BUG Save by power off generates CRC or header error upon restore if using SHARED_HIBERNATE_SAVESTATE=1
+// TODO: BUG it seems like odroid_system_emu_init will restore sound/volume setting upon every reloading ??
+// TODO: Add a way to cancel FF
+// TODO: Add bg/fg color option (and remember color of fast forward has to match ???)
+
+/**
+ * This is the Tamagotchi P1 emulator.
+ *
+ * The datasheet for the processor can be found here:
+ * https://download.epson-europe.com/pub/electronics-de/asmic/4bit/62family/technicalmanual/tm_6s46.pdf
+ */
+
+//#define TAMA_DEBUG
+#define TAMA_CLOCK_RATE 32768
+#define TAMA_SAMPLE_RATE TAMA_CLOCK_RATE
+#define TAMA_FRAME_RATE 60
+#define TAMA_LCD_FPS TAMA_FRAME_RATE
+#define TAMA_CLOCKS_PER_FRAME (TAMA_CLOCK_RATE / TAMA_FRAME_RATE)
+#define TAMA_LCD_WIDTH LCD_WIDTH
+#define TAMA_LCD_HEIGHT LCD_HEIGHT
+#define TAMA_MAX_ICON_NUM ICON_NUM
+#define TAMA_ICON_HEIGHT 32
+#define TAMA_ICON_WIDTH 32
+#define TAMA_ICONS_PER_ROW 4
+#define TAMA_LOG_ENABLED false
+#define TAMA_ROM_SIZE_MAX 6144
+#define MAX_SAVE_AGE_IN_MILLIS (2 * 24 * 60 * 60 * 1000)
+
+static u12_t tama_rom[TAMA_ROM_SIZE_MAX] __attribute__((aligned(4)));
+static bool_t tama_lcd[LCD_WIDTH][LCD_HEIGHT] __attribute__((aligned(4)));
+static bool_t tama_lcd_icons[TAMA_MAX_ICON_NUM] __attribute__((aligned(4)));
+static int8_t tama_audio[TAMA_CLOCKS_PER_FRAME] __attribute__((aligned(4)));
+static uint8_t tama_sound_period = 0;
+
+static state_t *state;
+static volatile bool reload;
+typedef enum {
+    SAVE_GAME_FLASH,
+    POWER_OFF_FLASH,
+    NOTHING,
+} restore_from_t;
+static restore_from_t restore_from = NOTHING;
+
+// Sound wave generator state
+static uint8_t current_period;
+static uint8_t current_half_period;
+static int16_t sample_high;
+static int16_t sample_low;
+static uint8_t period_index;
+
+static unsigned int emu_cycles, blit_cycles, audio_cycles, loop_cycles;
+
+// ************* Game rom loading *************
+
+void load_rom() {
+    /* Load and convert rom */
+    for (int i = 0; i < ROM_DATA_LENGTH / 2; i++) {
+        tama_rom[i] = ROM_DATA[i * 2 + 1] | ((ROM_DATA[i * 2] & 0xF) << 8);
+    }
+}
+
+// ************* Game state loading and saving *************
+
+static bool LoadStateByPtr(const uint8_t *ptr) {
+    printf("LoadState: loading...\n");
+    if (!tama_state_load(ptr)) {
+        printf("LoadState: failed.\n");
+        return false;
+    }
+
+    tamalib_refresh_hw();
+    printf("LoadState: done (%d).\n", restore_from);
+
+    return true;
+}
+
+// Called by the Reload in game menu option
+static bool LoadState(char *pathName) {
+    printf("Loading : %s", pathName);
+    reload = true;
+    return true;
+}
+
+static bool SaveState(char *pathName) {
+    printf("SaveState: saving...\n");
+    bool result;
+#if OFF_SAVESTATE == 1
+    if (strcmp(pathName, "1") == 0) {
+        // Save in common save slot (during a power off)
+        result = tama_state_save(&__OFFSAVEFLASH_START__);
+        restore_from = POWER_OFF_FLASH; // Not really needed
+    } else {
+#endif
+        result = tama_state_save(ACTIVE_FILE->save_address);
+        restore_from = SAVE_GAME_FLASH;
+#if OFF_SAVESTATE == 1
+    }
+#endif
+    if (result) {
+        printf("SaveState: done (%d).\n", restore_from);
+    } else {
+        printf("SaveState: failed.\n");
+    }
+
+    return result;
+}
+
+// ************* Tamalib HAL <-> GW HAL *************
+
+static bool_t hal_is_log_enabled(log_level_t level) {
+    return TAMA_LOG_ENABLED;
+}
+
+static void hal_log(log_level_t level, char *buff, ...) {
+    va_list(args);
+    va_start(args, buff);
+    printf(buff, args);
+}
+
+static void hal_set_lcd_matrix(u8_t x, u8_t y, uint8_t val) {
+    tama_lcd[x][y] = val == 0 ? 0 : val == 1 ? 0xFF
+                                             : val;
+}
+
+static void hal_set_lcd_icon(u8_t icon, bool_t val) {
+    tama_lcd_icons[icon] = val;
+}
+
+static void hal_set_sound_period(uint8_t period) {
+    tama_sound_period = period;
+}
+
+static void hal_play_sound(bool_t en) {
+    tama_audio[*state->tick_counter % TAMA_CLOCKS_PER_FRAME] = en ? tama_sound_period : 0; // TODO: Fix me!
+}
+
+static void hal_halt() {
+}
+
+static hal_t hal = {
+        .halt = &hal_halt,
+        .is_log_enabled = &hal_is_log_enabled,
+        .log = &hal_log,
+        .set_lcd_matrix = &hal_set_lcd_matrix,
+        .set_lcd_icon = &hal_set_lcd_icon,
+        .set_sound_period = &hal_set_sound_period,
+        .play_sound = &hal_play_sound,
+};
+
+// ************* Render the game on the display *************
+
+static void blit() {
+    /* Blit LCD matrix */
+    const uint16_t factor = 10;
+    const uint16_t matrix_start_y = GW_LCD_HEIGHT / 2 - (TAMA_LCD_HEIGHT * factor / 2);
+
+    uint16_t *screen = lcd_clear_active_buffer();
+    for (uint16_t x = 0; x < TAMA_LCD_WIDTH; x++) {
+        for (uint16_t y = 0; y < TAMA_LCD_HEIGHT; y++) {
+            // Kind of cheating using memset to either display 0x0000 as black and 0xffff as white
+            uint8_t pixel = tama_lcd[x][y];
+            for (uint16_t f = 0; f < factor - 2; f++) {
+                memset(&screen[(((y * factor + f) + matrix_start_y) * GW_LCD_WIDTH) + (x * factor) + 1], pixel, (factor - 2) * sizeof(uint16_t));
+            }
+        }
+    }
+
+    /* Blit LCD icons */
+    const uint16_t icon_start_x = (GW_LCD_WIDTH - (TAMA_ICONS_PER_ROW * TAMA_ICON_WIDTH)) / (TAMA_ICONS_PER_ROW + 1);
+    const uint16_t icon_space_x = icon_start_x + TAMA_ICON_WIDTH;
+    const uint16_t icon_start_y_top = (matrix_start_y / 2) - (TAMA_ICON_HEIGHT / 2);
+    const uint16_t icon_start_y_bottom = GW_LCD_HEIGHT - icon_start_y_top - TAMA_ICON_HEIGHT;
+
+    for (uint16_t i = 0; i < TAMA_ICONS_PER_ROW; i++) {
+        if (tama_lcd_icons[i]) {
+            odroid_display_write_rect(icon_start_x + (i * icon_space_x), icon_start_y_top, TAMA_ICON_HEIGHT, TAMA_ICON_WIDTH, TAMA_ICON_WIDTH, tama_icons[i]);
+        }
+        if (tama_lcd_icons[i + TAMA_ICONS_PER_ROW]) {
+            odroid_display_write_rect(icon_start_x + (i * icon_space_x), icon_start_y_bottom, TAMA_ICON_HEIGHT, TAMA_ICON_WIDTH, TAMA_ICON_WIDTH, tama_icons[i + TAMA_ICONS_PER_ROW]);
+        }
+    }
+
+    /* Handle common game overlays */
+    common_ingame_overlay();
+}
+
+// ************* Sound generator *************
+
+void init_audio_generator() {
+    current_period = 0;
+    current_half_period = 0;
+    sample_high = 0;
+    sample_low = 0;
+    period_index = 0;
+}
+
+void submit_audio() {
+    // Clear active sound buffer if muted
+    if (common_emu_sound_loop_is_muted()) {
+        return;
+    }
+
+    // Fetch volume factor and current active sound buffer
+    const int16_t factor = common_emu_sound_get_volume();
+    int16_t *sound_buffer = audio_get_active_buffer();
+    const uint16_t sound_buffer_length = audio_get_buffer_length();
+
+    // It is faster to clear the whole buffer here than to write individual 0's in the loop below
+    audio_clear_active_buffer();
+
+    // Write to DMA buffer and lower the volume accordingly
+    for (int i = 0; i < sound_buffer_length; i++) {
+        int8_t next_period = tama_audio[i];
+        if (next_period >= 0 && current_period != next_period) {
+            // Precalculate needed values and boundaries
+            current_period = next_period;
+            current_half_period = current_period >> 1;
+            period_index = 0;
+            sample_high = factor * SHRT_MAX >> 10; // Adjust max volume to 25% as 100% is REALLY, REALLY loud.
+            sample_low = factor * SHRT_MIN >> 10;  // Adjust max volume to 25% as 100% is REALLY, REALLY loud.
+        }
+
+        if (current_period > 0) {
+            sound_buffer[i] = period_index < current_half_period ? sample_high : sample_low;
+
+            // Reset waveform index at end of period
+            if (++period_index >= current_period) {
+                period_index = 0;
+            }
+        }
+    }
+
+    // Clear emulator sound frame buffer for next frame usage
+    memset(tama_audio, -1, sizeof(tama_audio));
+}
+
+// ************* GW buttons -> Tamalib HAL *************
+
+void update_buttons(odroid_gamepad_state_t *joystick) {
+    tamalib_set_button(BTN_LEFT, joystick->values[ODROID_INPUT_LEFT] || joystick->values[ODROID_INPUT_RIGHT] || joystick->values[ODROID_INPUT_UP] || joystick->values[ODROID_INPUT_DOWN] ? BTN_STATE_PRESSED : BTN_STATE_RELEASED);
+    tamalib_set_button(BTN_MIDDLE, joystick->values[ODROID_INPUT_B] || joystick->values[ODROID_INPUT_Y] ? BTN_STATE_PRESSED : BTN_STATE_RELEASED);
+    tamalib_set_button(BTN_RIGHT, joystick->values[ODROID_INPUT_A] || joystick->values[ODROID_INPUT_X] ? BTN_STATE_PRESSED : BTN_STATE_RELEASED);
+}
+
+// ************* Frame clock calculation *************
+
+void emulate_next_frame(bool *fast_forward_ptr, u64_t *total_fast_forward_clocks_ptr) {
+    uint64_t target = 0;
+    if (*fast_forward_ptr) {
+        uint64_t target_fast_forward_clocks = (GW_GetCurrentMillis() - *state->save_time) * TAMA_CLOCK_RATE / 1000;
+        if (*total_fast_forward_clocks_ptr >= target_fast_forward_clocks) {
+            *fast_forward_ptr = false;
+        } else {
+            uint64_t delta = MIN(target_fast_forward_clocks - *total_fast_forward_clocks_ptr, TAMA_CLOCKS_PER_FRAME * TAMA_FRAME_RATE * 50); // This gives around 300 x speed
+            if (delta < TAMA_CLOCKS_PER_FRAME) {
+                *fast_forward_ptr = false;
+            }
+
+            *total_fast_forward_clocks_ptr += delta;
+            target = *state->tick_counter + delta;
+        }
+    }
+
+    if (!*fast_forward_ptr) {
+        target = *state->tick_counter + TAMA_CLOCKS_PER_FRAME; //TODO: How do we handle overshoot ?
+    }
+
+    // printf("delta %lu\n", (uint32_t) (target - *state->tick_counter));
+    while (*state->tick_counter < target) {
+        tamalib_step();
+    }
+
+    // Blink F.F in upper left conor while in fast forward mode
+    if (*fast_forward_ptr && (GW_GetCurrentSubSeconds() > 127)) {
+        for (uint8_t i = 0; i < 2; i++) {
+            hal_set_lcd_matrix(1 + (i * 4), 0, 0x11);
+            hal_set_lcd_matrix(2 + (i * 4), 0, 0x11);
+            hal_set_lcd_matrix(3 + (i * 4), 0, 0x11);
+            hal_set_lcd_matrix(1 + (i * 4), 1, 0x11);
+            hal_set_lcd_matrix(1 + (i * 4), 2, 0x11);
+            hal_set_lcd_matrix(2 + (i * 4), 2, 0x11);
+            hal_set_lcd_matrix(1 + (i * 4), 3, 0x11);
+            hal_set_lcd_matrix(1 + (i * 4), 4, 0x11);
+            hal_set_lcd_matrix(3 + (i * 4), 4, 0x11);
+        }
+    }
+}
+
+// ************* Initialization and main game loop *************
+
+void main_tama(uint8_t start_paused) {
+    odroid_gamepad_state_t joystick;
+
+    /* Initialize internal buffers */
+    memset(tama_rom, 0, sizeof(tama_rom));
+    memset(tama_lcd, 0, sizeof(tama_lcd));
+    memset(tama_lcd_icons, 0, sizeof(tama_lcd_icons));
+    memset(tama_audio, -1, sizeof(tama_audio));
+
+    /* Initialize odroid system */
+    odroid_system_init(APPID_TAMA, TAMA_SAMPLE_RATE);
+    odroid_system_emu_init(&LoadState, &SaveState, NULL);
+
+    /* Initialize LCD */
+    lcd_clear_buffers();
+    lcd_set_refresh_rate(TAMA_LCD_FPS);
+
+    /* Initialize frame integrator */
+    common_emu_state.frame_time_10us = (uint16_t) (100000 / TAMA_FRAME_RATE + 0.5f);
+
+    /* Load rom */
+    load_rom();
+
+    /* Initialize emulator */
+    tamalib_register_hal(&hal);
+    tamalib_init(tama_rom, TAMA_CLOCK_RATE);
+    state = tamalib_get_state();
+
+#if OFF_SAVESTATE == 1
+    if (restore_from == POWER_OFF_FLASH) {
+        LoadStateByPtr(&__OFFSAVEFLASH_START__);
+    }
+#endif
+    if (restore_from == SAVE_GAME_FLASH) {
+        LoadStateByPtr(ACTIVE_FILE->save_address);
+    }
+
+    odroid_dialog_choice_t options[] = {ODROID_DIALOG_CHOICE_LAST};
+
+    /* Initialize audio */
+    init_audio_generator();
+    audio_start_playing(TAMA_SAMPLE_RATE / TAMA_FRAME_RATE);
+
+    /* Enable automatic pause of the emulator if started from a power off/on cycle */
+    if (start_paused) {
+        common_emu_state.pause_after_frames = 1;
+        odroid_audio_mute(true);
+    } else {
+        common_emu_state.pause_after_frames = 0;
+    }
+
+#ifdef TAMA_DEBUG
+    // Initialize CPU cycle counter
+    common_emu_enable_dwt_cycles();
+#endif
+
+    // Enable fast_forward if loading a previous save state, and it is younger than 48 hours
+    u64_t total_fast_forward_clocks = 0;
+    bool fast_forward = false;
+    uint64_t currentMillis = GW_GetCurrentMillis();
+    if (*state->save_time != 0 && currentMillis > *state->save_time && (currentMillis - *state->save_time) < MAX_SAVE_AGE_IN_MILLIS) {
+        fast_forward = true;
+    }
+
+    /* Enter emulation loop */
+    reload = false;
+    while (!reload) {
+        /* clear DWT counter used to monitor performances */
+        common_emu_clear_dwt_cycles();
+
+        /* Refresh watchdog */
+        wdog_refresh();
+
+        /* Read buttons and handle overlay and frame integrator */
+        bool drawFrame = common_emu_frame_loop();
+        odroid_input_read_gamepad(&joystick);
+        common_emu_input_loop(&joystick, options, &blit);
+
+        /* Forward button states to the emulator */
+        if (!fast_forward) {
+            update_buttons(&joystick);
+        }
+
+        /* Emulate X Tamagotchi frames as fast as possible */
+        emulate_next_frame(&fast_forward, &total_fast_forward_clocks);
+
+        /* Get how many cycles have been spent in the emulator */
+        emu_cycles = common_emu_get_dwt_cycles();
+
+        /* Update the screen */
+        if (drawFrame || fast_forward) {
+            blit();
+            lcd_swap();
+        }
+
+        /* get how many cycles have been spent in graphics rendering */
+        blit_cycles = common_emu_get_dwt_cycles();
+
+        /* Submit audio */
+        if (!fast_forward) {
+            submit_audio();
+        }
+
+        /* get how many cycles have been spent in audio rendering */
+        audio_cycles = common_emu_get_dwt_cycles();
+
+        /* Sync on sound buffer */
+        if (!fast_forward) {
+            common_emu_sound_sync(false);
+        }
+
+        /* Get how cycles have been spent inside this loop */
+        loop_cycles = common_emu_get_dwt_cycles();
+
+#ifdef TAMA_DEBUG
+        printf("emu_cycles %d, blit_cycles %d, audio_cycles %d, wait_cycles %d, loop_cycles %d\n", emu_cycles, blit_cycles - emu_cycles, audio_cycles - blit_cycles, loop_cycles - audio_cycles, loop_cycles);
+#endif
+    } // end of loop
+
+    audio_stop_playing();
+}
+
+_Noreturn void app_main_tama(uint8_t load_state, uint8_t start_paused, uint8_t save_slot) {
+    if (load_state) {
+#if OFF_SAVESTATE == 1
+        if (save_slot == 1) {
+            restore_from = POWER_OFF_FLASH;
+        } else {
+#endif
+            restore_from = SAVE_GAME_FLASH;
+#if OFF_SAVESTATE == 1
+        }
+#endif
+    } else {
+        restore_from = NOTHING;
+    }
+
+    while (true) {
+        main_tama(start_paused);
+        start_paused = false;
+    }
+}
+
+#endif

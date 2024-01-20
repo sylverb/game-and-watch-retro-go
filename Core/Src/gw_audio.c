@@ -166,5 +166,6 @@ void audio_start_playing(uint16_t length) {
 }
 
 void audio_stop_playing() {
+    audio_clear_buffers();
     HAL_SAI_DMAStop(&hsai_BlockA1);
 }

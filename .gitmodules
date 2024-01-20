@@ -28,3 +28,6 @@
 [submodule "smw"]
 	path = smw
 	url = https://github.com/marian-m12l/smw.git
+[submodule "tamalib"]
+	path = tamalib
+	url = https://github.com/BenjaminSoelberg/tamalib.git
