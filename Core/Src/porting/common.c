@@ -59,10 +59,20 @@ common_emu_state_t common_emu_state = {
     .frame_time_10us = (uint16_t)(100000 / 60 + 0.5f),  // Reasonable default of 60FPS if not explicitly configured.
 };
 
+static int32_t frame_integrator = 0;
+
+void common_emu_frame_loop_reset(void){
+    common_emu_state.last_sync_time = 0;
+    common_emu_state.skipped_frames =0;
+    common_emu_state.skip_frames =0;
+    common_emu_state.pause_frames=0;
+    common_emu_state.pause_after_frames=0;
+    common_emu_state.startup_frames=0;
+    frame_integrator = 0;
+}
 
 bool common_emu_frame_loop(void){
     rg_app_desc_t *app = odroid_system_get_app();
-    static int32_t frame_integrator = 0;
     int16_t frame_time_10us = common_emu_state.frame_time_10us;
     int16_t elapsed_10us = 100 * get_elapsed_time_since(common_emu_state.last_sync_time);
     bool draw_frame = common_emu_state.skip_frames < 2;
@@ -108,6 +118,7 @@ bool common_emu_frame_loop(void){
     if(frame_integrator > frame_time_10us << 1) common_emu_state.skip_frames = 2;
     else if(frame_integrator > frame_time_10us) common_emu_state.skip_frames = 1;
     else if(frame_integrator < -frame_time_10us) common_emu_state.pause_frames = 1;
+    printf("frame_integrator %ld\n", frame_integrator);
     common_emu_state.skipped_frames += common_emu_state.skip_frames;
 
     return draw_frame;

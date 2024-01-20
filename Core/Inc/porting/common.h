@@ -12,6 +12,7 @@
 
 extern const uint8_t volume_tbl[ODROID_AUDIO_VOLUME_MAX + 1];
 
+void common_emu_frame_loop_reset(void);
 bool common_emu_frame_loop(void);
 void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choice_t *game_options, void_callback_t repaint);
 void common_emu_input_loop_handle_turbo(odroid_gamepad_state_t *joystick);
