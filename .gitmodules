@@ -42,3 +42,6 @@
 [submodule "o2em-go"]
 	path = o2em-go
 	url = https://github.com/sylverb/o2em-go.git
+[submodule "ccleste-go"]
+	path = ccleste-go
+	url = https://github.com/sylverb/ccleste-go.git
