@@ -41,6 +41,15 @@ static uint16_t buttons_state = 0;
 // code could be added to control that but it's more cpu efficient to just increase buffer size
 static uint8_t fb_celeste[(128+20)*(128+20)];
 
+// current track info for savestates
+struct track_info {
+    uint8_t index;
+    uint8_t fade;
+    uint8_t mask;
+};
+
+struct track_info current_track = {-1, 0, 0};
+
 /*-------------------------------*/
 
 static bool SaveState(char *savePathName, char *sramPathName)
@@ -52,6 +61,7 @@ static bool SaveState(char *savePathName, char *sramPathName)
 
     FILE *fp = fopen(savePathName, "wb");
     fwrite(buffer, 1, Celeste_P8_get_state_size(), fp);
+	fwrite(&current_track, 1, sizeof(current_track), fp);
     fclose(fp);
 
     free(buffer);
@@ -65,11 +75,13 @@ static bool LoadState(char *savePathName, char *sramPathName)
 
     FILE *fp = fopen(savePathName, "rb");
     fread(buffer, 1, Celeste_P8_get_state_size(), fp);
+	fread(&current_track, 1, sizeof(current_track),fp);
     fclose(fp);
 
     Celeste_P8_load_state(buffer);
     free(buffer);
 
+	celeste_api_music(current_track.index, current_track.fade, current_track.mask);
     return true;
 }
 
@@ -397,9 +409,10 @@ int pico8emu(CELESTE_P8_CALLBACK_TYPE call, ...) {
 			int index = INT_ARG();
 			int fade = INT_ARG();
 			int mask = INT_ARG();
-			if (index == 40)
-				index = 0;
 
+			current_track.index = index;
+			current_track.fade = fade;
+			current_track.mask = mask;
 			celeste_api_music(index, fade, mask);
 		} break;
 		case CELESTE_P8_SPR: { //spr(sprite,x,y,cols,rows,flipx,flipy)
@@ -560,7 +573,7 @@ void celeste_blitscreen()
 	int offsety = 4;
 	for (int y=0; y < HEIGHT/2; y++)
 	{
-        for (int x = 0; x < WIDTH_P8; x++)
+        for (int x = 0; x < WIDTH_P8-1; x++)
 		{
             fb_data[offsetx+2*y*WIDTH+2*x] = base_palette[fb_celeste[(y+offsety)*PITCH_P8+x]];
             fb_data[offsetx+2*y*WIDTH+2*x+1] = base_palette[fb_celeste[(y+offsety)*PITCH_P8+x]];

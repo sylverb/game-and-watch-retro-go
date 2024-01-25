@@ -56,6 +56,14 @@ SDL_Surface* font = &font_local;
 // --- MAIN
 static uint16_t buttons_state = 0;
 
+struct track_info {
+    int8_t index;
+    uint8_t fade;
+    uint8_t mask;
+};
+
+struct track_info current_track = {-1, 0, 0};
+
 static bool SaveState(char *savePathName, char *sramPathName)
 {
 	fs_file_t *file;
@@ -67,6 +75,7 @@ static bool SaveState(char *savePathName, char *sramPathName)
 
     size = Celeste_P8_get_state_size();
     fs_write(file, buffer, size);
+    fs_write(file, (unsigned char *)&current_track, sizeof(current_track));
     fs_close(file);
 
 	memset(buffer, 0, sizeof(framebuffer1));
@@ -83,11 +92,14 @@ static bool LoadState(char *savePathName, char *sramPathName)
     file = fs_open(savePathName, FS_READ, FS_COMPRESS);
 	size = Celeste_P8_get_state_size();
     fs_read(file, buffer, size);
+    fs_read(file, (unsigned char *)&current_track, sizeof(current_track));
     fs_close(file);
 
     Celeste_P8_load_state(buffer);
 
 	memset(buffer, 0, sizeof(framebuffer1));
+
+	celeste_api_music(current_track.index, current_track.fade, current_track.mask);
 
     return true;
 }
@@ -333,6 +345,10 @@ int pico8emu(CELESTE_P8_CALLBACK_TYPE call, ...) {
 			int fade = INT_ARG();
 			int mask = INT_ARG();
 
+			current_track.index = index;
+			current_track.fade  = fade;
+			current_track.mask  = mask;
+
 			celeste_api_music(index, fade, mask);
 		} break;
 		case CELESTE_P8_SPR: { //spr(sprite,x,y,cols,rows,flipx,flipy)
@@ -490,7 +506,7 @@ static inline void blit_normal(uint8_t *src, uint16_t *framebuffer) {
 	int offsety = 4;
 	for (int y=0;y<HEIGHT/2;y++)
 	{
-        for (int x = 0; x < WIDTH_P8; x++)
+        for (int x = 0; x < WIDTH_P8-1; x++)
 		{
             framebuffer[offsetx+2*y*WIDTH+2*x] = base_palette[src[(y+offsety)*PITCH_P8+x]];
             framebuffer[offsetx+2*y*WIDTH+2*x+1] = base_palette[src[(y+offsety)*PITCH_P8+x]];
@@ -503,7 +519,7 @@ static inline void blit_normal(uint8_t *src, uint16_t *framebuffer) {
 __attribute__((optimize("unroll-loops")))
 static inline void screen_blit_nn(uint8_t *src, uint16_t *framebuffer, uint16_t width)
 {
-    uint16_t w1 = WIDTH_P8;
+    uint16_t w1 = WIDTH_P8-1;
     uint16_t h1 = HEIGHT_P8;
     uint16_t w2 = width;
     uint16_t h2 = HEIGHT;
