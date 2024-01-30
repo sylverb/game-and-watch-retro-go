@@ -183,6 +183,7 @@ void readSaveStateInitImpl() {
 }
 void readSaveStateImpl(uint8_t* data, size_t size) {
   if (savestate_file != NULL) {
+    wdog_refresh();
     fs_read(savestate_file, data, size);
   } else {
     memset(data, 0, size);
