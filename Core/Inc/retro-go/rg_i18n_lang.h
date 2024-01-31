@@ -12,6 +12,7 @@ typedef struct
     const char *s_Crop_Vertical_Overscan;
     const char *s_Crop_Horizontal_Overscan;
     const char *s_Disable_Sprite_Limit;
+    const char *s_Reset;
     const char *s_NES_CPU_OC;
     const char *s_NES_Eject_Insert_FDS;
     const char *s_NES_Eject_FDS;
