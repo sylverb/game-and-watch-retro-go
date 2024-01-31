@@ -907,6 +907,14 @@ static bool crop_overscan_h_cb(odroid_dialog_choice_t *option, odroid_dialog_eve
     return event == ODROID_DIALOG_ENTER;
 }
 
+static bool reset_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    if (event == ODROID_DIALOG_ENTER) {
+        FCEUI_ResetNES();
+    }
+    return event == ODROID_DIALOG_ENTER;
+}
+
 static bool fds_side_swap_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
     if (event == ODROID_DIALOG_NEXT) {
@@ -1125,6 +1133,7 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
         odroid_dialog_choice_t options[] = {
             // {101, "More...", "", 1, &advanced_settings_cb},
             {302, curr_lang->s_Palette, palette_values_text, 1, &palette_update_cb},
+            {302, curr_lang->s_Reset, NULL, 1, &reset_cb},
             {302, curr_lang->s_Crop_Vertical_Overscan,crop_overscan_v_text,1,&crop_overscan_v_cb},
             {302, curr_lang->s_Crop_Horizontal_Overscan,crop_overscan_h_text,1,&crop_overscan_h_cb},
             {302, curr_lang->s_Disable_Sprite_Limit,sprite_limit_text,1,&sprite_limit_cb},

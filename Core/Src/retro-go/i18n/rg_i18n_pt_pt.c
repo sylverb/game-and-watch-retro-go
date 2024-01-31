@@ -37,6 +37,7 @@ const lang_t lang_pt_pt LANG_DATA = {
     .s_Crop_Vertical_Overscan = "Cortar Overscan Vertical",
     .s_Crop_Horizontal_Overscan = "Cortar Overscan Horizontal",
     .s_Disable_Sprite_Limit = "Desativar o limite de sprites",
+    .s_Reset = "Reset",
     .s_NES_CPU_OC = "NES CPU Overclocking",
     .s_NES_Eject_Insert_FDS = "Ejetar/Inserir Disco",
     .s_NES_Eject_FDS = "Ejetar Disco",
