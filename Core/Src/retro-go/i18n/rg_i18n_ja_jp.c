@@ -39,6 +39,7 @@ const lang_t lang_ja_jp LANG_DATA = {
     .s_Crop_Vertical_Overscan = "縦のオーバースキャン削除",
     .s_Crop_Horizontal_Overscan = "横のオーバースキャン削除",
     .s_Disable_Sprite_Limit = "スプライトリミット無し",
+    .s_Reset = "Reset",
     .s_NES_CPU_OC = "NES CPUのオーバークロック",
     .s_NES_Eject_Insert_FDS = "ディスクの取り出し・挿入",
     .s_NES_Eject_FDS = "ディスク取り出し",
