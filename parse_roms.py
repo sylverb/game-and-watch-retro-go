@@ -1098,6 +1098,7 @@ class ROMParser:
         })
         romdef.setdefault('smw', {'smw': {'embed': '0'}})
         romdef.setdefault('videopac', {})
+        romdef.setdefault('homebrew', {'celeste': {'embed': '0'}})
 
         system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/gb_roms.c",
@@ -1496,6 +1497,23 @@ class ROMParser:
         total_save_size += save_size
         total_rom_size += rom_size
         build_config += "#define ENABLE_EMULATOR_VIDEOPAC\n" if rom_size > 0 else ""
+        if system_save_size > larger_save_size : larger_save_size = system_save_size
+
+        # TODO : improve this to handle different homebrew in future
+        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+            "Core/Src/retro-go/homebrew_roms.c",
+            "Homebrew",
+            "homebrew_system",
+            "homebrew",
+            ["png"],
+            "SAVE_HOMEBREW_",
+            romdef["homebrew"],
+            None,
+            current_id
+        )
+        total_save_size += save_size
+        total_rom_size += rom_size
+        build_config += "#define ENABLE_HOMEBREW\n" if rom_size > 0 else ""
         if system_save_size > larger_save_size : larger_save_size = system_save_size
 
         total_size = total_save_size + total_rom_size + total_img_size

@@ -26,6 +26,8 @@ ROMS_GG := $(filter-out roms/gg/.keep, $(wildcard roms/gg/*))
 ROMS_SG := $(filter-out roms/sg/.keep, $(wildcard roms/sg/*))
 ROMS_SMS := $(filter-out roms/sms/.keep, $(wildcard roms/sms/*))
 
+HOMEBREW_CELESTE := $(wildcard roms/homebrew/celeste.png roms/homebrew/Celeste.png)
+
 ######################################
 # source
 ######################################
@@ -678,6 +680,15 @@ o2em-go/src/vkeyb/vkeyb_layout.c \
 Core/Src/porting/videopac/main_videopac.c
 endif
 
+CELESTE_C_SOURCES = 
+
+ifneq ($(strip $(HOMEBREW_CELESTE)),)
+CELESTE_C_SOURCES += \
+ccleste-go/celeste.c \
+ccleste-go/celeste_audio.c \
+Core/Src/porting/celeste/main_celeste.c
+endif
+
 TAMP_C_INCLUDES += -I$(TAMP_DIR)
 
 ZELDA3_C_SOURCES = 
@@ -913,12 +924,21 @@ SMW_C_INCLUDES +=  \
 -Ismw/ \
 -I./
 
+CELESTE_C_INCLUDES +=  \
+-ICore/Inc \
+-ICore/Src/porting/lib \
+-ICore/Src/porting/lib/lzma \
+-Iretro-go-stm32/components/odroid \
+-Iccleste-go \
+-I./
+
+
 include Makefile.common
 
 
 $(BUILD_DIR)/$(TARGET)_extflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)
-	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_tgb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 -j .overlay_smw -j .overlay_videopac $< $(BUILD_DIR)/$(TARGET)_extflash.bin
+	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_tgb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 -j .overlay_smw -j .overlay_videopac -j .overlay_celeste $< $(BUILD_DIR)/$(TARGET)_extflash.bin
 
 $(BUILD_DIR)/$(TARGET)_intflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)

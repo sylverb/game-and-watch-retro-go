@@ -582,6 +582,28 @@ SECTIONS
   }
   _OVERLAY_VIDEOPAC_BSS_SIZE = SIZEOF(.overlay_videopac_bss);
 
+  .overlay_celeste __RAM_EMU_START__ : {
+    . = ALIGN(4);
+    __ram_emu_celeste_start__ = .;
+    build/celeste/*.o (.data .data* .text .text* .rodata .rodata*)
+    . = ALIGN(4);
+    _OVERLAY_CELESTE_LOAD_END = .;
+  } AT> EXTFLASH
+  _OVERLAY_CELESTE_LOAD_START = LOADADDR(.overlay_celeste);
+  _OVERLAY_CELESTE_SIZE = SIZEOF(.overlay_celeste);
+
+  .overlay_celeste_bss _OVERLAY_CELESTE_LOAD_END : {
+    . = ALIGN(4);
+    _OVERLAY_CELESTE_BSS_START = .;
+    build/celeste/*.o (.bss .bss*)
+    . = ALIGN(4);
+    build/celeste/*.o (COMMON)
+    __ram_emu_celeste_end__ = .;
+    _OVERLAY_CELESTE_BSS_END = .;
+    ASSERT(ABSOLUTE(_OVERLAY_CELESTE_BSS_END) < __RAM_EMU_END__, "Error: CELESTE BSS overflow");
+  }
+  _OVERLAY_CELESTE_BSS_SIZE = SIZEOF(.overlay_celeste_bss);
+
   /* Place this symbol after the last overlay definition */
   .overlay_end : {
     __extflash_end__ = .;

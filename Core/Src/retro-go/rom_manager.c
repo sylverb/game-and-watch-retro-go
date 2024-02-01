@@ -28,6 +28,7 @@ retro_emulator_file_t *ACTIVE_FILE = NULL;
 #include "zelda3_roms.c"
 #include "smw_roms.c"
 #include "videopac_roms.c"
+#include "homebrew_roms.c"
 
 const rom_system_t *systems[] = {
     &nes_system,
@@ -48,6 +49,7 @@ const rom_system_t *systems[] = {
     &zelda3_system,
     &smw_system,
     &videopac_system,
+    &homebrew_system,
 };
 
 const rom_manager_t rom_mgr = {

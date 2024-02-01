@@ -89,6 +89,10 @@ Supported SNES game _ports_:
 - The Legend of Zelda: A Link to the Past
 - Super Mario World
 
+Supported Homebrew _ports_:
+
+- ccleste (a port of Pico-8 version of Celeste Classic)
+
 ## Table of Contents
 - [NewUI howto](#newui-howto)
   - [**Undocumented 256k BANK used by default**](#undocumented-256k-bank-used-by-default)
@@ -120,6 +124,8 @@ Supported SNES game _ports_:
   - [SNES game ports](#snes-game-ports)
     - [The Legend of Zelda: A Link to the Past](#the-legend-of-zelda-a-link-to-the-past)
     - [Super Mario World](#super-mario-world)
+  - [Homebrew ports](#homebrew-ports)
+    - [Celeste Classic](#celeste-classic)
   - [Discord, support and discussion](#discord-support-and-discussion)
   - [LICENSE](#license)
 
@@ -516,6 +522,15 @@ Some features can be configured with flags:
 | Build flag    | Description |
 | ------------- | ------------- |
 | `LIMIT_30FPS` | Limit to 30 fps for improved stability.<br>Enabled by default.<br>Disabling this flag will result in unsteady framerate and stuttering. |
+
+## Homebrew ports
+
+Some homebrew games have been _ported_ to the G&W.
+
+### Celeste Classic
+
+This is a port of the Pico-8 version of Celeste Classic.
+To enable this port, add a `roms/homebrew/Celeste.png` file.
 
 ## Discord, support and discussion 
 

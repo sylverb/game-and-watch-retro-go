@@ -24,11 +24,15 @@
 #define WIDTH_P8  128
 #define PITCH_P8  148
 #define HEIGHT_P8 128
+#define CELESTE_FPS 30
+#define CELESTE_AUDIO_SAMPLE_RATE 22050
+#define CELESTE_AUDIO_BUFFER_LENGTH (CELESTE_AUDIO_SAMPLE_RATE/CELESTE_FPS)
+#define CELESTE_AUDIO_BUFFER_LENGTH_DMA (2*CELESTE_AUDIO_SAMPLE_RATE/CELESTE_FPS)
 
 // We add 20 pixels height in the buffer because sprites can be drawn outside of the screen, some
 // code could be added to control that but it's more cpu efficient to just increase buffer size
 static uint8_t fb_celeste [PITCH_P8*(HEIGHT_P8+20)];
-bool enable_screenshake = true;
+static bool enable_screenshake = true;
 
 typedef struct {
     int16_t x, y;
@@ -42,16 +46,15 @@ typedef struct SDL_Surface {
    SDL_Rect clip_rect;
 } SDL_Surface;
 
-SDL_Surface screen_local;
-SDL_Surface* screen = &screen_local;
-SDL_Surface gfx_local;
-SDL_Surface* gfx = &gfx_local;
-SDL_Surface font_local;
-SDL_Surface* font = &font_local;
+static SDL_Surface screen_local;
+static SDL_Surface* screen = &screen_local;
+static SDL_Surface gfx_local;
+static SDL_Surface* gfx = &gfx_local;
+static SDL_Surface font_local;
+static SDL_Surface* font = &font_local;
 
-// Use 60Hz for GB
-#define AUDIO_BUFFER_LENGTH_DMA ((2 * AUDIO_SAMPLE_RATE) / 60)
-//static int16_t *audiobuffer_emulator;
+static int16_t audioBuffer[CELESTE_AUDIO_BUFFER_LENGTH];
+
 
 // --- MAIN
 static uint16_t buttons_state = 0;
@@ -164,7 +167,7 @@ static void p8_rectfill(int x0, int y0, int x1, int y1, int col) {
 
 #define CLAMP(v,min,max) v = v < min ? min : v >= max ? max-1 : v;
 
-void p8_line(int x0, int y0, int x1, int y1, unsigned char color) {
+static void p8_line(int x0, int y0, int x1, int y1, unsigned char color) {
     CLAMP(x0, 0, WIDTH_P8);
     CLAMP(y0, 0, HEIGHT_P8);
     CLAMP(x1, 0, WIDTH_P8);
@@ -567,13 +570,6 @@ static void blit()
     common_ingame_overlay();
 }
 
-#define CELESTE_FPS 30
-#define CELESTE_AUDIO_SAMPLE_RATE 22050
-#define CELESTE_AUDIO_BUFFER_LENGTH (CELESTE_AUDIO_SAMPLE_RATE/CELESTE_FPS)
-#define CELESTE_AUDIO_BUFFER_LENGTH_DMA (2*CELESTE_AUDIO_SAMPLE_RATE/CELESTE_FPS)
-
-static int16_t audioBuffer[CELESTE_AUDIO_BUFFER_LENGTH];
-
 static void update_sound_celeste() {
     uint8_t volume = odroid_audio_volume_get();
     int32_t factor = volume_tbl[volume] / 2; // Divide by 2 to prevent overflow in stereo mixing
@@ -592,7 +588,6 @@ static void update_sound_celeste() {
         }
     }
 }
-
 
 void app_main_celeste(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
@@ -632,7 +627,7 @@ void app_main_celeste(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     // Allocate the maximum samples count for a frame on Amstrad
     odroid_set_audio_dma_size(CELESTE_AUDIO_BUFFER_LENGTH);
 
-    odroid_system_init(APPID_CELESTE, CELESTE_AUDIO_SAMPLE_RATE);
+    odroid_system_init(APPID_HOMEBREW, CELESTE_AUDIO_SAMPLE_RATE);
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma, CELESTE_AUDIO_BUFFER_LENGTH_DMA);

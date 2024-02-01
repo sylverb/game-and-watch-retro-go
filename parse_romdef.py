@@ -109,6 +109,9 @@ class ROMParser:
         json_file = script_path / "roms" / "videopac.json"
         self.parse_one(json_file, "videopac",["bin"])
 
+        json_file = script_path / "roms" / "celeste.json"
+        self.parse_one(json_file, "celeste",["png"])
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Define ROMs name & pulish to the build environment")
 

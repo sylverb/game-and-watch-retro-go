@@ -93,6 +93,10 @@ extern void * _OVERLAY_VIDEOPAC_LOAD_START[];
 extern uint8_t _OVERLAY_VIDEOPAC_SIZE;
 extern void * _OVERLAY_VIDEOPAC_BSS_START[];
 extern uint8_t _OVERLAY_VIDEOPAC_BSS_SIZE;
+extern void * _OVERLAY_CELESTE_LOAD_START[];
+extern uint8_t _OVERLAY_CELESTE_SIZE;
+extern void * _OVERLAY_CELESTE_BSS_START[];
+extern uint8_t _OVERLAY_CELESTE_BSS_SIZE;
 
 extern uint8_t *_NES_ROM_UNPACK_BUFFER;
 extern uint8_t _NES_ROM_UNPACK_BUFFER_SIZE;
