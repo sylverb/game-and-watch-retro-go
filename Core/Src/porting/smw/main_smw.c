@@ -305,6 +305,41 @@ int app_main_smw(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     
   g_wanted_features = FEATURES;
 
+
+  // A physical button (or combination of buttons) is assigned for each SNES controller button
+  // Each nibble represents a physical button assignment
+  // Order of assignments (SNES buttons) from most-significant to least-significant nibble: Select,Start,A,B,X,Y,L,R
+  // Values for physical buttons mapping: GAME modifier (MSB) + 3-bits physical button index (0=A, 1=B, 2=Select, 3=Start, 4=Time)
+  // A value of 0xf means no assignment
+  uint32_t profile = CONTROLLER_BINDINGS;
+
+  bool button_pressed(uint8_t button_index) {
+    switch (button_index) {
+      case 0x0: // A
+        return joystick.values[ODROID_INPUT_A];
+      case 0x1: // B
+        return joystick.values[ODROID_INPUT_B];
+      case 0x2: // Select
+        return joystick.values[ODROID_INPUT_Y];
+      case 0x3: // Start
+        return joystick.values[ODROID_INPUT_X];
+      case 0x4: // Time
+        return joystick.values[ODROID_INPUT_SELECT];
+      default:
+        return false;
+    }
+  }
+
+  bool get_profile_button(uint8_t command) {
+    uint8_t shift = (7 - (command - 5)) * 4;
+    uint8_t binding = (profile >> shift) & 0xf;
+    bool game_modifier = (binding & 0x8) == 0x8;
+    bool buttonPressed = button_pressed(binding & 0x7);
+    bool isPauseModifierPressed = joystick.values[ODROID_INPUT_VOLUME];
+    bool isGameModifierPressed = joystick.values[ODROID_INPUT_START];
+    return !isPauseModifierPressed && (game_modifier == isGameModifierPressed) && buttonPressed;
+  }
+
   g_spc_player = SmwSpcPlayer_Create();
   g_spc_player->initialize(g_spc_player);
     
@@ -348,7 +383,6 @@ int app_main_smw(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     }
     common_emu_input_loop(&joystick, options, &_repaint);
 
-
     // Handle inputs
     /*
     Retro-Go controls:
@@ -361,7 +395,8 @@ int app_main_smw(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
       PAUSE/SET + B 	    Load state.
       PAUSE/SET + A 	    Save state.
       PAUSE/SET + POWER 	Poweroff WITHOUT save-stating.
-    Game controls for zelda console:
+    Game controls depends on controller bindings.
+    Default controls for zelda console:
       A                   A button (Spin Jump)
       B                   B button (Regular Jump)
       SELECT | START      X/Y button (Dash/Shoot)
@@ -369,7 +404,7 @@ int app_main_smw(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
       GAME + TIME         Start button (Pause Game)
       GAME + B            L button (Scroll Screen Left)
       GAME + A            R button (Scroll Screen Right)
-    Game controls for mario console:
+    Default controls for mario console:
       A                   A button (Spin Jump)
       B                   B button (Regular Jump)
       TIME                X/Y button (Dash/Shoot)
@@ -380,29 +415,20 @@ int app_main_smw(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     */
 
     bool isPauseModifierPressed = joystick.values[ODROID_INPUT_VOLUME];
-    bool isGameModifierPressed = joystick.values[ODROID_INPUT_START];
 
     HandleCommand(1, !isPauseModifierPressed && joystick.values[ODROID_INPUT_UP]);
     HandleCommand(2, !isPauseModifierPressed && joystick.values[ODROID_INPUT_DOWN]);
     HandleCommand(3, !isPauseModifierPressed && joystick.values[ODROID_INPUT_LEFT]);
     HandleCommand(4, !isPauseModifierPressed && joystick.values[ODROID_INPUT_RIGHT]);
-    HandleCommand(7, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_A]); // A == A (Spin Jump)
-    HandleCommand(8, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_B]); // B == B (Regular Jump)
-    HandleCommand(6, !isPauseModifierPressed && isGameModifierPressed && joystick.values[ODROID_INPUT_SELECT]); // GAME + TIME == Start (Pause Game)
 
-    #if GNW_TARGET_ZELDA != 0
-        HandleCommand(9, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_Y]); // SELECT == X (Dash/Shoot)
-        HandleCommand(10, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_X]);  // START == Y (Dash/Shoot)
-        HandleCommand(5, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_SELECT]);  // TIME == Select (Use reserve item)
-        // L & R are used to scroll screen
-        HandleCommand(11, !isPauseModifierPressed && isGameModifierPressed && joystick.values[ODROID_INPUT_B]); // GAME + B == L
-        HandleCommand(12, !isPauseModifierPressed && isGameModifierPressed && joystick.values[ODROID_INPUT_A]); // GAME + A == R
-    #else
-        HandleCommand(9, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_SELECT]);  // TIME == X (Dash/Shoot)
-        HandleCommand(10, !isPauseModifierPressed && !isGameModifierPressed && joystick.values[ODROID_INPUT_SELECT]); // TIME == Y (Dash/Shoot)
-        HandleCommand(5, !isPauseModifierPressed && isGameModifierPressed && joystick.values[ODROID_INPUT_A]);  // GAME + A == Select (Use reserve item)
-        // No button combinations available for L/R on Mario units...
-    #endif /* GNW_TARGET_ZELDA */
+    HandleCommand(5, get_profile_button(5));   // SNES Select (Use reserve item)
+    HandleCommand(6, get_profile_button(6));   // SNES Start (Pause Game)
+    HandleCommand(7, get_profile_button(7));   // SNES A (Spin Jump)
+    HandleCommand(8, get_profile_button(8));   // SNES B (Regular Jump)
+    HandleCommand(9, get_profile_button(9));   // SNES X (Dash/Shoot)
+    HandleCommand(10, get_profile_button(10)); // SNES Y (Dash/Shoot)
+    HandleCommand(11, get_profile_button(11)); // SNES L (Scroll screen left)
+    HandleCommand(12, get_profile_button(12)); // SNES R (Scroll screen right)
 
 
     // Clear gamepad inputs when joypad directional inputs to avoid wonkiness
