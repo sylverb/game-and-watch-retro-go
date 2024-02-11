@@ -648,11 +648,13 @@ void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_pau
       app_main_videopac(load_state, start_paused, save_slot);
 #endif
     } else if(strcmp(emu->system_name, "Homebrew") == 0)  {
+#ifdef ENABLE_HOMEBREW
       // TODO : handle different homebrew applications
       memcpy(&__RAM_EMU_START__, &_OVERLAY_CELESTE_LOAD_START, (size_t)&_OVERLAY_CELESTE_SIZE);
       memset(&_OVERLAY_CELESTE_BSS_START, 0x0, (size_t)&_OVERLAY_CELESTE_BSS_SIZE);
       SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_CELESTE_SIZE);
       app_main_celeste(load_state, start_paused, save_slot);
+#endif
     }
     
 }
