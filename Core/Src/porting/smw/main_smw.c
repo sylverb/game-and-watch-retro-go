@@ -260,6 +260,15 @@ static void smw_sound_submit() {
   }
 }
 
+static bool reset_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+  if (event == ODROID_DIALOG_ENTER) {
+    printf("Resetting\n");
+    RtlReset(1);
+  }
+  return event == ODROID_DIALOG_ENTER;
+}
+
 /* Main */
 int app_main_smw(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
@@ -311,6 +320,7 @@ int app_main_smw(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 
 
     odroid_dialog_choice_t options[] = {
+            {300, curr_lang->s_Reset, NULL, 1, &reset_cb},
             ODROID_DIALOG_CHOICE_LAST
     };
     void _repaint()

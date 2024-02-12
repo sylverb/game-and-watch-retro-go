@@ -84,3 +84,8 @@ last_dma_state smw__last_dma_state
 renderedFrameCtr smw__renderedFrameCtr
 cpu_reset smw__cpu_reset
 Die smw__Die
+snes_reset smw__snes_reset
+cart_reset smw__cart_reset
+apu_reset smw__apu_reset
+RtlApuLock smw__RtlApuLock
+RtlApuUnlock smw__RtlApuUnlock
