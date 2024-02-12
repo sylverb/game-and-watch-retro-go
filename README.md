@@ -509,11 +509,11 @@ Due to the limited set of buttons (especially on the Mario console), the control
 
 | Description | Binding on Mario units | Binding on Zelda units |
 | ----------- | ---------------------- | ---------------------- |
-| `A` button (Spin Jump) | `A` | `A` |
-| `B` button (Regular Jump) | `B` | `B` |
-| `X`/`Y` button (Dash/Shoot) | `TIME` | `SELECT` or `START` |
-| `Select` button (Use Reserve Item) | `GAME + A` | `TIME` |
-| `Start` button (Pause Game) | `GAME + TIME` | `GAME + TIME` |
+| `A` button (Spin Jump) | `GAME + A` | `SELECT` |
+| `B` button (Regular Jump) | `A` | `A` |
+| `X`/`Y` button (Dash/Shoot) | `B` | `B` |
+| `Select` button (Use Reserve Item) | `TIME` | `TIME` |
+| `Start` button (Pause Game) | `GAME + TIME` | `START` |
 | `L` button (Scroll Screen Left) | `-` | `GAME + B` |
 | `R` button (Scroll Screen Right) | `-` | `GAME + A` |
 
