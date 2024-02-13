@@ -83,3 +83,8 @@ last_dma_state zelda3__last_dma_state
 renderedFrameCtr zelda3__renderedFrameCtr
 cpu_reset zelda3__cpu_reset
 Die zelda3__Die
+snes_reset zelda3__snes_reset
+cart_reset zelda3__cart_reset
+apu_reset zelda3__apu_reset
+RtlApuLock zelda3__RtlApuLock
+RtlApuUnlock zelda3__RtlApuUnlock
