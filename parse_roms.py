@@ -55,7 +55,7 @@ SYSTEM_PROTO_TEMPLATE = """
 #if !defined (BIG_BANK)
 #define BIG_BANK 1
 #endif
-#if (BIG_BANK == 1) && (EXTFLASH_SIZE <= 128*1024*1024)
+#if (BIG_BANK == 1) && (EXTFLASH_SIZE <= 16*1024*1024)
 #define EMU_DATA 
 #else
 #define EMU_DATA __attribute__((section(".extflash_emu_data")))
