@@ -810,6 +810,29 @@ endif
 # Limit to 30 fps for improved stability
 SMW_LIMIT_30FPS ?= 1
 
+# Controller bindings
+# A physical button (or combination of buttons) is assigned for each SNES controller button
+# Each nibble represents a physical button assignment
+# Order of assignments (SNES buttons) from most-significant to least-significant nibble: Select,Start,A,B,X,Y,L,R
+# Values for physical buttons mapping: GAME modifier (MSB) + 3-bits physical button index (0=A, 1=B, 2=Select, 3=Start, 4=Time)
+# A value of 0xf means no assignment
+
+# Binding "A" for zelda consoles: Use Reserve Item: TIME / Pause Game: GAME + TIME / Spin Jump: A / Regular Jump: B / Dash/Shoot: SELECT or START / Scroll Left: GAME + B / Scroll Right: GAME + A
+SMW_BINDINGS_ZELDA_A = 0x4c012398
+# Binding "B" for zelda consoles: Use Reserve Item: TIME / Pause Game: START / Spin Jump: SELECT / Regular Jump: A / Dash/Shoot: B / Scroll Left: GAME + B / Scroll Right: GAME + A
+SMW_BINDINGS_ZELDA_B = 0x43201198
+# Binding "A" for mario consoles: Use Reserve Item: GAME + A / Pause Game: GAME + TIME / Spin Jump: A / Regular Jump: B / Dash/Shoot: TIME / Scroll Left: Unassigned / Scroll Right: Unassigned
+SMW_BINDINGS_MARIO_A = 0x8c0144ff
+# Binding "B" for mario consoles: Use Reserve Item: TIME / Pause Game: GAME + TIME / Spin Jump: GAME + A / Regular Jump: A / Dash/Shoot: B / Scroll Left: Unassigned / Scroll Right: Unassigned
+SMW_BINDINGS_MARIO_B = 0x4c8011ff
+
+# Replace with the binding of your choice
+ifeq ($(GNW_TARGET_ZELDA),1)
+	SMW_CONTROLLER_BINDINGS = $(SMW_BINDINGS_ZELDA_A)
+else
+	SMW_CONTROLLER_BINDINGS = $(SMW_BINDINGS_MARIO_B)
+endif
+
 # Save to SRAM after each beaten level (instead of saving after castle is beaten).
 # SRAM save remains valid/compatible with emulators.
 SMW_FEATURE_SAVE_AFTER_EACH_BEATEN_LEVEL ?= 0
@@ -821,6 +844,7 @@ SMW_FEATURES := $(shell echo "$$(( $(SMW_FEATURES) | $(SMW_FEATURE_SAVE_AFTER_EA
 C_DEFS_SMW =  \
 -DHEADLESS \
 -DLIMIT_30FPS=$(SMW_LIMIT_30FPS) \
+-DCONTROLLER_BINDINGS=$(SMW_CONTROLLER_BINDINGS) \
 -DFEATURES=$(SMW_FEATURES) \
 
 # function used to generate prerequisite rules for smw objects
