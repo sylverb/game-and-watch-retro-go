@@ -1017,9 +1017,26 @@ static void MX_RTC_Init(void)
   hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
   hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
   hrtc.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
-  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+
+  // Important: this workaround is unnecessary in newer releases of the HAL SDK, where the issue is fixed within HAL_RTC_Init (starting from 1.11.0)
+
+  // To avoid loosing seconds on reset, apply suggested fix from github issue:
+  // https://github.com/STMicroelectronics/STM32CubeH7/issues/24#issuecomment-598659380
+  // Do not re-initialize RTC in case it has already been to avoid loosing seconds at each reset
+  if ((RCC->BDCR & RCC_BDCR_RTCEN) == 0)
   {
-    Error_Handler();
+    if (HAL_RTC_Init(&hrtc) != HAL_OK)
+    {
+      Error_Handler();
+    }
+  }
+  else
+  {
+    HAL_PWR_EnableBkUpAccess();
+    // Additional suggestions from:
+    // https://community.st.com/t5/stm32-mcus-products/stm32-rtc-loses-one-second-after-each-reset/td-p/432880
+    // (this would normally be called in the HAL_RTC_MspInit callback when executing HAL_RTC_Init)
+    __HAL_RCC_RTC_ENABLE();
   }
 
   /* USER CODE BEGIN Check_RTC_BKUP */
