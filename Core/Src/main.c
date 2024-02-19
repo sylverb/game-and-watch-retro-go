@@ -960,7 +960,6 @@ static void MX_OCTOSPI1_Init(void)
   hospi1.Init.SampleShifting = HAL_OSPI_SAMPLE_SHIFTING_NONE;
   hospi1.Init.DelayHoldQuarterCycle = HAL_OSPI_DHQC_DISABLE;
   hospi1.Init.ChipSelectBoundary = 0;
-  hospi1.Init.ClkChipSelectHighTime = 0;
   hospi1.Init.DelayBlockBypass = HAL_OSPI_DELAY_BLOCK_BYPASSED;
   hospi1.Init.MaxTran = 0;
   hospi1.Init.Refresh = 0;

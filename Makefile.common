@@ -307,7 +307,7 @@ Core/Src/retro-go/i18n/rg_i18n.c \
 Core/Src/retro-go/rg_logos.c
 
 # Version and URL for the STM32CubeH7 SDK
-SDK_VERSION ?= v1.8.0
+SDK_VERSION ?= v1.11.1
 SDK_URL ?= https://raw.githubusercontent.com/STMicroelectronics/STM32CubeH7
 
 # Local path for the SDK
