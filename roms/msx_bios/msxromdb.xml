@@ -36898,6 +36898,31 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		</dump>
 	</software>
 	<software>
+		<title xml:lang="en">Tiny Magic</title>
+		<system>MSX</system>
+		<company>Abyss</company>
+		<year>2023</year>
+		<country>EU</country>
+		<controls>45</controls>
+		<dump>
+			<original value="true" />
+			<megarom>
+				<type>KonamiSCC</type>
+				<hash algo="sha1">185139feff6e2cec4c06440ec39f916bda65398e</hash>
+			</megarom>
+		</dump>
+		<dump>
+			<original value="false" />
+			<disk>
+				<hash algo="sha1">1eb08c5c6d582665a3801c107d4eb010cb9751ee</hash>
+				<remark>
+					<text>dsk format from reverted dsk2rom</text>
+				</remark>
+			</disk>
+		</dump>
+	</software>
+
+	<software>
 		<title xml:lang="en">Title Awase - Title Memory</title>
 		<system>MSX</system>
 		<company>Konami</company>
