@@ -591,7 +591,6 @@ static void update_sound_celeste() {
 
 void app_main_celeste(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
-    dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
     gfx->w = 128;
     gfx->pitch = 128;
     gfx->h = 64;
@@ -676,13 +675,6 @@ void app_main_celeste(uint8_t load_state, uint8_t start_paused, int8_t save_slot
 		}
         lcd_swap();
 
-        if(!common_emu_state.skip_frames){
-            for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
-                while (dma_state == last_dma_state) {
-                    cpumon_sleep();
-                }
-                last_dma_state = dma_state;
-            }
-        }
+        common_emu_sound_sync(false);
     }
 }
