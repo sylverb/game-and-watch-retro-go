@@ -29,7 +29,6 @@
 
 // Use 60Hz for GB
 #define AUDIO_BUFFER_LENGTH_GB (AUDIO_SAMPLE_RATE / 60)
-#define AUDIO_BUFFER_LENGTH_DMA_GB ((2 * AUDIO_SAMPLE_RATE) / 60)
 static int16_t *audiobuffer_emulator;
 
 static odroid_video_frame_t update1 = {GB_WIDTH, GB_HEIGHT, GB_WIDTH * 2, 2, 0xFF, -1, NULL, NULL, 0, {}};
@@ -42,12 +41,6 @@ static int  saveSRAM_Timer = 0;
 static uint8_t gb_framebuffer[GB_WIDTH*GB_HEIGHT*sizeof(uint16_t)];
 
 // --- MAIN
-
-
-static void netplay_callback(netplay_event_t event, void *arg)
-{
-    // Where we're going we don't need netplay!
-}
 
 #define WIDTH 320
 
@@ -493,26 +486,25 @@ static bool advanced_settings_cb(odroid_dialog_choice_t *option, odroid_dialog_e
 }*/
 
 void pcm_submit() {
-    uint8_t volume = odroid_audio_volume_get();
-    int32_t factor = volume_tbl[volume];
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_BUFFER_LENGTH_GB;
+    if (common_emu_sound_loop_is_muted()) {
+        return;
+    }
 
-    if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_GB; i++) {
-            audiobuffer_dma[i + offset] = 0;
-        }
-    } else {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_GB; i++) {
-            int32_t sample = pcm.buf[i];
-            audiobuffer_dma[i + offset] = (sample * factor) >> 8;
-        }
+    int32_t factor = common_emu_sound_get_volume();
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
+
+    // Write to sound buffer and lower the volume accordingly
+    for (int i = 0; i < sound_buffer_length; i++) {
+        int32_t sample = pcm.buf[i];
+        sound_buffer[i] = (sample * factor) >> 8;
     }
 }
 
 rg_app_desc_t * init(uint8_t load_state, uint8_t save_slot)
 {
     odroid_system_init(APPID_GB, AUDIO_SAMPLE_RATE);
-    odroid_system_emu_init(&LoadState, &SaveState, &netplay_callback);
+    odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     // bzhxx : fix LCD glitch at the start by cleaning up the buffer emulator
     memset(gb_framebuffer, 0x0, sizeof(gb_framebuffer));
@@ -531,8 +523,7 @@ rg_app_desc_t * init(uint8_t load_state, uint8_t save_slot)
     memset(&rtc, 0, sizeof(rtc));
 
     // Video
-    memset(framebuffer1, 0, sizeof(framebuffer1));
-    memset(framebuffer2, 0, sizeof(framebuffer2));
+    lcd_clear_buffers();
     memset(&fb, 0, sizeof(fb));
     fb.w = GB_WIDTH;
     fb.h = GB_HEIGHT;
@@ -551,8 +542,7 @@ rg_app_desc_t * init(uint8_t load_state, uint8_t save_slot)
     pcm.buf = (n16*)audiobuffer_emulator;
     pcm.pos = 0;
 
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_GB);
+    audio_start_playing(AUDIO_BUFFER_LENGTH_GB);
 
     rg_app_desc_t *app = odroid_system_get_app();
 
@@ -592,9 +582,8 @@ void app_main_gb(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     {
         wdog_refresh();
 
-        odroid_input_read_gamepad(&joystick);
-
         bool drawFrame = common_emu_frame_loop();
+
         char palette_values[16];
         snprintf(palette_values, sizeof(palette_values), "%s", "7/7");
         odroid_dialog_choice_t options[] = {
@@ -602,16 +591,10 @@ void app_main_gb(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
             // {301, "More...", "", 1, &advanced_settings_cb},
             ODROID_DIALOG_CHOICE_LAST
         };
-        common_emu_input_loop(&joystick, options, &blit);
 
-        uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
-        bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
-        bool turbo_b = (joystick.values[ODROID_INPUT_B] && (turbo_buttons & 2));
-        bool turbo_button = odroid_button_turbos();
-        if (turbo_a)
-            joystick.values[ODROID_INPUT_A] = turbo_button;
-        if (turbo_b)
-            joystick.values[ODROID_INPUT_B] = !turbo_button;
+        odroid_input_read_gamepad(&joystick);
+        common_emu_input_loop(&joystick, options, &blit);
+        common_emu_input_loop_handle_turbo(&joystick);
 
         pad_set(PAD_UP, joystick.values[ODROID_INPUT_UP]);
         pad_set(PAD_RIGHT, joystick.values[ODROID_INPUT_RIGHT]);
@@ -639,18 +622,7 @@ void app_main_gb(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
             }
         }
 
-        if(!common_emu_state.skip_frames)
-        {
-            // odroid_audio_submit(pcm.buf, pcm.pos >> 1);
-            // handled in pcm_submit instead.
-            static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
-            for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
-                while (dma_state == last_dma_state) {
-                    cpumon_sleep();
-                }
-                last_dma_state = dma_state;
-            }
-        }
+        common_emu_sound_sync(false);
     }
 }
 

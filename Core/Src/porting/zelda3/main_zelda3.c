@@ -52,9 +52,8 @@ static uint32 renderedFrameCtr = 0;
 #define FRAMERATE 60
 #endif /* LIMIT_30FPS */
 #define ZELDA3_AUDIO_BUFFER_LENGTH 534  // When limited to 30 fps, audio is generated for two frames at once
-#define ZELDA3_AUDIO_BUFFER_LENGTH_DMA (2 * ZELDA3_AUDIO_BUFFER_LENGTH) // DMA buffer contains 2 frames worth of audio samples in a ring buffer
 
-int16_t audiobuffer_zelda3[ZELDA3_AUDIO_BUFFER_LENGTH];  // FIXME use audioBuffer from common.h instead???
+int16_t audiobuffer_zelda3[ZELDA3_AUDIO_BUFFER_LENGTH];
 
 uint8_t savestateBuffer[4096];
 uint16_t bufferCount = 0;
@@ -188,15 +187,11 @@ static void HandleCommand(uint32 j, bool pressed) {
 
   if (j == kKeys_Load) {
     // Mute
-    for (int i = 0; i < ZELDA3_AUDIO_BUFFER_LENGTH_DMA; i++) {
-        audiobuffer_dma[i] = 0;
-    }
+    audio_clear_buffers();
     SaveLoadSlot(kSaveLoad_Load, save_address);
   } else if (j == kKeys_Save) {
     // Mute
-    for (int i = 0; i < ZELDA3_AUDIO_BUFFER_LENGTH_DMA; i++) {
-        audiobuffer_dma[i] = 0;
-    }
+    audio_clear_buffers();
     SaveLoadSlot(kSaveLoad_Save, save_address);
   }
 }
@@ -278,25 +273,21 @@ void writeSramImpl(uint8_t* sram) {
 static void zelda3_sound_start()
 {
   memset(audiobuffer_zelda3, 0, sizeof(audiobuffer_zelda3));
-  memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-  HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, ZELDA3_AUDIO_BUFFER_LENGTH_DMA);
+  audio_start_playing(ZELDA3_AUDIO_BUFFER_LENGTH);
 }
 
 static void zelda3_sound_submit() {
-  uint8_t volume = odroid_audio_volume_get();
-  int16_t factor = volume_tbl[volume];
+  if (common_emu_sound_loop_is_muted()) {
+    return;
+  }
 
-  size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : ZELDA3_AUDIO_BUFFER_LENGTH;
+  int16_t factor = common_emu_sound_get_volume();
+  int16_t* sound_buffer = audio_get_active_buffer();
+  uint16_t sound_buffer_length = audio_get_buffer_length();
 
-  if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-    for (int i = 0; i < ZELDA3_AUDIO_BUFFER_LENGTH; i++) {
-      audiobuffer_dma[i + offset] = 0;
-    }
-  } else {
-    for (int i = 0; i < ZELDA3_AUDIO_BUFFER_LENGTH; i++) {
-      int32_t sample = audiobuffer_zelda3[i];
-      audiobuffer_dma[i + offset] = (sample * factor) >> 8;
-    }
+  for (int i = 0; i < sound_buffer_length; i++) {
+    int32_t sample = audiobuffer_zelda3[i];
+    sound_buffer[i] = (sample * factor) >> 8;
   }
 }
 
@@ -324,8 +315,7 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
   common_emu_state.frame_time_10us = (uint16_t)(100000 / FRAMERATE + 0.5f);
 
   /* clear the screen before rendering */
-  memset(lcd_get_inactive_buffer(), 0, 320 * 240 * 2);
-  memset(lcd_get_active_buffer(), 0, 320 * 240 * 2);
+  lcd_clear_buffers();
   
   unsigned short *screen = 0;
   screen = lcd_get_active_buffer();
@@ -491,17 +481,7 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
       renderedFrameCtr++;
     }
 
-    if(!common_emu_state.skip_frames)
-    {
-        static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
-        for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
-            while (dma_state == last_dma_state) {
-                cpumon_sleep();
-            }
-            last_dma_state = dma_state;
-        }
-    }
-
+    common_emu_sound_sync(false);
   }
 
 }

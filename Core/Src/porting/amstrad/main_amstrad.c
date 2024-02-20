@@ -218,8 +218,10 @@ int amstrad_button_select_key = CPC_RETURN;
 
 static char game_button_name[10];
 static char time_button_name[10];
+#if GNW_TARGET_ZELDA != 0
 static char start_button_name[10];
 static char select_button_name[10];
+#endif
 static char a_button_name[10];
 static char b_button_name[10];
 
@@ -245,7 +247,8 @@ static const uint8_t IMG_DISKETTE[] = {
 };
 
 static bool auto_key = false;
-static int16_t soundBuffer[AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS];
+#define AUDIO_BUFFER_LENGTH_AM (AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS)
+static int16_t soundBuffer[AUDIO_BUFFER_LENGTH_AM];
 extern void amstrad_set_volume(uint8_t volume);
 static const uint8_t volume_table[ODROID_AUDIO_VOLUME_MAX + 1] = {
     0,
@@ -453,6 +456,7 @@ static bool update_time_button_cb(odroid_dialog_choice_t *option, odroid_dialog_
     return event == ODROID_DIALOG_ENTER;
 }
 
+#if GNW_TARGET_ZELDA != 0
 static bool update_start_button_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
     int max_index = sizeof(amstrad_keyboard) / sizeof(amstrad_keyboard[0]) - 1;
@@ -502,6 +506,7 @@ static bool update_select_button_cb(odroid_dialog_choice_t *option, odroid_dialo
     strcpy(option->value, amstrad_keyboard[amstrad_button_key_index].name);
     return event == ODROID_DIALOG_ENTER;
 }
+#endif
 
 static bool update_a_button_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
@@ -957,8 +962,7 @@ void amstrad_pcm_submit()
     // update sound volume in emulator
     amstrad_set_volume(volume_table[odroid_audio_volume_get()]);
 
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS;
-    memcpy(&audiobuffer_dma[offset],soundBuffer,2 * AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS);
+    memcpy(audio_get_active_buffer(), soundBuffer, audio_get_buffer_size());
 }
 
 bool amstrad_is_cpm;
@@ -1040,7 +1044,6 @@ void _blit()
 
 void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
 {
-    static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
     odroid_gamepad_state_t joystick;
     odroid_dialog_choice_t options[11];
     int disk_load_result = 0;
@@ -1082,18 +1085,16 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
     common_emu_state.frame_time_10us = (uint16_t)(100000 / AMSTRAD_FPS + 0.5f);
     lcd_set_refresh_rate(AMSTRAD_FPS);
 
-    memset(framebuffer1, 0, sizeof(framebuffer1));
-    memset(framebuffer2, 0, sizeof(framebuffer2));
+    lcd_clear_buffers();
 
     odroid_system_init(APPID_AMSTRAD, AMSTRAD_SAMPLE_RATE);
     odroid_system_emu_init(&amstrad_system_loadState, &amstrad_system_saveState, NULL);
 
     // Init Sound
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS * 2);
+    audio_start_playing(AUDIO_BUFFER_LENGTH_AM);
 
     capmain(0, NULL);
-    amstrad_set_audio_buffer((int8_t *)soundBuffer, AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS * 2);
+    amstrad_set_audio_buffer((int8_t *)soundBuffer, sizeof(soundBuffer));
 
     if (0 == strcmp(ACTIVE_FILE->ext, AMSTRAD_DISK_EXTENSION))
     {
@@ -1144,38 +1145,22 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
         if (auto_key) {
             autorun_command();
         } else {
-
-            uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
-            bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
-            bool turbo_b = (joystick.values[ODROID_INPUT_B] && (turbo_buttons & 2));
-            bool turbo_button = odroid_button_turbos();
-            if (turbo_a)
-                joystick.values[ODROID_INPUT_A] = turbo_button;
-            if (turbo_b)
-                joystick.values[ODROID_INPUT_B] = !turbo_button;
+            common_emu_input_loop_handle_turbo(&joystick);
 
             amstrad_input_update(&joystick);
         }
 
         caprice_retro_loop();
+
         if (drawFrame) {
             _blit();
             lcd_swap();
         }
-        amstrad_pcm_submit();
-        amstrad_set_audio_buffer((int8_t *)soundBuffer, AMSTRAD_SAMPLE_RATE / AMSTRAD_FPS * 2);
 
-        if (!common_emu_state.skip_frames)
-        {
-            for (uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++)
-            {
-                while (dma_state == last_dma_state)
-                {
-                    cpumon_sleep();
-                }
-                last_dma_state = dma_state;
-            }
-        }
+        amstrad_pcm_submit();
+        amstrad_set_audio_buffer((int8_t *)soundBuffer, sizeof(soundBuffer));
+
+        common_emu_sound_sync(false);
     }
 }
 #endif

@@ -32,7 +32,6 @@
 #define PAL_SHIFT_MASK 0x80
 
 #define AUDIO_BUFFER_LENGTH_SMS (AUDIO_SAMPLE_RATE / 60)
-#define AUDIO_BUFFER_LENGTH_DMA_SMS ((2 * AUDIO_SAMPLE_RATE) / 60)
 
 static uint16_t palette[32];
 static uint32_t palette_spaced[32];
@@ -107,7 +106,7 @@ load_rom_from_flash(uint8_t emu_engine)
             {
                 wdog_refresh();
                 memcpy(&lzma_bank_size, &ROM_DATA[8 + 4 * i], sizeof(lzma_bank_size));
-                memset((uint8 *)lcd_get_inactive_buffer(),0x0,320*240*2);
+                lcd_clear_inactive_buffer();
 
                 uint16_t *dest = lcd_get_inactive_buffer();
 
@@ -190,11 +189,6 @@ load_rom_from_flash(uint8_t emu_engine)
         coleco.rom = (uint8*)ColecoVision_BIOS;
     }
     return 1;
-}
-
-static void netplay_callback(netplay_event_t event, void *arg)
-{
-    // Where we're going we don't need netplay!
 }
 
 extern uint32 glob_bp_lut[0x10000];
@@ -345,19 +339,18 @@ blit_sms(bitmap_t *bmp, uint16_t *framebuffer) {	/* 256 x 192 -> 320 x 230 */
 }
 
 void sms_pcm_submit() {
-    uint8_t volume = odroid_audio_volume_get();
-    int32_t factor = volume_tbl[volume] / 2; // Divide by 2 to prevent overflow in stereo mixing
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_BUFFER_LENGTH_SMS;
-    if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_SMS; i++) {
-            audiobuffer_dma[i + offset] = 0;
-        }
-    } else {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_SMS; i++) {
-            /* mix left & right */
-            int32_t sample = (sms_snd.output[0][i] + sms_snd.output[1][i]);
-            audiobuffer_dma[i + offset] = (sample * factor) >> 8;
-        }
+    if (common_emu_sound_loop_is_muted()) {
+        return;
+    }
+
+    int32_t factor = common_emu_sound_get_volume() / 2; // Divide by 2 to prevent overflow in stereo mixing
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
+
+    for (int i = 0; i < sound_buffer_length; i++) {
+        /* mix left & right */
+        int32_t sample = (sms_snd.output[0][i] + sms_snd.output[1][i]);
+        sound_buffer[i] = (sample * factor) >> 8;
     }
 }
 
@@ -459,7 +452,7 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, 
     }
 
     odroid_system_init(APPID_SMS, AUDIO_SAMPLE_RATE);
-    odroid_system_emu_init(&LoadState, &SaveState, &netplay_callback);
+    odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     system_reset_config();
     load_rom_from_flash( is_coleco );
@@ -487,8 +480,7 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, 
     system_init2();
     system_reset();
 
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_DMA_SMS);
+    audio_start_playing(AUDIO_BUFFER_LENGTH_SMS);
 
     consoleIsSMS = sms.console == CONSOLE_SMS || sms.console == CONSOLE_SMS2;
     consoleIsGG  = sms.console == CONSOLE_GG || sms.console == CONSOLE_GGMS;
@@ -503,8 +495,7 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, 
     }
 
     // Video
-    memset(framebuffer1, 0, sizeof(framebuffer1));
-    memset(framebuffer2, 0, sizeof(framebuffer2));
+    lcd_clear_buffers();
 
     if (load_state) {
 #if OFF_SAVESTATE==1
@@ -519,26 +510,19 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, 
 #endif
     }
 
+    odroid_gamepad_state_t joystick;
+    odroid_dialog_choice_t options[] = {
+            ODROID_DIALOG_CHOICE_LAST
+    };
     while (true)
     {
         wdog_refresh();
 
-        odroid_gamepad_state_t joystick;
-        odroid_input_read_gamepad(&joystick);
-        odroid_dialog_choice_t options[] = {
-            ODROID_DIALOG_CHOICE_LAST
-        };
-        common_emu_input_loop(&joystick, options, &blit);
-
         bool drawFrame = common_emu_frame_loop();
-        uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
-        bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
-        bool turbo_b = (joystick.values[ODROID_INPUT_B] && (turbo_buttons & 2));
-        bool turbo_button = odroid_button_turbos();
-        if (turbo_a)
-            joystick.values[ODROID_INPUT_A] = turbo_button;
-        if (turbo_b)
-            joystick.values[ODROID_INPUT_B] = !turbo_button;
+
+        odroid_input_read_gamepad(&joystick);
+        common_emu_input_loop(&joystick, options, &blit);
+        common_emu_input_loop_handle_turbo(&joystick);
 
         sms_update_keys( &joystick );
 
@@ -547,18 +531,10 @@ app_main_smsplusgx(uint8_t load_state, uint8_t start_paused, uint8_t save_slot, 
         if (drawFrame) {
             sms_draw_frame();
         }
+
         sms_pcm_submit();
 
-        if(!common_emu_state.skip_frames)
-        {
-            for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
-                static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
-                while (dma_state == last_dma_state) {
-                    cpumon_sleep();
-                }
-                last_dma_state = dma_state;
-            }
-        }
+        common_emu_sound_sync(false);
     }
 }
 

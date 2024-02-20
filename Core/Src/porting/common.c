@@ -13,7 +13,9 @@
 #include "bitmaps.h"
 #include "gw_buttons.h"
 #include "gw_lcd.h"
+#include "gw_audio.h"
 #include "gw_linker.h"
+#include "odroid_audio.h"
 #include "rg_i18n.h"
 
 #if ENABLE_SCREENSHOT
@@ -23,14 +25,6 @@ uint16_t framebuffer_capture[GW_LCD_WIDTH * GW_LCD_HEIGHT]  __attribute__((secti
 static void set_ingame_overlay(ingame_overlay_t type);
 
 cpumon_stats_t cpumon_stats = {0};
-
-uint32_t audio_mute;
-
-
-int16_t audiobuffer_dma[AUDIO_BUFFER_LENGTH * 2] __attribute__((section (".audio")));
-
-dma_transfer_state_t dma_state;
-uint32_t dma_counter;
 
 const uint8_t volume_tbl[ODROID_AUDIO_VOLUME_MAX + 1] = {
     (uint8_t)(UINT8_MAX * 0.00f),
@@ -45,19 +39,6 @@ const uint8_t volume_tbl[ODROID_AUDIO_VOLUME_MAX + 1] = {
     (uint8_t)(UINT8_MAX * 1.00f),
 };
 
-void HAL_SAI_TxHalfCpltCallback(SAI_HandleTypeDef *hsai)
-{
-    dma_counter++;
-    dma_state = DMA_TRANSFER_STATE_HF;
-}
-
-void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai)
-{
-    dma_counter++;
-    dma_state = DMA_TRANSFER_STATE_TC;
-}
-
-
 bool odroid_netplay_quick_start(void)
 {
     return true;
@@ -67,9 +48,7 @@ bool odroid_netplay_quick_start(void)
 void odroid_audio_mute(bool mute)
 {
     if (mute) {
-        for (int i = 0; i < sizeof(audiobuffer_dma) / sizeof(audiobuffer_dma[0]); i++) {
-            audiobuffer_dma[i] = 0;
-        }
+        audio_clear_buffers();
     }
 
     audio_mute = mute;
@@ -171,7 +150,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
             if (joystick->values[ODROID_INPUT_POWER]){
                 // Do NOT save-state and then poweroff
                 last_key = ODROID_INPUT_POWER;
-                HAL_SAI_DMAStop(&hsai_BlockA1);
+                audio_stop_playing();
                 odroid_system_sleep();
             }
             else if(joystick->values[ODROID_INPUT_START]){ // GAME button
@@ -312,12 +291,12 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
         lcd_sleep_while_swap_pending();
 
         // Clear the active screen buffer, caller must repaint it 
-        memset(lcd_get_active_buffer(), 0, sizeof(framebuffer1));
+        lcd_clear_active_buffer();
     }
 
     if (joystick->values[ODROID_INPUT_POWER]) {
         // Save-state and poweroff
-        HAL_SAI_DMAStop(&hsai_BlockA1);
+        audio_stop_playing();
 #if OFF_SAVESTATE==1
         app->saveState("1");
 #else
@@ -332,6 +311,76 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
             pause_pressed = true;
         }
     }
+}
+
+void common_emu_input_loop_handle_turbo(odroid_gamepad_state_t *joystick) {
+    uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
+    bool turbo_a = (joystick->values[ODROID_INPUT_A] && (turbo_buttons & 1));
+    bool turbo_b = (joystick->values[ODROID_INPUT_B] && (turbo_buttons & 2));
+    bool turbo_button = odroid_button_turbos();
+    if (turbo_a)
+        joystick->values[ODROID_INPUT_A] = turbo_button;
+    if (turbo_b)
+        joystick->values[ODROID_INPUT_B] = !turbo_button;
+}
+
+void common_emu_sound_sync(bool use_nops) {
+    if (!common_emu_state.skip_frames) {
+        static uint32_t last_dma_counter = 0;
+        if (last_dma_counter == 0) {
+            last_dma_counter = dma_counter;
+        }
+        for (uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
+            while (dma_counter == last_dma_counter) {
+                if (use_nops) {
+                    __NOP();
+                } else {
+                    cpumon_sleep();
+                }
+            }
+            last_dma_counter = dma_counter;
+        }
+    }
+}
+
+bool common_emu_sound_loop_is_muted() {
+    if (audio_mute || odroid_audio_volume_get() == ODROID_AUDIO_VOLUME_MIN) {
+        audio_clear_active_buffer();
+        return true;
+    }
+    return false;
+}
+
+uint8_t common_emu_sound_get_volume() {
+    return volume_tbl[odroid_audio_volume_get()];
+}
+
+/* DWT counter used to measure time execution */
+volatile unsigned int *DWT_CONTROL = (unsigned int *)0xE0001000;
+volatile unsigned int *DWT_CYCCNT = (unsigned int *)0xE0001004;
+volatile unsigned int *DEMCR = (unsigned int *)0xE000EDFC;
+volatile unsigned int *LAR = (unsigned int *)0xE0001FB0; // <-- lock access register
+
+void common_emu_enable_dwt_cycles()
+{
+    /* Use DWT cycle counter to get precision time elapsed during loop.
+       The DWT cycle counter is cleared on every loop.
+       It may crash if the DWT is used during trace profiling */
+
+    *DEMCR = *DEMCR | 0x01000000;    // enable trace
+    *LAR = 0xC5ACCE55;               // <-- added unlock access to DWT (ITM, etc.)registers
+    *DWT_CYCCNT = 0;                 // clear DWT cycle counter
+    *DWT_CONTROL = *DWT_CONTROL | 1; // enable DWT cycle counter
+}
+
+inline __attribute__((always_inline))
+unsigned int common_emu_get_dwt_cycles() {
+    return *DWT_CYCCNT;
+}
+
+inline __attribute__((always_inline))
+void common_emu_clear_dwt_cycles() {
+    *DWT_CYCCNT = 0;
 }
 
 static void cpumon_common(bool sleep){
@@ -626,16 +675,6 @@ void common_ingame_overlay(void) {
 static void set_ingame_overlay(ingame_overlay_t type){
     common_emu_state.overlay = type;
     common_emu_state.last_overlay_time = get_elapsed_time();
-}
-
-bool common_sleep_while_lcd_swap_pending() {
-    bool pending = false;
-    while (lcd_is_swap_pending()) {
-        pending = true;
-        cpumon_sleep();
-    }
-
-    return pending;
 }
 
 #define OVERLAY_COLOR_565 0xFFFF

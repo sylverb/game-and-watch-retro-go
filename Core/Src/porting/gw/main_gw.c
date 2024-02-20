@@ -34,9 +34,6 @@
 
 #define ODROID_APPID_GW 6
 
-/* Audio buffer length */
-#define GW_AUDIO_BUFFER_LENGTH_DMA ((2 * GW_AUDIO_FREQ) / GW_REFRESH_RATE)
-
 /* keys inpus (hw & sw) */
 static odroid_gamepad_state_t joystick;
 static bool softkey_time_pressed = 0;
@@ -159,18 +156,12 @@ static void gw_sound_init()
     /* init emulator sound system with shared audio buffer */
     gw_system_sound_init();
 
-    /* clear DMA audio buffer */
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-
-    /* Start SAI DMA */
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, GW_AUDIO_BUFFER_LENGTH_DMA);
+    /* Start playing */
+    audio_start_playing(GW_AUDIO_BUFFER_LENGTH);
 }
 
 static void gw_sound_submit()
 {
-
-    uint8_t volume = odroid_audio_volume_get();
-    int16_t factor = volume_tbl[volume];
 
     /** Enables the following code to track audio rendering issues **/
     /*
@@ -185,21 +176,18 @@ static void gw_sound_submit()
     }
     */
 
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : GW_AUDIO_BUFFER_LENGTH;
-
-    if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN)
-    {
-        for (int i = 0; i < GW_AUDIO_BUFFER_LENGTH; i++)
-        {
-            audiobuffer_dma[i + offset] = 0;
-        }
+    if (common_emu_sound_loop_is_muted()) {
+        return;
     }
-    else
+
+    int16_t factor = common_emu_sound_get_volume();
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
+
+    // Write to sound buffer and lower the volume accordingly
+    for (int i = 0; i < sound_buffer_length; i++)
     {
-        for (int i = 0; i < GW_AUDIO_BUFFER_LENGTH; i++)
-        {
-            audiobuffer_dma[i + offset] = (factor) * (gw_audio_buffer[i] << 4);
-        }
+        sound_buffer[i] = (factor) * (gw_audio_buffer[i] << 4);
     }
 
     gw_audio_buffer_copied = true;
@@ -222,30 +210,6 @@ static void gw_sound_submit()
 
 static unsigned int loop_cycles = 1, end_cycles = 1, proc_cycles = 1, blit_cycles = 1;
 
-/* DWT counter used to measure time execution */
-volatile unsigned int *DWT_CONTROL = (unsigned int *)0xE0001000;
-volatile unsigned int *DWT_CYCCNT = (unsigned int *)0xE0001004;
-volatile unsigned int *DEMCR = (unsigned int *)0xE000EDFC;
-volatile unsigned int *LAR = (unsigned int *)0xE0001FB0; // <-- lock access register
-
-#define get_dwt_cycles() *DWT_CYCCNT
-#define clear_dwt_cycles() *DWT_CYCCNT = 0
-
-#ifdef GW_EMU_DEBUG_OVERLAY
-static void enable_dwt_cycles()
-{
-
-    /* Use DWT cycle counter to get precision time elapsed during loop.
-    The DWT cycle counter is cleared on every loop
-    it may crash if the DWT is used during trace profiling */
-
-    *DEMCR = *DEMCR | 0x01000000;    // enable trace
-    *LAR = 0xC5ACCE55;               // <-- added unlock access to DWT (ITM, etc.)registers
-    *DWT_CYCCNT = 0;                 // clear DWT cycle counter
-    *DWT_CONTROL = *DWT_CONTROL | 1; // enable DWT cycle counter
-}
-#endif
-
 static void gw_debug_bar()
 {
 
@@ -257,7 +221,7 @@ static void gw_debug_bar()
 
     if (!debug_init_done)
     {
-        enable_dwt_cycles();
+        common_emu_enable_dwt_cycles();
         debug_init_done = true;
     }
 
@@ -510,12 +474,10 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
     /*** Main emulator loop */
     printf("Main emulator loop start\n");
 
-    clear_dwt_cycles();
-
     while (true)
     {
         /* clear DWT counter used to monitor performances */
-        clear_dwt_cycles();
+        common_emu_clear_dwt_cycles();
 
         wdog_refresh();
 
@@ -553,7 +515,7 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
         gw_system_run(GW_SYSTEM_CYCLES);
 
         /* get how many cycles have been spent in the emulator */
-        proc_cycles = get_dwt_cycles();
+        proc_cycles = common_emu_get_dwt_cycles();
 
         /* update the screen only if there is no pending frame to render */
         if (!lcd_is_swap_pending() && drawFrame)
@@ -564,7 +526,7 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
             lcd_swap();
 
             /* get how many cycles have been spent in graphics rendering */
-            blit_cycles = get_dwt_cycles() - proc_cycles;
+            blit_cycles = common_emu_get_dwt_cycles() - proc_cycles;
         }
         /****************************************************************************/
 
@@ -575,27 +537,15 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
         }
 
         /* get how many cycles have been spent to process everything */
-        end_cycles = get_dwt_cycles();
+        end_cycles = common_emu_get_dwt_cycles();
 
-        if (!common_emu_state.skip_frames)
-        {
-            for (uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++)
-            {
-                static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
-                while (dma_state == last_dma_state)
-                {
 #ifdef GW_EMU_DEBUG_OVERLAY
-                    __NOP();
+        common_emu_sound_sync(true);
 #else
-                    cpumon_sleep();
+        common_emu_sound_sync(false);
 #endif
-                }
-                last_dma_state = dma_state;
-            }
-        }
-
         /* get how cycles have been spent inside this loop */
-        loop_cycles = get_dwt_cycles();
+        loop_cycles = common_emu_get_dwt_cycles();
 
     } // end of loop
 }

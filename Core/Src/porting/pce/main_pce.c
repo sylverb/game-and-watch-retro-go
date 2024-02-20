@@ -158,10 +158,6 @@ void osd_log(int type, const char *format, ...) {
     va_end(ap);
 }
 
-static void netplay_callback(netplay_event_t event, void *arg) {
-    // Where we're going we don't need netplay!
-}
-
 static bool SaveStateStm(char *pathName) {
     int pos=0;
     uint8_t *pce_save_buf = pce_framebuffer;
@@ -555,20 +551,20 @@ void pce_osd_gfx_blit() {
 }
 
 void pce_pcm_submit() {
-    uint8_t volume = odroid_audio_volume_get();
-    int32_t factor = volume_tbl[volume] / 2; // Divide by 2 to prevent overflow in stereo mixing
-    pce_snd_update(audioBuffer_pce, AUDIO_BUFFER_LENGTH_PCE );
-    size_t offset = (dma_state == DMA_TRANSFER_STATE_HF) ? 0 : AUDIO_BUFFER_LENGTH_PCE;
-    if (audio_mute || volume == ODROID_AUDIO_VOLUME_MIN) {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_PCE; i++) {
-            audiobuffer_dma[offset + i] = 0;
-        }
-    } else {
-        for (int i = 0; i < AUDIO_BUFFER_LENGTH_PCE; i++) {
-            /* mix left & right */
-            int32_t sample = (audioBuffer_pce[i*2] + audioBuffer_pce[i*2+1]);
-            audiobuffer_dma[offset + i] = (sample * factor) >> 8;
-        }
+    pce_snd_update(audioBuffer_pce, AUDIO_BUFFER_LENGTH_PCE);
+
+    if (common_emu_sound_loop_is_muted()) {
+        return;
+    }
+
+    int32_t factor = common_emu_sound_get_volume() / 2; // Divide by 2 to prevent overflow in stereo mixing
+    int16_t* sound_buffer = audio_get_active_buffer();
+    uint16_t sound_buffer_length = audio_get_buffer_length();
+
+    for (int i = 0; i < sound_buffer_length; i++) {
+        /* mix left & right */
+        int32_t sample = (audioBuffer_pce[i*2] + audioBuffer_pce[i*2+1]);
+        sound_buffer[i] = (sample * factor) >> 8;
     }
 }
 
@@ -582,22 +578,20 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, uint8_t save_slot) {
     }
 
     odroid_system_init(APPID_PCE, PCE_SAMPLE_RATE);
-    odroid_system_emu_init(&LoadStateStm, &SaveStateStm, &netplay_callback);
+    odroid_system_emu_init(&LoadStateStm, &SaveStateStm, NULL);
     pce_log[0]=0;
 
     // Init Graphics
     init_color_pals();
     const int refresh_rate = FPS_NTSC;
     sprintf(pce_log,"%d",refresh_rate);
-    memset(framebuffer1, 0, sizeof(framebuffer1));
-    memset(framebuffer2, 0, sizeof(framebuffer2));
+    lcd_clear_buffers();
 
     gfx_init();
     printf("Graphics initialized\n");
 
     // Init Sound
-    memset(audiobuffer_dma, 0, sizeof(audiobuffer_dma));
-    HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)audiobuffer_dma, AUDIO_BUFFER_LENGTH_PCE * 2 );
+    audio_start_playing(AUDIO_BUFFER_LENGTH_PCE);
     pce_snd_init();
     printf("Sound initialized\n");
 
@@ -644,24 +638,17 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, uint8_t save_slot) {
     // Main emulator loop
     printf("Main emulator loop start\n");
     odroid_gamepad_state_t joystick = {0};
-
+    odroid_dialog_choice_t options[] = {
+            ODROID_DIALOG_CHOICE_LAST
+    };
     while (true) {
         wdog_refresh();
-        bool drawFrame = common_emu_frame_loop();
-        odroid_input_read_gamepad(&joystick);
 
-        odroid_dialog_choice_t options[] = {
-            ODROID_DIALOG_CHOICE_LAST
-        };
+        bool drawFrame = common_emu_frame_loop();
+
+        odroid_input_read_gamepad(&joystick);
         common_emu_input_loop(&joystick, options, &blit);
-        uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
-        bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
-        bool turbo_b = (joystick.values[ODROID_INPUT_B] && (turbo_buttons & 2));
-        bool turbo_button = odroid_button_turbos();
-        if (turbo_a)
-            joystick.values[ODROID_INPUT_A] = turbo_button;
-        if (turbo_b)
-            joystick.values[ODROID_INPUT_B] = !turbo_button;
+        common_emu_input_loop_handle_turbo(&joystick);
 
         pce_input_read(&joystick);
 
@@ -672,17 +659,10 @@ int app_main_pce(uint8_t load_state, uint8_t start_paused, uint8_t save_slot) {
         if (drawFrame) {
             pce_osd_gfx_blit();
         }
+
         pce_pcm_submit();
 
-        if(!common_emu_state.skip_frames){
-            static dma_transfer_state_t last_dma_state = DMA_TRANSFER_STATE_HF;
-            for(uint8_t p = 0; p < common_emu_state.pause_frames + 1; p++) {
-                while (dma_state == last_dma_state) {
-                    cpumon_sleep();
-                }
-                last_dma_state = dma_state;
-            }
-        }
+        common_emu_sound_sync(false);
 
         // Prevent overflow
         PCE.Timer.cycles_counter -= Cycles;
