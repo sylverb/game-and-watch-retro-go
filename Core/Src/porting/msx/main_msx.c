@@ -1443,13 +1443,13 @@ static void insertGame() {
             msx_button_a_key = EC_SPACE;
             msx_button_b_key = EC_N;
 #if GNW_TARGET_MARIO != 0
-            msx_button_game_key = EC_F3; // Show Map
+            msx_button_game_key = EC_BKSPACE; // Show Map
             msx_button_time_key =  EC_F5; // Restart
 #else
             msx_button_game_key = EC_F2; // Show Password
             msx_button_time_key = EC_F5; // Restart
             msx_button_start_key = EC_F3; // Show Map
-            msx_button_select_key = EC_F5; // Restart
+            msx_button_select_key = EC_BKSPACE; // Cancel move
 #endif
         break;
         default:
