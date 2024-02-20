@@ -557,9 +557,9 @@ void app_main_videopac(uint8_t load_state, uint8_t start_paused, int8_t save_slo
     {
         wdog_refresh();
 
-        odroid_input_read_gamepad(&joystick);
-
         bool drawFrame = common_emu_frame_loop();
+
+        odroid_input_read_gamepad(&joystick);
         common_emu_input_loop(&joystick, options, &blit);
         common_emu_input_loop_handle_turbo(&joystick);
 

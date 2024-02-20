@@ -649,14 +649,17 @@ void app_main_celeste(uint8_t load_state, uint8_t start_paused, int8_t save_slot
     while (true)
     {
         buttons_state = 0;
-        wdog_refresh();
 	    screen->pixels = fb_celeste;
 
-        odroid_input_read_gamepad(&joystick);
+        wdog_refresh();
+
         bool drawFrame = common_emu_frame_loop();
+
         odroid_dialog_choice_t options[] = {
             ODROID_DIALOG_CHOICE_LAST
         };
+
+        odroid_input_read_gamepad(&joystick);
         common_emu_input_loop(&joystick, options, &blit);
 		common_emu_input_loop_handle_turbo(&joystick);
 
