@@ -561,15 +561,7 @@ void app_main_videopac(uint8_t load_state, uint8_t start_paused, int8_t save_slo
 
         bool drawFrame = common_emu_frame_loop();
         common_emu_input_loop(&joystick, options, &blit);
-
-        uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
-        bool turbo_a = (joystick.values[ODROID_INPUT_A] && (turbo_buttons & 1));
-        bool turbo_b = (joystick.values[ODROID_INPUT_B] && (turbo_buttons & 2));
-        bool turbo_button = odroid_button_turbos();
-        if (turbo_a)
-            joystick.values[ODROID_INPUT_A] = turbo_button;
-        if (turbo_b)
-            joystick.values[ODROID_INPUT_B] = !turbo_button;
+        common_emu_input_loop_handle_turbo(&joystick);
 
         videopac_input_update(&joystick);
 

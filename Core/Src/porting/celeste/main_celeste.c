@@ -658,6 +658,7 @@ void app_main_celeste(uint8_t load_state, uint8_t start_paused, int8_t save_slot
             ODROID_DIALOG_CHOICE_LAST
         };
         common_emu_input_loop(&joystick, options, &blit);
+		common_emu_input_loop_handle_turbo(&joystick);
 
         if (joystick.values[ODROID_INPUT_LEFT]) buttons_state |= (1<<0);
         if (joystick.values[ODROID_INPUT_RIGHT]) buttons_state |= (1<<1);

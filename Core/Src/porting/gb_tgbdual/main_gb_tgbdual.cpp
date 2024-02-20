@@ -518,6 +518,7 @@ void app_main_gb_tgbdual_cpp(uint8_t load_state, uint8_t start_paused, int8_t sa
         odroid_input_read_gamepad(&joystick);
 
         common_emu_input_loop(&joystick, options, &gb_process_blit);
+        common_emu_input_loop_handle_turbo(&joystick);
 
         for (int line = 0;line < 154; line++) {
             g_gb->run();
