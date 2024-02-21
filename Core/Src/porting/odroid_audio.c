@@ -1,7 +1,8 @@
-#include "odroid_system.h"
 #include "odroid_audio.h"
-#include "gw_audio.h"
 #include <assert.h>
+#include "gw_audio.h"
+#include "gw_multisync.h"
+#include "odroid_system.h"
 
 #include "stm32h7xx_hal.h"
 
@@ -169,16 +170,6 @@ static void set_audio_frequency(uint32_t frequency)
         PeriphClkInitStruct.PLL2.PLL2FRACN = 1;
     }
 
-    // keep PLL3 unchanged
-    PeriphClkInitStruct.PLL3.PLL3M = 4;
-    PeriphClkInitStruct.PLL3.PLL3N = 10; //9;
-    PeriphClkInitStruct.PLL3.PLL3P = 2;
-    PeriphClkInitStruct.PLL3.PLL3Q = 2;
-    PeriphClkInitStruct.PLL3.PLL3R = 32; //24;
-    PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_3;
-    PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
-    PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
-
     PeriphClkInitStruct.Sai1ClockSelection = RCC_SAI1CLKSOURCE_PLL2;
     PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
 
@@ -239,6 +230,8 @@ static void set_audio_frequency(uint32_t frequency)
 
     /* apply the new configuration */
     HAL_SAI_Init(&hsai_BlockA1);
+    HAL_SAI_RegisterCallback(&hsai_BlockA1, HAL_SAI_TX_HALFCOMPLETE_CB_ID, &multisync_SAI_TxHalfCpltCallback);
+    HAL_SAI_RegisterCallback(&hsai_BlockA1, HAL_SAI_TX_COMPLETE_CB_ID, &multisync_SAI_TxCpltCallback);
 }
 
 void odroid_audio_init(int sample_rate)

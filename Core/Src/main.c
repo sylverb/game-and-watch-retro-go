@@ -603,7 +603,7 @@ void SystemClock_Config(void)
   /*
     NORMAL : PLLM = 16 PLLN=140 PLLP=2 PLLQ=2 PLLR=2 Clock is ClockP >> 280MHz and OSPI 64MHz
     BOOST 1: PLLM = 16 PLLN=156 PLLP=2 PLLQ=6 PLLR=2 CLOCKPLL >> 312MHz CoreClock and OSPI 104MHz
-    BOOST 2: PLLM = 38 PLLN=420 PLLP=2 PLLQ=7 PLLR=2 CLOCKPLL >> 3..MHz CoreClock and OSPI 100MHz
+    BOOST 2: PLLM = 38 PLLN=420 PLLP=2 PLLQ=7 PLLR=2 CLOCKPLL >> 353MHz CoreClock and OSPI 100MHz
     CoreClock= HSI/PLLM x PLLN/PLLP
     OSPIClock= HSI/PLLM x PLLN/PLLQ
   */
@@ -669,14 +669,17 @@ void SystemClock_Config(void)
   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
   PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+
+  /* 60 Hz, see gw_lcd.c */
   PeriphClkInitStruct.PLL3.PLL3M = 4;
-  PeriphClkInitStruct.PLL3.PLL3N = 9;
+  PeriphClkInitStruct.PLL3.PLL3N = 10;
   PeriphClkInitStruct.PLL3.PLL3P = 2;
   PeriphClkInitStruct.PLL3.PLL3Q = 2;
-  PeriphClkInitStruct.PLL3.PLL3R = 24;
+  PeriphClkInitStruct.PLL3.PLL3R = 28;
   PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_3;
   PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
-  PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
+  PeriphClkInitStruct.PLL3.PLL3FRACN = 4096;
+
   if (oc_level == 0)  //// No overclocking
     PeriphClkInitStruct.OspiClockSelection = RCC_OSPICLKSOURCE_CLKP;
   else
@@ -1096,6 +1099,7 @@ static void MX_SAI1_Init(void)
   hsai_BlockA1.Init.MonoStereoMode = SAI_MONOMODE;
   hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
   hsai_BlockA1.Init.TriState = SAI_OUTPUT_NOTRELEASED;
+
   if (HAL_SAI_InitProtocol(&hsai_BlockA1, SAI_I2S_STANDARD, SAI_PROTOCOL_DATASIZE_16BIT, 2) != HAL_OK)
   {
     Error_Handler();

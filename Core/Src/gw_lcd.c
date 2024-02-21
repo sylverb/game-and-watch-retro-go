@@ -242,14 +242,24 @@ void lcd_set_dithering(uint32_t enable) {
 
 /* set display refresh rate 50Hz or 60Hz  */
 void lcd_set_refresh_rate(uint32_t frequency) {
-  uint32_t plln = 9, pllr = 24;
+  // All values have been chosen to ensure:
+  // * The fraction is centered to allow for the multisync PID to change it at runtime
+  // * The frequency between the 0 and 8191 fraction was sufficient to allow for a +-4% tolerance
+  // * Even the worst PLL error in the sound frequency would still be within this tolerance
+  // * The universe is fine-tuned
+
+  // Target clock can be calculated using (hltdc.Init.TotalWidth + 1) * (hltdc.Init.TotalHeight + 1) * RefreshRate
+
+  uint32_t plln, pllr;
   if (frequency == 60) {
-    plln = 9;
-    pllr = 24;
+    // 6 MHz pixel clock (real target is 6,036,480 Hz)
+    plln = 10;
+    pllr = 28;
   }
   else if (frequency == 50) {
-    plln = 10;
-    pllr = 32;
+    // 5 MHz pixel clock (real target is 5,030,400 Hz)
+    plln = 12;
+    pllr = 40;
   } else {
     //  printf("wrong lcd refresh rate; 50Hz or 60Hz only\n");
     //  assert(0);
@@ -269,7 +279,7 @@ void lcd_set_refresh_rate(uint32_t frequency) {
   PeriphClkInitStruct.PLL3.PLL3R = pllr;
   PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_3;
   PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
-  PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
+  PeriphClkInitStruct.PLL3.PLL3FRACN = 4096;
 
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
     Error_Handler();
