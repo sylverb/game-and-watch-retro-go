@@ -118,7 +118,6 @@ bool common_emu_frame_loop(void){
     if(frame_integrator > frame_time_10us << 1) common_emu_state.skip_frames = 2;
     else if(frame_integrator > frame_time_10us) common_emu_state.skip_frames = 1;
     else if(frame_integrator < -frame_time_10us) common_emu_state.pause_frames = 1;
-    printf("frame_integrator %ld\n", frame_integrator);
     common_emu_state.skipped_frames += common_emu_state.skip_frames;
 
     return draw_frame;

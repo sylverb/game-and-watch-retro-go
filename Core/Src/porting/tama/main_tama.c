@@ -19,15 +19,13 @@
 #include "tamalib.h"
 
 // TODO: BUG: Fast save and reload gives CRC error on reload
-// TODO: BUG: Fix set audio changes lcd refresh rate to 50 and also search order of init and set audio calls in all emulators
+// TODO: BUG Save by power off generates CRC or header error upon restore if using SHARED_HIBERNATE_SAVESTATE=1
 // TODO: BUG: The LCD flickers a bit at the bottom as the LCD refresh rate is a bit slower than the sound and since we get active buffer and clears it with memset causing it to write to inactive buffer during swap ever 2,x sec
 // TODO: WISH: add GW rtc -> Tamagotchi rtc (for P1 rom only, not test rom. Might use CRC32 rom value check to enable feature)
-// TODO: WISH: mb a cpu_reset menu option ???
-// TODO: WISH: Tone icons down if not on ???
-// TODO: BUG Save by power off generates CRC or header error upon restore if using SHARED_HIBERNATE_SAVESTATE=1
-// TODO: BUG it seems like odroid_system_emu_init will restore sound/volume setting upon every reloading ??
-// TODO: Add a way to cancel FF
-// TODO: Add bg/fg color option (and remember color of fast forward has to match ???)
+// TODO: FEATURE: A power off/on during FF will cancel it (Its not a bug but a feature)
+// TODO: Small sound tick if going from mute to unmute by turning vol up in a new game
+// TODO: Sometimes vol is different than system vol after starting new
+// TODO: Think about resetting the frame integrator after every menu enter->exit in every emulator
 
 /**
  * This is the Tamagotchi P1 emulator.
@@ -73,12 +71,13 @@ static uint8_t current_half_period;
 static int16_t sample_high;
 static int16_t sample_low;
 static uint8_t period_index;
+static u64_t frame_start_tick_counter = 0;
 
 static unsigned int emu_cycles, blit_cycles, audio_cycles, loop_cycles;
 
 // ************* Game rom loading *************
 
-void load_rom() {
+static void load_rom() {
     /* Load and convert rom */
     for (int i = 0; i < ROM_DATA_LENGTH / 2; i++) {
         tama_rom[i] = ROM_DATA[i * 2 + 1] | ((ROM_DATA[i * 2] & 0xF) << 8);
@@ -157,7 +156,10 @@ static void hal_set_sound_period(uint8_t period) {
 }
 
 static void hal_play_sound(bool_t en) {
-    tama_audio[*state->tick_counter % TAMA_CLOCKS_PER_FRAME] = en ? tama_sound_period : 0; // TODO: Fix me!
+    u64_t index = *state->tick_counter - frame_start_tick_counter;
+    if (index < sizeof(tama_audio)) { // Discard Fast-forward clock indexes
+        tama_audio[index] = en ? tama_sound_period : 0;
+    }
 }
 
 static void hal_halt() {
@@ -212,7 +214,7 @@ static void blit() {
 
 // ************* Sound generator *************
 
-void init_audio_generator() {
+static void init_audio_generator() {
     current_period = 0;
     current_half_period = 0;
     sample_high = 0;
@@ -220,7 +222,7 @@ void init_audio_generator() {
     period_index = 0;
 }
 
-void submit_audio() {
+static void submit_audio() {
     // Clear active sound buffer if muted
     if (common_emu_sound_loop_is_muted()) {
         return;
@@ -262,7 +264,7 @@ void submit_audio() {
 
 // ************* GW buttons -> Tamalib HAL *************
 
-void update_buttons(odroid_gamepad_state_t *joystick) {
+static void update_buttons(odroid_gamepad_state_t *joystick) {
     tamalib_set_button(BTN_LEFT, joystick->values[ODROID_INPUT_LEFT] || joystick->values[ODROID_INPUT_RIGHT] || joystick->values[ODROID_INPUT_UP] || joystick->values[ODROID_INPUT_DOWN] ? BTN_STATE_PRESSED : BTN_STATE_RELEASED);
     tamalib_set_button(BTN_MIDDLE, joystick->values[ODROID_INPUT_B] || joystick->values[ODROID_INPUT_Y] ? BTN_STATE_PRESSED : BTN_STATE_RELEASED);
     tamalib_set_button(BTN_RIGHT, joystick->values[ODROID_INPUT_A] || joystick->values[ODROID_INPUT_X] ? BTN_STATE_PRESSED : BTN_STATE_RELEASED);
@@ -270,20 +272,23 @@ void update_buttons(odroid_gamepad_state_t *joystick) {
 
 // ************* Frame clock calculation *************
 
-void emulate_next_frame(bool *fast_forward_ptr, u64_t *total_fast_forward_clocks_ptr) {
+static void emulate_next_frame(bool *fast_forward_ptr, u64_t *total_fast_forward_clocks_ptr) {
+    frame_start_tick_counter = *state->tick_counter;
     uint64_t target = 0;
     if (*fast_forward_ptr) {
         uint64_t target_fast_forward_clocks = (GW_GetCurrentMillis() - *state->save_time) * TAMA_CLOCK_RATE / 1000;
-        if (*total_fast_forward_clocks_ptr >= target_fast_forward_clocks) {
-            *fast_forward_ptr = false;
-        } else {
+        if (*total_fast_forward_clocks_ptr < target_fast_forward_clocks) {
             uint64_t delta = MIN(target_fast_forward_clocks - *total_fast_forward_clocks_ptr, TAMA_CLOCKS_PER_FRAME * TAMA_FRAME_RATE * 50); // This gives around 300 x speed
-            if (delta < TAMA_CLOCKS_PER_FRAME) {
+            if (delta > TAMA_CLOCKS_PER_FRAME) {
+                *total_fast_forward_clocks_ptr += delta;
+                target = *state->tick_counter + delta;
+            } else {
                 *fast_forward_ptr = false;
+                common_emu_frame_loop_reset();
             }
-
-            *total_fast_forward_clocks_ptr += delta;
-            target = *state->tick_counter + delta;
+        } else {
+            *fast_forward_ptr = false;
+            common_emu_frame_loop_reset();
         }
     }
 
@@ -296,7 +301,7 @@ void emulate_next_frame(bool *fast_forward_ptr, u64_t *total_fast_forward_clocks
         tamalib_step();
     }
 
-    // Blink F.F in upper left conor while in fast forward mode
+    // Blink F.F in upper left corner while in fast forward mode
     if (*fast_forward_ptr && (GW_GetCurrentSubSeconds() > 127)) {
         for (uint8_t i = 0; i < 2; i++) {
             hal_set_lcd_matrix(1 + (i * 4), 0, 0x11);
@@ -313,8 +318,8 @@ void emulate_next_frame(bool *fast_forward_ptr, u64_t *total_fast_forward_clocks
 }
 
 // ************* Initialization and main game loop *************
-
-void main_tama(uint8_t start_paused) {
+static bool odroid_system_initialized = false;
+static void main_tama(uint8_t start_paused) {
     odroid_gamepad_state_t joystick;
 
     /* Initialize internal buffers */
@@ -324,7 +329,10 @@ void main_tama(uint8_t start_paused) {
     memset(tama_audio, -1, sizeof(tama_audio));
 
     /* Initialize odroid system */
-    odroid_system_init(APPID_TAMA, TAMA_SAMPLE_RATE);
+    if (!odroid_system_initialized) {
+        odroid_system_init(APPID_TAMA, TAMA_SAMPLE_RATE);
+        odroid_system_initialized = true;
+    }
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
 
     /* Initialize LCD */
