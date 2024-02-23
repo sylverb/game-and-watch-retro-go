@@ -71,6 +71,9 @@ static bool SaveState(char *savePathName, char *sramPathName)
     file = fs_open(savePathName, FS_WRITE, FS_COMPRESS);
     fs_write(file, data, size);
     fs_close(file);
+
+    lcd_clear_active_buffer();
+
     return true;
 }
 
@@ -87,6 +90,9 @@ static bool LoadState(char *savePathName, char *sramPathName)
 
     if (strcmp((const char *)&(data[34]),g_gb->get_rom()->get_info()->cart_name) == 0)
         g_gb->restore_state_mem((void *)data);
+
+    lcd_clear_active_buffer();
+
     return true;
 }
 
@@ -466,6 +472,8 @@ void app_main_gb_tgbdual_cpp(uint8_t load_state, uint8_t start_paused, int8_t sa
 
     odroid_system_init(APPID_GB, GB_AUDIO_FREQUENCY);
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
+
+    lcd_clear_buffers();
 
     // To optimize free memory for bank caching, we make sure that maximum
     // data will be set in itc ram. If RAM size info tell that we need
