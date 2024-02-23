@@ -56,7 +56,7 @@ static retro_emulator_file_t *CHOSEN_FILE = NULL;
 static uint16_t overlay_buffer[ODROID_SCREEN_WIDTH * 32 * 2] __attribute__((aligned(4)));
 static short font_size = 8;
 
-#define MAX_OPTIONS_COUNT 17
+#define MAX_OPTIONS_COUNT 18
 
 void odroid_overlay_init()
 {
