@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+#define BOOT_MODE_APP      0
+#define BOOT_MODE_WARM     1
+
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h7xx_hal.h"
 

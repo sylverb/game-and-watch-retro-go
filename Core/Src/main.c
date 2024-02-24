@@ -82,9 +82,6 @@ WWDG_HandleTypeDef hwwdg1;
 
 /* USER CODE BEGIN PV */
 
-#define BOOT_MODE_APP      0
-#define BOOT_MODE_WARM     1
-
 PERSISTENT(boot_magic) volatile uint32_t boot_magic;
 PERSISTENT(oc_level) volatile uint32_t oc_level;
 uint32_t log_idx PERSISTENT(log_idx);

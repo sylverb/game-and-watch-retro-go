@@ -816,14 +816,6 @@ void app_main(uint8_t boot_mode)
 {
     lcd_set_buffers(framebuffer1, framebuffer2);
     odroid_system_init(ODROID_APPID_LAUNCHER, 32000);
-    uint8_t oc = odroid_settings_cpu_oc_level_get();
-    if (oc != oc_level_get())
-    {
-        //reboot to oc level;
-        oc_level_set(oc);
-        boot_magic_set(BOOT_MAGIC_STANDBY);
-        odroid_system_switch_app(9);
-    }    
     odroid_overlay_draw_fill_rect(0, 0, ODROID_SCREEN_WIDTH, ODROID_SCREEN_HEIGHT, curr_colors->bg_c);
 
     //check data;
@@ -832,13 +824,21 @@ void app_main(uint8_t boot_mode)
     fs_init();
     // Re-initialize system now that the filesystem is mounted.
     odroid_system_init(ODROID_APPID_LAUNCHER, 32000);
+    uint8_t oc = odroid_settings_cpu_oc_level_get();
+    if (oc != oc_level_get())
+    {
+        //reboot to oc level;
+        oc_level_set(oc);
+        boot_magic_set(BOOT_MAGIC_STANDBY);
+        odroid_system_switch_app(9);
+    }
 
     emulators_init();
 
     app_logo();
 
 #if DISABLE_SPLASH_SCREEN == 0
-    if (boot_mode != 2)
+    if (boot_mode != BOOT_MODE_WARM)
         app_start_logo();
 #endif
 
