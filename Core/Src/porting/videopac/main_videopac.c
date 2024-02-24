@@ -63,7 +63,7 @@ static void blit() {
 
 static bool SaveState(char *savePathName, char *sramPathName)
 {
-    uint8_t *save_buffer = (uint8_t *)lcd_get_inactive_buffer();
+    uint8_t *save_buffer = (uint8_t *)lcd_get_active_buffer();
     size_t save_size = savestate_size();
 
     savestate_to_mem(save_buffer, save_size);
@@ -78,7 +78,7 @@ static bool SaveState(char *savePathName, char *sramPathName)
 
 static bool LoadState(char *savePathName, char *sramPathName)
 {
-    uint8_t *save_buffer = (uint8_t *)lcd_get_inactive_buffer();
+    uint8_t *save_buffer = (uint8_t *)lcd_get_active_buffer();
     size_t save_size = savestate_size();
     fs_file_t *file;
     file = fs_open(savePathName, FS_READ, FS_COMPRESS);
