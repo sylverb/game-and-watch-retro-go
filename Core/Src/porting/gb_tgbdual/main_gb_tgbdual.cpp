@@ -64,6 +64,7 @@ static bool SaveState(char *savePathName, char *sramPathName)
     size_t size = g_gb->get_state_size();
 
     // We store data in the not visible framebuffer
+    lcd_wait_for_vblank();
     unsigned char *data = (unsigned char *)lcd_get_active_buffer();
     g_gb->save_state_mem((void *)data);
 
