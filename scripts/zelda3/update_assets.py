@@ -23,5 +23,5 @@ def write_c_array(file_name, variable_name, data):
     c_file.write(final_content + ";\n")
 
 
-raw_data = read_file("zelda3/tables/zelda3_assets.dat")
+raw_data = read_file("external/zelda3/tables/zelda3_assets.dat")
 write_c_array("Core/Src/porting/zelda3/zelda_assets", "zelda_assets", raw_data)

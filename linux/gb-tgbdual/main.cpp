@@ -16,6 +16,8 @@ extern "C" {
 #include "porting.h"
 #include "crc32.h"
 
+#include "gw_malloc.h"
+
 #include "rom_manager.h"
 
 #include "gw_malloc.h"
@@ -122,7 +124,7 @@ uint32_t allocated_ram = 0;
 uint32_t ahb_allocated_ram = 0;
 uint32_t itc_allocated_ram = 0;
 
-void *itc_calloc(size_t count,size_t size)
+extern "C" void *itc_calloc(size_t count,size_t size)
 {
    itc_allocated_ram+=size*count;
    printf("itc_calloc %zu bytes (new total = %u)\n",size*count,itc_allocated_ram);
@@ -130,7 +132,7 @@ void *itc_calloc(size_t count,size_t size)
    return ret;
 }
 
-void *itc_malloc(size_t size)
+extern "C" void *itc_malloc(size_t size)
 {
    itc_allocated_ram+=size;
    printf("itc_malloc %zu bytes (new total = %u)\n",size,itc_allocated_ram);

@@ -93,16 +93,18 @@ retro-go-stm32/gnuboy-go/components/gnuboy/sound.c
 endif
 else
 ifneq ($(strip $(ROMS_GB)),)
+CORE_TGBDUAL = external/tgbdual-go
+
 TGBDUAL_CXX_SOURCES += \
 Core/Src/porting/gb_tgbdual/main_gb_tgbdual.cpp \
 Core/Src/porting/gb_tgbdual/gw_renderer.cpp \
-tgbdual-go/gb_core/tgbdual_apu.cpp \
-tgbdual-go/gb_core/tgbdual_cheat.cpp \
-tgbdual-go/gb_core/tgbdual_cpu.cpp \
-tgbdual-go/gb_core/tgbdual_gb.cpp \
-tgbdual-go/gb_core/tgbdual_lcd.cpp \
-tgbdual-go/gb_core/tgbdual_mbc.cpp \
-tgbdual-go/gb_core/tgbdual_rom.cpp
+$(CORE_TGBDUAL)/gb_core/tgbdual_apu.cpp \
+$(CORE_TGBDUAL)/gb_core/tgbdual_cheat.cpp \
+$(CORE_TGBDUAL)/gb_core/tgbdual_cpu.cpp \
+$(CORE_TGBDUAL)/gb_core/tgbdual_gb.cpp \
+$(CORE_TGBDUAL)/gb_core/tgbdual_lcd.cpp \
+$(CORE_TGBDUAL)/gb_core/tgbdual_mbc.cpp \
+$(CORE_TGBDUAL)/gb_core/tgbdual_rom.cpp
 endif
 endif
 
@@ -187,280 +189,281 @@ endif
 else
 NES_FCEU_C_SOURCES = 
 ifneq ($(strip $(ROMS_NES)),)
+CORE_FCEUMM = external/fceumm-go
 NES_FCEU_C_SOURCES += \
 Core/Src/porting/nes_fceu/main_nes_fceu.c \
-fceumm-go/src/boards/09-034a.c \
-fceumm-go/src/boards/3d-block.c \
-fceumm-go/src/boards/8in1.c \
-fceumm-go/src/boards/12in1.c \
-fceumm-go/src/boards/15.c \
-fceumm-go/src/boards/18.c \
-fceumm-go/src/boards/28.c \
-fceumm-go/src/boards/31.c \
-fceumm-go/src/boards/32.c \
-fceumm-go/src/boards/33.c \
-fceumm-go/src/boards/34.c \
-fceumm-go/src/boards/40.c \
-fceumm-go/src/boards/41.c \
-fceumm-go/src/boards/42.c \
-fceumm-go/src/boards/43.c \
-fceumm-go/src/boards/46.c \
-fceumm-go/src/boards/50.c \
-fceumm-go/src/boards/51.c \
-fceumm-go/src/boards/57.c \
-fceumm-go/src/boards/60.c \
-fceumm-go/src/boards/62.c \
-fceumm-go/src/boards/65.c \
-fceumm-go/src/boards/67.c \
-fceumm-go/src/boards/68.c \
-fceumm-go/src/boards/69.c \
-fceumm-go/src/boards/71.c \
-fceumm-go/src/boards/72.c \
-fceumm-go/src/boards/77.c \
-fceumm-go/src/boards/79.c \
-fceumm-go/src/boards/80.c \
-fceumm-go/src/boards/82.c \
-fceumm-go/src/boards/88.c \
-fceumm-go/src/boards/91.c \
-fceumm-go/src/boards/96.c \
-fceumm-go/src/boards/99.c \
-fceumm-go/src/boards/103.c \
-fceumm-go/src/boards/104.c \
-fceumm-go/src/boards/106.c \
-fceumm-go/src/boards/108.c \
-fceumm-go/src/boards/112.c \
-fceumm-go/src/boards/116.c \
-fceumm-go/src/boards/117.c \
-fceumm-go/src/boards/120.c \
-fceumm-go/src/boards/121.c \
-fceumm-go/src/boards/126-422-534.c \
-fceumm-go/src/boards/134.c \
-fceumm-go/src/boards/151.c \
-fceumm-go/src/boards/156.c \
-fceumm-go/src/boards/162.c \
-fceumm-go/src/boards/163.c \
-fceumm-go/src/boards/164.c \
-fceumm-go/src/boards/168.c \
-fceumm-go/src/boards/170.c \
-fceumm-go/src/boards/175.c \
-fceumm-go/src/boards/177.c \
-fceumm-go/src/boards/178.c \
-fceumm-go/src/boards/183.c \
-fceumm-go/src/boards/185.c \
-fceumm-go/src/boards/186.c \
-fceumm-go/src/boards/187.c \
-fceumm-go/src/boards/189.c \
-fceumm-go/src/boards/190.c \
-fceumm-go/src/boards/193.c \
-fceumm-go/src/boards/195.c \
-fceumm-go/src/boards/199.c \
-fceumm-go/src/boards/206.c \
-fceumm-go/src/boards/208.c \
-fceumm-go/src/boards/218.c \
-fceumm-go/src/boards/222.c \
-fceumm-go/src/boards/225.c \
-fceumm-go/src/boards/228.c \
-fceumm-go/src/boards/230.c \
-fceumm-go/src/boards/232.c \
-fceumm-go/src/boards/233.c \
-fceumm-go/src/boards/234.c \
-fceumm-go/src/boards/235.c \
-fceumm-go/src/boards/236.c \
-fceumm-go/src/boards/237.c \
-fceumm-go/src/boards/244.c \
-fceumm-go/src/boards/246.c \
-fceumm-go/src/boards/252.c \
-fceumm-go/src/boards/253.c \
-fceumm-go/src/boards/267.c \
-fceumm-go/src/boards/268.c \
-fceumm-go/src/boards/269.c \
-fceumm-go/src/boards/272.c \
-fceumm-go/src/boards/283.c \
-fceumm-go/src/boards/291.c \
-fceumm-go/src/boards/293.c \
-fceumm-go/src/boards/294.c \
-fceumm-go/src/boards/310.c \
-fceumm-go/src/boards/319.c \
-fceumm-go/src/boards/326.c \
-fceumm-go/src/boards/330.c \
-fceumm-go/src/boards/334.c \
-fceumm-go/src/boards/351.c \
-fceumm-go/src/boards/353.c \
-fceumm-go/src/boards/354.c \
-fceumm-go/src/boards/356.c \
-fceumm-go/src/boards/357.c \
-fceumm-go/src/boards/359.c \
-fceumm-go/src/boards/360.c \
-fceumm-go/src/boards/364.c \
-fceumm-go/src/boards/368.c \
-fceumm-go/src/boards/369.c \
-fceumm-go/src/boards/370.c \
-fceumm-go/src/boards/372.c \
-fceumm-go/src/boards/375.c \
-fceumm-go/src/boards/376.c \
-fceumm-go/src/boards/377.c \
-fceumm-go/src/boards/380.c \
-fceumm-go/src/boards/382.c \
-fceumm-go/src/boards/383.c \
-fceumm-go/src/boards/389.c \
-fceumm-go/src/boards/390.c \
-fceumm-go/src/boards/391.c \
-fceumm-go/src/boards/393.c \
-fceumm-go/src/boards/395.c \
-fceumm-go/src/boards/396.c \
-fceumm-go/src/boards/401.c \
-fceumm-go/src/boards/403.c \
-fceumm-go/src/boards/410.c \
-fceumm-go/src/boards/411.c \
-fceumm-go/src/boards/414.c \
-fceumm-go/src/boards/416.c \
-fceumm-go/src/boards/417.c \
-fceumm-go/src/boards/428.c \
-fceumm-go/src/boards/431.c \
-fceumm-go/src/boards/432.c \
-fceumm-go/src/boards/433.c \
-fceumm-go/src/boards/434.c \
-fceumm-go/src/boards/436.c \
-fceumm-go/src/boards/437.c \
-fceumm-go/src/boards/438.c \
-fceumm-go/src/boards/441.c \
-fceumm-go/src/boards/443.c \
-fceumm-go/src/boards/444.c \
-fceumm-go/src/boards/449.c \
-fceumm-go/src/boards/452.c \
-fceumm-go/src/boards/455.c \
-fceumm-go/src/boards/456.c \
-fceumm-go/src/boards/460.c \
-fceumm-go/src/boards/463.c \
-fceumm-go/src/boards/465.c \
-fceumm-go/src/boards/466.c \
-fceumm-go/src/boards/467.c \
-fceumm-go/src/boards/468.c \
-fceumm-go/src/boards/516.c \
-fceumm-go/src/boards/533.c \
-fceumm-go/src/boards/539.c \
-fceumm-go/src/boards/554.c \
-fceumm-go/src/boards/558.c \
-fceumm-go/src/boards/603-5052.c \
-fceumm-go/src/boards/8157.c \
-fceumm-go/src/boards/8237.c \
-fceumm-go/src/boards/411120-c.c \
-fceumm-go/src/boards/830118C.c \
-fceumm-go/src/boards/830134C.c \
-fceumm-go/src/boards/a9746.c \
-fceumm-go/src/boards/ac-08.c \
-fceumm-go/src/boards/addrlatch.c \
-fceumm-go/src/boards/ax40g.c \
-fceumm-go/src/boards/ax5705.c \
-fceumm-go/src/boards/bandai.c \
-fceumm-go/src/boards/bb.c \
-fceumm-go/src/boards/bj56.c \
-fceumm-go/src/boards/bmc42in1r.c \
-fceumm-go/src/boards/bmc64in1nr.c \
-fceumm-go/src/boards/bmc60311c.c \
-fceumm-go/src/boards/bmc80013b.c \
-fceumm-go/src/boards/bmc830425C4391t.c \
-fceumm-go/src/boards/bmcctc09.c \
-fceumm-go/src/boards/bmcgamecard.c \
-fceumm-go/src/boards/bmck3006.c \
-fceumm-go/src/boards/bmck3033.c \
-fceumm-go/src/boards/bmck3036.c \
-fceumm-go/src/boards/bmcl6in1.c \
-fceumm-go/src/boards/BMW8544.c \
-fceumm-go/src/boards/bonza.c \
-fceumm-go/src/boards/bs-5.c \
-fceumm-go/src/boards/cheapocabra.c \
-fceumm-go/src/boards/cityfighter.c \
-fceumm-go/src/boards/coolgirl.c \
-fceumm-go/src/boards/dance2000.c \
-fceumm-go/src/boards/datalatch.c \
-fceumm-go/src/boards/dream.c \
-fceumm-go/src/boards/edu2000.c \
-fceumm-go/src/boards/eeprom_93C66.c \
-fceumm-go/src/boards/eh8813a.c \
-fceumm-go/src/boards/et-100.c \
-fceumm-go/src/boards/et-4320.c \
-fceumm-go/src/boards/f-15.c \
-fceumm-go/src/boards/fceu-emu2413.c \
-fceumm-go/src/boards/famicombox.c \
-fceumm-go/src/boards/faridunrom.c \
-fceumm-go/src/boards/ffe.c \
-fceumm-go/src/boards/fk23c.c \
-fceumm-go/src/boards/gn26.c \
-fceumm-go/src/boards/h2288.c \
-fceumm-go/src/boards/hp10xx_hp20xx.c \
-fceumm-go/src/boards/hp898f.c \
-fceumm-go/src/boards/jyasic.c \
-fceumm-go/src/boards/karaoke.c \
-fceumm-go/src/boards/KG256.c \
-fceumm-go/src/boards/kof97.c \
-fceumm-go/src/boards/KS7012.c \
-fceumm-go/src/boards/KS7013.c \
-fceumm-go/src/boards/KS7016.c \
-fceumm-go/src/boards/KS7017.c \
-fceumm-go/src/boards/KS7030.c \
-fceumm-go/src/boards/KS7031.c \
-fceumm-go/src/boards/KS7032.c \
-fceumm-go/src/boards/KS7037.c \
-fceumm-go/src/boards/KS7057.c \
-fceumm-go/src/boards/le05.c \
-fceumm-go/src/boards/lh32.c \
-fceumm-go/src/boards/lh51.c \
-fceumm-go/src/boards/lh53.c \
-fceumm-go/src/boards/malee.c \
-fceumm-go/src/boards/mihunche.c \
-fceumm-go/src/boards/mmc1.c \
-fceumm-go/src/boards/mmc2and4.c \
-fceumm-go/src/boards/mmc3.c \
-fceumm-go/src/boards/mmc5.c \
-fceumm-go/src/boards/n106.c \
-fceumm-go/src/boards/n625092.c \
-fceumm-go/src/boards/novel.c \
-fceumm-go/src/boards/onebus.c \
-fceumm-go/src/boards/pec-586.c \
-fceumm-go/src/boards/resetnromxin1.c \
-fceumm-go/src/boards/resettxrom.c \
-fceumm-go/src/boards/rt-01.c \
-fceumm-go/src/boards/SA-9602B.c \
-fceumm-go/src/boards/sachen.c \
-fceumm-go/src/boards/sheroes.c \
-fceumm-go/src/boards/sl1632.c \
-fceumm-go/src/boards/subor.c \
-fceumm-go/src/boards/super40in1.c \
-fceumm-go/src/boards/supervision.c \
-fceumm-go/src/boards/t-227-1.c \
-fceumm-go/src/boards/t-262.c \
-fceumm-go/src/boards/tengen.c \
-fceumm-go/src/boards/tf-1201.c \
-fceumm-go/src/boards/transformer.c \
-fceumm-go/src/boards/txcchip.c \
-fceumm-go/src/boards/unrom512.c \
-fceumm-go/src/boards/vrc1.c \
-fceumm-go/src/boards/vrc2and4.c \
-fceumm-go/src/boards/vrc3.c \
-fceumm-go/src/boards/vrc6.c \
-fceumm-go/src/boards/vrc7.c \
-fceumm-go/src/boards/vrc7p.c \
-fceumm-go/src/boards/yoko.c \
-fceumm-go/src/cheat.c \
-fceumm-go/src/fceu-cart.c \
-fceumm-go/src/fceu-endian.c \
-fceumm-go/src/fceu-memory.c \
-fceumm-go/src/fceu-sound.c \
-fceumm-go/src/fceu-state.c \
-fceumm-go/src/fceu.c \
-fceumm-go/src/fds.c \
-fceumm-go/src/fds_apu.c \
-fceumm-go/src/filter.c \
-fceumm-go/src/general.c \
-fceumm-go/src/ines.c \
-fceumm-go/src/input.c \
-fceumm-go/src/md5.c \
-fceumm-go/src/nsf.c \
-fceumm-go/src/palette.c \
-fceumm-go/src/ppu.c \
-fceumm-go/src/video.c \
-fceumm-go/src/x6502.c
+$(CORE_FCEUMM)/src/boards/09-034a.c \
+$(CORE_FCEUMM)/src/boards/3d-block.c \
+$(CORE_FCEUMM)/src/boards/8in1.c \
+$(CORE_FCEUMM)/src/boards/12in1.c \
+$(CORE_FCEUMM)/src/boards/15.c \
+$(CORE_FCEUMM)/src/boards/18.c \
+$(CORE_FCEUMM)/src/boards/28.c \
+$(CORE_FCEUMM)/src/boards/31.c \
+$(CORE_FCEUMM)/src/boards/32.c \
+$(CORE_FCEUMM)/src/boards/33.c \
+$(CORE_FCEUMM)/src/boards/34.c \
+$(CORE_FCEUMM)/src/boards/40.c \
+$(CORE_FCEUMM)/src/boards/41.c \
+$(CORE_FCEUMM)/src/boards/42.c \
+$(CORE_FCEUMM)/src/boards/43.c \
+$(CORE_FCEUMM)/src/boards/46.c \
+$(CORE_FCEUMM)/src/boards/50.c \
+$(CORE_FCEUMM)/src/boards/51.c \
+$(CORE_FCEUMM)/src/boards/57.c \
+$(CORE_FCEUMM)/src/boards/60.c \
+$(CORE_FCEUMM)/src/boards/62.c \
+$(CORE_FCEUMM)/src/boards/65.c \
+$(CORE_FCEUMM)/src/boards/67.c \
+$(CORE_FCEUMM)/src/boards/68.c \
+$(CORE_FCEUMM)/src/boards/69.c \
+$(CORE_FCEUMM)/src/boards/71.c \
+$(CORE_FCEUMM)/src/boards/72.c \
+$(CORE_FCEUMM)/src/boards/77.c \
+$(CORE_FCEUMM)/src/boards/79.c \
+$(CORE_FCEUMM)/src/boards/80.c \
+$(CORE_FCEUMM)/src/boards/82.c \
+$(CORE_FCEUMM)/src/boards/88.c \
+$(CORE_FCEUMM)/src/boards/91.c \
+$(CORE_FCEUMM)/src/boards/96.c \
+$(CORE_FCEUMM)/src/boards/99.c \
+$(CORE_FCEUMM)/src/boards/103.c \
+$(CORE_FCEUMM)/src/boards/104.c \
+$(CORE_FCEUMM)/src/boards/106.c \
+$(CORE_FCEUMM)/src/boards/108.c \
+$(CORE_FCEUMM)/src/boards/112.c \
+$(CORE_FCEUMM)/src/boards/116.c \
+$(CORE_FCEUMM)/src/boards/117.c \
+$(CORE_FCEUMM)/src/boards/120.c \
+$(CORE_FCEUMM)/src/boards/121.c \
+$(CORE_FCEUMM)/src/boards/126-422-534.c \
+$(CORE_FCEUMM)/src/boards/134.c \
+$(CORE_FCEUMM)/src/boards/151.c \
+$(CORE_FCEUMM)/src/boards/156.c \
+$(CORE_FCEUMM)/src/boards/162.c \
+$(CORE_FCEUMM)/src/boards/163.c \
+$(CORE_FCEUMM)/src/boards/164.c \
+$(CORE_FCEUMM)/src/boards/168.c \
+$(CORE_FCEUMM)/src/boards/170.c \
+$(CORE_FCEUMM)/src/boards/175.c \
+$(CORE_FCEUMM)/src/boards/177.c \
+$(CORE_FCEUMM)/src/boards/178.c \
+$(CORE_FCEUMM)/src/boards/183.c \
+$(CORE_FCEUMM)/src/boards/185.c \
+$(CORE_FCEUMM)/src/boards/186.c \
+$(CORE_FCEUMM)/src/boards/187.c \
+$(CORE_FCEUMM)/src/boards/189.c \
+$(CORE_FCEUMM)/src/boards/190.c \
+$(CORE_FCEUMM)/src/boards/193.c \
+$(CORE_FCEUMM)/src/boards/195.c \
+$(CORE_FCEUMM)/src/boards/199.c \
+$(CORE_FCEUMM)/src/boards/206.c \
+$(CORE_FCEUMM)/src/boards/208.c \
+$(CORE_FCEUMM)/src/boards/218.c \
+$(CORE_FCEUMM)/src/boards/222.c \
+$(CORE_FCEUMM)/src/boards/225.c \
+$(CORE_FCEUMM)/src/boards/228.c \
+$(CORE_FCEUMM)/src/boards/230.c \
+$(CORE_FCEUMM)/src/boards/232.c \
+$(CORE_FCEUMM)/src/boards/233.c \
+$(CORE_FCEUMM)/src/boards/234.c \
+$(CORE_FCEUMM)/src/boards/235.c \
+$(CORE_FCEUMM)/src/boards/236.c \
+$(CORE_FCEUMM)/src/boards/237.c \
+$(CORE_FCEUMM)/src/boards/244.c \
+$(CORE_FCEUMM)/src/boards/246.c \
+$(CORE_FCEUMM)/src/boards/252.c \
+$(CORE_FCEUMM)/src/boards/253.c \
+$(CORE_FCEUMM)/src/boards/267.c \
+$(CORE_FCEUMM)/src/boards/268.c \
+$(CORE_FCEUMM)/src/boards/269.c \
+$(CORE_FCEUMM)/src/boards/272.c \
+$(CORE_FCEUMM)/src/boards/283.c \
+$(CORE_FCEUMM)/src/boards/291.c \
+$(CORE_FCEUMM)/src/boards/293.c \
+$(CORE_FCEUMM)/src/boards/294.c \
+$(CORE_FCEUMM)/src/boards/310.c \
+$(CORE_FCEUMM)/src/boards/319.c \
+$(CORE_FCEUMM)/src/boards/326.c \
+$(CORE_FCEUMM)/src/boards/330.c \
+$(CORE_FCEUMM)/src/boards/334.c \
+$(CORE_FCEUMM)/src/boards/351.c \
+$(CORE_FCEUMM)/src/boards/353.c \
+$(CORE_FCEUMM)/src/boards/354.c \
+$(CORE_FCEUMM)/src/boards/356.c \
+$(CORE_FCEUMM)/src/boards/357.c \
+$(CORE_FCEUMM)/src/boards/359.c \
+$(CORE_FCEUMM)/src/boards/360.c \
+$(CORE_FCEUMM)/src/boards/364.c \
+$(CORE_FCEUMM)/src/boards/368.c \
+$(CORE_FCEUMM)/src/boards/369.c \
+$(CORE_FCEUMM)/src/boards/370.c \
+$(CORE_FCEUMM)/src/boards/372.c \
+$(CORE_FCEUMM)/src/boards/375.c \
+$(CORE_FCEUMM)/src/boards/376.c \
+$(CORE_FCEUMM)/src/boards/377.c \
+$(CORE_FCEUMM)/src/boards/380.c \
+$(CORE_FCEUMM)/src/boards/382.c \
+$(CORE_FCEUMM)/src/boards/383.c \
+$(CORE_FCEUMM)/src/boards/389.c \
+$(CORE_FCEUMM)/src/boards/390.c \
+$(CORE_FCEUMM)/src/boards/391.c \
+$(CORE_FCEUMM)/src/boards/393.c \
+$(CORE_FCEUMM)/src/boards/395.c \
+$(CORE_FCEUMM)/src/boards/396.c \
+$(CORE_FCEUMM)/src/boards/401.c \
+$(CORE_FCEUMM)/src/boards/403.c \
+$(CORE_FCEUMM)/src/boards/410.c \
+$(CORE_FCEUMM)/src/boards/411.c \
+$(CORE_FCEUMM)/src/boards/414.c \
+$(CORE_FCEUMM)/src/boards/416.c \
+$(CORE_FCEUMM)/src/boards/417.c \
+$(CORE_FCEUMM)/src/boards/428.c \
+$(CORE_FCEUMM)/src/boards/431.c \
+$(CORE_FCEUMM)/src/boards/432.c \
+$(CORE_FCEUMM)/src/boards/433.c \
+$(CORE_FCEUMM)/src/boards/434.c \
+$(CORE_FCEUMM)/src/boards/436.c \
+$(CORE_FCEUMM)/src/boards/437.c \
+$(CORE_FCEUMM)/src/boards/438.c \
+$(CORE_FCEUMM)/src/boards/441.c \
+$(CORE_FCEUMM)/src/boards/443.c \
+$(CORE_FCEUMM)/src/boards/444.c \
+$(CORE_FCEUMM)/src/boards/449.c \
+$(CORE_FCEUMM)/src/boards/452.c \
+$(CORE_FCEUMM)/src/boards/455.c \
+$(CORE_FCEUMM)/src/boards/456.c \
+$(CORE_FCEUMM)/src/boards/460.c \
+$(CORE_FCEUMM)/src/boards/463.c \
+$(CORE_FCEUMM)/src/boards/465.c \
+$(CORE_FCEUMM)/src/boards/466.c \
+$(CORE_FCEUMM)/src/boards/467.c \
+$(CORE_FCEUMM)/src/boards/468.c \
+$(CORE_FCEUMM)/src/boards/516.c \
+$(CORE_FCEUMM)/src/boards/533.c \
+$(CORE_FCEUMM)/src/boards/539.c \
+$(CORE_FCEUMM)/src/boards/554.c \
+$(CORE_FCEUMM)/src/boards/558.c \
+$(CORE_FCEUMM)/src/boards/603-5052.c \
+$(CORE_FCEUMM)/src/boards/8157.c \
+$(CORE_FCEUMM)/src/boards/8237.c \
+$(CORE_FCEUMM)/src/boards/411120-c.c \
+$(CORE_FCEUMM)/src/boards/830118C.c \
+$(CORE_FCEUMM)/src/boards/830134C.c \
+$(CORE_FCEUMM)/src/boards/a9746.c \
+$(CORE_FCEUMM)/src/boards/ac-08.c \
+$(CORE_FCEUMM)/src/boards/addrlatch.c \
+$(CORE_FCEUMM)/src/boards/ax40g.c \
+$(CORE_FCEUMM)/src/boards/ax5705.c \
+$(CORE_FCEUMM)/src/boards/bandai.c \
+$(CORE_FCEUMM)/src/boards/bb.c \
+$(CORE_FCEUMM)/src/boards/bj56.c \
+$(CORE_FCEUMM)/src/boards/bmc42in1r.c \
+$(CORE_FCEUMM)/src/boards/bmc64in1nr.c \
+$(CORE_FCEUMM)/src/boards/bmc60311c.c \
+$(CORE_FCEUMM)/src/boards/bmc80013b.c \
+$(CORE_FCEUMM)/src/boards/bmc830425C4391t.c \
+$(CORE_FCEUMM)/src/boards/bmcctc09.c \
+$(CORE_FCEUMM)/src/boards/bmcgamecard.c \
+$(CORE_FCEUMM)/src/boards/bmck3006.c \
+$(CORE_FCEUMM)/src/boards/bmck3033.c \
+$(CORE_FCEUMM)/src/boards/bmck3036.c \
+$(CORE_FCEUMM)/src/boards/bmcl6in1.c \
+$(CORE_FCEUMM)/src/boards/BMW8544.c \
+$(CORE_FCEUMM)/src/boards/bonza.c \
+$(CORE_FCEUMM)/src/boards/bs-5.c \
+$(CORE_FCEUMM)/src/boards/cheapocabra.c \
+$(CORE_FCEUMM)/src/boards/cityfighter.c \
+$(CORE_FCEUMM)/src/boards/coolgirl.c \
+$(CORE_FCEUMM)/src/boards/dance2000.c \
+$(CORE_FCEUMM)/src/boards/datalatch.c \
+$(CORE_FCEUMM)/src/boards/dream.c \
+$(CORE_FCEUMM)/src/boards/edu2000.c \
+$(CORE_FCEUMM)/src/boards/eeprom_93C66.c \
+$(CORE_FCEUMM)/src/boards/eh8813a.c \
+$(CORE_FCEUMM)/src/boards/et-100.c \
+$(CORE_FCEUMM)/src/boards/et-4320.c \
+$(CORE_FCEUMM)/src/boards/f-15.c \
+$(CORE_FCEUMM)/src/boards/fceu-emu2413.c \
+$(CORE_FCEUMM)/src/boards/famicombox.c \
+$(CORE_FCEUMM)/src/boards/faridunrom.c \
+$(CORE_FCEUMM)/src/boards/ffe.c \
+$(CORE_FCEUMM)/src/boards/fk23c.c \
+$(CORE_FCEUMM)/src/boards/gn26.c \
+$(CORE_FCEUMM)/src/boards/h2288.c \
+$(CORE_FCEUMM)/src/boards/hp10xx_hp20xx.c \
+$(CORE_FCEUMM)/src/boards/hp898f.c \
+$(CORE_FCEUMM)/src/boards/jyasic.c \
+$(CORE_FCEUMM)/src/boards/karaoke.c \
+$(CORE_FCEUMM)/src/boards/KG256.c \
+$(CORE_FCEUMM)/src/boards/kof97.c \
+$(CORE_FCEUMM)/src/boards/KS7012.c \
+$(CORE_FCEUMM)/src/boards/KS7013.c \
+$(CORE_FCEUMM)/src/boards/KS7016.c \
+$(CORE_FCEUMM)/src/boards/KS7017.c \
+$(CORE_FCEUMM)/src/boards/KS7030.c \
+$(CORE_FCEUMM)/src/boards/KS7031.c \
+$(CORE_FCEUMM)/src/boards/KS7032.c \
+$(CORE_FCEUMM)/src/boards/KS7037.c \
+$(CORE_FCEUMM)/src/boards/KS7057.c \
+$(CORE_FCEUMM)/src/boards/le05.c \
+$(CORE_FCEUMM)/src/boards/lh32.c \
+$(CORE_FCEUMM)/src/boards/lh51.c \
+$(CORE_FCEUMM)/src/boards/lh53.c \
+$(CORE_FCEUMM)/src/boards/malee.c \
+$(CORE_FCEUMM)/src/boards/mihunche.c \
+$(CORE_FCEUMM)/src/boards/mmc1.c \
+$(CORE_FCEUMM)/src/boards/mmc2and4.c \
+$(CORE_FCEUMM)/src/boards/mmc3.c \
+$(CORE_FCEUMM)/src/boards/mmc5.c \
+$(CORE_FCEUMM)/src/boards/n106.c \
+$(CORE_FCEUMM)/src/boards/n625092.c \
+$(CORE_FCEUMM)/src/boards/novel.c \
+$(CORE_FCEUMM)/src/boards/onebus.c \
+$(CORE_FCEUMM)/src/boards/pec-586.c \
+$(CORE_FCEUMM)/src/boards/resetnromxin1.c \
+$(CORE_FCEUMM)/src/boards/resettxrom.c \
+$(CORE_FCEUMM)/src/boards/rt-01.c \
+$(CORE_FCEUMM)/src/boards/SA-9602B.c \
+$(CORE_FCEUMM)/src/boards/sachen.c \
+$(CORE_FCEUMM)/src/boards/sheroes.c \
+$(CORE_FCEUMM)/src/boards/sl1632.c \
+$(CORE_FCEUMM)/src/boards/subor.c \
+$(CORE_FCEUMM)/src/boards/super40in1.c \
+$(CORE_FCEUMM)/src/boards/supervision.c \
+$(CORE_FCEUMM)/src/boards/t-227-1.c \
+$(CORE_FCEUMM)/src/boards/t-262.c \
+$(CORE_FCEUMM)/src/boards/tengen.c \
+$(CORE_FCEUMM)/src/boards/tf-1201.c \
+$(CORE_FCEUMM)/src/boards/transformer.c \
+$(CORE_FCEUMM)/src/boards/txcchip.c \
+$(CORE_FCEUMM)/src/boards/unrom512.c \
+$(CORE_FCEUMM)/src/boards/vrc1.c \
+$(CORE_FCEUMM)/src/boards/vrc2and4.c \
+$(CORE_FCEUMM)/src/boards/vrc3.c \
+$(CORE_FCEUMM)/src/boards/vrc6.c \
+$(CORE_FCEUMM)/src/boards/vrc7.c \
+$(CORE_FCEUMM)/src/boards/vrc7p.c \
+$(CORE_FCEUMM)/src/boards/yoko.c \
+$(CORE_FCEUMM)/src/cheat.c \
+$(CORE_FCEUMM)/src/fceu-cart.c \
+$(CORE_FCEUMM)/src/fceu-endian.c \
+$(CORE_FCEUMM)/src/fceu-memory.c \
+$(CORE_FCEUMM)/src/fceu-sound.c \
+$(CORE_FCEUMM)/src/fceu-state.c \
+$(CORE_FCEUMM)/src/fceu.c \
+$(CORE_FCEUMM)/src/fds.c \
+$(CORE_FCEUMM)/src/fds_apu.c \
+$(CORE_FCEUMM)/src/filter.c \
+$(CORE_FCEUMM)/src/general.c \
+$(CORE_FCEUMM)/src/ines.c \
+$(CORE_FCEUMM)/src/input.c \
+$(CORE_FCEUMM)/src/md5.c \
+$(CORE_FCEUMM)/src/nsf.c \
+$(CORE_FCEUMM)/src/palette.c \
+$(CORE_FCEUMM)/src/ppu.c \
+$(CORE_FCEUMM)/src/video.c \
+$(CORE_FCEUMM)/src/x6502.c
 endif
 endif
 
@@ -500,7 +503,7 @@ endif
 MSX_C_SOURCES = 
 
 ifneq ($(strip $(ROMS_MSX)),)
-CORE_MSX = blueMSX-go
+CORE_MSX = external/blueMSX-go
 LIBRETRO_COMM_DIR  = $(CORE_MSX)/libretro-common
 
 MSX_C_SOURCES += \
@@ -574,83 +577,88 @@ endif
 GW_C_SOURCES = 
 
 ifneq ($(strip $(ROMS_GW)),)
+CORE_GW = external/LCD-Game-Emulator
 GW_C_SOURCES += \
 Core/Src/porting/lib/lz4_depack.c \
-LCD-Game-Emulator/src/cpus/sm500op.c \
-LCD-Game-Emulator/src/cpus/sm510op.c \
-LCD-Game-Emulator/src/cpus/sm500core.c \
-LCD-Game-Emulator/src/cpus/sm5acore.c \
-LCD-Game-Emulator/src/cpus/sm510core.c \
-LCD-Game-Emulator/src/cpus/sm511core.c \
-LCD-Game-Emulator/src/cpus/sm510base.c \
-LCD-Game-Emulator/src/gw_sys/gw_romloader.c \
-LCD-Game-Emulator/src/gw_sys/gw_graphic.c \
-LCD-Game-Emulator/src/gw_sys/gw_system.c \
+$(CORE_GW)/src/cpus/sm500op.c \
+$(CORE_GW)/src/cpus/sm510op.c \
+$(CORE_GW)/src/cpus/sm500core.c \
+$(CORE_GW)/src/cpus/sm5acore.c \
+$(CORE_GW)/src/cpus/sm510core.c \
+$(CORE_GW)/src/cpus/sm511core.c \
+$(CORE_GW)/src/cpus/sm510base.c \
+$(CORE_GW)/src/gw_sys/gw_romloader.c \
+$(CORE_GW)/src/gw_sys/gw_graphic.c \
+$(CORE_GW)/src/gw_sys/gw_system.c \
 Core/Src/porting/gw/main_gw.c
 endif
 
 WSV_C_SOURCES = 
 
 ifneq ($(strip $(ROMS_WSV)),)
+CORE_WSV = external/potator
 WSV_C_SOURCES += \
-potator/common/controls.c \
-potator/common/gpu.c \
-potator/common/m6502/m6502.c \
-potator/common/memorymap.c \
-potator/common/timer.c \
-potator/common/watara.c \
-potator/common/wsv_sound.c \
+$(CORE_WSV)/common/controls.c \
+$(CORE_WSV)/common/gpu.c \
+$(CORE_WSV)/common/m6502/m6502.c \
+$(CORE_WSV)/common/memorymap.c \
+$(CORE_WSV)/common/timer.c \
+$(CORE_WSV)/common/watara.c \
+$(CORE_WSV)/common/wsv_sound.c \
 Core/Src/porting/wsv/main_wsv.c
 endif
 
 MD_C_SOURCES = 
 
 ifneq ($(strip $(ROMS_MD)),)
+CORE_GWENESIS = external/gwenesis
 MD_C_SOURCES += \
-gwenesis/src/cpus/M68K/m68kcpu.c \
-gwenesis/src/cpus/Z80/Z80.c \
-gwenesis/src/sound/z80inst.c \
-gwenesis/src/sound/ym2612.c \
-gwenesis/src/sound/gwenesis_sn76489.c \
-gwenesis/src/bus/gwenesis_bus.c \
-gwenesis/src/io/gwenesis_io.c \
-gwenesis/src/vdp/gwenesis_vdp_mem.c \
-gwenesis/src/vdp/gwenesis_vdp_gfx.c \
-gwenesis/src/savestate/gwenesis_savestate.c \
+$(CORE_GWENESIS)/src/cpus/M68K/m68kcpu.c \
+$(CORE_GWENESIS)/src/cpus/Z80/Z80.c \
+$(CORE_GWENESIS)/src/sound/z80inst.c \
+$(CORE_GWENESIS)/src/sound/ym2612.c \
+$(CORE_GWENESIS)/src/sound/gwenesis_sn76489.c \
+$(CORE_GWENESIS)/src/bus/gwenesis_bus.c \
+$(CORE_GWENESIS)/src/io/gwenesis_io.c \
+$(CORE_GWENESIS)/src/vdp/gwenesis_vdp_mem.c \
+$(CORE_GWENESIS)/src/vdp/gwenesis_vdp_gfx.c \
+$(CORE_GWENESIS)/src/savestate/gwenesis_savestate.c \
 Core/Src/porting/gwenesis/main_gwenesis.c
 endif
 
 A7800_C_SOURCES = 
 
 ifneq ($(strip $(ROMS_A7800)),)
+CORE_PROSYSTEM = external/prosystem-go
 A7800_C_SOURCES += \
-prosystem-go/core/Bios.c \
-prosystem-go/core/Cartridge.c \
-prosystem-go/core/Database.c \
-prosystem-go/core/Hash.c \
-prosystem-go/core/Maria.c \
-prosystem-go/core/Memory.c \
-prosystem-go/core/Palette.c \
-prosystem-go/core/Pokey.c \
-prosystem-go/core/ProSystem.c \
-prosystem-go/core/Region.c \
-prosystem-go/core/Riot.c \
-prosystem-go/core/Sally.c \
-prosystem-go/core/Tia.c \
+$(CORE_PROSYSTEM)/core/Bios.c \
+$(CORE_PROSYSTEM)/core/Cartridge.c \
+$(CORE_PROSYSTEM)/core/Database.c \
+$(CORE_PROSYSTEM)/core/Hash.c \
+$(CORE_PROSYSTEM)/core/Maria.c \
+$(CORE_PROSYSTEM)/core/Memory.c \
+$(CORE_PROSYSTEM)/core/Palette.c \
+$(CORE_PROSYSTEM)/core/Pokey.c \
+$(CORE_PROSYSTEM)/core/ProSystem.c \
+$(CORE_PROSYSTEM)/core/Region.c \
+$(CORE_PROSYSTEM)/core/Riot.c \
+$(CORE_PROSYSTEM)/core/Sally.c \
+$(CORE_PROSYSTEM)/core/Tia.c \
 Core/Src/porting/a7800/main_a7800.c
 endif
 
 AMSTRAD_C_SOURCES = 
 
 ifneq ($(strip $(ROMS_AMSTRAD)),)
+CORE_AMSTRAD = external/caprice32-go
 AMSTRAD_C_SOURCES += \
-caprice32-go/cap32/cap32.c \
-caprice32-go/cap32/crtc.c \
-caprice32-go/cap32/fdc.c \
-caprice32-go/cap32/kbdauto.c \
-caprice32-go/cap32/psg.c \
-caprice32-go/cap32/slots.c \
-caprice32-go/cap32/cap32_z80.c \
+$(CORE_AMSTRAD)/cap32/cap32.c \
+$(CORE_AMSTRAD)/cap32/crtc.c \
+$(CORE_AMSTRAD)/cap32/fdc.c \
+$(CORE_AMSTRAD)/cap32/kbdauto.c \
+$(CORE_AMSTRAD)/cap32/psg.c \
+$(CORE_AMSTRAD)/cap32/slots.c \
+$(CORE_AMSTRAD)/cap32/cap32_z80.c \
 Core/Src/porting/amstrad/main_amstrad.c \
 Core/Src/porting/amstrad/amstrad_catalog.c \
 Core/Src/porting/amstrad/amstrad_format.c \
@@ -661,32 +669,34 @@ endif
 VIDEOPAC_C_SOURCES = 
 
 ifneq ($(strip $(ROMS_VIDEOPAC)),)
+CORE_O2EM = external/o2em-go
 VIDEOPAC_C_SOURCES += \
-o2em-go/src/o2em_audio.c \
-o2em-go/src/o2em_cpu.c \
-o2em-go/src/o2em_cset.c \
-o2em-go/src/o2em_keyboard.c \
-o2em-go/src/o2em_score.c \
-o2em-go/src/o2em_table.c \
-o2em-go/src/o2em_vdc.c \
-o2em-go/src/o2em_vmachine.c \
-o2em-go/src/o2em_voice.c \
-o2em-go/src/o2em_vpp.c \
-o2em-go/src/o2em_vpp_cset.c \
-o2em-go/allegrowrapper/wrapalleg.c \
-o2em-go/src/vkeyb/ui.c \
-o2em-go/src/vkeyb/vkeyb.c \
-o2em-go/src/vkeyb/vkeyb_config.c \
-o2em-go/src/vkeyb/vkeyb_layout.c \
+$(CORE_O2EM)/src/o2em_audio.c \
+$(CORE_O2EM)/src/o2em_cpu.c \
+$(CORE_O2EM)/src/o2em_cset.c \
+$(CORE_O2EM)/src/o2em_keyboard.c \
+$(CORE_O2EM)/src/o2em_score.c \
+$(CORE_O2EM)/src/o2em_table.c \
+$(CORE_O2EM)/src/o2em_vdc.c \
+$(CORE_O2EM)/src/o2em_vmachine.c \
+$(CORE_O2EM)/src/o2em_voice.c \
+$(CORE_O2EM)/src/o2em_vpp.c \
+$(CORE_O2EM)/src/o2em_vpp_cset.c \
+$(CORE_O2EM)/allegrowrapper/wrapalleg.c \
+$(CORE_O2EM)/src/vkeyb/ui.c \
+$(CORE_O2EM)/src/vkeyb/vkeyb.c \
+$(CORE_O2EM)/src/vkeyb/vkeyb_config.c \
+$(CORE_O2EM)/src/vkeyb/vkeyb_layout.c \
 Core/Src/porting/videopac/main_videopac.c
 endif
 
 CELESTE_C_SOURCES = 
 
 ifneq ($(strip $(HOMEBREW_CELESTE)),)
+CORE_CCLESTE = external/ccleste-go
 CELESTE_C_SOURCES += \
-ccleste-go/celeste.c \
-ccleste-go/celeste_audio.c \
+$(CORE_CCLESTE)/celeste.c \
+$(CORE_CCLESTE)/celeste_audio.c \
 Core/Src/porting/celeste/main_celeste.c
 endif
 
@@ -695,34 +705,35 @@ TAMP_C_INCLUDES += -I$(TAMP_DIR)
 ZELDA3_C_SOURCES = 
 
 ifneq ("$(wildcard roms/zelda3/zelda3.sfc)","")
+CORE_ZELDA3 = external/zelda3
 ZELDA3_C_SOURCES += \
-zelda3/zelda_rtl.c \
-zelda3/misc.c \
-zelda3/nmi.c \
-zelda3/poly.c \
-zelda3/attract.c \
-zelda3/snes/ppu.c \
-zelda3/snes/dma.c \
-zelda3/spc_player.c \
-zelda3/util.c \
-zelda3/audio.c \
-zelda3/overworld.c \
-zelda3/ending.c \
-zelda3/select_file.c \
-zelda3/dungeon.c \
-zelda3/messaging.c \
-zelda3/hud.c \
-zelda3/load_gfx.c \
-zelda3/ancilla.c \
-zelda3/player.c \
-zelda3/sprite.c \
-zelda3/player_oam.c \
-zelda3/snes/dsp.c \
-zelda3/sprite_main.c \
-zelda3/tagalong.c \
-zelda3/third_party/opus-1.3.1-stripped/opus_decoder_amalgam.c \
-zelda3/tile_detect.c \
-zelda3/overlord.c \
+$(CORE_ZELDA3)/zelda_rtl.c \
+$(CORE_ZELDA3)/misc.c \
+$(CORE_ZELDA3)/nmi.c \
+$(CORE_ZELDA3)/poly.c \
+$(CORE_ZELDA3)/attract.c \
+$(CORE_ZELDA3)/snes/ppu.c \
+$(CORE_ZELDA3)/snes/dma.c \
+$(CORE_ZELDA3)/spc_player.c \
+$(CORE_ZELDA3)/util.c \
+$(CORE_ZELDA3)/audio.c \
+$(CORE_ZELDA3)/overworld.c \
+$(CORE_ZELDA3)/ending.c \
+$(CORE_ZELDA3)/select_file.c \
+$(CORE_ZELDA3)/dungeon.c \
+$(CORE_ZELDA3)/messaging.c \
+$(CORE_ZELDA3)/hud.c \
+$(CORE_ZELDA3)/load_gfx.c \
+$(CORE_ZELDA3)/ancilla.c \
+$(CORE_ZELDA3)/player.c \
+$(CORE_ZELDA3)/sprite.c \
+$(CORE_ZELDA3)/player_oam.c \
+$(CORE_ZELDA3)/snes/dsp.c \
+$(CORE_ZELDA3)/sprite_main.c \
+$(CORE_ZELDA3)/tagalong.c \
+$(CORE_ZELDA3)/third_party/opus-1.3.1-stripped/opus_decoder_amalgam.c \
+$(CORE_ZELDA3)/tile_detect.c \
+$(CORE_ZELDA3)/overlord.c \
 Core/Src/porting/zelda3/main_zelda3.c \
 Core/Src/porting/zelda3/zelda_assets.c
 endif
@@ -730,33 +741,34 @@ endif
 SMW_C_SOURCES = 
 
 ifneq ("$(wildcard roms/smw/smw.sfc)","")
+CORE_SMW = external/smw
 SMW_C_SOURCES += \
-smw/src/smw_rtl.c \
-smw/src/smw_00.c \
-smw/src/smw_01.c \
-smw/src/smw_02.c \
-smw/src/smw_03.c \
-smw/src/smw_04.c \
-smw/src/smw_05.c \
-smw/src/smw_07.c \
-smw/src/smw_0c.c \
-smw/src/smw_0d.c \
-smw/src/smw_cpu_infra.c \
-smw/src/smw_spc_player.c \
-smw/src/config.c \
-smw/src/common_rtl.c \
-smw/src/common_cpu_infra.c \
-smw/src/util.c \
-smw/src/lm.c \
-smw/src/snes/ppu.c \
-smw/src/snes/dma.c \
-smw/src/snes/dsp.c \
-smw/src/snes/apu.c \
-smw/src/snes/spc.c \
-smw/src/snes/snes.c \
-smw/src/snes/cpu.c \
-smw/src/snes/cart.c \
-smw/src/tracing.c \
+$(CORE_SMW)/src/smw_rtl.c \
+$(CORE_SMW)/src/smw_00.c \
+$(CORE_SMW)/src/smw_01.c \
+$(CORE_SMW)/src/smw_02.c \
+$(CORE_SMW)/src/smw_03.c \
+$(CORE_SMW)/src/smw_04.c \
+$(CORE_SMW)/src/smw_05.c \
+$(CORE_SMW)/src/smw_07.c \
+$(CORE_SMW)/src/smw_0c.c \
+$(CORE_SMW)/src/smw_0d.c \
+$(CORE_SMW)/src/smw_cpu_infra.c \
+$(CORE_SMW)/src/smw_spc_player.c \
+$(CORE_SMW)/src/config.c \
+$(CORE_SMW)/src/common_rtl.c \
+$(CORE_SMW)/src/common_cpu_infra.c \
+$(CORE_SMW)/src/util.c \
+$(CORE_SMW)/src/lm.c \
+$(CORE_SMW)/src/snes/ppu.c \
+$(CORE_SMW)/src/snes/dma.c \
+$(CORE_SMW)/src/snes/dsp.c \
+$(CORE_SMW)/src/snes/apu.c \
+$(CORE_SMW)/src/snes/spc.c \
+$(CORE_SMW)/src/snes/snes.c \
+$(CORE_SMW)/src/snes/cpu.c \
+$(CORE_SMW)/src/snes/cart.c \
+$(CORE_SMW)/src/tracing.c \
 Core/Src/porting/smw/main_smw.c \
 Core/Src/porting/smw/smw_assets.c
 endif
@@ -773,9 +785,9 @@ TGBDUAL_C_INCLUDES +=  \
 -ICore/Inc/porting/gb_tgbdual \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
--Itgbdual-go \
--Itgbdual-go/gb_core \
--Itgbdual-go/libretro \
+-I$(CORE_TGBDUAL) \
+-I$(CORE_TGBDUAL)/gb_core \
+-I$(CORE_TGBDUAL)/libretro \
 -I./
 
 NES_C_INCLUDES +=  \
@@ -794,7 +806,7 @@ NES_FCEU_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Ifceumm-go/src/ \
+-I$(CORE_FCEUMM)/src/ \
 -I./
 
 SMSPLUSGX_C_INCLUDES +=  \
@@ -820,9 +832,9 @@ GW_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--ILCD-Game-Emulator/src \
--ILCD-Game-Emulator/src/cpus \
--ILCD-Game-Emulator/src/gw_sys \
+-I$(CORE_GW)/src \
+-I$(CORE_GW)/src/cpus \
+-I$(CORE_GW)/src/gw_sys \
 -I./
 
 MD_C_INCLUDES +=  \
@@ -830,13 +842,13 @@ MD_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Igwenesis/src/cpus/M68K \
--Igwenesis/src/cpus/Z80 \
--Igwenesis/src/sound \
--Igwenesis/src/bus \
--Igwenesis/src/vdp \
--Igwenesis/src/io \
--Igwenesis/src/savestate \
+-I$(CORE_GWENESIS)/src/cpus/M68K \
+-I$(CORE_GWENESIS)/src/cpus/Z80 \
+-I$(CORE_GWENESIS)/src/sound \
+-I$(CORE_GWENESIS)/src/bus \
+-I$(CORE_GWENESIS)/src/vdp \
+-I$(CORE_GWENESIS)/src/io \
+-I$(CORE_GWENESIS)/src/savestate \
 -I./
 
 
@@ -881,14 +893,14 @@ WSV_C_INCLUDES += \
 -ICore/Inc \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
--Ipotator/common \
+-I$(CORE_WSV)/common \
 -I./
 
 A7800_C_INCLUDES += \
 -ICore/Inc \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
--Iprosystem-go/core \
+-I$(CORE_PROSYSTEM)/core \
 -I./
 
 AMSTRAD_C_INCLUDES +=  \
@@ -896,7 +908,7 @@ AMSTRAD_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Icaprice32-go/cap32 \
+-I$(CORE_AMSTRAD)/cap32 \
 -I./
 
 VIDEOPAC_C_INCLUDES +=  \
@@ -904,9 +916,9 @@ VIDEOPAC_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Io2em-go/src \
--Io2em-go/libretro-common/include \
--Io2em-go/allegrowrapper \
+-I$(CORE_O2EM)/src \
+-I$(CORE_O2EM)/libretro-common/include \
+-I$(CORE_O2EM)/allegrowrapper \
 -I./
 
 ZELDA3_C_INCLUDES +=  \
@@ -914,7 +926,8 @@ ZELDA3_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Izelda3/ \
+-I$(CORE_ZELDA3)/ \
+-Iexternal \
 -I./
 
 SMW_C_INCLUDES +=  \
@@ -922,7 +935,8 @@ SMW_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Ismw/ \
+-I$(CORE_SMW)/ \
+-Iexternal \
 -I./
 
 CELESTE_C_INCLUDES +=  \
@@ -930,7 +944,7 @@ CELESTE_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Iccleste-go \
+-I$(CORE_CCLESTE)\
 -I./
 
 

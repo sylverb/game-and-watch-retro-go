@@ -1,4 +1,4 @@
-TARGET = retro-go-gb
+TARGET = retro-go-tgbdual
 
 DEBUG = 1
 #OPT = -Og -ggdb
@@ -24,13 +24,13 @@ porting.c \
 ../retro-go-stm32/components/lupng/miniz.c \
 
 SOURCES_CXX := \
-	../tgbdual-go/gb_core/tgbdual_apu.cpp \
-	../tgbdual-go/gb_core/tgbdual_cheat.cpp \
-	../tgbdual-go/gb_core/tgbdual_cpu.cpp \
-	../tgbdual-go/gb_core/tgbdual_gb.cpp \
-	../tgbdual-go/gb_core/tgbdual_lcd.cpp \
-	../tgbdual-go/gb_core/tgbdual_mbc.cpp \
-	../tgbdual-go/gb_core/tgbdual_rom.cpp \
+	../external/tgbdual-go/gb_core/tgbdual_apu.cpp \
+	../external/tgbdual-go/gb_core/tgbdual_cheat.cpp \
+	../external/tgbdual-go/gb_core/tgbdual_cpu.cpp \
+	../external/tgbdual-go/gb_core/tgbdual_gb.cpp \
+	../external/tgbdual-go/gb_core/tgbdual_lcd.cpp \
+	../external/tgbdual-go/gb_core/tgbdual_mbc.cpp \
+	../external/tgbdual-go/gb_core/tgbdual_rom.cpp \
 	gb-tgbdual/linux_renderer.cpp \
 	gb-tgbdual/main.cpp \
 
@@ -56,20 +56,20 @@ C_INCLUDES =  \
 -I../Core/Inc/porting/gb_tgbdual \
 -I../retro-go-stm32/components/odroid \
 -I../retro-go-stm32/components/lupng \
--I../tgbdual-go \
--I../tgbdual-go/gb_core \
--I../tgbdual-go/libretro
+-I../external/tgbdual-go \
+-I../external/tgbdual-go/gb_core \
+-I../external/tgbdual-go/libretro
 
 CXX_INCLUDES =  \
 -I. \
--I./gb \
+-I./gb-tgbdual \
 -I../Core/Src/porting/lib \
 -I../Core/Src/porting/lib/lzma \
 -I../retro-go-stm32/components/odroid \
 -I../retro-go-stm32/components/lupng \
--I../tgbdual-go \
--I../tgbdual-go/gb_core \
--I../tgbdual-go/libretro
+-I../external/tgbdual-go \
+-I../external/tgbdual-go/gb_core \
+-I../external/tgbdual-go/libretro
 
 
 ASFLAGS = $(AS_DEFS) $(AS_INCLUDES) $(OPT) -fdata-sections -ffunction-sections

@@ -2,25 +2,25 @@
 	path = retro-go-stm32
 	url = https://github.com/sylverb/retro-go-stm32
 [submodule "LCD-Game-Emulator"]
-	path = LCD-Game-Emulator
+	path = external/LCD-Game-Emulator
 	url = https://github.com/sylverb/LCD-Game-Emulator.git
 [submodule "blueMSX-go"]
-	path = blueMSX-go
+	path = external/blueMSX-go
 	url = https://github.com/sylverb/blueMSX-go.git
 [submodule "potator"]
-	path = potator
+	path = external/potator
 	url = https://github.com/sylverb/potator.git
 [submodule "gwenesis"]
-	path = gwenesis
+	path = external/gwenesis
 	url = https://github.com/sylverb/gwenesis
 [submodule "prosystem-go"]
-	path = prosystem-go
+	path = external/prosystem-go
 	url = https://github.com/sylverb/prosystem-go.git
 [submodule "caprice32-go"]
-	path = caprice32-go
+	path = external/caprice32-go
 	url = https://github.com/sylverb/caprice32-go.git
 [submodule "fceumm-go"]
-	path = fceumm-go
+	path = external/fceumm-go
 	url = https://github.com/sylverb/fceumm-go.git
 [submodule "Core/Src/porting/lib/littlefs"]
 	path = Core/Src/porting/lib/littlefs
@@ -29,19 +29,19 @@
 	path = Core/Src/porting/lib/tamp
 	url = https://github.com/BrianPugh/tamp.git
 [submodule "tgbdual-go"]
-	path = tgbdual-go
+	path = external/tgbdual-go
 	url = https://github.com/sylverb/tgbdual-go.git
 [submodule "zelda3"]
-	path = zelda3
+	path = external/zelda3
 	url = https://github.com/sylverb/zelda3.git
 	branch = filesystem
 [submodule "smw"]
-	path = smw
+	path = external/smw
 	url = https://github.com/sylverb/smw.git
 	branch = filesystem
 [submodule "o2em-go"]
-	path = o2em-go
+	path = external/o2em-go
 	url = https://github.com/sylverb/o2em-go.git
 [submodule "ccleste-go"]
-	path = ccleste-go
+	path = external/ccleste-go
 	url = https://github.com/sylverb/ccleste-go.git

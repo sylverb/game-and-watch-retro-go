@@ -6,7 +6,7 @@ OPT = -O0 -ggdb3
 #-fsanitize=address
 
 BUILD_DIR = build
-CORE_MSX := ../blueMSX-go
+CORE_MSX := ../external/blueMSX-go
 
 #../Core/Src/porting/lib/lz4_depack.c \
 ../Core/Src/porting/lib/lzma/LzmaDec.c \

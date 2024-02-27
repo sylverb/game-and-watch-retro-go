@@ -17,8 +17,8 @@ odroid_display.c \
 odroid_audio.c \
 gw_lcd.c \
 porting.c \
-../ccleste-go/celeste.c \
-../ccleste-go/celeste_audio.c \
+../external/ccleste-go/celeste.c \
+../external/ccleste-go/celeste_audio.c \
 celeste/main.c \
 
 PREFIX = 
@@ -38,7 +38,7 @@ C_INCLUDES =  \
 -I. \
 -I../Core/Inc/porting/celeste \
 -I../retro-go-stm32/components/odroid \
--I../ccleste-go/
+-I../external/ccleste-go/
 
 
 ASFLAGS = $(AS_DEFS) $(AS_INCLUDES) $(OPT) -fdata-sections -ffunction-sections

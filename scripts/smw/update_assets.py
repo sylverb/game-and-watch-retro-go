@@ -23,5 +23,5 @@ def write_c_array(file_name, variable_name, data):
     c_file.write(final_content + ";\n")
 
 
-raw_data = read_file("smw/smw_assets.dat")
+raw_data = read_file("external/smw/smw_assets.dat")
 write_c_array("Core/Src/porting/smw/smw_assets", "smw_assets", raw_data)

@@ -1,6 +1,10 @@
 #ifndef _GW_MALLOC_H_
 #define _GW_MALLOC_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stddef.h>
 void ahb_init();
@@ -10,5 +14,9 @@ void *ahb_calloc(size_t count,size_t size);
 void itc_init();
 void *itc_malloc(size_t size);
 void *itc_calloc(size_t count,size_t size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

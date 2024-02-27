@@ -498,7 +498,7 @@ class ROM:
         if self.system_name == "MSX":
             mapper = int(subprocess.check_output([sys.executable, "./tools/findblueMsxMapper.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk').replace('.lzma','')]))
         if self.system_name == "Nintendo Entertainment System":
-            mapper = int(subprocess.check_output([sys.executable, "./fceumm-go/nesmapper.py", "mapper", str(self.path).replace('.lzma','')]))
+            mapper = int(subprocess.check_output([sys.executable, "./external/fceumm-go/nesmapper.py", "mapper", str(self.path).replace('.lzma','')]))
         return mapper
 
     @property
