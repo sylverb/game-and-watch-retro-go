@@ -909,6 +909,7 @@ class ROMParser:
                 return []
 
             roms = []
+            print("system_name : "+str(system_name)+" / extensions = "+str(extensions))
             for e in extensions:
                 roms += self.find_roms(system_name, folder, e + "." + compress, romdefs)
             return roms
@@ -934,10 +935,10 @@ class ROMParser:
             cdk_disks = self.find_roms(system_name, folder, "cdk", romdefs)
         #remove .dsk from list
         roms_raw = [r for r in roms_raw if not contains_rom_by_name(r, cdk_disks)]
-        #add .cdk disks to list
-        roms_raw.extend(cdk_disks)
 
         roms_compressed = find_compressed_roms()
+
+        print("roms_compressed : "+str(roms_compressed))
 
         roms_raw = [r for r in roms_raw if not contains_rom_by_name(r, roms_compressed)]
         if roms_raw and compress is not None:
@@ -953,6 +954,9 @@ class ROMParser:
                 )
             # Re-generate the compressed rom list
             roms_compressed = find_compressed_roms()
+
+        #add .cdk disks to list
+        roms_raw.extend(cdk_disks)
 
         # Create a list with all compressed roms and roms that
         # don't have a compressed counterpart.
