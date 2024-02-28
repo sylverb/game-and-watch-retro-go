@@ -499,7 +499,7 @@ class ROM:
             value = int(control) + (int(ctrl_boot) << 7)
             return [mapper, value]
         if self.system_name == "Nintendo Entertainment System":
-            mapper = int(subprocess.check_output([sys.executable, "./fceumm-go/nesmapper.py", "mapper", str(self.path).replace('.lzma','')]))
+            mapper = int(subprocess.check_output([sys.executable, "./external/fceumm-go/nesmapper.py", "mapper", str(self.path).replace('.lzma','')]))
             return [mapper]
         return []
 
