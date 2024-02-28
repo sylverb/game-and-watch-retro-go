@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List
+from packaging import version
 
 try:
     from tqdm import tqdm
@@ -232,7 +233,11 @@ def parse_msx_bios_files():
 
 def write_covart(srcfile, fn, w, h, jpg_quality):
     from PIL import Image, ImageOps
-    img = Image.open(srcfile).convert(mode="RGB").resize((w, h), Image.ANTIALIAS)
+    if version.parse(Image.__version__) >= version.parse('7.0'):
+        dither = Image.Resampling.LANCZOS
+    else:
+        dither = Image.ANTIALIAS
+    img = Image.open(srcfile).convert(mode="RGB").resize((w, h), dither)
     img.save(fn,format="JPEG",optimize=True,quality=jpg_quality)
 
 # def write_rgb565(srcfile, fn, v):
