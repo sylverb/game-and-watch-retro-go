@@ -37942,6 +37942,53 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		</dump>
 	</software>
 	<software>
+		<title xml:lang="en">Final Fantasy</title>
+		<system>MSX</system>
+		<controls>46</controls>
+		<ctrl>1</ctrl>
+		<dump>
+			<disk>
+				<hash algo="sha1">88313a53a1301d030317d5d1b76c16fcf4ae1a21</hash>
+			</disk>
+			<disk>
+				<hash algo="sha1">b871923a7c693bd7fa75684bcec08c7c8800ea53</hash>
+				<remark>
+					<text>[a]</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">6608af878b95aa97b489ff9279698d9ad590e124</hash>
+				<remark>
+					<text>[a2]</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">7a90593367351303ec95f3ddc5da4ebbadebe00c</hash>
+				<remark>
+					<text>[a3]</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">535c58e163c02f9d4a926c2f89d29ae34c6dfc34</hash>
+				<remark>
+					<text>[b]</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">ccc328c9607ffdbae5956a76967855f1ba389f18</hash>
+				<remark>
+					<text>English Translation</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">a7408be21b9248e6ff3124a5f6934338489a4a7b</hash>
+				<remark>
+					<text>English Translation + Performance Patch [a]</text>
+				</remark>
+			</disk>
+		</dump>
+	</software>
+	<software>
 		<title xml:lang="en">Fire Hawk - Thexder 2</title>
 		<system>MSX</system>
 		<controls>2</controls>

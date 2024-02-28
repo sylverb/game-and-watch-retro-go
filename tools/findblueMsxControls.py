@@ -5,7 +5,7 @@ import hashlib
 import xml.dom.minidom
 
 def getGameControls(collection,sha1):
-    controls = "255"
+    controls = "127"
     ctrl = "0" # Does the game require to press ctrl at boot ?
     for software in collection.getElementsByTagName("software"):
         system = software.getElementsByTagName('system')[0]

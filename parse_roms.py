@@ -503,14 +503,14 @@ class ROM:
 
     @property
     def game_config(self):
-        value = 0xff
+        value = 0x7f
         if self.system_name == "MSX":
             # MSX game_config structure :
             # b7-b0 : Controls profile
             # b8 : Does the game require to press ctrl at boot ?
             sp_output = subprocess.check_output([sys.executable, "./tools/findblueMsxControls.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk').replace('.lzma','')]).splitlines()
-            value = int(sp_output[0]) + (int(sp_output[1]) << 8)
-            if int(sp_output[0]) == 0xff :
+            value = int(sp_output[0]) + (int(sp_output[1]) << 7)
+            if int(sp_output[0]) == 0x7f :
                 print(f"Warning : {self.name} has no controls configuration in roms/msx_bios/msxromdb.xml, default controls will be used")
         return value
     @property

@@ -851,7 +851,15 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
                 machine->slotInfo[i].startPage = 2;
                 machine->slotInfo[i].pageCount = 4;
                 machine->slotInfo[i].romType = ROM_TC8566AF;
-                strcpy(machine->slotInfo[i].name, "PANASONICDISK.rom");
+                // If game requires extended ram by disabling second floppy
+                // controller, we need to load a modified disk bios that is
+                // forcing disabling second floppy controller without having
+                // to press ctrl key at boot
+                if ((ACTIVE_FILE->game_config&0x80) == 0x80) {
+                    strcpy(machine->slotInfo[i].name, "PANASONICDISK_.rom");
+                } else {
+                    strcpy(machine->slotInfo[i].name, "PANASONICDISK.rom");
+                }
                 i++;
             }
 
@@ -905,7 +913,15 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
                 machine->slotInfo[i].startPage = 2;
                 machine->slotInfo[i].pageCount = 4;
                 machine->slotInfo[i].romType = ROM_TC8566AF;
-                strcpy(machine->slotInfo[i].name, "PANASONICDISK.rom");
+                // If game requires extended ram by disabling second floppy
+                // controller, we need to load a modified disk bios that is
+                // forcing disabling second floppy controller without having
+                // to press ctrl key at boot
+                if ((ACTIVE_FILE->game_config&0x80) == 0x80) {
+                    strcpy(machine->slotInfo[i].name, "PANASONICDISK_.rom");
+                } else {
+                    strcpy(machine->slotInfo[i].name, "PANASONICDISK.rom");
+                }
                 i++;
             } else if (msx_game_type == MSX_GAME_HDIDE) {
                 machine->slotInfo[i].slot = 1;
@@ -983,7 +999,15 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
                 machine->slotInfo[i].startPage = 2;
                 machine->slotInfo[i].pageCount = 4;
                 machine->slotInfo[i].romType = ROM_TC8566AF;
-                strcpy(machine->slotInfo[i].name, "PANASONICDISK.rom");
+                // If game requires extended ram by disabling second floppy
+                // controller, we need to load a modified disk bios that is
+                // forcing disabling second floppy controller without having
+                // to press ctrl key at boot
+                if ((ACTIVE_FILE->game_config&0x80) == 0x80) {
+                    strcpy(machine->slotInfo[i].name, "PANASONICDISK_.rom");
+                } else {
+                    strcpy(machine->slotInfo[i].name, "PANASONICDISK.rom");
+                }
                 i++;
             } else if (msx_game_type == MSX_GAME_HDIDE) {
                 machine->slotInfo[i].slot = 1;
@@ -1056,10 +1080,14 @@ static void insertGame() {
     msx_button_time_key = EC_CTRL;
     msx_button_start_key = EC_RETURN;
     msx_button_select_key = EC_CTRL;
-    uint8_t controls_profile = ACTIVE_FILE->game_config&0xFF;
+
+    // We suppose that we won't need more than 127 different
+    // configurations, change that if it happens one day
+    uint8_t controls_profile = ACTIVE_FILE->game_config&0x7F;
 
     switch (controls_profile) {
-        case 0: // Default configuration
+        case 0:   // Default configuration
+        case 0x7F: // No configuration
         break;
         case 1: // Konami
             msx_button_a_key = EC_SPACE;
@@ -1451,6 +1479,14 @@ static void insertGame() {
             msx_button_start_key = EC_F3; // Show Map
             msx_button_select_key = EC_BKSPACE; // Cancel move
 #endif
+        break;
+        case 46: // Final Fantasy
+            msx_button_a_key = EC_SPACE;
+            msx_button_b_key = EC_RETURN;
+            msx_button_game_key = EC_F1; // Menu
+            msx_button_time_key = EC_F2; // Team
+            msx_button_start_key = EC_F1; // Menu
+            msx_button_select_key = EC_F2; // Team
         break;
         default:
             controls_found = false;
