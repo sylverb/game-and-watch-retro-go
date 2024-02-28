@@ -81,15 +81,15 @@ ifeq ($(FORCE_GNUBOY),1)
 ifneq ($(strip $(ROMS_GB)),)
 GNUBOY_C_SOURCES += \
 Core/Src/porting/gb/main_gb.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/cpu.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/debug.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/emu.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/hw.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/lcd.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/loader.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/mem.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/rtc.c \
-retro-go-stm32/gnuboy-go/components/gnuboy/sound.c
+retro-go-stm32/gnuboy-go/components/gnuboy/gnuboy_cpu.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/gnuboy_debug.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/gnuboy_emu.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/gnuboy_hw.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/gnuboy_lcd.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/gnuboy_loader.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/gnuboy_mem.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/gnuboy_rtc.c \
+retro-go-stm32/gnuboy-go/components/gnuboy/gnuboy_sound.c
 endif
 else
 ifneq ($(strip $(ROMS_GB)),)
