@@ -811,7 +811,7 @@ static void createOptionMenu(odroid_dialog_choice_t *options) {
 
 static void setPropertiesMsx(Machine *machine, int msxType) {
     int i = 0;
-
+    uint8_t ctrl_needed = ACTIVE_FILE->extra[1]&0x80;
     msx2_dif = 0;
     switch(msxType) {
         case 0: // MSX1
@@ -855,7 +855,7 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
                 // controller, we need to load a modified disk bios that is
                 // forcing disabling second floppy controller without having
                 // to press ctrl key at boot
-                if ((ACTIVE_FILE->game_config&0x80) == 0x80) {
+                if (ctrl_needed) {
                     strcpy(machine->slotInfo[i].name, "PANASONICDISK_.rom");
                 } else {
                     strcpy(machine->slotInfo[i].name, "PANASONICDISK.rom");
@@ -917,7 +917,7 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
                 // controller, we need to load a modified disk bios that is
                 // forcing disabling second floppy controller without having
                 // to press ctrl key at boot
-                if ((ACTIVE_FILE->game_config&0x80) == 0x80) {
+                if (ctrl_needed) {
                     strcpy(machine->slotInfo[i].name, "PANASONICDISK_.rom");
                 } else {
                     strcpy(machine->slotInfo[i].name, "PANASONICDISK.rom");
@@ -1003,7 +1003,7 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
                 // controller, we need to load a modified disk bios that is
                 // forcing disabling second floppy controller without having
                 // to press ctrl key at boot
-                if ((ACTIVE_FILE->game_config&0x80) == 0x80) {
+                if (ctrl_needed) {
                     strcpy(machine->slotInfo[i].name, "PANASONICDISK_.rom");
                 } else {
                     strcpy(machine->slotInfo[i].name, "PANASONICDISK.rom");
@@ -1083,7 +1083,7 @@ static void insertGame() {
 
     // We suppose that we won't need more than 127 different
     // configurations, change that if it happens one day
-    uint8_t controls_profile = ACTIVE_FILE->game_config&0x7F;
+    uint8_t controls_profile = ACTIVE_FILE->extra[1]&0x7F;
 
     switch (controls_profile) {
         case 0:   // Default configuration
@@ -1495,8 +1495,8 @@ static void insertGame() {
     switch (msx_game_type) {
         case MSX_GAME_ROM:
         {
-            printf("Rom Mapper %d\n",ACTIVE_FILE->mapper);
-            uint16_t mapper = ACTIVE_FILE->mapper;
+            uint16_t mapper = ACTIVE_FILE->extra[0];
+            printf("Rom Mapper %d\n",mapper);
             if (mapper == ROM_UNKNOWN) {
                 uint32_t rom_size;
                 uint8_t *rom_data;

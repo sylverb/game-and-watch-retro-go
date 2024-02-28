@@ -39,8 +39,7 @@ ROM_ENTRY_TEMPLATE = """\t{{
 \t\t#endif
 \t\t.system = &{system},
 \t\t.region = {region},
-\t\t.mapper = {mapper},
-\t\t.game_config = {game_config},
+\t\t.extra = {extra},
 #if CHEAT_CODES == 1
 \t\t.cheat_codes = {cheat_codes},
 \t\t.cheat_descs = {cheat_descs},
@@ -484,6 +483,21 @@ class ROM:
         # No cheat file found
         return []
 
+    def extra(self):
+        if self.system_name == "MSX":
+            mapper = int(subprocess.check_output([sys.executable, "./tools/findblueMsxMapper.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk').replace('.lzma','')]))
+            sp_output = subprocess.check_output([sys.executable, "./tools/findblueMsxControls.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk').replace('.lzma','')]).splitlines()
+            control = int(sp_output[0])
+            ctrl_boot = int(sp_output[1]) # Does the game require to press ctrl at boot ?
+            if control == 0x7f :
+                print(f"Warning : {self.name} has no controls configuration in roms/msx_bios/msxromdb.xml, default controls will be used")
+            value = int(control) + (int(ctrl_boot) << 7)
+            return [mapper, value]
+        if self.system_name == "Nintendo Entertainment System":
+            mapper = int(subprocess.check_output([sys.executable, "./fceumm-go/nesmapper.py", "mapper", str(self.path).replace('.lzma','')]))
+            return [mapper]
+        return []
+
     @property
     def ext(self):
         return self.path.suffix[1:].lower()
@@ -493,26 +507,26 @@ class ROM:
         return self.path.stat().st_size
 
     @property
-    def mapper(self):
-        mapper = 0
-        if self.system_name == "MSX":
-            mapper = int(subprocess.check_output([sys.executable, "./tools/findblueMsxMapper.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk').replace('.lzma','')]))
-        if self.system_name == "Nintendo Entertainment System":
-            mapper = int(subprocess.check_output([sys.executable, "./external/fceumm-go/nesmapper.py", "mapper", str(self.path).replace('.lzma','')]))
-        return mapper
+    def region(self):
+        region = ""
 
-    @property
-    def game_config(self):
-        value = 0x7f
-        if self.system_name == "MSX":
-            # MSX game_config structure :
-            # b7-b0 : Controls profile
-            # b8 : Does the game require to press ctrl at boot ?
-            sp_output = subprocess.check_output([sys.executable, "./tools/findblueMsxControls.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk').replace('.lzma','')]).splitlines()
-            value = int(sp_output[0]) + (int(sp_output[1]) << 7)
-            if int(sp_output[0]) == 0x7f :
-                print(f"Warning : {self.name} has no controls configuration in roms/msx_bios/msxromdb.xml, default controls will be used")
-        return value
+        if region == "" :
+            is_pal = any(
+                substring in self.filename
+                for substring in [
+                    "(E)",
+                    "(Europe)",
+                    "(Sweden)",
+                    "(Germany)",
+                    "(Italy)",
+                    "(France)",
+                    "(A)",
+                    "(Australia)",
+                ]
+            )
+            region = "REGION_PAL" if is_pal else "REGION_NTSC"
+        return region
+
     @property
     def img_size(self):
         try:
@@ -549,20 +563,6 @@ class ROMParser:
             rom = roms[i]
             if not (rom.publish):
                 continue
-            is_pal = any(
-                substring in rom.filename
-                for substring in [
-                    "(E)",
-                    "(Europe)",
-                    "(Sweden)",
-                    "(Germany)",
-                    "(Italy)",
-                    "(France)",
-                    "(A)",
-                    "(Australia)",
-                ]
-            )
-            region = "REGION_PAL" if is_pal else "REGION_NTSC"
             gg_count_name = "%s%s_COUNT" % (cheat_codes_prefix, i)
             gg_code_array_name = "%sCODE_%s" % (cheat_codes_prefix, i)
             gg_desc_array_name = "%sDESC_%s" % (cheat_codes_prefix, i)
@@ -573,14 +573,13 @@ class ROMParser:
                 rom_entry=rom.symbol,
                 img_size=rom.img_size,
                 img_entry=rom.img_symbol if rom.img_size else "NULL",
-                region=region,
+                region=rom.region,
                 extension=rom.ext,
                 system=system,
                 cheat_codes=gg_code_array_name if cheat_codes_prefix else "NULL",
                 cheat_descs=gg_desc_array_name if cheat_codes_prefix else 0,
                 cheat_count=gg_count_name if cheat_codes_prefix else 0,
-                mapper=rom.mapper,
-                game_config=rom.game_config,
+                extra=system+"_extra_"+str(i) if len(rom.extra()) > 0 else "NULL",
             )
             body += "\n"
             pubcount += 1
@@ -693,6 +692,14 @@ class ROMParser:
         )
         template = "extern const uint8_t {name}[];\n"
         return template.format(name=rom.img_symbol)
+
+    def generate_extra_entry(self, name: str, data: list) -> str:
+        size = len(data)
+        if size > 0:
+            data_str = ', '.join(map(hex, data))
+            return f'uint8_t {name}[{size}] = {{{data_str}}};\n'
+        else :
+            return f''
 
     def generate_cheat_entry(self, name: str, num: int, cheat_codes_and_descs: []) -> str:
         str = ""
@@ -1011,6 +1018,8 @@ class ROMParser:
                         f.write(self.generate_img_object_file(rom, cover_width, cover_height))
                     except NoArtworkError:
                         pass
+
+                f.write(self.generate_extra_entry(variable_name+"_extra_"+str(i), rom.extra()))
 
                 cheat_codes_and_descs = rom.get_cheat_codes();
                 if cheat_codes_prefix:

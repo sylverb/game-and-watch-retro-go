@@ -36,10 +36,9 @@ typedef struct {
     //size_t crc_offset;
     //uint32_t checksum;
     //bool missing_cover;
-    uint16_t mapper;
+    const uint8_t *extra;
     rom_region_t region;
     const rom_system_t *system;
-    uint16_t game_config;
 #if CHEAT_CODES == 1
     const char** cheat_codes; // Cheat codes to choose from
     const char** cheat_descs; // Cheat codes descriptions
