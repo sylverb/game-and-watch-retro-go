@@ -212,11 +212,15 @@ def parse_msx_bios_files():
         print("Bad or missing roms/msx_bios/PANASONICDISK.rom, check roms/msx_bios/README.md for info")
         return 0
 
+    if (sha1_for_file("roms/msx_bios/MSXKANJI.rom") != "dcc3a67732aa01c4f2ee8d1ad886444a4dbafe06"):
+        print("Bad or missing roms/msx_bios/MSXKANJI.rom, check roms/msx_bios/README.md for info")
+        return 0
+
     # PANASONICDISK_.rom is a patched version of PANASONICDISK.rom to disable the 2nd FDD
     # this is allowing to free some ram, which is needed for some games. It could be done by pressing
     # ctrl key at boot using original bios, but using this patched version, the user will have nothing
     # to do. Unfortunately this version can't be used in all cases because some games (from Micro Cabin)
-    # like Fray, XAK III, 
+    # like Fray, XAK III, ... are crashing if 2nd FDD is not enabled in bios
     if (sha1_for_file("roms/msx_bios/PANASONICDISK_.rom") != "b9bce28fb74223ea902f82ebd107279624cf2aba"):
         shutil.copy("roms/msx_bios/PANASONICDISK.rom","roms/msx_bios/PANASONICDISK_.rom")
         if (sha1_for_file("roms/msx_bios/PANASONICDISK_.rom") == "7ed7c55e0359737ac5e68d38cb6903f9e5d7c2b6"):

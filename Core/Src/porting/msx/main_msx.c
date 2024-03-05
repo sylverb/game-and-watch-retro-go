@@ -973,7 +973,7 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
             machine->slotInfo[i].subslot = 0;
             machine->slotInfo[i].startPage = 0;
             machine->slotInfo[i].pageCount = 0;
-            machine->slotInfo[i].romType = ROM_F4DEVICE; //ROM_F4INVERTED;
+            machine->slotInfo[i].romType = ROM_F4INVERTED;
             strcpy(machine->slotInfo[i].name, "");
             i++;
 
@@ -995,7 +995,7 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
 
             if (msx_game_type == MSX_GAME_DISK) {
                 machine->slotInfo[i].slot = 3;
-                machine->slotInfo[i].subslot = 1;
+                machine->slotInfo[i].subslot = 2;
                 machine->slotInfo[i].startPage = 2;
                 machine->slotInfo[i].pageCount = 4;
                 machine->slotInfo[i].romType = ROM_TC8566AF;
@@ -1025,6 +1025,14 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
             machine->slotInfo[i].pageCount = 2;
             machine->slotInfo[i].romType = ROM_MSXMUSIC; // FMPAC
             strcpy(machine->slotInfo[i].name, "MSX2PMUS.rom");
+            i++;
+
+            machine->slotInfo[i].slot = 3;
+            machine->slotInfo[i].subslot = 1;
+            machine->slotInfo[i].startPage = 2;
+            machine->slotInfo[i].pageCount = 4;
+            machine->slotInfo[i].romType = ROM_0x4000;
+            strcpy(machine->slotInfo[i].name, "MSXKANJI.rom");
             i++;
 
             machine->slotInfoCount = i;

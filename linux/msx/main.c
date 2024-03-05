@@ -771,7 +771,7 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
             machine->slotInfo[i].startPage = 0;
             machine->slotInfo[i].pageCount = 4;
             machine->slotInfo[i].romType = ROM_CASPATCH;
-            strcpy(machine->slotInfo[i].name, "MSX.rom");
+            strcpy(machine->slotInfo[i].name, "../roms/msx_bios/MSX.rom");
             i++;
 
             if (msx_game_type == MSX_GAME_DISK) {
@@ -780,7 +780,7 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
                 machine->slotInfo[i].startPage = 2;
                 machine->slotInfo[i].pageCount = 4;
                 machine->slotInfo[i].romType = ROM_TC8566AF;
-                strcpy(machine->slotInfo[i].name, "PANASONICDISK.rom");
+                strcpy(machine->slotInfo[i].name, "../roms/msx_bios/PANASONICDISK.rom");
                 i++;
             }
 
@@ -817,7 +817,7 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
             machine->slotInfo[i].startPage = 0;
             machine->slotInfo[i].pageCount = 4;
             machine->slotInfo[i].romType = ROM_CASPATCH;
-            strcpy(machine->slotInfo[i].name, "MSX2.rom");
+            strcpy(machine->slotInfo[i].name, "../roms/msx_bios/MSX2.rom");
             i++;
 
             machine->slotInfo[i].slot = 3;
@@ -825,7 +825,7 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
             machine->slotInfo[i].startPage = 0;
             machine->slotInfo[i].pageCount = 2;
             machine->slotInfo[i].romType = ROM_NORMAL;
-            strcpy(machine->slotInfo[i].name, "MSX2EXT.rom");
+            strcpy(machine->slotInfo[i].name, "../roms/msx_bios/MSX2EXT.rom");
             i++;
 
             if (msx_game_type == MSX_GAME_DISK) {
@@ -834,7 +834,7 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
                 machine->slotInfo[i].startPage = 2;
                 machine->slotInfo[i].pageCount = 4;
                 machine->slotInfo[i].romType = ROM_TC8566AF;
-                strcpy(machine->slotInfo[i].name, "PANASONICDISK.rom");
+                strcpy(machine->slotInfo[i].name, "../roms/msx_bios/PANASONICDISK.rom");
                 i++;
             } else if (msx_game_type == MSX_GAME_HDIDE) {
                 machine->slotInfo[i].slot = 1;
@@ -842,7 +842,7 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
                 machine->slotInfo[i].startPage = 0;
                 machine->slotInfo[i].pageCount = 16;
                 machine->slotInfo[i].romType = ROM_MSXDOS2;
-                strcpy(machine->slotInfo[i].name, "MSXDOS23.ROM");
+                strcpy(machine->slotInfo[i].name, "../roms/msx_bios/MSXDOS23.ROM");
                 i++;
             }
 
@@ -851,7 +851,7 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
             machine->slotInfo[i].startPage = 2;
             machine->slotInfo[i].pageCount = 2;
             machine->slotInfo[i].romType = ROM_MSXMUSIC; // FMPAC
-            strcpy(machine->slotInfo[i].name, "MSX2PMUS.rom");
+            strcpy(machine->slotInfo[i].name, "../roms/msx_bios/MSX2PMUS.rom");
             i++;
 
             machine->slotInfoCount = i;
@@ -874,19 +874,11 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
             machine->cart[1].slot = 2;
             machine->cart[1].subslot = 0;
 
-            machine->slotInfo[i].slot = 3;
-            machine->slotInfo[i].subslot = 0;
-            machine->slotInfo[i].startPage = 0;
-            machine->slotInfo[i].pageCount = 16; // 128kB of RAM
-            machine->slotInfo[i].romType = RAM_MAPPER;
-            strcpy(machine->slotInfo[i].name, "");
-            i++;
-
             machine->slotInfo[i].slot = 0;
             machine->slotInfo[i].subslot = 0;
             machine->slotInfo[i].startPage = 0;
             machine->slotInfo[i].pageCount = 0;
-            machine->slotInfo[i].romType = ROM_F4DEVICE; //ROM_F4INVERTED;
+            machine->slotInfo[i].romType = ROM_F4INVERTED;
             strcpy(machine->slotInfo[i].name, "");
             i++;
 
@@ -895,7 +887,23 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
             machine->slotInfo[i].startPage = 0;
             machine->slotInfo[i].pageCount = 4;
             machine->slotInfo[i].romType = ROM_CASPATCH;
-            strcpy(machine->slotInfo[i].name, "MSX2P.rom");
+            strcpy(machine->slotInfo[i].name, "../roms/msx_bios/MSX2P.rom");
+            i++;
+
+            machine->slotInfo[i].slot = 0;
+            machine->slotInfo[i].subslot = 2;
+            machine->slotInfo[i].startPage = 2;
+            machine->slotInfo[i].pageCount = 2;
+            machine->slotInfo[i].romType = ROM_MSXMUSIC; // FMPAC
+            strcpy(machine->slotInfo[i].name, "../roms/msx_bios/MSX2PMUS.rom");
+            i++;
+
+            machine->slotInfo[i].slot = 3;
+            machine->slotInfo[i].subslot = 0;
+            machine->slotInfo[i].startPage = 0;
+            machine->slotInfo[i].pageCount = 16; // 128kB of RAM
+            machine->slotInfo[i].romType = RAM_MAPPER;
+            strcpy(machine->slotInfo[i].name, "");
             i++;
 
             machine->slotInfo[i].slot = 3;
@@ -903,16 +911,24 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
             machine->slotInfo[i].startPage = 0;
             machine->slotInfo[i].pageCount = 2;
             machine->slotInfo[i].romType = ROM_NORMAL;
-            strcpy(machine->slotInfo[i].name, "MSX2PEXT.rom");
+            strcpy(machine->slotInfo[i].name, "../roms/msx_bios/MSX2PEXT.rom");
+            i++;
+
+            machine->slotInfo[i].slot = 3;
+            machine->slotInfo[i].subslot = 1;
+            machine->slotInfo[i].startPage = 2;
+            machine->slotInfo[i].pageCount = 4;
+            machine->slotInfo[i].romType = ROM_0x4000;
+            strcpy(machine->slotInfo[i].name, "../roms/msx_bios/MSXKANJI.rom");
             i++;
 
             if (msx_game_type == MSX_GAME_DISK) {
                 machine->slotInfo[i].slot = 3;
-                machine->slotInfo[i].subslot = 1;
+                machine->slotInfo[i].subslot = 2;
                 machine->slotInfo[i].startPage = 2;
                 machine->slotInfo[i].pageCount = 4;
                 machine->slotInfo[i].romType = ROM_TC8566AF;
-                strcpy(machine->slotInfo[i].name, "PANASONICDISK.rom");
+                strcpy(machine->slotInfo[i].name, "../roms/msx_bios/PANASONICDISK.rom");
                 i++;
             } else if (msx_game_type == MSX_GAME_HDIDE) {
                 machine->slotInfo[i].slot = 1;
@@ -920,17 +936,9 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
                 machine->slotInfo[i].startPage = 0;
                 machine->slotInfo[i].pageCount = 16;
                 machine->slotInfo[i].romType = ROM_MSXDOS2;
-                strcpy(machine->slotInfo[i].name, "MSXDOS23.ROM");
+                strcpy(machine->slotInfo[i].name, "../roms/msx_bios/MSXDOS23.ROM");
                 i++;
             }
-
-            machine->slotInfo[i].slot = 0;
-            machine->slotInfo[i].subslot = 2;
-            machine->slotInfo[i].startPage = 2;
-            machine->slotInfo[i].pageCount = 2;
-            machine->slotInfo[i].romType = ROM_MSXMUSIC; // FMPAC
-            strcpy(machine->slotInfo[i].name, "MSX2PMUS.rom");
-            i++;
 
             machine->slotInfoCount = i;
             break;
@@ -1140,7 +1148,7 @@ int main(int argc, char *argv[])
                          ((i&0x3)*31/3);
     }
 
-    setupEmulatorRessources(2); // 1 = MSX2 2 = MSX2+
+    setupEmulatorRessources(2); // 0 = MSX1 1 = MSX2 2 = MSX2+
 
 
     while (1) {
