@@ -20,6 +20,8 @@ extern int16_t audiobuffer_dma[AUDIO_BUFFER_LENGTH * 2] __attribute__((section (
 extern dma_transfer_state_t dma_state;
 extern uint32_t dma_counter;
 
+//TODO: Rename to follow naming convention
+void set_audio_frequency(uint32_t frequency);
 uint16_t audio_get_buffer_length(void);
 uint16_t audio_get_buffer_size(void);
 int16_t *audio_get_active_buffer(void);
