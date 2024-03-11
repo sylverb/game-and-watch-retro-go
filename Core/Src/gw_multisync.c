@@ -38,11 +38,12 @@ static void multisync_set_pll_fracn(int32_t fracn) {
 
 void multisync_init() {
     PID_Init(&pidController, 0, KP, KI, KD, PID_MIN_OUTPUT, PID_MAX_OUTPUT);
+    in_sync_count = 0;
     initialized = true;
 }
 
 bool multisync_is_synchronized() {
-    return in_sync_count >= MIN_IN_SYNC_COUNT;
+    return in_sync_count >= MIN_IN_SYNC_COUNT && initialized;
 }
 
 static void multisync_common_handler() {
@@ -63,7 +64,7 @@ static void multisync_common_handler() {
     double adjust = PID_Update(&pidController, normalized_line);
     multisync_set_pll_fracn((int32_t) adjust + CENTER_FRACN);
 #ifdef MULTISYNC_DEBUG
-    printf("MultiSync: frame: %ld line: %d adjust: %0.2f in sync: %d\n", lcd_get_frame_counter(), normalized_line, adjust, multisync_is_synchronized());
+    printf("MultiSync: frame: %ld line: %d adjust: %d in sync: %d\n", lcd_get_frame_counter(), normalized_line, (uint16_t) adjust, multisync_is_synchronized());
 #endif
 }
 

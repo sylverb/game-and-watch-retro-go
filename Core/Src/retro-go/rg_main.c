@@ -350,6 +350,19 @@ static bool debug_menu_debug_clock_cb(odroid_dialog_choice_t *option, odroid_dia
     return event == ODROID_DIALOG_ENTER;
 }
 
+static bool debug_menu_multisync_debug_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    bool on = odroid_settings_DebugMenuMultisyncDebug_get();
+    if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
+        on = !on;
+        odroid_settings_DebugMenuMultisyncDebug_set(on);
+    }
+
+    sprintf(option->value, "%s", on ? curr_lang->s_Multisync_debug_on : curr_lang->s_Multisync_debug_off);
+
+    return event == ODROID_DIALOG_ENTER;
+}
+
 static bool debug_menu_debug_cr_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
     sprintf(option->value, "0x%08lX", DBGMCU->CR);
@@ -369,6 +382,7 @@ static void handle_debug_menu()
     char dbgmcu_id_str[16];
     char dbgmcu_cr_str[16];
     char dbgmcu_clock_str[16];
+    char multisync_debug_str[16];
 
     // Read jedec id and status register from the external flash
     OSPI_DisableMemoryMappedMode();
@@ -393,6 +407,8 @@ static void handle_debug_menu()
             {-1, curr_lang->s_DBGMCU_IDCODE, dbgmcu_id_str, 0, NULL},
             {-1, curr_lang->s_DBGMCU_CR, dbgmcu_cr_str, 0, debug_menu_debug_cr_cb},
             {1, curr_lang->s_DBGMCU_clock, dbgmcu_clock_str, 1, debug_menu_debug_clock_cb},
+            ODROID_DIALOG_CHOICE_SEPARATOR,
+            {1, curr_lang->s_Multisync_debug, multisync_debug_str, 1, debug_menu_multisync_debug_cb},
             ODROID_DIALOG_CHOICE_SEPARATOR,
             {0, curr_lang->s_Close, "", 1, NULL},
             ODROID_DIALOG_CHOICE_LAST};

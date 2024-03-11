@@ -27,7 +27,7 @@ void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai) {
 }
 
 /* set audio frequency  */
-void set_audio_frequency(uint32_t frequency) {
+void audio_set_frequency(uint32_t frequency) {
     // (re)config PLL2 and SAI
     RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
@@ -74,13 +74,13 @@ void set_audio_frequency(uint32_t frequency) {
         PeriphClkInitStruct.PLL2.PLL2P = 10;
         PeriphClkInitStruct.PLL2.PLL2FRACN = 5000;
     } else if (frequency == MD_AUDIO_FREQ_NTSC) {
-        // MCLK = 8, target = 53267, realized = 53267, error = 0.00% //TODO: Remove the sync feature in gwenesis (both NTSC & PAL)
+        // MCLK = 8, target = 53267, realized = 53267, error = 0.00%
         PeriphClkInitStruct.PLL2.PLL2M = 11;
         PeriphClkInitStruct.PLL2.PLL2N = 75;
         PeriphClkInitStruct.PLL2.PLL2P = 4;
         PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
     } else if (frequency == MD_AUDIO_FREQ_PAL) {
-        // MCLK = 8, target = 52781, realized = 52781, error = 0.00% //TODO: Remove the sync feature in gwenesis (both NTSC & PAL)
+        // MCLK = 8, target = 52781, realized = 52781, error = 0.00%
         PeriphClkInitStruct.PLL2.PLL2M = 9;
         PeriphClkInitStruct.PLL2.PLL2N = 76;
         PeriphClkInitStruct.PLL2.PLL2P = 5;

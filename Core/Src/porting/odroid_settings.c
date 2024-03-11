@@ -71,6 +71,7 @@ typedef struct persistent_config {
     uint16_t main_menu_cursor;
 
     bool debug_clock_always_on;
+    bool multisync_debug;
 
     app_config_t app[APPID_COUNT];
 
@@ -83,7 +84,7 @@ typedef struct persistent_config {
 
 static const persistent_config_t persistent_config_default = {
     .magic = CONFIG_MAGIC,
-    .version = 6,
+    .version = 7,
 
     .backlight = ODROID_BACKLIGHT_LEVEL6,
     .start_action = ODROID_START_ACTION_RESUME,
@@ -122,6 +123,7 @@ static const persistent_config_t persistent_config_default = {
     .main_menu_selected_tab = 0,
     .main_menu_cursor = 0,
     .debug_clock_always_on = false,
+    .multisync_debug = false,
     .app = {
         {0}, // Launcher
         {
@@ -581,5 +583,15 @@ bool odroid_settings_DebugMenuDebugClockAlwaysOn_get()
 void odroid_settings_DebugMenuDebugClockAlwaysOn_set(bool value)
 {
     persistent_config_ram.debug_clock_always_on = value;
+}
+
+
+bool odroid_settings_DebugMenuMultisyncDebug_get()
+{
+    return persistent_config_ram.multisync_debug;
+}
+void odroid_settings_DebugMenuMultisyncDebug_set(bool value)
+{
+    persistent_config_ram.multisync_debug = value;
 }
 
