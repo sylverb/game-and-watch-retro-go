@@ -163,19 +163,6 @@ static void gw_sound_init()
 static void gw_sound_submit()
 {
 
-    /** Enables the following code to track audio rendering issues **/
-    /*
-    if (gw_audio_buffer_idx < GW_AUDIO_BUFFER_LENGTH) {
-        printf("audio underflow:%u < %u \n",gw_audio_buffer_idx , GW_AUDIO_BUFFER_LENGTH);
-        assert(0);
-    }
-
-    if (gw_audio_buffer_idx > (GW_AUDIO_BUFFER_LENGTH +12) ) {
-        printf("audio oveflow:%u < %u \n",gw_audio_buffer_idx , GW_AUDIO_BUFFER_LENGTH);
-        assert(0);
-    }
-    */
-
     if (common_emu_sound_loop_is_muted()) {
         return;
     }
@@ -189,8 +176,6 @@ static void gw_sound_submit()
     {
         sound_buffer[i] = (factor) * (gw_audio_buffer[i] << 4);
     }
-
-    gw_audio_buffer_copied = true;
 }
 
 /************************ Debug function in overlay START *******************************/
@@ -436,6 +421,8 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
 
     /* emulate watch mode */
     if (!LoadState_done) {
+        //TODO: Will generate a watchdog timeout!
+        //TODO: gw_audio_buffer_idx gets out of bounds here as well!
         softkey_time_pressed = 0;
         softkey_alarm_pressed = 0;
         softkey_A_pressed = 0;
@@ -518,23 +505,19 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
         proc_cycles = common_emu_get_dwt_cycles();
 
         /* update the screen only if there is no pending frame to render */
-        if (!lcd_is_swap_pending() && drawFrame)
+        if (drawFrame)
         {
             _blit();
             gw_debug_bar();
             if(debug_display_ram == 1) gw_display_ram_overlay();
             lcd_swap();
-
-            /* get how many cycles have been spent in graphics rendering */
-            blit_cycles = common_emu_get_dwt_cycles() - proc_cycles;
         }
+        /* get how many cycles have been spent in graphics rendering */
+        blit_cycles = common_emu_get_dwt_cycles() - proc_cycles;
         /****************************************************************************/
 
         /* copy audio samples for DMA */
-        if (drawFrame)
-        {
-            gw_sound_submit();
-        }
+        gw_sound_submit();
 
         /* get how many cycles have been spent to process everything */
         end_cycles = common_emu_get_dwt_cycles();
