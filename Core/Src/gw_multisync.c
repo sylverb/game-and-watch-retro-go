@@ -20,21 +20,13 @@
 #define PID_MAX_OUTPUT 4095
 
 // Sync after last line
-#define SYNC_AT_LCD_LINE 248
 #define MIN_IN_SYNC_COUNT 10
-#define CENTER_FRACN 4096
 
 //#define MULTISYNC_DEBUG
 
 static PIDController pidController;
 static uint32_t in_sync_count;
 static bool initialized = false;
-
-static void multisync_set_pll_fracn(int32_t fracn) {
-    __HAL_RCC_PLL3FRACN_DISABLE();
-    __HAL_RCC_PLL3FRACN_CONFIG(fracn);
-    __HAL_RCC_PLL3FRACN_ENABLE();
-}
 
 void multisync_init() {
     PID_Init(&pidController, 0, KP, KI, KD, PID_MIN_OUTPUT, PID_MAX_OUTPUT);
@@ -53,16 +45,16 @@ static void multisync_common_handler() {
 
     // Note: The total number of lines in the LCD, both visible and invisible is 256.
     uint8_t current_line = lcd_get_pixel_position() & 0xFF;
-    int8_t normalized_line = current_line - SYNC_AT_LCD_LINE;
+    int8_t normalized_line = current_line - GW_LCD_RELOAD_LINE;
 
-    if (current_line >= SYNC_AT_LCD_LINE - 1 && current_line <= SYNC_AT_LCD_LINE + 1) {
+    if (current_line >= GW_LCD_RELOAD_LINE - 1 && current_line <= GW_LCD_RELOAD_LINE + 1) {
         in_sync_count += 1;
     } else {
         in_sync_count = 0;
     }
 
     double adjust = PID_Update(&pidController, normalized_line);
-    multisync_set_pll_fracn((int32_t) adjust + CENTER_FRACN);
+    lcd_set_pll_fracn((int32_t) adjust + GW_LCD_PLL_FRACN_CENTER);
 #ifdef MULTISYNC_DEBUG
     printf("MultiSync: frame: %ld line: %d adjust: %d in sync: %d\n", lcd_get_frame_counter(), normalized_line, (uint16_t) adjust, multisync_is_synchronized());
 #endif

@@ -227,6 +227,16 @@ void lcd_wait_for_vblank(void)
   }
 }
 
+/**
+ * Reload happens at line 248.
+ */
+void lcd_wait_for_reload(void)
+{
+  while ((lcd_get_pixel_position() & 0xFFFF) != GW_LCD_RELOAD_LINE) {
+    __NOP();
+  }
+}
+
 uint32_t lcd_get_frame_counter(void)
 {
   return frame_counter;
@@ -279,9 +289,15 @@ void lcd_set_refresh_rate(uint32_t frequency) {
   PeriphClkInitStruct.PLL3.PLL3R = pllr;
   PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_3;
   PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
-  PeriphClkInitStruct.PLL3.PLL3FRACN = 4096;
+  PeriphClkInitStruct.PLL3.PLL3FRACN = GW_LCD_PLL_FRACN_CENTER;
 
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
     Error_Handler();
   }
+}
+
+void lcd_set_pll_fracn(int32_t fracn) {
+  __HAL_RCC_PLL3FRACN_DISABLE();
+  __HAL_RCC_PLL3FRACN_CONFIG(fracn);
+  __HAL_RCC_PLL3FRACN_ENABLE();
 }

@@ -1,4 +1,5 @@
 #include "gw_audio.h"
+#include <gw_lcd.h>
 #include <string.h>
 #include "gw_multisync.h"
 
@@ -159,6 +160,8 @@ void audio_set_buffer_length(uint16_t length) {
 void audio_start_playing(uint16_t length) {
     audio_clear_buffers();
     audio_set_buffer_length(length);
+    // Initial sync of LCD clock & audio clock to aid a faster multisync
+    lcd_wait_for_reload();
     HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) audiobuffer_dma, audiobuffer_length * 2);
 }
 
