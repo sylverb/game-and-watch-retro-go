@@ -431,6 +431,7 @@ static bool update_disk_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t
 static void gw_sound_restart()
 {
     audio_stop_playing();
+    lcd_set_refresh_rate(msx_fps);
     audio_start_playing(AUDIO_MSX_SAMPLE_RATE / msx_fps);
 }
 
