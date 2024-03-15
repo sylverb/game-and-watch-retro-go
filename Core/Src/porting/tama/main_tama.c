@@ -20,11 +20,8 @@
 
 // TODO: BUG: Fast save and reload gives CRC error on reload
 // TODO: BUG Save by power off generates CRC or header error upon restore if using SHARED_HIBERNATE_SAVESTATE=1
-// TODO: BUG: The LCD flickers a bit at the bottom as the LCD refresh rate is a bit slower than the sound and since we get active buffer and clears it with memset causing it to write to inactive buffer during swap ever 2,x sec
 // TODO: WISH: add GW rtc -> Tamagotchi rtc (for P1 rom only, not test rom. Might use CRC32 rom value check to enable feature)
-// TODO: FEATURE: A power off/on during FF will cancel it (Its not a bug but a feature)
 // TODO: Small sound tick if going from mute to unmute by turning vol up in a new game
-// TODO: Sometimes vol is different than system vol after starting new
 // TODO: Think about resetting the frame integrator after every menu enter->exit in every emulator
 
 /**
