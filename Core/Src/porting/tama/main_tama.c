@@ -18,10 +18,7 @@
 #include "state_tama.h"
 #include "tamalib.h"
 
-// TODO: BUG: Fast save and reload gives CRC error on reload
-// TODO: BUG Save by power off generates CRC or header error upon restore if using SHARED_HIBERNATE_SAVESTATE=1
 // TODO: WISH: add GW rtc -> Tamagotchi rtc (for P1 rom only, not test rom. Might use CRC32 rom value check to enable feature)
-// TODO: Small sound tick if going from mute to unmute by turning vol up in a new game
 // TODO: Think about resetting the frame integrator after every menu enter->exit in every emulator
 
 /**
@@ -222,6 +219,8 @@ static void init_audio_generator() {
 static void submit_audio() {
     // Clear active sound buffer if muted
     if (common_emu_sound_loop_is_muted()) {
+        // Clear emulator sound frame buffer for next frame usage
+        memset(tama_audio, -1, sizeof(tama_audio));
         return;
     }
 
