@@ -7,6 +7,7 @@
 #include <odroid_system.h>
 #include <rg_i18n.h>
 #include <rom_manager.h>
+#include <sha256.h>
 
 #include "appid.h"
 #include "common.h"
@@ -19,7 +20,6 @@
 #include "state_tama.h"
 #include "tamalib.h"
 
-// TODO: WISH: add GW rtc -> Tamagotchi rtc (for P1 rom only, not test rom. Might use CRC32 rom value check to enable feature)
 // TODO: Think about resetting the frame integrator after every menu enter->exit in every emulator
 
 /**
@@ -299,7 +299,31 @@ static void update_buttons(odroid_gamepad_state_t *joystick) {
     tamalib_set_button(BTN_RIGHT, joystick->values[ODROID_INPUT_A] || joystick->values[ODROID_INPUT_X] ? BTN_STATE_PRESSED : BTN_STATE_RELEASED);
 }
 
-// ************* Frame clock calculation *************
+// ************* Frame emulation *************
+
+static void update_clock() {
+    char sha256[65];
+    sha256_to_string((BYTE *) sha256, (const BYTE *) &tama_rom, sizeof(tama_rom));
+    // Test if this rom is the original P1 rom as it is the only one that I could find and verify the offsets
+    // Note that this is NOT the file hash but the hash of the processed rom after load_rom()
+    if (strncmp("48a716bbae6395ad8b5f43c1a6f57f84ce8abffcdfda0786007b75c2e3a35665", sha256, sizeof(sha256)) == 0) {
+        uint8_t ss = GW_GetCurrentSecond();
+        set_memory(0x10, ss % 10);
+        set_memory(0x11, ss / 10);
+        uint8_t mm = GW_GetCurrentMinute();
+        set_memory(0x12, mm % 10);
+        set_memory(0x13, mm / 10);
+        uint8_t hh = GW_GetCurrentHour();
+        set_memory(0x14, hh & 0x0F);
+        set_memory(0x15, hh >> 4);
+    }
+}
+
+static void end_fast_forward(bool *fast_forward_ptr) {
+    *fast_forward_ptr = false;
+    common_emu_frame_loop_reset();
+    update_clock();
+}
 
 static void emulate_next_frame(bool *fast_forward_ptr, u64_t *total_fast_forward_clocks_ptr) {
     frame_start_tick_counter = *state->tick_counter;
@@ -312,12 +336,10 @@ static void emulate_next_frame(bool *fast_forward_ptr, u64_t *total_fast_forward
                 *total_fast_forward_clocks_ptr += delta;
                 target = *state->tick_counter + delta;
             } else {
-                *fast_forward_ptr = false;
-                common_emu_frame_loop_reset();
+                end_fast_forward(fast_forward_ptr);
             }
         } else {
-            *fast_forward_ptr = false;
-            common_emu_frame_loop_reset();
+            end_fast_forward(fast_forward_ptr);
         }
     }
 
@@ -347,6 +369,7 @@ static void emulate_next_frame(bool *fast_forward_ptr, u64_t *total_fast_forward
 }
 
 // ************* Initialization and main game loop *************
+
 static bool odroid_system_initialized = false;
 static void main_tama(uint8_t start_paused) {
     odroid_gamepad_state_t joystick;
@@ -417,6 +440,8 @@ static void main_tama(uint8_t start_paused) {
     uint64_t currentMillis = GW_GetCurrentMillis();
     if (*state->save_time != 0 && currentMillis > *state->save_time && (currentMillis - *state->save_time) < MAX_SAVE_AGE_IN_MILLIS) {
         fast_forward = true;
+    } else {
+        update_clock();
     }
 
     /* Enter emulation loop */
