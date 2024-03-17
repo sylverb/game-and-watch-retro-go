@@ -5,6 +5,7 @@
 #include <gw_linker.h>
 #endif
 #include <odroid_system.h>
+#include <rg_i18n.h>
 #include <rom_manager.h>
 
 #include "appid.h"
@@ -68,6 +69,38 @@ static uint8_t period_index;
 static u64_t frame_start_tick_counter = 0;
 
 static unsigned int emu_cycles, blit_cycles, audio_cycles, loop_cycles;
+
+// ************* Tamagotchi debug *************
+
+static bool debug_display_ram = false;
+static bool debug_display_ram_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat) {
+    if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT)
+        debug_display_ram = !debug_display_ram;
+
+    strcpy(option->value, debug_display_ram ? curr_lang->s_Yes : curr_lang->s_No);
+
+    return event == ODROID_DIALOG_ENTER;
+}
+
+static void display_ram_overlay() {
+    char draw_line_content[80];
+    sprintf(draw_line_content, "   00000000000000001111111111111111");
+    odroid_overlay_draw_text(10, 32, 300, draw_line_content, curr_colors->sel_c, curr_colors->main_c);
+    sprintf(draw_line_content, "   0123456789ABCDEF0123456789ABCDEF");
+    odroid_overlay_draw_text(10, 40, 300, draw_line_content, curr_colors->sel_c, curr_colors->main_c);
+    for (unsigned char i = 0; i < (MEM_RAM_SIZE / 32); i++) {
+        sprintf(draw_line_content, "%2X %1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X%1X", i,
+                state->memory[(i * 16) + 0], state->memory[(i * 16) + 1], state->memory[(i * 16) + 2], state->memory[(i * 16) + 3],
+                state->memory[(i * 16) + 4], state->memory[(i * 16) + 5], state->memory[(i * 16) + 6], state->memory[(i * 16) + 7],
+                state->memory[(i * 16) + 8], state->memory[(i * 16) + 9], state->memory[(i * 16) + 10], state->memory[(i * 16) + 11],
+                state->memory[(i * 16) + 12], state->memory[(i * 16) + 13], state->memory[(i * 16) + 14], state->memory[(i * 16) + 15],
+                state->memory[(i * 16) + 16], state->memory[(i * 16) + 17], state->memory[(i * 16) + 18], state->memory[(i * 16) + 19],
+                state->memory[(i * 16) + 20], state->memory[(i * 16) + 21], state->memory[(i * 16) + 22], state->memory[(i * 16) + 23],
+                state->memory[(i * 16) + 24], state->memory[(i * 16) + 25], state->memory[(i * 16) + 26], state->memory[(i * 16) + 27],
+                state->memory[(i * 16) + 28], state->memory[(i * 16) + 29], state->memory[(i * 16) + 30], state->memory[(i * 16) + 31]);
+        odroid_overlay_draw_text(10, 48 + 8 * i, 300, draw_line_content, curr_colors->sel_c, curr_colors->main_c);
+    }
+}
 
 // ************* Game rom loading *************
 
@@ -355,7 +388,11 @@ static void main_tama(uint8_t start_paused) {
         LoadStateByPtr(ACTIVE_FILE->save_address);
     }
 
-    odroid_dialog_choice_t options[] = {ODROID_DIALOG_CHOICE_LAST};
+    char debug_display_ram_text[10];
+    odroid_dialog_choice_t options[] = {
+            ODROID_DIALOG_CHOICE_SEPARATOR,
+            {100, curr_lang->s_Display_RAM, debug_display_ram_text, 1, &debug_display_ram_cb},
+            ODROID_DIALOG_CHOICE_LAST};
 
     /* Initialize audio */
     init_audio_generator();
@@ -410,6 +447,9 @@ static void main_tama(uint8_t start_paused) {
         /* Update the screen */
         if (drawFrame || fast_forward) {
             blit();
+            if (debug_display_ram) {
+                display_ram_overlay();
+            }
             lcd_swap();
         }
 
