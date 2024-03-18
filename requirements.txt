@@ -1,4 +1,4 @@
--r zelda3/requirements.txt
+-r external/zelda3/requirements.txt
 lz4
 pillow
 tqdm
