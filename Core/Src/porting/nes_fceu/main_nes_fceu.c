@@ -507,8 +507,6 @@ static bool LoadState(char *pathName)
     return true;
 }
 
-// TODO: Move to lcd.c/h
-extern LTDC_HandleTypeDef hltdc;
 unsigned dendy = 0;
 
 static uint16_t palette565[256];

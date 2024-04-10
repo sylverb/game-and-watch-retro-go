@@ -42,9 +42,6 @@ static bool consoleIsSMS = false;
 static bool consoleIsCOL = false;
 static bool consoleIsSG  = false;
 
-// TODO: Move to lcd.c/h
-extern LTDC_HandleTypeDef hltdc;
-
 void set_config();
 unsigned int crc32_le(unsigned int crc, unsigned char const * buf,unsigned int len);
 
