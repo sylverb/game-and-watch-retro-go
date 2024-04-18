@@ -1,8 +1,8 @@
 /*
-***************************************************
-*                Warning!!!!!!!                   *
-*  This file must be saved with cp932  Encoding   *
-***************************************************
+*************************************************************
+*                        Warning!!!!!!!                     *
+*  This file must be saved with cp932/Windows 31j Encoding  *
+*************************************************************
 */
 #if !defined (INCLUDED_JA_JP)
 #define INCLUDED_JA_JP 0
@@ -136,6 +136,7 @@ const lang_t lang_ja_jp LANG_DATA = {
     .s_OptionsTit = "オプション",
     .s_FPS = "FPS",
     .s_BUSY = "ビジー",
+    .s_SYNC = "SYNC",
     .s_Scaling = "スケーリング",
     .s_SCalingOff = "Off",
     .s_SCalingFit = "フィット",
@@ -226,6 +227,9 @@ const lang_t lang_ja_jp LANG_DATA = {
     .s_DBGMCU_clock = "DBGMCU Clock",
     .s_DBGMCU_clock_on = "On",
     .s_DBGMCU_clock_auto = "Auto",
+    .s_Multisync_debug = "Multisync debug",
+    .s_Multisync_debug_on = "On",
+    .s_Multisync_debug_off = "Off",
     //.s_Close                   = "Close",
     .s_Debug_Title = "Debug",
     .s_Idle_power_off = "スリープまでの時間",

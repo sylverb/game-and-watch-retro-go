@@ -20,6 +20,8 @@ Core/Src/gw_buttons.c \
 Core/Src/gw_flash.c \
 Core/Src/gw_lcd.c \
 Core/Src/gw_audio.c \
+Core/Src/gw_multisync_pid.c \
+Core/Src/gw_multisync.c \
 Core/Src/gw_malloc.c \
 Core/Src/main.c \
 Core/Src/sha256.c \

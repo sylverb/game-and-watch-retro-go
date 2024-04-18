@@ -34,6 +34,7 @@ int odroid_overlay_game_menu(odroid_dialog_choice_t *extra_options, void_callbac
 #include "gw_buttons.h"
 #include "bitmaps/font_basic.h"
 #include "gw_lcd.h"
+#include "gw_multisync.h"
 #include "odroid_system.h"
 #include "odroid_overlay.h"
 #include "main.h"
@@ -1065,12 +1066,14 @@ static void draw_game_status_bar(runtime_stats_t stats)
     int pad_text = (height - i18n_get_text_height()) / 2;
     char bottom[80], header[60];
 
-    snprintf(header, 60, "%s: %d.%d (%d.%d) / %s: %d.%d%%",
+    snprintf(header, 60, "%s: %d.%d (%d.%d) / %s: %d.%d%% / %s: %s",
              curr_lang->s_FPS,
              (int)stats.totalFPS, (int)fmod(stats.totalFPS * 10, 10),
              (int)stats.skippedFPS, (int)fmod(stats.skippedFPS * 10, 10),
              curr_lang->s_BUSY,
-             (int)stats.busyPercent, (int)fmod(stats.busyPercent * 10, 10));
+             (int)stats.busyPercent, (int)fmod(stats.busyPercent * 10, 10),
+             curr_lang->s_SYNC,
+             multisync_is_synchronized() ? curr_lang->s_Yes:curr_lang->s_No);
     snprintf(bottom, 80, "%s", ACTIVE_FILE ? (ACTIVE_FILE->name) : "N/A");
 
     odroid_overlay_draw_fill_rect(0, 0, ODROID_SCREEN_WIDTH, height, curr_colors->main_c);

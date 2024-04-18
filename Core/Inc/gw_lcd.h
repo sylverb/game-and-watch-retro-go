@@ -7,6 +7,8 @@
 
 #define GW_LCD_WIDTH  320
 #define GW_LCD_HEIGHT 240
+#define GW_LCD_RELOAD_LINE 248
+#define GW_LCD_PLL_FRACN_CENTER 4096
 
 #ifdef GW_LCD_MODE_LUT8
 extern uint8_t framebuffer1[GW_LCD_WIDTH * GW_LCD_HEIGHT]  __attribute__((section (".lcd1"))) __attribute__ ((aligned (16)));
@@ -38,6 +40,7 @@ void* lcd_get_active_buffer(void);
 void* lcd_get_inactive_buffer(void);
 void lcd_set_buffers(uint16_t *buf1, uint16_t *buf2);
 void lcd_wait_for_vblank(void);
+void lcd_wait_for_reload(void);
 uint32_t lcd_is_swap_pending(void);
 bool lcd_sleep_while_swap_pending(void);
 
@@ -48,5 +51,6 @@ uint32_t lcd_get_frame_counter(void);
 uint32_t lcd_get_pixel_position();
 void lcd_set_dithering(uint32_t enable);
 void lcd_set_refresh_rate(uint32_t frequency);
+void lcd_set_pll_fracn(int32_t fracn);
 
 #endif

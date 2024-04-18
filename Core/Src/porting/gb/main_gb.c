@@ -28,7 +28,8 @@
 #define NVS_KEY_SAVE_SRAM "sram"
 
 // Use 60Hz for GB
-#define AUDIO_BUFFER_LENGTH_GB (AUDIO_SAMPLE_RATE / 60)
+#define LCD_REFRESH_RATE 60
+#define AUDIO_BUFFER_LENGTH_GB (AUDIO_SAMPLE_RATE / LCD_REFRESH_RATE)
 static int16_t *audiobuffer_emulator;
 
 static odroid_video_frame_t update1 = {GB_WIDTH, GB_HEIGHT, GB_WIDTH * 2, 2, 0xFF, -1, NULL, NULL, 0, {}};
@@ -542,6 +543,7 @@ rg_app_desc_t * init(uint8_t load_state, uint8_t save_slot)
     pcm.buf = (n16*)audiobuffer_emulator;
     pcm.pos = 0;
 
+    lcd_set_refresh_rate(LCD_REFRESH_RATE);
     audio_start_playing(AUDIO_BUFFER_LENGTH_GB);
 
     rg_app_desc_t *app = odroid_system_get_app();

@@ -48,6 +48,7 @@ __license__ = "GPLv3"
 #include "gwenesis_io.h"
 #include "gwenesis_vdp.h"
 #include "gwenesis_savestate.h"
+#include "gw_multisync.h"
 
 #pragma GCC optimize("Ofast")
 
@@ -150,15 +151,10 @@ static unsigned int gwenesis_show_debug_bar = 0;
 
 unsigned int gwenesis_audio_freq;
 unsigned int gwenesis_audio_buffer_lenght;
-static int gwenesis_vsync_mode = 0;
 unsigned int gwenesis_refresh_rate;
-
-unsigned int gwenesis_lcd_current_line;
-#define GWENESIS_AUDIOSYNC_START_LCD_LINE 248
 
 static int gwenesis_lpfilter = 0;
 extern int gwenesis_H32upscaler;
-static unsigned int gwenesis_audio_pll_sync = 0;
 
 /* Clocks and synchronization */
 /* system clock is video clock */
@@ -245,9 +241,6 @@ static void gwenesis_system_init() {
   /* init emulator sound system with shared audio buffer */
  // extern int mode_pal;
 
-  gwenesis_audio_pll_sync = 0;
-
-
 //  memset(audiobuffer_emulator, 0, sizeof(audiobuffer_emulator));
 
  // if (mode_pal) {
@@ -267,51 +260,6 @@ static void gwenesis_system_init() {
 
   odroid_audio_init(gwenesis_audio_freq);
   lcd_set_refresh_rate(gwenesis_refresh_rate);
-}
-
-static void gwenesis_sound_start()
-{
-  audio_start_playing(gwenesis_audio_buffer_lenght);
-}
-
-/* PLL Audio controller to synchonize with video clock */
-// Center value is 4566
-#define GWENESIS_FRACN_PAL_DOWN 4000
-#define GWENESIS_FRACN_PAL_UP 5000
-
-// Center value is 4566
-#define GWENESIS_FRACN_NTSC_DOWN 4000
-#define GWENESIS_FRACN_NTSC_UP 5000
-
-#define GWENESIS_FRACN_DOWN 3000
-#define GWENESIS_FRACN_UP 6000
-
-#define GWENESIS_FRACN_CENTER 4566
-
-/* AUDIO PLL controller */
-static void gwenesis_audio_pll_stepdown() {
-
-  __HAL_RCC_PLL2FRACN_DISABLE();
-  __HAL_RCC_PLL2FRACN_CONFIG(GWENESIS_FRACN_DOWN);
-  __HAL_RCC_PLL2FRACN_ENABLE();
-  gwenesis_audio_pll_sync = 0;
-}
-
-static void gwenesis_audio_pll_stepup() {
-
-  __HAL_RCC_PLL2FRACN_DISABLE();
-  __HAL_RCC_PLL2FRACN_CONFIG(GWENESIS_FRACN_UP);
-  __HAL_RCC_PLL2FRACN_ENABLE();
-  gwenesis_audio_pll_sync = 0;
-}
-
-static void gwenesis_audio_pll_center() {
-  if (gwenesis_audio_pll_sync == 0) {
-    __HAL_RCC_PLL2FRACN_DISABLE();
-    __HAL_RCC_PLL2FRACN_CONFIG(GWENESIS_FRACN_CENTER);
-    __HAL_RCC_PLL2FRACN_ENABLE();
-    gwenesis_audio_pll_sync = 1;
-  }
 }
 
 /* single-pole low-pass filter (6 dB/octave) */
@@ -382,15 +330,7 @@ static void gwenesis_debug_bar()
   loop_duration_us = loop_cycles / SYSTEM_CORE_CLOCK_MHZ;
   cpu_workload = 100 * end_cycles / loop_cycles;
 
-  if (gwenesis_lcd_current_line == GWENESIS_AUDIOSYNC_START_LCD_LINE)
-    sprintf(debugMsg, "%05dus %05dus%3d %6ld %3d SYNC Y%3d", loop_duration_us,
-            end_duration_us, cpu_workload, frame_counter, overflow_count,
-            gwenesis_lcd_current_line);
-  else
-    sprintf(debugMsg, "%05dus %05dus%3d %6ld %3d  ..  Y%3d", loop_duration_us,
-            end_duration_us, cpu_workload, frame_counter, overflow_count,
-            gwenesis_lcd_current_line);
-
+  sprintf(debugMsg, "%05dus %05dus%3d %6ld %3d", loop_duration_us, end_duration_us, cpu_workload, frame_counter, overflow_count);
 
   odroid_overlay_draw_text(0, 0, 320, debugMsg, C_GW_YELLOW, C_GW_RED);
 
@@ -400,7 +340,6 @@ static void gwenesis_debug_bar()
 
 unsigned int lines_per_frame = LINES_PER_FRAME_NTSC; //262; /* NTSC: 262, PAL: 313 */
 unsigned int scan_line;
-unsigned int drawFrame = 1;
 
 
 // static char gwenesis_GameGenie_str[10]="....-....";
@@ -636,7 +575,6 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
     static int hori_screen_offset, vert_screen_offset;
     int hint_counter;
     extern int hint_pending;
-    volatile unsigned int current_frame;
 
     if (load_state) {
 #if OFF_SAVESTATE==1
@@ -652,16 +590,9 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
     }
 
     /* Start at the same time DMAs audio & video */
-    /* Audio period and Video period are the same (almost at least 1 hour) */
-    lcd_wait_for_vblank();
-    gwenesis_sound_start();
-    gwenesis_audio_pll_sync = 1;
+    audio_start_playing(gwenesis_audio_buffer_lenght);
 
-    // gwenesis_init_position = 0xFFFF & lcd_get_pixel_position();
     while (true) {
-
-      /* capture the frame processed by the LCD controller */
-      current_frame = frame_counter;
 
       /* clear DWT counter used to monitor performances */
       common_emu_clear_dwt_cycles();
@@ -684,7 +615,6 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
         {302, curr_lang->s_md_AudioFilter, AudioFilter_str, 1, &gwenesis_submenu_setAudioFilter},
 #if ENABLE_DEBUG_OPTIONS != 0
         {303, curr_lang->s_md_VideoUpscaler, VideoUpscaler_str, 1, &gwenesis_submenu_setVideoUpscaler},
-        {304, curr_lang->s_md_Synchro, gwenesis_sync_mode_str, 1, &gwenesis_submenu_sync_mode},
         {310, curr_lang->s_md_Debug_bar, debug_bar_str, 1, &gwenesis_submenu_debug_bar},
 #endif
         //  {320, "+GameGenie", gwenesis_GameGenie_str, 0, &gwenesis_submenu_GameGenie},
@@ -715,8 +645,7 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
     common_emu_input_loop(&joystick, options, &_repaint);
     common_emu_input_loop_handle_turbo(&joystick);
 
-    // bool drawFrame =
-    common_emu_frame_loop();
+    bool drawFrame = common_emu_frame_loop();
 
       /* Eumulator loop */
       screen = lcd_get_active_buffer();
@@ -813,48 +742,14 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
       if (gwenesis_show_debug_bar == 1)
         gwenesis_debug_bar();
 
-      if (drawFrame)
-        common_ingame_overlay();
+      if (drawFrame) {
+          common_ingame_overlay();
+          lcd_swap();
+      }
 
       end_cycles = common_emu_get_dwt_cycles();
 
-      /* VSYNC mode */
-      if (gwenesis_vsync_mode) {
-        /* Check if we are still in the same frame as at the beginning of the
-         * loop if it's different we are in overflow : skip next frame using
-         * (drawFrame = 0) otherwise we are in the same frame. wait the end of
-         * frame.
-         */
-        if (current_frame != frame_counter) {
-          overflow_count++;
-          drawFrame = 0;
-
-        } else {
-          lcd_swap();
-          drawFrame = 1;
-          lcd_sleep_while_swap_pending();
-        }
-
-        /* AUDIO SYNC mode */
-        /* default as Audio/Video are synchronized */
-      } else {
-
-        lcd_swap();
-
-        common_emu_state.pause_frames = 0;
-        common_emu_state.skip_frames = 0;
-        common_emu_sound_sync(gwenesis_show_debug_bar);
-      }
-      // Get current line LCD position to check A/V synchronization
-      gwenesis_lcd_current_line = 0xFFFF & lcd_get_pixel_position();
-
-      /*  SYNC A/V */
-      if (gwenesis_lcd_current_line > GWENESIS_AUDIOSYNC_START_LCD_LINE)
-        gwenesis_audio_pll_stepup();
-      if (gwenesis_lcd_current_line < GWENESIS_AUDIOSYNC_START_LCD_LINE)
-        gwenesis_audio_pll_stepdown();
-      if (gwenesis_lcd_current_line == GWENESIS_AUDIOSYNC_START_LCD_LINE)
-        gwenesis_audio_pll_center();
+      common_emu_sound_sync(gwenesis_show_debug_bar);
 
       /* get how cycles have been spent inside this loop */
       loop_cycles = common_emu_get_dwt_cycles();

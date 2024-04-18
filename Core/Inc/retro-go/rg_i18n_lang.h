@@ -108,6 +108,7 @@ typedef struct
     const char *s_OptionsTit;
     const char *s_FPS;
     const char *s_BUSY;
+    const char *s_SYNC;
     const char *s_Scaling;
     const char *s_SCalingOff;
     const char *s_SCalingFit;
@@ -192,6 +193,9 @@ typedef struct
     const char *s_DBGMCU_clock;
     const char *s_DBGMCU_clock_on;
     const char *s_DBGMCU_clock_auto;
+    const char *s_Multisync_debug;
+    const char *s_Multisync_debug_on;
+    const char *s_Multisync_debug_off;
     const char *s_Debug_Title;
     const char *s_Idle_power_off;
     const char *s_Time;

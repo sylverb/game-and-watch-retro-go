@@ -17,6 +17,7 @@
 #include "gw_linker.h"
 #include "odroid_audio.h"
 #include "rg_i18n.h"
+#include "gw_multisync.h"
 
 #if ENABLE_SCREENSHOT
 uint16_t framebuffer_capture[GW_LCD_WIDTH * GW_LCD_HEIGHT]  __attribute__((section (".fbflash"))) __attribute__((aligned(4096)));
@@ -290,7 +291,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
         clear_frames--;
         lcd_sleep_while_swap_pending();
 
-        // Clear the active screen buffer, caller must repaint it 
+        // Clear the active screen buffer, caller must repaint it
         lcd_clear_active_buffer();
     }
 
@@ -324,7 +325,26 @@ void common_emu_input_loop_handle_turbo(odroid_gamepad_state_t *joystick) {
         joystick->values[ODROID_INPUT_B] = !turbo_button;
 }
 
+__attribute__((optimize("unroll-loops"))) static void draw_multisync_status() {
+    uint16_t color = multisync_is_synchronized() ? 0b0000011111100000 : 0b1111100000000000; // Green & red
+    // The inactive buffer is actually the active buffer since swap is normally already called at this point.
+    // And if not then a direct inactive buffer write is also what we need (in case of a skipped frame)
+    pixel_t *fb = lcd_get_inactive_buffer();
+    for (uint16_t x = 0; x < GW_LCD_WIDTH; x++) {
+        fb[x + GW_LCD_WIDTH * 0] = color;
+        fb[x + GW_LCD_WIDTH * (GW_LCD_HEIGHT - 1)] = color;
+    }
+    for (uint16_t y = 0; y < GW_LCD_HEIGHT; y++) {
+        fb[0 + GW_LCD_WIDTH * y] = color;
+        fb[(GW_LCD_WIDTH - 1) + GW_LCD_WIDTH * y] = color;
+    }
+}
+
 void common_emu_sound_sync(bool use_nops) {
+    if (odroid_settings_DebugMenuMultisyncDebug_get()) {
+        draw_multisync_status();
+    }
+
     if (!common_emu_state.skip_frames) {
         static uint32_t last_dma_counter = 0;
         if (last_dma_counter == 0) {
@@ -551,9 +571,9 @@ void common_ingame_overlay(void) {
     uint16_t percentage = odroid_input_read_battery().percentage;
     if (percentage <= 15) {
         if ((get_elapsed_time() % 1000) < 300)
-            odroid_overlay_draw_battery(150, 90); 
+            odroid_overlay_draw_battery(150, 90);
     }
-    
+
     switch(common_emu_state.overlay)
     {
         case INGAME_OVERLAY_NONE:
@@ -692,7 +712,7 @@ void draw_border_zelda3(pixel_t * fb){
     for(uint16_t i=0; i < BORDER_HEIGHT; i++){
         uint32_t offset = start + i * GW_LCD_WIDTH;
         for(uint8_t j=0; j < BORDER_WIDTH; j++){
-            fb[offset + j] = 
+            fb[offset + j] =
                 (IMG_BORDER_ZELDA3[bit_index >> 3] << (bit_index & 0x07)) & 0x80 ? BORDER_COLOR_565 : 0x0000;
             bit_index++;
         }
@@ -702,7 +722,7 @@ void draw_border_zelda3(pixel_t * fb){
     for(uint16_t i=0; i < BORDER_HEIGHT; i++){
         uint32_t offset = start + i * GW_LCD_WIDTH;
         for(uint8_t j=0; j < BORDER_WIDTH; j++){
-            fb[offset + j] = 
+            fb[offset + j] =
                 (IMG_BORDER_ZELDA3[bit_index >> 3] << (bit_index & 0x07)) & 0x80 ? BORDER_COLOR_565 : 0x0000;
             bit_index++;
         }
@@ -717,7 +737,7 @@ void draw_border_smw(pixel_t * fb){
     for(uint16_t i=0; i < BORDER_HEIGHT; i++){
         uint32_t offset = start + i * GW_LCD_WIDTH;
         for(uint8_t j=0; j < BORDER_WIDTH; j++){
-            fb[offset + j] = 
+            fb[offset + j] =
                 (IMG_BORDER_LEFT_SMW[bit_index >> 3] << (bit_index & 0x07)) & 0x80 ? BORDER_COLOR_565 : 0x0000;
             bit_index++;
         }
@@ -727,7 +747,7 @@ void draw_border_smw(pixel_t * fb){
     for(uint16_t i=0; i < BORDER_HEIGHT; i++){
         uint32_t offset = start + i * GW_LCD_WIDTH;
         for(uint8_t j=0; j < BORDER_WIDTH; j++){
-            fb[offset + j] = 
+            fb[offset + j] =
                 (IMG_BORDER_RIGHT_SMW[bit_index >> 3] << (bit_index & 0x07)) & 0x80 ? BORDER_COLOR_565 : 0x0000;
             bit_index++;
         }
