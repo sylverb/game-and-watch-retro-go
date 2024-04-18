@@ -73,9 +73,6 @@ int osd_init()
    return 0;
 }
 
-// TODO: Move to lcd.c/h
-extern LTDC_HandleTypeDef hltdc;
-
 static rgb_t *palette = NULL;
 static uint16_t palette565[256];
 static uint32_t palette_spaced_565[256];

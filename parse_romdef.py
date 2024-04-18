@@ -106,6 +106,9 @@ class ROMParser:
         json_file = script_path / "roms" / "amstrad.json"
         self.parse_one(json_file, "amstrad",["dsk"])
 
+        json_file = script_path / "roms" / "tama.json"
+        self.parse_one(json_file, "tama",["b"])
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Define ROMs name & pulish to the build environment")
 

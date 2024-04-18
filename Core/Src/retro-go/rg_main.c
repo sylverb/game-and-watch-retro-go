@@ -777,8 +777,8 @@ void app_check_data_loop()
 #if DISABLE_SPLASH_SCREEN == 0
 void app_start_logo()
 {
-    const retro_logo_image* logos[] =   {&logo_nitendo, &logo_sega,     &logo_nitendo, &logo_sega,  &logo_nitendo, &logo_pce,    &logo_sega,  &logo_coleco, &logo_microsoft, &logo_watara, &logo_sega,  &logo_atari,   &logo_amstrad};
-    const retro_logo_image* headers[] = {&header_gb,    &header_sg1000, &header_nes,   &header_gg,  &header_gw,    &header_pce,  &header_sms, &header_col,  &header_msx,     &header_wsv,  &header_gen, &header_a7800, &header_amstrad};
+    const retro_logo_image* logos[] =   {&logo_nitendo, &logo_sega,     &logo_nitendo, &logo_sega,  &logo_nitendo, &logo_pce,    &logo_sega,  &logo_coleco, &logo_microsoft, &logo_watara, &logo_sega,  &logo_atari,   &logo_amstrad,   &logo_tama};
+    const retro_logo_image* headers[] = {&header_gb,    &header_sg1000, &header_nes,   &header_gg,  &header_gw,    &header_pce,  &header_sms, &header_col,  &header_msx,     &header_wsv,  &header_gen, &header_a7800, &header_amstrad, &header_tama};
     odroid_overlay_draw_fill_rect(0, 0, ODROID_SCREEN_WIDTH, ODROID_SCREEN_HEIGHT, curr_colors->bg_c);
     for (int i = 0; i < 13; i++)
     {

@@ -18,6 +18,9 @@
 #include "odroid_audio.h"
 #include "rg_i18n.h"
 #include "gw_multisync.h"
+#ifdef SALEAE_DEBUG_SIGNALS
+#include "gw_debug.h"
+#endif
 
 #if ENABLE_SCREENSHOT
 uint16_t framebuffer_capture[GW_LCD_WIDTH * GW_LCD_HEIGHT]  __attribute__((section (".fbflash"))) __attribute__((aligned(4096)));
@@ -59,10 +62,20 @@ common_emu_state_t common_emu_state = {
     .frame_time_10us = (uint16_t)(100000 / 60 + 0.5f),  // Reasonable default of 60FPS if not explicitly configured.
 };
 
+static int32_t frame_integrator = 0;
+
+void common_emu_frame_loop_reset(void){
+    common_emu_state.last_sync_time = 0;
+    common_emu_state.skipped_frames =0;
+    common_emu_state.skip_frames =0;
+    common_emu_state.pause_frames=0;
+    common_emu_state.pause_after_frames=0;
+    common_emu_state.startup_frames=0;
+    frame_integrator = 0;
+}
 
 bool common_emu_frame_loop(void){
     rg_app_desc_t *app = odroid_system_get_app();
-    static int32_t frame_integrator = 0;
     int16_t frame_time_10us = common_emu_state.frame_time_10us;
     int16_t elapsed_10us = 100 * get_elapsed_time_since(common_emu_state.last_sync_time);
     bool draw_frame = common_emu_state.skip_frames < 2;
@@ -346,6 +359,9 @@ void common_emu_sound_sync(bool use_nops) {
     }
 
     if (!common_emu_state.skip_frames) {
+#ifdef SALEAE_DEBUG_SIGNALS
+        HAL_GPIO_WritePin(DEBUG_PORT_PIN_4, DEBUG_PIN_4, GPIO_PIN_SET);
+#endif
         static uint32_t last_dma_counter = 0;
         if (last_dma_counter == 0) {
             last_dma_counter = dma_counter;
@@ -360,7 +376,13 @@ void common_emu_sound_sync(bool use_nops) {
             }
             last_dma_counter = dma_counter;
         }
+#ifdef SALEAE_DEBUG_SIGNALS
+        HAL_GPIO_WritePin(DEBUG_PORT_PIN_4, DEBUG_PIN_4, GPIO_PIN_RESET);
+#endif
     }
+#ifdef SALEAE_DEBUG_SIGNALS
+    HAL_GPIO_TogglePin(DEBUG_PORT_PIN_5, DEBUG_PIN_5);
+#endif
 }
 
 bool common_emu_sound_loop_is_muted() {

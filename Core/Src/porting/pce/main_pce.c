@@ -53,8 +53,6 @@ static short audioBuffer_pce[ AUDIO_BUFFER_LENGTH_PCE * 2];
 static uint8_t pce_framebuffer[XBUF_WIDTH * XBUF_HEIGHT * 2];
 static uint8_t PCE_EXRAM_BUF[0x8000];
 
-// TODO: Move to lcd.c/h
-extern LTDC_HandleTypeDef hltdc;
 static char pce_log[100];
 
 /**

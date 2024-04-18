@@ -1,4 +1,7 @@
 #include "gw_audio.h"
+#ifdef SALEAE_DEBUG_SIGNALS
+#include <gw_debug.h>
+#endif
 #include <gw_lcd.h>
 #include <string.h>
 #include "gw_multisync.h"
@@ -18,11 +21,17 @@ uint32_t dma_counter;
 static uint16_t audiobuffer_length = AUDIO_BUFFER_LENGTH;
 
 void HAL_SAI_TxHalfCpltCallback(SAI_HandleTypeDef *hsai) {
+#ifdef SALEAE_DEBUG_SIGNALS
+    HAL_GPIO_WritePin(DEBUG_PORT_PIN_0, DEBUG_PIN_0, GPIO_PIN_SET);
+#endif
     dma_counter++;
     dma_state = DMA_TRANSFER_STATE_HF;
 }
 
 void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai) {
+#ifdef SALEAE_DEBUG_SIGNALS
+    HAL_GPIO_WritePin(DEBUG_PORT_PIN_0, DEBUG_PIN_0, GPIO_PIN_RESET);
+#endif
     dma_counter++;
     dma_state = DMA_TRANSFER_STATE_TC;
 }
@@ -166,5 +175,6 @@ void audio_start_playing(uint16_t length) {
 }
 
 void audio_stop_playing() {
+    audio_clear_buffers();
     HAL_SAI_DMAStop(&hsai_BlockA1);
 }

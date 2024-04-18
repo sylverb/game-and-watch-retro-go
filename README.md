@@ -83,6 +83,7 @@ Supported emulators:
 - Sega Master System (sms)
 - Sega SG-1000 (sg)
 - Watara Supervision (wsv)
+- Tamagotchi P1 (tama)
 
 Supported SNES game _ports_:
 

@@ -93,6 +93,7 @@ SAVE_SIZES = {
     "amstrad": 132 * 1024,
     "zelda3": 272 * 1024,
     "smw": 264 * 1024,
+    "tama": 8 * 1024,
 }
 
 
@@ -1185,6 +1186,7 @@ class ROMParser:
             'zelda3_sv': {'publish': '0'},
         })
         romdef.setdefault('smw', {'smw': {'embed': '0'}})
+        romdef.setdefault('tama', {})
 
         system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/gb_roms.c",
@@ -1567,6 +1569,23 @@ class ROMParser:
             self.write_if_changed(
                 "build/smw_extflash.ld",""
             )
+
+        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+            "Core/Src/retro-go/tama_roms.c",
+            "Tamagotchi",
+            "tama_system",
+            "tama",
+            ["b"],
+            "SAVE_TAMA_",
+            romdef["tama"],
+            None,
+            current_id,
+        )
+        total_save_size += save_size
+        total_rom_size += rom_size
+        total_img_size += img_size
+        build_config += "#define ENABLE_EMULATOR_TAMA\n" if rom_size > 0 else ""
+        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
         total_size = total_save_size + total_rom_size + total_img_size
         #total_size +=sega_larger_rom_size
