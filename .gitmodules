@@ -1,9 +1,9 @@
 [submodule "retro-go-stm32"]
 	path = retro-go-stm32
-	url = git@github.com:BenjaminSoelberg/retro-go-stm32.git
+	url = https://github.com/BenjaminSoelberg/retro-go-stm32.git
 [submodule "LCD-Game-Emulator"]
 	path = LCD-Game-Emulator
-	url = git@github.com:BenjaminSoelberg/LCD-Game-Emulator.git
+	url = https://github.com/BenjaminSoelberg/LCD-Game-Emulator.git
 [submodule "blueMSX-go"]
 	path = blueMSX-go
 	url = https://github.com/sylverb/blueMSX-go.git
@@ -30,4 +30,4 @@
 	url = https://github.com/marian-m12l/smw.git
 [submodule "tamalib"]
 	path = tamalib
-	url = git@github.com:BenjaminSoelberg/tamalib.git
+	url = https://github.com/BenjaminSoelberg/tamalib.git
