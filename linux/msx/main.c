@@ -134,6 +134,14 @@ void *itc_malloc(size_t size)
    return ret;
 }
 
+void *ram_malloc(size_t size)
+{
+   itc_allocated_ram+=size;
+//   printf("itc_malloc %zu bytes (new total = %u)\n",size,itc_allocated_ram);
+   void *ret = malloc(size);
+   return ret;
+}
+
 #define APP_ID  11
 
 typedef struct SdlSound {
@@ -901,7 +909,7 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
             machine->slotInfo[i].slot = 3;
             machine->slotInfo[i].subslot = 0;
             machine->slotInfo[i].startPage = 0;
-            machine->slotInfo[i].pageCount = 16; // 128kB of RAM
+            machine->slotInfo[i].pageCount = 32; // 256kB of RAM
             machine->slotInfo[i].romType = RAM_MAPPER;
             strcpy(machine->slotInfo[i].name, "");
             i++;
@@ -985,11 +993,11 @@ static void createMsxMachine(int msxType) {
 
 static void insertGame() {
     bool controls_found = true;
+    printf("Rom Mapper %d\n",ROM_MAPPER);
+    uint16_t mapper = ROM_MAPPER;
     switch (msx_game_type) {
         case MSX_GAME_ROM:
         {
-            printf("Rom Mapper %d\n",ROM_MAPPER);
-            uint16_t mapper = ROM_MAPPER;
             if (mapper == ROM_UNKNOWN) {
                 uint32_t rom_size;
                 uint8_t *rom_data;
@@ -1006,7 +1014,16 @@ static void insertGame() {
         {
             insertDiskette(properties, 0, ROM_NAME, NULL, -1);
             // We load SCC-I cartridge for disk games requiring it
-            insertCartridge(properties, 0, CARTNAME_SNATCHER, NULL, ROM_SNATCHER, -1);
+            // We load SCC-I cartridge for disk games requiring it
+            switch (mapper) {
+                case ROM_SNATCHER:
+                case ROM_SDSNATCHER:
+                    insertCartridge(properties, 0, CARTNAME_SNATCHER, NULL, ROM_SNATCHER, -1);
+                break;
+                case ROM_SCC:
+                    insertCartridge(properties, 0, CARTNAME_SCC, NULL, ROM_SCC, -1);
+                break;
+            }
             break;
         }
         case MSX_GAME_HDIDE:

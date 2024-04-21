@@ -1631,7 +1631,7 @@ static void insertGame() {
                     insertCartridge(properties, 0, CARTNAME_SNATCHER, NULL, ROM_SNATCHER, -1);
                 break;
                 case ROM_SCC:
-                    insertCartridge(properties, 0, CARTNAME_SNATCHER, NULL, ROM_SCC, -1);
+                    insertCartridge(properties, 0, CARTNAME_SCC, NULL, ROM_SCC, -1);
                 break;
             }
             if (!controls_found) {
