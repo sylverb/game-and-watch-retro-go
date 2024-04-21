@@ -51,6 +51,8 @@
 #include "gw_linker.h"
 #include "main_msx.h"
 
+extern uint32_t ram_start;
+
 extern BoardInfo boardInfo;
 static Properties* properties;
 static Machine *msxMachine;
@@ -115,8 +117,8 @@ static const uint8_t volume_table[ODROID_AUDIO_VOLUME_MAX + 1] = {
     100,
 };
 
-/* Compression buffer */
-static uint8_t rom_decompress_buffer[136*1024];
+/* Compression management */
+static size_t rom_decompress_size;
 
 /* Framebuffer management */
 uint8_t msx_framebuffer[272*240];
@@ -886,7 +888,11 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
             machine->slotInfo[i].slot = 3;
             machine->slotInfo[i].subslot = 2;
             machine->slotInfo[i].startPage = 0;
-            machine->slotInfo[i].pageCount = 16; // 128kB of RAM
+            if (msx_game_type == MSX_GAME_ROM) {
+                machine->slotInfo[i].pageCount = 16; // 128kB of RAM
+            } else {
+                machine->slotInfo[i].pageCount = 32; // 256kB of RAM
+            }
             machine->slotInfo[i].romType = RAM_MAPPER;
             strcpy(machine->slotInfo[i].name, "");
             i++;
@@ -964,7 +970,11 @@ static void setPropertiesMsx(Machine *machine, int msxType) {
             machine->slotInfo[i].slot = 3;
             machine->slotInfo[i].subslot = 0;
             machine->slotInfo[i].startPage = 0;
-            machine->slotInfo[i].pageCount = 16; // 128kB of RAM
+            if (msx_game_type == MSX_GAME_ROM) {
+                machine->slotInfo[i].pageCount = 16; // 128kB of RAM
+            } else {
+                machine->slotInfo[i].pageCount = 32; // 256kB of RAM
+            }
             machine->slotInfo[i].romType = RAM_MAPPER;
             strcpy(machine->slotInfo[i].name, "");
             i++;
@@ -1075,6 +1085,8 @@ static void createMsxMachine(int msxType) {
 static void insertGame() {
     char game_name[PROP_MAXPATH];
     bool controls_found = true;
+    uint16_t mapper = ACTIVE_FILE->extra[0];
+
     sprintf(game_name,"%s.%s",ACTIVE_FILE->name,ACTIVE_FILE->ext);
 
     // default config
@@ -1269,7 +1281,7 @@ static void insertGame() {
             msx_button_start_key = EC_STOP; // Continue
             msx_button_select_key = EC_STOP; // Menu
         break;
-        case 22: // R-TYPE
+        case 22: // R-TYPE, Double Dragon
             msx_button_a_key = EC_SPACE;
             msx_button_b_key = EC_GRAPH;
             msx_button_game_key = EC_ESC;
@@ -1496,20 +1508,78 @@ static void insertGame() {
             msx_button_start_key = EC_F1; // Menu
             msx_button_select_key = EC_F2; // Team
         break;
+        case 47: // Binary Land
+            msx_button_a_key = EC_SPACE;
+            msx_button_b_key = EC_SPACE;
+            msx_button_game_key = EC_ESC; // Title Screen
+            msx_button_time_key = EC_F2; // Music On/Off
+            msx_button_start_key = EC_F1; // Pause
+            msx_button_select_key = EC_F1; // Pause
+        break;
+        case 48: // Boulder Dash
+            msx_button_a_key = EC_SPACE;
+            msx_button_b_key = EC_SPACE;
+            msx_button_game_key = EC_ESC; // Retry
+            msx_button_time_key = EC_ESC; // Retry
+            msx_button_start_key = EC_RETURN; // Pause
+            msx_button_select_key = EC_ESC; // Retry
+        break;
+        case 49: // Bruce Lee
+            msx_button_a_key = EC_SPACE;
+            msx_button_b_key = EC_SPACE;
+            msx_button_game_key = EC_F4;
+            msx_button_time_key = EC_F4;
+            msx_button_start_key = EC_F4;
+            msx_button_select_key = EC_F4;
+        break;
+        case 50: // Cloud Master
+            msx_button_a_key = EC_SPACE; // Primary Weapon
+            msx_button_b_key = EC_GRAPH; // Secondary Weapon
+            msx_button_game_key = EC_SPACE;
+            msx_button_time_key = EC_GRAPH;
+            msx_button_start_key = EC_SPACE;
+            msx_button_select_key = EC_GRAPH;
+        break;
+        case 51: // Ghostly Manor
+            msx_button_a_key = EC_SPACE; // Block Spell
+            msx_button_b_key = EC_GRAPH; // Jump
+            msx_button_game_key = EC_SELECT; // 50/60Hz Toggle
+            msx_button_time_key = EC_GRAPH;
+            msx_button_start_key = EC_SELECT; // 50/60Hz Toggle
+            msx_button_select_key = EC_GRAPH;
+        break;
+        case 52: // Pampas & Selene
+            msx_button_a_key = EC_SPACE; // Main Attack
+            msx_button_b_key = EC_M; // Special Attack 1 (Bow / Fireball)
+            // EC_N : Special Attack 2 (mine/wave) & or release an enemy soul
+            msx_button_game_key = EC_F1; // Character screen & Inventory
+            msx_button_time_key = EC_F2; // Maps
+            msx_button_start_key = EC_F3; // Gods & Quests
+            msx_button_select_key = EC_F4; // Achievements
+        break;
+        case 53: // Snatcher
+            msx_button_a_key = EC_SPACE;
+            msx_button_b_key = EC_GRAPH;
+            msx_button_game_key = EC_0;
+            msx_button_time_key = EC_1;
+            msx_button_start_key = EC_2;
+            msx_button_select_key = EC_3;
+        break;
         default:
             controls_found = false;
         break;
     }
+
     switch (msx_game_type) {
         case MSX_GAME_ROM:
         {
-            uint16_t mapper = ACTIVE_FILE->extra[0];
             printf("Rom Mapper %d\n",mapper);
             if (mapper == ROM_UNKNOWN) {
-                uint32_t rom_size;
-                uint8_t *rom_data;
-                rom_size = msx_getromdata(&rom_data,(uint8_t *)ROM_DATA,ROM_DATA_LENGTH,ROM_EXT);
-                mapper = GuessROM(rom_data,rom_size);
+                if(strcmp(ROM_EXT, "lzma") == 0) {
+                    mapper = GuessROM((unsigned char *)&_MSX_ROM_UNPACK_BUFFER,rom_decompress_size);
+                } else {
+                    mapper = GuessROM((uint8_t *)ROM_DATA,ROM_DATA_LENGTH);
+                }
             }
             if (!controls_found) {
                 // If game is using konami mapper, we setup a Konami key mapping
@@ -1555,7 +1625,15 @@ static void insertGame() {
                 insertDiskette(properties, 0, game_name, NULL, -1);
             }
             // We load SCC-I cartridge for disk games requiring it
-            insertCartridge(properties, 0, CARTNAME_SNATCHER, NULL, ROM_SNATCHER, -1);
+            switch (mapper) {
+                case ROM_SNATCHER:
+                case ROM_SDSNATCHER:
+                    insertCartridge(properties, 0, CARTNAME_SNATCHER, NULL, ROM_SNATCHER, -1);
+                break;
+                case ROM_SCC:
+                    insertCartridge(properties, 0, CARTNAME_SNATCHER, NULL, ROM_SCC, -1);
+                break;
+            }
             if (!controls_found) {
                 // If game name contains konami, we setup a Konami key mapping
                 if (strcasestr(ACTIVE_FILE->name,"konami")) {
@@ -1735,8 +1813,8 @@ static void blit(uint8_t *msx_fb, uint16_t *framebuffer)
 size_t msx_getromdata(uint8_t **data, uint8_t *src_data, size_t src_size, const char *ext)
 {
     /* src pointer to the ROM data in the external flash (raw or LZ4) */
-    unsigned char *dest = (unsigned char *)rom_decompress_buffer;
-    uint32_t available_size = (uint32_t)sizeof(rom_decompress_buffer);
+    unsigned char *dest = (unsigned char *)&_MSX_ROM_UNPACK_BUFFER;
+    uint32_t available_size = (uint32_t)&_MSX_ROM_UNPACK_BUFFER_SIZE;
 
     wdog_refresh();
     if(strcmp(ext, "lzma") == 0){
@@ -1790,6 +1868,21 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
     memset(msx_framebuffer, 0, sizeof(msx_framebuffer));
     
     audio_clear_buffers();
+
+    /* To reserve correct amount of RAM for decompressing game   */
+    /* We have to decompress game ROM in ram now (if compressed) */
+    /* It will allow to correctly dynamically allocate ram for   */
+    /* different usages (like MSX RAM)                           */
+    if(strcmp(ROM_EXT, "lzma") == 0) {
+        unsigned char *dest = (unsigned char *)&_MSX_ROM_UNPACK_BUFFER;
+        rom_decompress_size = lzma_inflate((unsigned char *)&_MSX_ROM_UNPACK_BUFFER,
+                                           (uint32_t)&_MSX_ROM_UNPACK_BUFFER_SIZE,
+                                           (uint8_t *)ROM_DATA,
+                                           ROM_DATA_LENGTH);
+        ram_start = (uint32_t)dest + rom_decompress_size;
+    } else {
+        ram_start = (uint32_t)&_MSX_ROM_UNPACK_BUFFER;
+    }
 
     setupEmulatorRessources(selected_msx_index);
 

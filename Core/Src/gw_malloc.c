@@ -29,12 +29,13 @@ extern uint16_t __NULLPTR_LENGTH__;
 void ahb_init() {
   current_ram_pointer = (uint32_t)0;
   current_ahb_pointer = (uint32_t)(&__ahbram_end__);
+  current_ram_pointer = 0;
 }
 
 void *ram_malloc(size_t size) {
   if (current_ram_pointer == 0)
     current_ram_pointer = (ram_start + 3) & ~0x03; // Make sure pointers are always 32 bits aligned;
-//  printf("ram_malloc 0x%lx size %d\n",current_ram_pointer,size);
+  printf("ram_malloc 0x%lx size %d\n",current_ram_pointer,size);
   void *pointer = (void *)current_ram_pointer;
   if (pointer == 0)
     return NULL;

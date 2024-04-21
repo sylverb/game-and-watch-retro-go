@@ -39,11 +39,13 @@ void saveStateCreateForWrite(const char* fileName)
 
 void saveStateSet(SaveState* state, const char* tagName, UInt32 value)
 {
+    wdog_refresh();
     fs_write(state, (unsigned char *)&value, 4);
 }
 
 void saveStateSetBuffer(SaveState* state, const char* tagName, void* buffer, UInt32 length)
 {
+    wdog_refresh();
     fs_write(state, buffer, length);
 }
 
@@ -85,12 +87,14 @@ SaveState* saveStateOpenForRead(const char* fileName)
 UInt32 saveStateGet(SaveState* state, const char* tagName, UInt32 defValue)
 {
     UInt32 value;
+    wdog_refresh();
     fs_read(state, (unsigned char *)&value, 4);
     return value;
 }
 
 void saveStateGetBuffer(SaveState* state, const char* tagName, void* buffer, UInt32 length)
 {
+    wdog_refresh();
     fs_read(state, buffer, length);
 }
 

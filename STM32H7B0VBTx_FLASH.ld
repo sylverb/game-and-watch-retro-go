@@ -401,11 +401,13 @@ SECTIONS
     build/msx/*.o (.bss .bss*)
     . = ALIGN(4);
     build/msx/*.o (COMMON)
+    _MSX_ROM_UNPACK_BUFFER = .;
     __ram_emu_msx_end__ = .;
     _OVERLAY_MSX_BSS_END = .;
     ASSERT(ABSOLUTE(_OVERLAY_MSX_BSS_END) < __RAM_EMU_END__, "Error: MSX BSS overflow");
   }
   _OVERLAY_MSX_BSS_SIZE = SIZEOF(.overlay_msx_bss);
+  _MSX_ROM_UNPACK_BUFFER_SIZE = __RAM_EMU_START__ + __RAM_EMU_LENGTH__ - _MSX_ROM_UNPACK_BUFFER;
 
   .overlay_wsv __RAM_EMU_START__ : {
     . = ALIGN(4);
