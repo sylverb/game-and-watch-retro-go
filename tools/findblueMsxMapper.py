@@ -290,8 +290,9 @@ def getRomMapper(collection,sha1):
             for disk in dump.getElementsByTagName('disk'):
                 hash = disk.getElementsByTagName('hash')[0].childNodes[0].data
                 if sha1string == hash:
-                    type = disk.getElementsByTagName('type')[0].childNodes[0].data
-                    return getMapperValue(type)
+                    if disk.getElementsByTagName('type') :
+                        type = disk.getElementsByTagName('type')[0].childNodes[0].data
+                        return getMapperValue(type)
     return ROM_UNKNOWN
 
 BUF_SIZE = 65536  # lets read stuff in 64kb chunks!
