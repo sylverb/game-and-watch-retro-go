@@ -765,6 +765,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Activision - Square</company>
 		<year>1987</year>
 		<country>US</country>
+		<controls>15</controls>
 		<dump>
 			<original value="true">GoodMSX</original>
 			<megarom>
@@ -798,7 +799,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		     	<megarom>
 				<type>MSXDOS2</type>
 				<hash algo="sha1">92a0ca682a367cbc1c6c5f96f8b84619a43e9f12</hash>
-			</megarom>>
+			</megarom>
 		</dump>
 		<dump>
 			<original value="false" />
@@ -4915,6 +4916,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Broderbund</company>
 		<year>1985</year>
 		<country>JP</country>
+		<controls>7</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -35234,7 +35236,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Konami</company>
 		<year>1987</year>
 		<country>JP</country>
-		<controls>1</controls>
+		<controls>54</controls>
 		<dump>
 			<original value="false" />
 			<megarom>
@@ -37994,6 +37996,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 	<software>
 		<title xml:lang="en">Aleste Gaiden</title>
 		<system>MSX</system>
+		<company>Compile</company>
 		<controls>2</controls>
 		<dump>
 			<original value="false" />
@@ -38005,6 +38008,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 	<software>
 		<title xml:lang="en">Aleste 2</title>
 		<system>MSX</system>
+		<company>Compile</company>
 		<controls>2</controls>
 		<dump>
 			<original value="false" />
@@ -38027,15 +38031,86 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 				</remark>
 			</disk>
 		</dump>
+	</software>
+	<software>
+		<title xml:lang="en">Black Cyclon</title>
+		<system>MSX</system>
+		<company>Parallax</company>
+		<year>1993</year>
+		<controls>56</controls>
 		<dump>
 			<original value="false" />
-			<megarom>
-				<type>ASCII8</type>
-				<hash algo="sha1">df29d62a536ebaaf7a101478574ff3cc44833cd4</hash>
+			<disk>
+				<hash algo="sha1">50de1a780deda933e2798c6fc36c1ae0632df118</hash>
 				<remark>
-					<text>Aleste 2 ROM convertion by Jose Angel Morente</text>
+					<text>Disk 1</text>
 				</remark>
-			</megarom>
+			</disk>
+			<disk>
+				<hash algo="sha1">9687f5970b2c917053f4451a45f7fc01a273e1b4</hash>
+				<remark>
+					<text>Disk 2</text>
+				</remark>
+			</disk>
+		</dump>
+	</software>
+	<software>
+		<title xml:lang="en">Blade Lords</title>
+		<system>MSX</system>
+		<company>Parallax</company>
+		<year>1997</year>
+		<controls>15</controls>
+		<dump>
+			<original value="false" />
+			<disk>
+				<hash algo="sha1">536e7263a6a5b16ff6334fcf05d6e28cc88ffabd</hash>
+			</disk>
+		</dump>
+	</software>
+	<software>
+		<title xml:lang="en">Dead of the Brain - Day of the Living Dead</title>
+		<system>MSX</system>
+		<company>Fairytale</company>
+		<controls>55</controls>
+		<dump>
+			<disk>
+				<hash algo="sha1">605217e4aca8812dbc86af06e6c1b3f79a70b3db</hash>
+				<remark>
+					<text>Disk 1 English Translation Fixed</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">b9d3eca819516851d7519fcfc0c0db9d75aae2d7</hash>
+				<remark>
+					<text>Disk 2 English Translation Fixed</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">c05bbd395423fc3a12c166f2479cc630a4b12d75</hash>
+				<remark>
+					<text>Disk 3 English Translation Fixed</text>
+				</remark>
+			</disk>
+		</dump>
+		<dump>
+			<disk>
+				<hash algo="sha1">0075da44ca7f6d1e4d797f2722c832fa74ff4e2e</hash>
+				<remark>
+					<text>Disk 1 Spanish Translation</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">87e75f95957f18d0b905db05ba02e0cf36236d70</hash>
+				<remark>
+					<text>Disk 2 Spanish Translation</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">7df46c2a906f6003145302306eac398914056b21</hash>
+				<remark>
+					<text>Disk 3 Spanish Translation</text>
+				</remark>
+			</disk>
 		</dump>
 	</software>
 	<software>
@@ -38751,7 +38826,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 	<software>
 		<title xml:lang="en">Yuurei Kun. Mr Ghost</title>
 		<system>MSX</system>
-		<controls>24</controls>
+		<controls>42</controls>
 		<msx>MSX2</msx>
 		<dump>
 			<disk>
@@ -38759,9 +38834,10 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 			</disk>
 		</dump>
 		<dump>
-			<disk>
-				<hash algo="sha1">a91a5938cdb2a1cec673a228501610bdade10e34</hash>
-			</disk>
+			<megarom>
+				<type>ASCII8</type>
+				<hash algo="sha1">bfe62e8eab59a92315604dd322f186c96ba358f2</hash>
+			</megarom>
 		</dump>
 	</software>
 	<software>

@@ -1562,8 +1562,32 @@ static void insertGame() {
             msx_button_b_key = EC_GRAPH;
             msx_button_game_key = EC_0;
             msx_button_time_key = EC_1;
-            msx_button_start_key = EC_2;
-            msx_button_select_key = EC_3;
+            msx_button_start_key = EC_3;
+            msx_button_select_key = EC_2;
+        break;
+        case 54: // Konami with F5 to continue
+            msx_button_a_key = EC_SPACE;
+            msx_button_b_key = EC_N;
+            msx_button_game_key = EC_F4;
+            msx_button_time_key = EC_F3;
+            msx_button_start_key = EC_F5;
+            msx_button_select_key = EC_F2;
+        break;
+        case 55: // Brain Dead
+            msx_button_a_key = EC_SPACE;
+            msx_button_b_key = EC_ESC;
+            msx_button_game_key = EC_SPACE;
+            msx_button_time_key = EC_ESC;
+            msx_button_start_key = EC_SPACE;
+            msx_button_select_key = EC_ESC;
+        break;
+        case 56: // Black Cyclon
+            msx_button_a_key = EC_SPACE; // Fire
+            msx_button_b_key = EC_LSHIFT; // Action
+            msx_button_game_key = EC_F2; // Use equipment
+            msx_button_time_key = EC_F3; // Lock control
+            msx_button_start_key = EC_STOP; // Pause
+            msx_button_select_key = EC_F5; // Lose life
         break;
         default:
             controls_found = false;

@@ -529,6 +529,7 @@ void keyboardUpdate()
                 break;
             case SDLK_RSHIFT:
                 eventMap[EC_RSHIFT]  = 0;
+                break;
             case SDLK_RETURN:
                 eventMap[EC_RETURN]  = 0;
                 break;
