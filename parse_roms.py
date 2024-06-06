@@ -235,9 +235,38 @@ def parse_msx_bios_files():
     return 1
 
 
+def compare_versions(version1, version2):
+    """
+    Compare two versions represented as strings.
+    Returns:
+        -1 if version1 < version2
+         0 if version1 == version2
+         1 if version1 > version2
+    """
+    v1_parts = [int(part) for part in version1.split('.')]
+    v2_parts = [int(part) for part in version2.split('.')]
+
+    for v1, v2 in zip(v1_parts, v2_parts):
+        if v1 < v2:
+            return -1
+        elif v1 > v2:
+            return 1
+
+    # If all parts are equal, compare the lengths
+    if len(v1_parts) < len(v2_parts):
+        return -1
+    elif len(v1_parts) > len(v2_parts):
+        return 1
+    else:
+        return 0
+
 def write_covart(srcfile, fn, w, h, jpg_quality):
     from PIL import Image, ImageOps
-    img = Image.open(srcfile).convert(mode="RGB").resize((w, h), Image.ANTIALIAS)
+    if compare_versions(Image.__version__, '7.0') >= 0:
+        dither = Image.Resampling.LANCZOS
+    else:
+        dither = Image.ANTIALIAS
+    img = Image.open(srcfile).convert(mode="RGB").resize((w, h), dither)
     img.save(fn,format="JPEG",optimize=True,quality=jpg_quality)
 
 # def write_rgb565(srcfile, fn, v):
