@@ -1589,6 +1589,62 @@ static void insertGame() {
             msx_button_start_key = EC_STOP; // Pause
             msx_button_select_key = EC_F5; // Lose life
         break;
+        case 57: // Gyro Adventure
+            msx_button_a_key = EC_Z; // Fire
+            msx_button_b_key = EC_X; // Action
+            msx_button_game_key = EC_SPACE;
+            msx_button_time_key = EC_ESC;
+            msx_button_start_key = EC_SPACE;
+            msx_button_select_key = EC_ESC;
+        break;
+        case 58: // River Raid
+            msx_button_a_key = EC_SPACE; // Fire
+            msx_button_b_key = EC_SPACE; // Fire
+            msx_button_game_key = EC_1;
+            msx_button_time_key = EC_3;
+            msx_button_start_key = EC_7;
+            msx_button_select_key = EC_5;
+        break;
+        case 59: // Sokoban
+            msx_button_a_key = EC_SPACE;
+            msx_button_b_key = EC_SPACE;
+            msx_button_game_key = EC_F1; // Restart
+            msx_button_time_key = EC_F2; // Color Menu
+            msx_button_start_key = EC_F2; // Color Menu
+            msx_button_select_key = EC_F1; // Restart
+        break;
+        case 60: // Takahasi Meijin no Boukenjima - Wonder Boy
+            msx_button_a_key = EC_Z;
+            msx_button_b_key = EC_X;
+            msx_button_game_key = EC_SPACE;
+            msx_button_time_key = EC_SPACE;
+            msx_button_start_key = EC_SPACE;
+            msx_button_select_key = EC_SPACE;
+        break;
+        case 61: // Magnar
+            msx_button_a_key = EC_SPACE;
+            msx_button_b_key = EC_GRAPH;
+            msx_button_game_key = EC_F1; // Main menu
+            msx_button_time_key = EC_F2; // Weapons
+            msx_button_start_key = EC_F4; // System
+            msx_button_select_key = EC_F3; // Equipment
+        break;
+        case 62: // Dragon Slayer 5 : Sorcerian
+            msx_button_a_key = EC_GRAPH; // Valid
+            msx_button_b_key = EC_SPACE; // Cancel
+            msx_button_game_key = EC_E; // Equipment
+            msx_button_time_key = EC_I; // Inventory
+            msx_button_start_key = EC_S; // Status
+            msx_button_select_key = EC_M; // Monster Info
+        break;
+        case 63: // Dragon Slayer 3 : Romancia
+            msx_button_a_key = EC_LSHIFT;
+            msx_button_b_key = EC_Z;
+            msx_button_game_key = EC_LSHIFT;
+            msx_button_time_key = EC_Z;
+            msx_button_start_key = EC_LSHIFT;
+            msx_button_select_key = EC_Z;
+        break;
         default:
             controls_found = false;
         break;

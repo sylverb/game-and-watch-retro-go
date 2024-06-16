@@ -921,6 +921,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Pony Canyon</company>
 		<year>1986</year>
 		<country>JP</country>
+		<controls>35</controls>
 		<dump>
 			<original value="true">GoodMSX</original>
 			<rom>
@@ -3243,7 +3244,8 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<dump>
 			<original value="false"	/>
 			<rom>
-				<hash algo="sha1">cef76580a01cc8e16704590d0d884d7eeadaa3a8</hash>						</rom>
+				<hash algo="sha1">cef76580a01cc8e16704590d0d884d7eeadaa3a8</hash>
+			</rom>
 		</dump>
 	</software>
 	<software>
@@ -3554,6 +3556,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Namcot</company>
 		<year>1984</year>
 		<country>JP</country>
+		<controls>35</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -3633,6 +3636,12 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 				<hash algo="sha1">28b25f82e6c35161b4955efa107b472acbb84f70</hash>
 			</rom>
 		</dump>
+		<dump>
+			<original value="false" />
+			<rom>
+				<hash algo="sha1">dae75b692112e06f5be8f00e71e0776f75010475</hash>
+			</rom>
+		</dump>
 	</software>
 	<software>
 		<title xml:lang="en">Boulder Dash 2</title>
@@ -3651,6 +3660,12 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 			<original value="false" />
 			<rom>
 				<hash algo="sha1">bd13e3d81aa075365feecbee7c52b1baae98ea33</hash>
+			</rom>
+		</dump>
+		<dump>
+			<original value="false" />
+			<rom>
+				<hash algo="sha1">cfc53f6569fd45472c082de6c608446cccb74700</hash>
 			</rom>
 		</dump>
 	</software>
@@ -7365,6 +7380,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Falcom</company>
 		<year>1986</year>
 		<country>JP</country>
+		<controls>63</controls>
 		<dump>
 			<original value="true">GoodMSX</original>
 			<megarom>
@@ -9781,6 +9797,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Namcot</company>
 		<year>1984</year>
 		<country>JP</country>
+		<controls>35</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -9927,6 +9944,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Sony - Hal</company>
 		<year>1986</year>
 		<country>JP</country>
+		<controls>35</controls>
 		<dump>
 			<original value="true">GoodMSX</original>
 			<megarom>
@@ -11916,6 +11934,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Colpax</company>
 		<year>1984</year>
 		<country>JP</country>
+		<controls>57</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -11926,6 +11945,12 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 			<original value="false" />
 			<rom>
 				<hash algo="sha1">ac412b4f746deb653002e30ed9ef874a4d5d61f8</hash>
+			</rom>
+		</dump>
+		<dump>
+			<original value="false" />
+			<rom>
+				<hash algo="sha1">6ae42ce317c23e064dec0c8bd10a645494b67e35</hash>
 			</rom>
 		</dump>
 	</software>
@@ -13004,6 +13029,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Methodic Solutions</company>
 		<year>1987</year>
 		<country>NL</country>
+		<controls>35</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -14282,6 +14308,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Hudson</company>
 		<year>1985</year>
 		<country>JP</country>
+		<controls>35</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -14765,6 +14792,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Activision</company>
 		<year>1984</year>
 		<country>US</country>
+		<controls>35</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -20846,6 +20874,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Comptiq</company>
 		<year>1985</year>
 		<country>JP</country>
+		<controls>35</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -21134,6 +21163,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Namcot</company>
 		<year>1984</year>
 		<country>JP</country>
+		<controls>35</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -21177,6 +21207,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Namcot</company>
 		<year>1988</year>
 		<country>JP</country>
+		<controls>35</controls>
 		<dump>
 			<original value="false" />
 			<megarom>
@@ -21715,6 +21746,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Ascii</company>
 		<year>1985</year>
 		<country>JP</country>
+		<controls>35</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -21749,6 +21781,21 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 				<remark>
 					<text>Ulver crack</text>
 				</remark>
+			</rom>
+		</dump>
+	</software>
+	<software>
+	<title xml:lang="en">Pentacorn Quest</title>
+		<system>MSX</system>
+		<company>Robosoft Inc</company>
+		<year>2023</year>
+		<country>NL</country>
+		<controls>52</controls>
+		<dump>
+			<original value="false" />
+			<rom>
+				<type>mirrored</type>
+				<hash algo="sha1">4e00f654c0c5ebbd8c4bec4adc9be0ba54555d3f</hash>
 			</rom>
 		</dump>
 	</software>
@@ -23680,6 +23727,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Sony</company>
 		<year>1984</year>
 		<country>JP</country>
+		<controls>35</controls>
 		<dump>
 			<original value="true">GoodMSX</original>
 			<rom>
@@ -24184,6 +24232,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Pony Canyon</company>
 		<year>1984</year>
 		<country>JP</country>
+		<controls>58</controls>
 		<dump>
 			<original value="true">GoodMSX</original>
 			<rom>
@@ -26297,9 +26346,25 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 	<software>
 		<title xml:lang="en">Sokoban</title>
 		<system>MSX</system>
+		<company>Ascii</company>
+		<year>1984</year>
+		<country>JP</country>
+		<controls>59</controls>
+		<dump>
+			<original value="false" />
+			<rom>
+				<type>mirrored</type>
+				<hash algo="sha1">e0edabbde8a6fada56bb7591d5f17fb17afe13da</hash>
+			</rom>
+		</dump>
+	</software>
+	<software>
+		<title xml:lang="en">Perfect Soukoban</title>
+		<system>MSX</system>
 		<company>Thinking Rabbit</company>
 		<year>1988</year>
 		<country>JP</country>
+		<controls>10</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -26307,6 +26372,18 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 				<start>0x8000</start>
 				<hash algo="sha1">f35a3f1f09b018957696e015b20dc1d12d3ccc2e</hash>
 			</rom>
+		</dump>
+		<dump>
+			<original value="false" />
+			<disk>
+				<hash algo="sha1">4dc15e702ab172ebb4ce7b9b7f023575742bd910</hash>
+			</disk>
+		</dump>
+		<dump>
+			<original value="false" />
+			<disk>
+				<hash algo="sha1">a192e7bb254dfd2fcfc6c4b407eebbbabe7ecdf9</hash>
+			</disk>
 		</dump>
 	</software>
 	<software>
@@ -27057,6 +27134,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Hudson</company>
 		<year>1986</year>
 		<country>JP</country>
+		<controls>36</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -28150,6 +28228,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Hudson</company>
 		<year>1986</year>
 		<country>JP</country>
+		<controls>60</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -30570,6 +30649,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Alligata</company>
 		<year>1986</year>
 		<country>GB</country>
+		<controls>35</controls>
 		<dump>
 			<original value="false" />
 			<rom>
@@ -31396,6 +31476,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Pony Canyon</company>
 		<year>1986</year>
 		<country>JP</country>
+		<controls>36</controls>
 		<dump>
 			<original value="true">GoodMSX</original>
 			<rom>
@@ -32951,6 +33032,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Falcom</company>
 		<year>1986</year>
 		<country>JP</country>
+		<controls>63</controls>
 		<dump>
 			<original value="true">GoodMSX</original>
 			<megarom>
@@ -35915,12 +35997,19 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Namcot</company>
 		<year>1989</year>
 		<country>JP</country>
+		<controls>35</controls>
 		<dump>
 			<original value="true">GoodMSX</original>
 			<megarom>
 				<type>ASCII8</type>
 				<hash algo="sha1">d5902afbd8dfb1ea96fc8cf4d62cf6e4fa40d4f7</hash>
 			</megarom>
+		</dump>
+		<dump>
+			<original value="false" />
+			<disk>
+				<hash algo="sha1">8a80ef7b1b51adfda38a4f12f962e0ff7b5c9c87</hash>
+			</disk>
 		</dump>
 	</software>
 	<software>
@@ -37012,6 +37101,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<company>Sein</company>
 		<year>1986</year>
 		<country>JP</country>
+		<controls>40</controls>
 		<dump>
 			<original value="true">GoodMSX</original>
 			<megarom>
@@ -38125,6 +38215,17 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		</dump>
 	</software>
 	<software>
+		<title xml:lang="en">Gradius Legends</title>
+		<system>MSX</system>
+		<controls>54</controls>
+		<dump>
+			<original value="false" />
+			<disk>
+				<hash algo="sha1">50e448ddcc856765a24d1fd728bb95919d8856da</hash>
+			</disk>
+		</dump>
+	</software>
+	<software>
 		<title xml:lang="en">Ys : Omen</title>
 		<system>MSX</system>
 		<controls>3</controls>
@@ -38296,6 +38397,43 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		</dump>
 	</software>
 	<software>
+		<title xml:lang="en">Dragon Slayer 5 : Sorcerian</title>
+		<system>MSX</system>
+		<controls>62</controls>
+		<dump>
+			<disk>
+				<hash algo="sha1">8bad424f44a35c4df533211d14575d7cd88e9d28</hash>
+				<remark>
+					<text>Disk 1 (Program Disk)</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">d8bdac5317ece5ae647140ee59c7d8eb85d21c27</hash>
+				<remark>
+					<text>Disk 2 (Scenario Disk 1)</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">69af7aa378a84bdd788949900bd7db9050ad376f</hash>
+				<remark>
+					<text>Disk 3 (Scenario Disk 2)</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">0650e04f106e3f3b81f1a7a9d8d9868d97ffa30e</hash>
+				<remark>
+					<text>Disk 4 (Scenario Disk 3)</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">40fd7b0a72a9344b33f5e5f6d0b4c621e9ad9435</hash>
+				<remark>
+					<text>User Disk</text>
+				</remark>
+			</disk>
+		</dump>
+	</software>
+	<software>
 		<title xml:lang="en">Dragon Slayer 6</title>
 		<system>MSX</system>
 		<controls>12</controls>
@@ -38306,32 +38444,24 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 					<text>Disk 1</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">86d4e55b0467925c1c49a056b62a3aca16a3a7e4</hash>
 				<remark>
 					<text>Disk 2</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">30a812a98388ed90da1494da00ae19c916081347</hash>
 				<remark>
 					<text>Disk 3</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">7e5c6172b803d89d7b503f6db8d8fdbf6aef0c54</hash>
 				<remark>
 					<text>Disk 4</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">071e119c048c4322be437d7d1729b3df5b5a9e0e</hash>
 				<remark>
@@ -38351,13 +38481,21 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 					<text>Disk 1</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">7ce756e3b39aaa14a73cdfd3bcbdcb6ec70ad032</hash>
 				<remark>
 					<text>Disk 2</text>
 				</remark>
+			</disk>
+		</dump>
+	</software>
+	<software>
+		<title xml:lang="en">Feedback</title>
+		<system>MSX</system>
+		<controls>36</controls>
+		<dump>
+			<disk>
+				<hash algo="sha1">b8960a5a7dacddbf68aeff0efd31442f7661006c</hash>
 			</disk>
 		</dump>
 	</software>
@@ -38370,36 +38508,48 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 			<disk>
 				<hash algo="sha1">88313a53a1301d030317d5d1b76c16fcf4ae1a21</hash>
 			</disk>
+		</dump>
+		<dump>
 			<disk>
 				<hash algo="sha1">b871923a7c693bd7fa75684bcec08c7c8800ea53</hash>
 				<remark>
 					<text>[a]</text>
 				</remark>
 			</disk>
+		</dump>
+		<dump>
 			<disk>
 				<hash algo="sha1">6608af878b95aa97b489ff9279698d9ad590e124</hash>
 				<remark>
 					<text>[a2]</text>
 				</remark>
 			</disk>
+		</dump>
+		<dump>
 			<disk>
 				<hash algo="sha1">7a90593367351303ec95f3ddc5da4ebbadebe00c</hash>
 				<remark>
 					<text>[a3]</text>
 				</remark>
 			</disk>
+		</dump>
+		<dump>
 			<disk>
 				<hash algo="sha1">535c58e163c02f9d4a926c2f89d29ae34c6dfc34</hash>
 				<remark>
 					<text>[b]</text>
 				</remark>
 			</disk>
+		</dump>
+		<dump>
 			<disk>
 				<hash algo="sha1">ccc328c9607ffdbae5956a76967855f1ba389f18</hash>
 				<remark>
 					<text>English Translation</text>
 				</remark>
 			</disk>
+		</dump>
+		<dump>
 			<disk>
 				<hash algo="sha1">a7408be21b9248e6ff3124a5f6934338489a4a7b</hash>
 				<remark>
@@ -38419,8 +38569,6 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 					<text>Disk 1</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">ca33dd80bb8ce424991ae7c23cbe98ae6a439930</hash>
 				<remark>
@@ -38440,24 +38588,18 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 					<text>Disk 1</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">ea55d4feea9c1e45cc63ffb1b4f0aeb551acdbf3</hash>
 				<remark>
 					<text>Disk 2</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">0adcfca1ade6ce66ea3ad655f949d9940d181cad</hash>
 				<remark>
 					<text>Disk 3</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">c6bdfbc94c460f8964985d61285bfd1e559bbcb3</hash>
 				<remark>
@@ -38481,21 +38623,29 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 					<text>Disk 1</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">8b318d439180f59730aba404cd5b9e21c4b058d6</hash>
 				<remark>
 					<text>Disk 2</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">507f040278be2c5040c99a9e467634f7bd930dcc</hash>
 				<remark>
 					<text>Disk 3</text>
 				</remark>
+			</disk>
+		</dump>
+	</software>
+	<software>
+		<title xml:lang="en">Gorby&#39;s Pipeline</title>
+		<system>MSX</system>
+		<msx>MSX1</msx>
+		<controls>36</controls>
+		<dump>
+			<original value="false" />
+			<disk>
+				<hash algo="sha1">7e8fd49d81b55858de5b08677e35ec3821290428</hash>
 			</disk>
 		</dump>
 	</software>
@@ -38525,6 +38675,31 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		<dump>
 			<disk>
 				<hash algo="sha1">302b1960b29af77ff4ce887931ac8d31202c7e89</hash>
+			</disk>
+		</dump>
+	</software>
+	<software>
+		<title xml:lang="en">Magnar</title>
+		<system>MSX</system>
+		<controls>61</controls>
+		<dump>
+			<disk>
+				<hash algo="sha1">920bbfc34dd9c6cee490ead1e29cfbc2c8e5f2d3</hash>
+				<remark>
+					<text>Disk 1</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">a878b1cc8aad5dafb1355991b00a17209219aab7</hash>
+				<remark>
+					<text>Disk 2</text>
+				</remark>
+			</disk>
+			<disk>
+				<hash algo="sha1">fb77b85b0135dcd4fc865efa086e06f07575668e</hash>
+				<remark>
+					<text>Disk 3</text>
+				</remark>
 			</disk>
 		</dump>
 	</software>
@@ -38573,9 +38748,19 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 		</dump>
 	</software>
 	<software>
+		<title xml:lang="en">Rune Master</title>
+		<system>MSX</system>
+		<controls>2</controls>
+		<dump>
+			<disk>
+				<hash algo="sha1">98e78192ad8f23dfefb5f4a1c17303638cee75b4</hash>
+			</disk>
+		</dump>
+	</software>
+	<software>
 		<title xml:lang="en">Rune Master II</title>
 		<system>MSX</system>
-		<controls>0</controls>
+		<controls>2</controls>
 		<dump>
 			<disk>
 				<hash algo="sha1">7d6cbade94b372a5946ec90af9d70754e7c02360</hash>
@@ -38585,7 +38770,7 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 	<software>
 		<title xml:lang="en">Rune Master III</title>
 		<system>MSX</system>
-		<controls>0</controls>
+		<controls>2</controls>
 		<dump>
 			<disk>
 				<hash algo="sha1">de2e239261db4d256165bfafd34c5d0f3c214dbd</hash>
@@ -38593,16 +38778,12 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 					<text>Disk 1</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">5fcdc7f75a4b18196c72e32b77b82ba3c2f3a31d</hash>
 				<remark>
 					<text>Disk 2</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">c3e1382be693445ca3a678f9204b77ba388ed1ce</hash>
 				<remark>
@@ -38678,24 +38859,18 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 					<text>Disk 1</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">43c12ee91407255e4f69c3d9195df3e778532d0c</hash>
 				<remark>
 					<text>Disk 2</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">4d30e9c23ebc14f65c7583ff1103ef343054b353</hash>
 				<remark>
 					<text>Disk 3</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">c1cc16c542caaec1cee8bd050d9bfdcd2bb71bb8</hash>
 				<remark>
@@ -38715,16 +38890,12 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 					<text>Disk 1</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">bfab93c55a04adf8e49d211f26b189e5b6eeac2d</hash>
 				<remark>
 					<text>Disk 2</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">a52cb8e05863a7b0892b54ee5ed98c489a954d6b</hash>
 				<remark>
@@ -38744,40 +38915,30 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 					<text>Disk 1</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">4afbe7a103a1a1956ce653762be9b532e7aabc5f</hash>
 				<remark>
 					<text>Disk 2</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">de969546243efd6aa3aaca53151cce653574be80</hash>
 				<remark>
 					<text>Disk 3</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">a680c86a2b6bf8890655a50528dda3da98fd0bc8</hash>
 				<remark>
 					<text>Disk 4</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">c9962d96e6b3f9e0d4311bd7a9d65743b5e84e2b</hash>
 				<remark>
 					<text>Disk 5</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">a6eb716d16e6f87b97bfc43bb5f9f0055d4b3a43</hash>
 				<remark>
@@ -38797,24 +38958,18 @@ This MSX games database is conceived for blueMSX, although it's 99% compatible w
 					<text>Disk 1</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">602549f7be4621c78f4eb05d71e9b67e8b9447f4</hash>
 				<remark>
 					<text>Disk 2</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">d55f91f09441f66abd9ba8f24c7301242c6cb2f0</hash>
 				<remark>
 					<text>Disk 3</text>
 				</remark>
 			</disk>
-		</dump>
-		<dump>
 			<disk>
 				<hash algo="sha1">ef9a7746ffad24ebf48863a272a999effbf0a28d</hash>
 				<remark>
