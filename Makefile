@@ -797,7 +797,7 @@ ZELDA3_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Izelda3/ \
+-Izelda3 \
 -I.
 
 SMW_C_INCLUDES +=  \
@@ -805,7 +805,7 @@ SMW_C_INCLUDES +=  \
 -ICore/Src/porting/lib \
 -ICore/Src/porting/lib/lzma \
 -Iretro-go-stm32/components/odroid \
--Ismw/ \
+-Ismw \
 -I.
 
 TAMA_C_INCLUDES +=  \
