@@ -567,7 +567,7 @@ void gwenesis_load_local_data(fs_file_t *file) {
   fs_read(file, (unsigned char *)&gwenesis_lpfilter, 4);
 }
 
-static bool gwenesis_system_SaveState(char *savePathName, char *sramPathName) {
+static bool gwenesis_system_SaveState(char *savePathName, char *sramPathName, int slot) {
   printf("Saving state...\n");
   fs_file_t *file;
   file = fs_open(savePathName, FS_WRITE, FS_COMPRESS);
@@ -578,7 +578,7 @@ static bool gwenesis_system_SaveState(char *savePathName, char *sramPathName) {
   return true;
 }
 
-static bool gwenesis_system_LoadState(char *savePathName, char *sramPathName) {
+static bool gwenesis_system_LoadState(char *savePathName, char *sramPathName, int slot) {
   printf("Loading state...\n");
   fs_file_t *file;
   file = fs_open(savePathName, FS_READ, FS_COMPRESS);

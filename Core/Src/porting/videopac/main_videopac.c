@@ -61,7 +61,7 @@ static void blit() {
 
 }
 
-static bool SaveState(char *savePathName, char *sramPathName)
+static bool SaveState(char *savePathName, char *sramPathName, int slot)
 {
     uint8_t *save_buffer = (uint8_t *)lcd_get_active_buffer();
     size_t save_size = savestate_size();
@@ -76,7 +76,7 @@ static bool SaveState(char *savePathName, char *sramPathName)
     return true;
 }
 
-static bool LoadState(char *savePathName, char *sramPathName)
+static bool LoadState(char *savePathName, char *sramPathName, int slot)
 {
     uint8_t *save_buffer = (uint8_t *)lcd_get_active_buffer();
     size_t save_size = savestate_size();

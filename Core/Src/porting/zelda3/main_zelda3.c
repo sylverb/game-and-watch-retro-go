@@ -220,7 +220,7 @@ void readSaveStateFinalizeImpl() {
   }
 }
 
-static bool zelda3_system_SaveState(char *savePathName, char *sramPathName) {
+static bool zelda3_system_SaveState(char *savePathName, char *sramPathName, int slot) {
   printf("Saving state...\n");
   odroid_audio_mute(true);
   strcpy(savestate_path, savePathName);
@@ -236,7 +236,7 @@ static bool zelda3_system_SaveState(char *savePathName, char *sramPathName) {
   return true;
 }
 
-static bool zelda3_system_LoadState(char *savePathName, char *sramPathName) {
+static bool zelda3_system_LoadState(char *savePathName, char *sramPathName, int slot) {
   printf("Loading state...\n");
   odroid_audio_mute(true);
 

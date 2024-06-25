@@ -41,7 +41,7 @@ extern int nes_state_save(uint8_t *flash_ptr, size_t size);
 
 void nes_audio_submit(int16_t *buffer);
 
-static bool SaveState(char *savePathName, char *sramPathName)
+static bool SaveState(char *savePathName, char *sramPathName, int slot)
 {
     printf("Saving state...\n");
 
@@ -58,7 +58,7 @@ static bool SaveState(char *savePathName, char *sramPathName)
 // TODO: Expose properly
 extern int nes_state_load(uint8_t* flash_ptr, size_t size);
 
-static bool LoadState(char *savePathName, char *sramPathName)
+static bool LoadState(char *savePathName, char *sramPathName, int slot)
 {
     fs_file_t *file;
     file = fs_open(savePathName, FS_READ, FS_COMPRESS);

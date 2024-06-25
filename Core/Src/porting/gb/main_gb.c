@@ -363,7 +363,7 @@ static void blit_and_swap(void)
 
 #define STATE_SAVE_BUFFER_LENGTH 1024 * 192
 
-static bool SaveState(char *savePathName, char *sramPathName)
+static bool SaveState(char *savePathName, char *sramPathName, int slot)
 {
     printf("Saving state...\n");
     fs_file_t *file;
@@ -381,7 +381,7 @@ static bool SaveState(char *savePathName, char *sramPathName)
     return 0;
 }
 
-static bool LoadState(char *savePathName, char *sramPathName)
+static bool LoadState(char *savePathName, char *sramPathName, int slot)
 {
     fs_file_t *file;
     int savestate_size;

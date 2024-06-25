@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include "Board.h"
 
-static char *headerString = "bMSX0000";
+static char *headerString = "bMSX0001";
 
 extern BoardInfo boardInfo;
 static SaveState *msxSaveState = NULL;  // This is really a fs_file_t
@@ -27,6 +27,13 @@ UInt32 saveMsxState(char *pathName) {
     msxSaveState = fs_open(pathName, FS_WRITE, FS_COMPRESS);
     fs_write(msxSaveState, (unsigned char *)headerString, 8);
     boardSaveState("mem0",0);
+    fs_close(msxSaveState);
+    return 0;
+}
+
+UInt32 saveGnwMsxData(char *pathName) {
+    msxSaveState = fs_open(pathName, FS_WRITE, FS_COMPRESS);
+    fs_write(msxSaveState, (unsigned char *)headerString, 8);
     save_gnw_msx_data();
     fs_close(msxSaveState);
     return 0;
@@ -72,6 +79,16 @@ UInt32 loadMsxState(char *pathName) {
     fs_read(msxSaveState, (unsigned char *)header, sizeof(header));
     if (memcmp(headerString, header, 8) == 0) {
         boardInfo.loadState();
+    }
+    fs_close(msxSaveState);
+    return 0;
+}
+
+UInt32 loadGnwMsxData(char *pathName) {
+    char header[8];
+    msxSaveState = fs_open(pathName, FS_READ, FS_COMPRESS);
+    fs_read(msxSaveState, (unsigned char *)header, sizeof(header));
+    if (memcmp(headerString, header, 8) == 0) {
         load_gnw_msx_data();
     }
     fs_close(msxSaveState);
@@ -102,5 +119,10 @@ void saveStateCreateForRead(const char* fileName)
 {
     // Nothing to do, file is previously opened in loadMsxState()
 }
+
+/* Savestate functions */
+
+/* Loadstate functions */
+
 
 #endif

@@ -269,7 +269,7 @@ static char *headerString = "AMST0000";
 extern int cap32_save_state(fs_file_t *file);
 extern int cap32_load_state(fs_file_t *file);
 
-bool saveAmstradState(char *savePathName, char *sramPathName) {
+bool saveAmstradState(char *savePathName, char *sramPathName, int slot) {
     // Show disk icon when saving state
     uint16_t *dest = lcd_get_inactive_buffer();
     uint16_t idx = 0;
@@ -302,7 +302,7 @@ bool saveAmstradState(char *savePathName, char *sramPathName) {
     return 0;
 }
 
-bool loadAmstradState(char *savePathName, char *sramPathName) {
+bool loadAmstradState(char *savePathName, char *sramPathName, int slot) {
     fs_file_t *file;
     file = fs_open(savePathName, FS_READ, FS_COMPRESS);
     unsigned char readin_header[8] = {0};

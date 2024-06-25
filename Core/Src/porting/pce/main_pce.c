@@ -162,7 +162,7 @@ void osd_log(int type, const char *format, ...) {
 
 #define SAVE_STATE_BUFFER_SIZE (76*1024)
 
-static bool SaveState(char *savePathName, char *sramPathName) {
+static bool SaveState(char *savePathName, char *sramPathName, int slot) {
     int pos=0;
     uint8_t *pce_save_buf = pce_framebuffer;
     memset(pce_save_buf, 0x00, SAVE_STATE_BUFFER_SIZE); // 76K save size
@@ -195,7 +195,7 @@ static bool SaveState(char *savePathName, char *sramPathName) {
     return false;
 }
 
-static bool LoadState(char *savePathName, char *sramPathName) {
+static bool LoadState(char *savePathName, char *sramPathName, int slot) {
     uint8_t *pce_save_buf = pce_framebuffer;
 
     fs_file_t *file;

@@ -97,7 +97,7 @@ static void gw_check_time() {
 }
 static unsigned char state_save_buffer[sizeof(gw_state_t)];
 
-static bool gw_system_SaveState(char *savePathName, char *sramPathName)
+static bool gw_system_SaveState(char *savePathName, char *sramPathName, int slot)
 {
     printf("Saving state...\n");
     fs_file_t *file;
@@ -112,7 +112,7 @@ static bool gw_system_SaveState(char *savePathName, char *sramPathName)
     return false;
 }
 
-static bool gw_system_LoadState(char *savePathName, char *sramPathName)
+static bool gw_system_LoadState(char *savePathName, char *sramPathName, int slot)
 {
     printf("Loading state...\n");
     fs_file_t *file;

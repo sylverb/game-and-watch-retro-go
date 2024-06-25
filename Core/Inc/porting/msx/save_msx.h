@@ -34,7 +34,9 @@
 typedef fs_file_t SaveState;
 
 UInt32 saveMsxState(char *pathName);
+UInt32 saveGnwMsxData(char *pathName);
 UInt32 loadMsxState(char *pathName);
+UInt32 loadGnwMsxData(char *pathName);
 
 void saveStateCreateForRead(const char* fileName);
 void saveStateCreateForWrite(const char* fileName);

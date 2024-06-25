@@ -16,10 +16,10 @@ static sleep_hook_t sleep_hook = NULL;
 
 #define TURBOS_SPEED 10
 
-bool odroid_button_turbos(void) 
+bool odroid_button_turbos(void)
 {
-  int turbos = 1000 / TURBOS_SPEED;
-  return (get_elapsed_time() % turbos) < (turbos / 2);
+    int turbos = 1000 / TURBOS_SPEED;
+    return (get_elapsed_time() % turbos) < (turbos / 2);
 }
 
 void odroid_system_panic(const char *reason, const char *function, const char *file)
@@ -56,37 +56,58 @@ rg_app_desc_t *odroid_system_get_app()
     return &currentApp;
 }
 
-
 const char OFF_SAVESTATE_PATH[] = "savestate/common";
+const char OFF_GNW_DATA_PATH[] = "savestate/common.gnw";
 const char OFF_SRAM_PATH[] = "savestate/common.srm";
 
-static void parse_save_path(char *path, size_t size, int slot){
-    if (slot == -1) {
+void odroid_system_get_save_path(char *path, size_t size, int slot)
+{
+    if (slot == -1)
+    {
         strcpy(path, OFF_SAVESTATE_PATH);
     }
-    else {
+    else
+    {
         snprintf(path,
                  size,
                  "savestate/%s/%s/%d",
                  ACTIVE_FILE->system->extension,
                  ACTIVE_FILE->name,
-                 slot
-                 );
+                 slot);
     }
 }
 
-static void parse_sram_path(char *path, size_t size, int slot){
-    if (slot == -1) {
+void odroid_system_get_gnw_data_path(char *path, size_t size, int slot)
+{
+    if (slot == -1)
+    {
+        strcpy(path, OFF_GNW_DATA_PATH);
+    }
+    else
+    {
+        snprintf(path,
+                 size,
+                 "savestate/%s/%s/%d.gnw",
+                 ACTIVE_FILE->system->extension,
+                 ACTIVE_FILE->name,
+                 slot);
+    }
+}
+
+void odroid_system_get_sram_path(char *path, size_t size, int slot)
+{
+    if (slot == -1)
+    {
         strcpy(path, OFF_SRAM_PATH);
     }
-    else {
+    else
+    {
         snprintf(path,
                  size,
                  "savestate/%s/%s/%d.srm",
                  ACTIVE_FILE->system->extension,
                  ACTIVE_FILE->name,
-                 slot
-                 );
+                 slot);
     }
 }
 /* Return true on successful load.
@@ -95,23 +116,33 @@ static void parse_sram_path(char *path, size_t size, int slot){
 bool odroid_system_emu_load_state(int slot)
 {
     char savePath[FS_MAX_PATH_SIZE];
+    char gnwDataPath[FS_MAX_PATH_SIZE];
     char sramPath[FS_MAX_PATH_SIZE];
     if (currentApp.loadState == NULL)
         return true;
-    parse_save_path(savePath, sizeof(savePath), slot);
-    parse_sram_path(sramPath, sizeof(sramPath), slot);
+    odroid_system_get_save_path(savePath, sizeof(savePath), slot);
+    odroid_system_get_gnw_data_path(gnwDataPath, sizeof(gnwDataPath), slot);
+    odroid_system_get_sram_path(sramPath, sizeof(sramPath), slot);
     printf("Attempting to load state from [%s]\n", savePath);
-    if(!fs_exists(savePath) && !fs_exists(sramPath)){
+    if (!fs_exists(savePath) && !fs_exists(sramPath))
+    {
         printf("Savestate does not exist.\n");
         return false;
     }
-    (*currentApp.loadState)(savePath, sramPath);
-    if (slot == -1) {
+    (*currentApp.loadState)(savePath, sramPath, slot);
+    if (slot == -1)
+    {
         // Delete save files as it's not useful anymore
-        if(fs_exists(savePath)) {
+        if (fs_exists(savePath))
+        {
             fs_delete(savePath);
         }
-        if(fs_exists(sramPath)) {
+        if (fs_exists(gnwDataPath))
+        {
+            fs_delete(gnwDataPath);
+        }
+        if (fs_exists(sramPath))
+        {
             fs_delete(sramPath);
         }
     }
@@ -125,23 +156,28 @@ bool odroid_system_emu_save_state(int slot)
     if (currentApp.saveState == NULL)
         return true;
 
-    parse_save_path(savePath, sizeof(savePath), slot);
-    parse_sram_path(sramPath, sizeof(sramPath), slot);
+    odroid_system_get_save_path(savePath, sizeof(savePath), slot);
+    odroid_system_get_sram_path(sramPath, sizeof(sramPath), slot);
     printf("Savestating to [%s]\n", savePath);
-    (*currentApp.saveState)(savePath, sramPath);
+    (*currentApp.saveState)(savePath, sramPath, slot);
     return true;
 };
 
 IRAM_ATTR void odroid_system_tick(uint skippedFrame, uint fullFrame, uint busyTime)
 {
-    if (skippedFrame) counters.skippedFrames++;
-    else if (fullFrame) counters.fullFrames++;
+    if (skippedFrame)
+        counters.skippedFrames++;
+    else if (fullFrame)
+        counters.fullFrames++;
     counters.totalFrames++;
 
     // Because the emulator may have a different time perception, let's just skip the first report.
-    if (skip) {
+    if (skip)
+    {
         skip = 0;
-    } else {
+    }
+    else
+    {
         counters.busyTime += busyTime;
     }
 
@@ -152,7 +188,8 @@ void odroid_system_switch_app(int app)
 {
     printf("%s: Switching to app %d.\n", __FUNCTION__, app);
 
-    switch (app) {
+    switch (app)
+    {
     case 0:
         odroid_settings_StartupFile_set(0);
         odroid_settings_commit();
@@ -171,14 +208,14 @@ void odroid_system_switch_app(int app)
          * For stuff not running a bootloader like this, these commands are
          * harmless.
          */
-        *((uint32_t *)0x2001FFF8) = 0x544F4F42; // "BOOT"
-        *((uint32_t *)0x2001FFFC) = (uint32_t) &__INTFLASH__; // vector table
+        *((uint32_t *)0x2001FFF8) = 0x544F4F42;              // "BOOT"
+        *((uint32_t *)0x2001FFFC) = (uint32_t)&__INTFLASH__; // vector table
 
         NVIC_SystemReset();
         break;
     case 9:
-        *((uint32_t *)0x2001FFF8) = 0x544F4F42; // "BOOT"
-        *((uint32_t *)0x2001FFFC) = (uint32_t) &__INTFLASH__; // vector table
+        *((uint32_t *)0x2001FFF8) = 0x544F4F42;              // "BOOT"
+        *((uint32_t *)0x2001FFFC) = (uint32_t)&__INTFLASH__; // vector table
 
         NVIC_SystemReset();
         break;

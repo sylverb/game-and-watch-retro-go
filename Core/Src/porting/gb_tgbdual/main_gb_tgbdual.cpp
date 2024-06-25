@@ -59,7 +59,7 @@ bool tgb_drawFrame;
 
 // --- MAIN
 
-static bool SaveState(char *savePathName, char *sramPathName)
+static bool SaveState(char *savePathName, char *sramPathName, int slot)
 {
     size_t size = g_gb->get_state_size();
 
@@ -78,7 +78,7 @@ static bool SaveState(char *savePathName, char *sramPathName)
     return true;
 }
 
-static bool LoadState(char *savePathName, char *sramPathName)
+static bool LoadState(char *savePathName, char *sramPathName, int slot)
 {
     // We store data in the not visible framebuffer
     unsigned char *data = (unsigned char *)lcd_get_active_buffer();

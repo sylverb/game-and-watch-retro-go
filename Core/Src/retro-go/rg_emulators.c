@@ -403,6 +403,16 @@ static void parse_save_path(retro_emulator_file_t *file, char *path, size_t size
                 );
 }
 
+static void parse_gnw_data_path(retro_emulator_file_t *file, char *path, size_t size, int slot){
+    snprintf(path,
+                size,
+                "savestate/%s/%s/%d.gnw",
+                file->system->extension,
+                file->name,
+                slot
+                );
+}
+
 static void parse_sram_path(retro_emulator_file_t *file, char *path, size_t size, int slot){
     snprintf(path,
                 size,
@@ -424,6 +434,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
 
     char saveFolderPath[FS_MAX_PATH_SIZE];
     char savePath[FS_MAX_PATH_SIZE];
+    char gnwDataPath[FS_MAX_PATH_SIZE];
     char sramPath[FS_MAX_PATH_SIZE];
     bool has_save = 0;
     bool has_sram = 0;
@@ -441,6 +452,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
 #endif
     parse_save_folder_path(file, saveFolderPath, sizeof(saveFolderPath));
     parse_save_path(file, savePath, sizeof(savePath), 0);
+    parse_gnw_data_path(file, gnwDataPath, sizeof(gnwDataPath), 0);
     parse_sram_path(file, sramPath, sizeof(sramPath), 0);
 
     has_save = fs_exists(savePath);
@@ -487,6 +499,7 @@ bool emulator_show_file_menu(retro_emulator_file_t *file)
         if (has_save) {
             if (odroid_overlay_confirm(curr_lang->s_Confirm_del_save, false, &gui_redraw_callback) == 1) {
                 fs_delete(savePath);
+                fs_delete(gnwDataPath);
             }
         }
         if (has_sram) {

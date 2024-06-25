@@ -44,7 +44,7 @@ static uint8_t *pokeyMixBuffer         = NULL;
 
 static uint8_t save_buffer[32832];
 
-static bool LoadState(char *savePathName, char *sramPathName) {
+static bool LoadState(char *savePathName, char *sramPathName, int slot) {
     fs_file_t *file;
     file = fs_open(savePathName, FS_READ, FS_COMPRESS);
     fs_read(file, save_buffer, sizeof(save_buffer));
@@ -60,7 +60,7 @@ static bool LoadState(char *savePathName, char *sramPathName) {
     return 0;
 }
 
-static bool SaveState(char *savePathName, char *sramPathName) {
+static bool SaveState(char *savePathName, char *sramPathName, int slot) {
     save_buffer[0] = '7';
     save_buffer[1] = '8';
     save_buffer[2] = '0';

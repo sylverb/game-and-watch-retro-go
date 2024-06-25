@@ -195,7 +195,7 @@ void readSaveStateFinalizeImpl() {
   }
 }
 
-static bool smw_system_SaveState(char *savePathName, char *sramPathName) {
+static bool smw_system_SaveState(char *savePathName, char *sramPathName, int slot) {
   printf("Saving state...\n");
   odroid_audio_mute(true);
 
@@ -213,7 +213,7 @@ static bool smw_system_SaveState(char *savePathName, char *sramPathName) {
   return true;
 }
 
-static bool smw_system_LoadState(char *savePathName, char *sramPathName) {
+static bool smw_system_LoadState(char *savePathName, char *sramPathName, int slot) {
   printf("Loading state...\n");
 
   odroid_audio_mute(true);

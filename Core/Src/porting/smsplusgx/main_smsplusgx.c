@@ -195,7 +195,7 @@ load_rom_from_flash(uint8_t emu_engine)
 extern uint32 glob_bp_lut[0x10000];
 #define SAVE_STATE_BUFFER_SIZE (60 * 1024)
 
-static bool SaveState(char *savePathName, char *sramPathName)
+static bool SaveState(char *savePathName, char *sramPathName, int slot)
 {
     uint8_t *state_save_buffer = (uint8_t *)glob_bp_lut;
     system_save_state(state_save_buffer);
@@ -210,7 +210,7 @@ static bool SaveState(char *savePathName, char *sramPathName)
     return false;
 }
 
-static bool LoadState(char *savePathName, char *sramPathName)
+static bool LoadState(char *savePathName, char *sramPathName, int slot)
 {
     uint8_t *state_save_buffer = (uint8_t *)glob_bp_lut;
 

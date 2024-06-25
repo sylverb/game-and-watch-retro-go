@@ -66,7 +66,7 @@ struct track_info {
 
 struct track_info current_track = {-1, 0, 0};
 
-static bool SaveState(char *savePathName, char *sramPathName)
+static bool SaveState(char *savePathName, char *sramPathName, int slot)
 {
     fs_file_t *file;
     size_t size;
@@ -85,7 +85,7 @@ static bool SaveState(char *savePathName, char *sramPathName)
     return true;
 }
 
-static bool LoadState(char *savePathName, char *sramPathName)
+static bool LoadState(char *savePathName, char *sramPathName, int slot)
 {
     fs_file_t *file;
     size_t size;

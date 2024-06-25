@@ -39,7 +39,7 @@ static uint8 wsv_rom_memory[WSV_ROM_BUFF_LENGTH];
 
 #define STATE_SAVE_BUFFER_LENGTH (1024 * 28)
 
-static bool LoadState(char *savePathName, char *sramPathName) {
+static bool LoadState(char *savePathName, char *sramPathName, int slot) {
     fs_file_t *file;
     file = fs_open(savePathName, FS_READ, FS_COMPRESS);
     fs_read(file, wsv_framebuffer, STATE_SAVE_BUFFER_LENGTH);
@@ -47,7 +47,7 @@ static bool LoadState(char *savePathName, char *sramPathName) {
     supervision_load_state(wsv_framebuffer);
     return 0;
 }
-static bool SaveState(char *savePathName, char *sramPathName) {
+static bool SaveState(char *savePathName, char *sramPathName, int slot) {
     int size = supervision_save_state(wsv_framebuffer);
     assert(size<STATE_SAVE_BUFFER_LENGTH);
 
