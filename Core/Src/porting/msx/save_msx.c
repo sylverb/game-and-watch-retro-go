@@ -17,10 +17,23 @@
 #include <stdio.h>
 #include "Board.h"
 
-static char *headerString = "bMSX0001";
+static char *headerString0 = "bMSX0000";
+static char *headerString  = "bMSX0001";
 
 extern BoardInfo boardInfo;
 static SaveState *msxSaveState = NULL;  // This is really a fs_file_t
+
+uint16_t saveMsxGetVersion(char *pathName) {
+    char header[8];
+    msxSaveState = fs_open(pathName, FS_READ, FS_COMPRESS);
+    fs_read(msxSaveState, (unsigned char *)header, sizeof(header));
+    fs_close(msxSaveState);
+    if (memcmp(headerString0, header, 8) == 0) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
 
 /* Savestate functions */
 UInt32 saveMsxState(char *pathName) {
@@ -72,6 +85,19 @@ void saveStateClose(SaveState* state)
     // Nothing to do, all "files" are serialized in... serial
 }
 
+/* Loadstate v0 functions */
+UInt32 loadMsxStateV0(char *pathName) {
+    char header[8];
+    msxSaveState = fs_open(pathName, FS_READ, FS_COMPRESS);
+    fs_read(msxSaveState, (unsigned char *)header, sizeof(header));
+    if (memcmp(headerString0, header, 8) == 0) {
+        boardInfo.loadState();
+        load_gnw_msx_data();
+    }
+    fs_close(msxSaveState);
+    return 0;
+}
+
 /* Loadstate functions */
 UInt32 loadMsxState(char *pathName) {
     char header[8];
@@ -119,10 +145,5 @@ void saveStateCreateForRead(const char* fileName)
 {
     // Nothing to do, file is previously opened in loadMsxState()
 }
-
-/* Savestate functions */
-
-/* Loadstate functions */
-
 
 #endif

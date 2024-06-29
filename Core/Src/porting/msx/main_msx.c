@@ -159,14 +159,19 @@ void msxLedSetFdd1(int state) {
 
 static bool msx_system_LoadState(char *savePathName, char *sramPathName, int slot)
 {
-    char gnwDataSavePath[FS_MAX_PATH_SIZE];
-    odroid_system_get_gnw_data_path(gnwDataSavePath,
-                                    sizeof(gnwDataSavePath),
-                                    slot
-    );
+    // If savestate is in the old version, load it using the old way
+    if (saveMsxGetVersion(savePathName) == 0) {
+        loadMsxStateV0(savePathName); // internally calls load_gnw_msx_data
+    } else {
+        char gnwDataSavePath[FS_MAX_PATH_SIZE];
+        odroid_system_get_gnw_data_path(gnwDataSavePath,
+                                        sizeof(gnwDataSavePath),
+                                        slot
+        );
 
-    loadGnwMsxData(gnwDataSavePath);
-    loadMsxState(savePathName);
+        loadGnwMsxData(gnwDataSavePath);
+        loadMsxState(savePathName);
+    }
     return true;
 }
 
@@ -1929,19 +1934,31 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 {
     odroid_gamepad_state_t joystick;
     odroid_dialog_choice_t options[10];
+    char msxSavePath[FS_MAX_PATH_SIZE];
+    uint16_t saveStateVersion;
     bool drawFrame;
 
     show_disk_icon = false;
     selected_disk_index = -1;
 
     if (load_state) {
-        char gnwDataSavePath[FS_MAX_PATH_SIZE];
-
-        odroid_system_get_gnw_data_path(gnwDataSavePath,
-                                        sizeof(gnwDataSavePath),
-                                        save_slot
+        // Get savestate path and version
+        odroid_system_get_save_path(msxSavePath,
+                                    sizeof(msxSavePath),
+                                    save_slot
         );
-        loadGnwMsxData(gnwDataSavePath);
+
+        saveStateVersion = saveMsxGetVersion(msxSavePath);
+
+        if (saveStateVersion == 1) {
+            char gnwDataSavePath[FS_MAX_PATH_SIZE];
+
+            odroid_system_get_gnw_data_path(gnwDataSavePath,
+                                            sizeof(gnwDataSavePath),
+                                            save_slot
+            );
+            loadGnwMsxData(gnwDataSavePath);
+        }
     }
 
     // Create RGB8 to RGB565 table
@@ -1994,6 +2011,19 @@ void app_main_msx(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
 
     if (load_state) {
         odroid_system_emu_load_state(save_slot);
+        if (saveStateVersion == 0) {
+            // Make sure we have correct disk inserted after loading state
+            if (msx_game_type == MSX_GAME_DISK) {
+                char game_name[PROP_MAXPATH];
+                retro_emulator_file_t *disk_file = NULL;
+                const rom_system_t *msx_system = rom_manager_system(&rom_mgr, "MSX");
+                disk_file = (retro_emulator_file_t *)rom_get_ext_file_at_index(msx_system,MSX_DISK_EXTENSION,selected_disk_index);
+                sprintf(game_name,"%s.%s",disk_file->name,disk_file->ext);
+                emulatorSuspend();
+                insertDiskette(properties, 0, game_name, NULL, -1);
+                emulatorResume();
+            }
+        }
     }
 
     while (1) {
