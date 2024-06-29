@@ -114,14 +114,17 @@ static void show_saves(char *path, int offset) {
             if (sel >= 0) {
                 if (entry[sel].has_savestate) {
                     if (odroid_overlay_confirm(curr_lang->s_Confirm_del_save, false, &gui_redraw_callback) == 1) {
-                        char save_path[100];
+                        char save_path[FS_MAX_PATH_SIZE];
+                        char gnw_data_path[FS_MAX_PATH_SIZE];
                         sprintf(save_path,"%s/%s/0",path,entry[sel].name);
+                        sprintf(gnw_data_path,"%s/%s/0.gnw",path,entry[sel].name);
                         fs_delete(save_path);
+                        fs_delete(gnw_data_path);
                     }
                 }
                 if (entry[sel].has_sram) {
                     if (odroid_overlay_confirm(curr_lang->s_Confirm_del_sram, false, &gui_redraw_callback) == 1) {
-                        char save_path[100];
+                        char save_path[FS_MAX_PATH_SIZE];
                         sprintf(save_path,"%s/%s/0.srm",path,entry[sel].name);
                         fs_delete(save_path);
                     }
