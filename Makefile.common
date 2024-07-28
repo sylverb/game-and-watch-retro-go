@@ -19,6 +19,10 @@ LARGE_FLASH ?= 0
 # setting EXTFLASH_OFFSET. Useful if the first 1MB are to be preserved.
 EXTFLASH_OFFSET ?= 0
 
+ifneq ($(shell echo "$$(( $(EXTFLASH_OFFSET) % 4096 ))"), 0)
+$(error Invalid EXTFLASH_OFFSET, should be aligned to a 4KB sector)
+endif
+
 # Configure Game & Watch target device mario|zelda
 ifneq ($(findstring flash,$(MAKECMDGOALS)),flash)
 	GNW_TARGET ?= mario
@@ -107,6 +111,10 @@ EXTFLASH_SIZE_MB ?= 1
 BIG_BANK ?= 1
 
 EXTFLASH_SIZE ?= $(shell echo "$$(( $(EXTFLASH_SIZE_MB) * 1024 * 1024 ))")
+
+ifneq ($(shell echo "$$(( $(EXTFLASH_SIZE) % 4096 ))"), 0)
+$(error Invalid EXTFLASH_SIZE, should be aligned to a 4KB sector)
+endif
 
 EXTFLASH_FORCE_SPI ?= 0
 
