@@ -517,14 +517,14 @@ class ROM:
 
     def extra(self):
         if self.system_name == "MSX":
-            mapper = int(subprocess.check_output([sys.executable, "./tools/findblueMsxMapper.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk').replace('.lzma','')]))
-            sp_output = subprocess.check_output([sys.executable, "./tools/findblueMsxControls.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk').replace('.lzma','')]).splitlines()
-            control = int(sp_output[0])
-            ctrl_boot = int(sp_output[1]) # Does the game require to press ctrl at boot ?
+            infos = subprocess.check_output([sys.executable, "./tools/findblueMsxInfo.py", "roms/msx_bios/msxromdb.xml", str(self.path).replace('.dsk.cdk','.dsk').replace('.lzma','')]).splitlines()
+            # infos is [mapper, control, ctrl_boot]
+            control = int(infos[1])
+            ctrl_boot = int(infos[2]) # Does the game require to press ctrl at boot ?
             if control == 0x7f :
                 print(f"Warning : {self.name} has no controls configuration in roms/msx_bios/msxromdb.xml, default controls will be used")
             value = int(control) + (int(ctrl_boot) << 7)
-            return [mapper, value]
+            return [int(infos[0]), value]
         if self.system_name == "Nintendo Entertainment System":
             mapper = int(subprocess.check_output([sys.executable, "./external/fceumm-go/nesmapper.py", "mapper", str(self.path).replace('.lzma','')]))
             return [mapper]
