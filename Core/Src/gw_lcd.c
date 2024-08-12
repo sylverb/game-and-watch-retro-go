@@ -75,12 +75,16 @@ void lcd_deinit(SPI_HandleTypeDef *spi) {
   gw_set_power_3V3(0);
 }
 
-void lcd_clear_active_buffer() {
-  memset(lcd_get_active_buffer(), 0, sizeof(framebuffer1));
+void *lcd_clear_active_buffer() {
+  void *buffer = lcd_get_active_buffer();
+  memset(buffer, 0, sizeof(framebuffer1));
+  return buffer;
 }
 
-void lcd_clear_inactive_buffer() {
-  memset(lcd_get_inactive_buffer(), 0, sizeof(framebuffer1));
+void *lcd_clear_inactive_buffer() {
+  void *buffer = lcd_get_inactive_buffer();
+  memset(buffer, 0, sizeof(framebuffer1));
+  return buffer;
 }
 
 void lcd_clear_buffers() {

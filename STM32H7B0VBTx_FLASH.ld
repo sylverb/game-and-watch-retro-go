@@ -606,6 +606,28 @@ SECTIONS
   }
   _OVERLAY_CELESTE_BSS_SIZE = SIZEOF(.overlay_celeste_bss);
 
+  .overlay_tama __RAM_EMU_START__ : {
+    . = ALIGN(4);
+    __ram_emu_tama_start__ = .;
+    build/tama/*.o (.data .data* .text .text* .rodata .rodata*)
+    . = ALIGN(4);
+    _OVERLAY_TAMA_LOAD_END = .;
+  } AT> EXTFLASH
+  _OVERLAY_TAMA_LOAD_START = LOADADDR(.overlay_tama);
+  _OVERLAY_TAMA_SIZE = SIZEOF(.overlay_tama);
+
+  .overlay_tama_bss _OVERLAY_TAMA_LOAD_END : {
+    . = ALIGN(4);
+    _OVERLAY_TAMA_BSS_START = .;
+    build/tama/*.o (.bss .bss*)
+    . = ALIGN(4);
+    build/tama/*.o (COMMON)
+    __ram_emu_tama_end__ = .;
+    _OVERLAY_TAMA_BSS_END = .;
+    ASSERT(ABSOLUTE(_OVERLAY_TAMA_BSS_END) < __RAM_EMU_END__, "Error: TAMA BSS overflow");
+  }
+  _OVERLAY_TAMA_BSS_SIZE = SIZEOF(.overlay_tama_bss);
+
   /* Place this symbol after the last overlay definition */
   .overlay_end : {
     __extflash_end__ = .;

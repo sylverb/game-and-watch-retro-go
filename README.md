@@ -83,6 +83,7 @@ Supported emulators:
 - Sega SG-1000 (sg)
 - Videopac / Odyssey2 (videopac)
 - Watara Supervision (wsv)
+- Tamagotchi P1 (tama)
 
 Supported SNES game _ports_:
 

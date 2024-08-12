@@ -45,3 +45,6 @@
 [submodule "ccleste-go"]
 	path = external/ccleste-go
 	url = https://github.com/sylverb/ccleste-go.git
+[submodule "external/tamalib"]
+	path = external/tamalib
+	url = https://github.com/BenjaminSoelberg/tamalib.git

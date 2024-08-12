@@ -20,6 +20,7 @@ ROMS_MSX := $(filter-out roms/msx/.keep, $(wildcard roms/msx/*))
 ROMS_PCE := $(filter-out roms/pce/.keep, $(wildcard roms/pce/*))
 ROMS_VIDEOPAC := $(filter-out roms/videopac/.keep, $(wildcard roms/videopac/*))
 ROMS_WSV := $(filter-out roms/wsv/.keep, $(wildcard roms/wsv/*))
+ROMS_TAMA := $(filter-out roms/tama/.keep, $(wildcard roms/tama/*))
 
 ROMS_COL := $(filter-out roms/col/.keep, $(wildcard roms/col/*))
 ROMS_GG := $(filter-out roms/gg/.keep, $(wildcard roms/gg/*))
@@ -690,6 +691,18 @@ $(CORE_O2EM)/src/vkeyb/vkeyb_layout.c \
 Core/Src/porting/videopac/main_videopac.c
 endif
 
+TAMA_C_SOURCES = 
+
+ifneq ($(strip $(ROMS_TAMA)),)
+CORE_TAMA = external/tamalib
+TAMA_C_SOURCES += \
+$(CORE_TAMA)/tamalib_cpu.c \
+$(CORE_TAMA)/tamalib_hw.c \
+$(CORE_TAMA)/tamalib.c \
+Core/Src/porting/tama/state_tama.c \
+Core/Src/porting/tama/main_tama.c
+endif
+
 CELESTE_C_SOURCES = 
 
 ifneq ($(strip $(HOMEBREW_CELESTE)),)
@@ -947,13 +960,19 @@ CELESTE_C_INCLUDES +=  \
 -I$(CORE_CCLESTE)\
 -I./
 
+TAMA_C_INCLUDES +=  \
+-ICore/Inc \
+-ICore/Src/porting/lib \
+-Iretro-go-stm32/components/odroid \
+-I$(CORE_TAMA) \
+-I./
 
 include Makefile.common
 
 
 $(BUILD_DIR)/$(TARGET)_extflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)
-	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_tgb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 -j .overlay_smw -j .overlay_videopac -j .overlay_celeste $< $(BUILD_DIR)/$(TARGET)_extflash.bin
+	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_tgb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 -j .overlay_smw -j .overlay_videopac -j .overlay_celeste -j .overlay_tama $< $(BUILD_DIR)/$(TARGET)_extflash.bin
 
 $(BUILD_DIR)/$(TARGET)_intflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)

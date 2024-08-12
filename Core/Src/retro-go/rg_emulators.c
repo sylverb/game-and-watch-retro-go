@@ -28,6 +28,7 @@
 #include "main_smw.h"
 #include "main_videopac.h"
 #include "main_celeste.h"
+#include "main_tama.h"
 #include "rg_rtc.h"
 #include "heap.hpp"
 
@@ -35,7 +36,7 @@
 #define COVERFLOW 0
 #endif /* COVERFLOW */
 // Increase when adding new emulators
-#define MAX_EMULATORS 17
+#define MAX_EMULATORS 18
 static retro_emulator_t emulators[MAX_EMULATORS];
 static int emulators_count = 0;
 
@@ -668,13 +669,20 @@ void emulator_start(retro_emulator_file_t *file, bool load_state, bool start_pau
       SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_CELESTE_SIZE);
       app_main_celeste(load_state, start_paused, save_slot);
 #endif
+    } else if(strcmp(emu->system_name, "Tamagotchi") == 0) {
+#ifdef ENABLE_EMULATOR_TAMA
+      memcpy(&__RAM_EMU_START__, &_OVERLAY_TAMA_LOAD_START, (size_t)&_OVERLAY_TAMA_SIZE);
+      memset(&_OVERLAY_TAMA_BSS_START, 0x0, (size_t)&_OVERLAY_TAMA_BSS_SIZE);
+      SCB_CleanDCache_by_Addr((uint32_t *)&__RAM_EMU_START__, (size_t)&_OVERLAY_TAMA_SIZE);
+      app_main_tama(load_state, start_paused, save_slot);
+#endif
     }
     
 }
 
 void emulators_init()
 {
-#if !( defined(ENABLE_EMULATOR_GB) || defined(ENABLE_EMULATOR_NES) || defined(ENABLE_EMULATOR_SMS) || defined(ENABLE_EMULATOR_GG) || defined(ENABLE_EMULATOR_COL) || defined(ENABLE_EMULATOR_SG1000) || defined(ENABLE_EMULATOR_PCE) || defined(ENABLE_EMULATOR_GW) || defined(ENABLE_EMULATOR_MSX) || defined(ENABLE_EMULATOR_WSV) || defined(ENABLE_EMULATOR_MD) || defined(ENABLE_EMULATOR_A7800) || defined(ENABLE_EMULATOR_AMSTRAD) || defined(ENABLE_EMULATOR_VIDEOPAC) || defined(ENABLE_HOMEBREW))
+#if !( defined(ENABLE_EMULATOR_GB) || defined(ENABLE_EMULATOR_NES) || defined(ENABLE_EMULATOR_SMS) || defined(ENABLE_EMULATOR_GG) || defined(ENABLE_EMULATOR_COL) || defined(ENABLE_EMULATOR_SG1000) || defined(ENABLE_EMULATOR_PCE) || defined(ENABLE_EMULATOR_GW) || defined(ENABLE_EMULATOR_MSX) || defined(ENABLE_EMULATOR_WSV) || defined(ENABLE_EMULATOR_MD) || defined(ENABLE_EMULATOR_A7800) || defined(ENABLE_EMULATOR_AMSTRAD) || defined(ENABLE_EMULATOR_VIDEOPAC) || defined(ENABLE_HOMEBREW)|| defined(ENABLE_HOMEBREW_ZELDA3) || defined(ENABLE_HOMEBREW_SMW) || defined(ENABLE_EMULATOR_TAMA))
     // Add gameboy as a placeholder in case no emulator is built.
     add_emulator("Nintendo Gameboy", "gb", "gb", "tgbdual-go", 0, &pad_gb, &header_gb);
 #endif
@@ -747,6 +755,10 @@ void emulators_init()
 
 #ifdef ENABLE_HOMEBREW
     add_emulator("Homebrew", "homebrew", "bin", "", 0, &pad_homebrew, &header_homebrew);
+#endif
+
+#ifdef ENABLE_EMULATOR_TAMA
+    add_emulator("Tamagotchi", "tama", "b", "tamalib", 0, &pad_tama, &header_tama);
 #endif
 
     // add_emulator("ColecoVision", "col", "col", "smsplusgx-go", 0, logo_col, header_col);
