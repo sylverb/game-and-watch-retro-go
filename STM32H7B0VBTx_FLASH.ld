@@ -217,7 +217,11 @@ SECTIONS
     __extflash_logo_data_start__ = .;
     *(.extflash_logo)
     . = ALIGN(4);
-    __extflash_logo_data_start__ = .;
+    __extflash_logo_data_end__ = .;
+    __extflash_global_data_start__ = .;
+    *(.extflash_global)
+    . = ALIGN(4);
+    __extflash_global_data_end__ = .;
     __extflash_nes_start__ = .;
     build/core/logo*.o (.text .text* .rodata .rodata*)
     . = ALIGN(4);
@@ -705,6 +709,9 @@ SECTIONS
     _intflash_logo_start = .;
     *(.intflash_logo)
     _intflash_logo_end = .;
+    _intflash_global_start = .;
+    *(.intflash_global)
+    _intflash_global_end = .;
     . = ALIGN(4);
   } >FLASH
 

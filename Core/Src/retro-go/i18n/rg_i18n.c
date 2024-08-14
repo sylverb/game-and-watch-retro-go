@@ -55,13 +55,13 @@
 #include "odroid_system.h"
 #include "odroid_overlay.h"
 
-#if BIG_BANK == 1
+#if (BIG_BANK == 1) && (EXTFLASH_SIZE <= 16*1024*1024)
 #define FONT_DATA
 #else
 #define FONT_DATA __attribute__((section(".extflash_font")))
 #endif
 
-#if BIG_BANK == 1
+#if (BIG_BANK == 1) && (EXTFLASH_SIZE <= 16*1024*1024)
 #define LANG_DATA
 #else
 #define LANG_DATA __attribute__((section(".extflash_emu_data")))

@@ -4,13 +4,13 @@
 #if !defined(BIG_BANK)
 #define BIG_BANK 1
 #endif
-#if BIG_BANK == 1
+#if (BIG_BANK == 1) && (EXTFLASH_SIZE <= 16*1024*1024)
 #define LOGO_DATA __attribute__((section(".intflash_logo")))
 #else
 #define LOGO_DATA __attribute__((section(".extflash_logo")))
 #endif
 
-const retro_logo_image logo_rgo = {
+const retro_logo_image logo_rgo LOGO_DATA = {
     64,
     12,
     {
@@ -45,7 +45,7 @@ const retro_logo_image logo_rgo = {
         */
     },
 };
-const retro_logo_image logo_rgw = {
+const retro_logo_image logo_rgw LOGO_DATA = {
     120,
     12,
     {
@@ -81,7 +81,7 @@ const retro_logo_image logo_rgw = {
     },
 };
 
-const retro_logo_image logo_flash = {
+const retro_logo_image logo_flash LOGO_DATA = {
     96,
     18,
     {
@@ -130,7 +130,7 @@ const retro_logo_image logo_flash = {
     },
 };
 
-const retro_logo_image logo_gnw = {
+const retro_logo_image logo_gnw LOGO_DATA = {
     35,
     30,
     {
@@ -2129,7 +2129,7 @@ const unsigned char IMG_BUTTON_B_P[] LOGO_DATA = {
     0x00, 0x18, 0x00, //___________##___________
 };
 
-const unsigned char img_clock_00[] = {
+const unsigned char img_clock_00[] LOGO_DATA = {
     // width6, height:10
     0x78, //  _####_
     0xb4, //  #_##_#
@@ -2143,7 +2143,7 @@ const unsigned char img_clock_00[] = {
     0x78, //  _####_
 };
 
-const unsigned char img_clock_01[] = {
+const unsigned char img_clock_01[] LOGO_DATA = {
     // width6, height:10
     0x00, //  ______
     0x04, //  _____#
@@ -2156,7 +2156,7 @@ const unsigned char img_clock_01[] = {
     0x04, //  _____#
     0x00, //  ______
 };
-const unsigned char img_clock_02[] = {
+const unsigned char img_clock_02[] LOGO_DATA = {
     // width6, height:10
     0x78, //  _####_
     0x34, //  __##_#
@@ -2169,7 +2169,7 @@ const unsigned char img_clock_02[] = {
     0xb0, //  #_##__
     0x78, //  _####_
 };
-const unsigned char img_clock_03[] = {
+const unsigned char img_clock_03[] LOGO_DATA = {
     // width6, height:10
     0x78, //  _####_
     0x34, //  __##_#
@@ -2182,7 +2182,7 @@ const unsigned char img_clock_03[] = {
     0x34, //  __##_#
     0x78, //  _####_
 };
-const unsigned char img_clock_04[] = {
+const unsigned char img_clock_04[] LOGO_DATA = {
     // width6, height:10
     0x00, //  ______
     0x84, //  #____#
@@ -2195,7 +2195,7 @@ const unsigned char img_clock_04[] = {
     0x04, //  _____#
     0x00, //  ______
 };
-const unsigned char img_clock_05[] = {
+const unsigned char img_clock_05[] LOGO_DATA = {
     // width6, height:10
     0x78, //  _####_
     0xb0, //  #_##__
@@ -2208,7 +2208,7 @@ const unsigned char img_clock_05[] = {
     0x34, //  __##_#
     0x78, //  _####_
 };
-const unsigned char img_clock_06[] = {
+const unsigned char img_clock_06[] LOGO_DATA = {
     // width6, height:10
     0x78, //  _####_
     0xb0, //  #_##__
@@ -2221,7 +2221,7 @@ const unsigned char img_clock_06[] = {
     0xb4, //  #_##_#
     0x78, //  _####_
 };
-const unsigned char img_clock_07[] = {
+const unsigned char img_clock_07[] LOGO_DATA = {
     // width6, height:10
     0x78, //  _####_
     0x34, //  __##_#
@@ -2234,7 +2234,7 @@ const unsigned char img_clock_07[] = {
     0x04, //  _____#
     0x00, //  ______
 };
-const unsigned char img_clock_08[] = {
+const unsigned char img_clock_08[] LOGO_DATA = {
     // width6, height:10
     0x78, //  _####_
     0xb4, //  #_##_#
@@ -2247,7 +2247,7 @@ const unsigned char img_clock_08[] = {
     0xb4, //  #_##_#
     0x78, //  _####_
 };
-const unsigned char img_clock_09[] = {
+const unsigned char img_clock_09[] LOGO_DATA = {
     // width6, height:10
     0x78, //  _####_
     0xb4, //  #_##_#
