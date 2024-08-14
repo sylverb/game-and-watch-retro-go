@@ -323,7 +323,7 @@ SECTIONS
   .overlay_tgb __RAM_EMU_START__ : {
     . = ALIGN(4);
     __ram_emu_tgb_start__ = .;
-    build/tgbdual/*.o (.data .data* .text .text* .rodata .rodata*)
+    build/tgbdual/*.o (.data .data* .text .text* .text.* .rodata .rodata* .ARM.extab.text.* .ARM.exidx.text.* )
     . = ALIGN(4);
     _OVERLAY_TGB_LOAD_END = .;
   } AT> EXTFLASH
