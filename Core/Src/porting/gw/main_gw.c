@@ -421,8 +421,6 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
 
     /* emulate watch mode */
     if (!LoadState_done) {
-        //TODO: Will generate a watchdog timeout!
-        //TODO: gw_audio_buffer_idx gets out of bounds here as well!
         softkey_time_pressed = 0;
         softkey_alarm_pressed = 0;
         softkey_A_pressed = 0;
