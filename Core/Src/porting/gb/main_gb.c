@@ -411,6 +411,12 @@ static bool palette_update_cb(odroid_dialog_choice_t *option, odroid_dialog_even
     if (event == ODROID_DIALOG_PREV || event == ODROID_DIALOG_NEXT) {
         odroid_settings_Palette_set(pal);
         pal_set_dmg(pal);
+
+        // We have to advances the emulator one frame to update the display buffer
+        void (*org)() = fb.blit_func;
+        fb.blit_func = NULL;
+        emu_run(true);
+        fb.blit_func = org;
     }
 
     if (pal == 0) strcpy(option->value, "GBC");
