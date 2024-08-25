@@ -1,0 +1,1 @@
+void wdog_refresh(void);

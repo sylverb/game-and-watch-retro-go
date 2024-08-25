@@ -478,6 +478,28 @@ SECTIONS
   }
   _OVERLAY_MD_BSS_SIZE = SIZEOF(.overlay_md_bss);
 
+.overlay_a2600 __RAM_EMU_START__ : {
+    . = ALIGN(4);
+    __ram_emu_a2600_start__ = .;
+    build/a2600/*.o (.data .data* .text .text* .rodata .rodata* .ARM.extab.text.* .ARM.exidx.text.*)
+    . = ALIGN(4);
+    _OVERLAY_A2600_LOAD_END = .;
+  } AT> EXTFLASH
+  _OVERLAY_A2600_LOAD_START = LOADADDR(.overlay_a2600);
+  _OVERLAY_A2600_SIZE = SIZEOF(.overlay_a2600);
+
+  .overlay_a2600_bss _OVERLAY_A2600_LOAD_END : {
+    . = ALIGN(4);
+    _OVERLAY_A2600_BSS_START = .;
+    build/a2600/*.o (COMMON)
+    . = ALIGN(4);
+    build/a2600/*.o (.bss .bss*)
+    _OVERLAY_A2600_BSS_END = .;
+    __ram_emu_a2600_end__ = .;
+    ASSERT(ABSOLUTE(_OVERLAY_A2600_BSS_END) < __RAM_EMU_END__, "Error: A2600 BSS overflow");
+  }
+  _OVERLAY_A2600_BSS_SIZE = SIZEOF(.overlay_a2600_bss);
+
   .overlay_a7800 __RAM_EMU_START__ : {
     . = ALIGN(4);
     __ram_emu_a7800_start__ = .;

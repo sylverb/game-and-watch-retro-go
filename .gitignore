@@ -35,10 +35,12 @@ Core/Src/porting/smw/smw_assets.c
 Core/Src/retro-go/videopac_roms.c
 Core/Src/retro-go/homebrew_roms.c
 Core/Src/retro-go/tama_roms.c
+Core/Src/retro-go/a2600_roms.c
 
 linux/loaded_gb_rom.c
 linux/loaded_nes_rom.c
 linux/loaded_o2em_rom.c
+linux/loaded_a2600_rom.c
 
 save_states
 

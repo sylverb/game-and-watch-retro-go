@@ -55,6 +55,7 @@ print_usage ram_emu_gw   __RAM_EMU_LENGTH__
 print_usage ram_emu_msx  __RAM_EMU_LENGTH__
 print_usage ram_emu_wsv  __RAM_EMU_LENGTH__
 print_usage ram_emu_md __RAM_EMU_LENGTH__
+print_usage ram_emu_a2600  __RAM_EMU_LENGTH__
 print_usage ram_emu_a7800  __RAM_EMU_LENGTH__
 print_usage ram_emu_amstrad  __RAM_EMU_LENGTH__
 print_usage ram_emu_zelda3  __RAM_EMU_LENGTH__

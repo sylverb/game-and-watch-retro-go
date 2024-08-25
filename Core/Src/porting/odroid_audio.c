@@ -85,6 +85,18 @@ static void set_audio_frequency(uint32_t frequency)
         PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
         PeriphClkInitStruct.PLL2.PLL2FRACN = 51;
     }
+    else if (frequency == 31400)
+    {
+
+        PeriphClkInitStruct.PLL2.PLL2M = 33;
+        PeriphClkInitStruct.PLL2.PLL2N = 166;
+        PeriphClkInitStruct.PLL2.PLL2P = 5;
+        PeriphClkInitStruct.PLL2.PLL2Q = 2;
+        PeriphClkInitStruct.PLL2.PLL2R = 5;
+        PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
+        PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+        PeriphClkInitStruct.PLL2.PLL2FRACN = 25;
+    }
     else if (frequency == 31440)
     {
 
@@ -246,6 +258,7 @@ static void set_audio_frequency(uint32_t frequency)
             (frequency == SAI_AUDIO_FREQUENCY_48K) ||
             (frequency == SAI_AUDIO_FREQUENCY_44K) ||
             (frequency == SAI_AUDIO_FREQUENCY_32K) ||
+            (frequency == 31400) ||
             (frequency == 31440) ||
             (frequency == 31200) ||
             (frequency == SAI_AUDIO_FREQUENCY_22K) ||

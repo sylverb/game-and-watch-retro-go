@@ -14,7 +14,11 @@
 typedef enum
 {
     REGION_NTSC = 0,
-    REGION_PAL
+    REGION_PAL,
+    REGION_SECAM,
+    REGION_NTSC50,
+    REGION_PAL60,
+    REGION_AUTO
 } rom_region_t;
 
 typedef struct rom_system_t rom_system_t;

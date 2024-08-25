@@ -48,3 +48,6 @@
 [submodule "external/tamalib"]
 	path = external/tamalib
 	url = https://github.com/BenjaminSoelberg/tamalib.git
+[submodule "external/stella2014-go"]
+	path = external/stella2014-go
+	url = https://github.com/sylverb/stella2014-go.git

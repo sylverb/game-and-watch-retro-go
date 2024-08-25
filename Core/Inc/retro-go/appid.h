@@ -17,6 +17,7 @@ typedef enum {
     APPID_VIDEOPAC = 13,
     APPID_HOMEBREW = 14,
     APPID_TAMA     = 15,
+    APPID_A2600    = 16,
 
     APPID_COUNT,
 } appid_t;

@@ -10,6 +10,7 @@ ifneq ($(strip $(VERBOSE)),1)
 V = @
 endif
 
+ROMS_A2600 := $(filter-out roms/a2600/.keep, $(wildcard roms/a2600/*))
 ROMS_A7800 := $(filter-out roms/a7800/.keep, $(wildcard roms/a7800/*))
 ROMS_AMSTRAD := $(filter-out roms/amstrad/.keep, $(wildcard roms/amstrad/*))
 ROMS_GB := $(filter-out roms/gb/.keep, $(wildcard roms/gb/*))
@@ -627,6 +628,74 @@ $(CORE_GWENESIS)/src/savestate/gwenesis_savestate.c \
 Core/Src/porting/gwenesis/main_gwenesis.c
 endif
 
+A2600_C_SOURCES =
+A2600_CXX_SOURCES =
+
+ifneq ($(strip $(ROMS_A2600)),)
+CORE_A2600 = external/stella2014-go
+A2600_CXX_SOURCES += \
+Core/Src/porting/a2600/main_a2600.cxx \
+$(CORE_A2600)/stella/src/common/StellaSound.cxx \
+$(CORE_A2600)/stella/src/emucore/Booster.cxx \
+$(CORE_A2600)/stella/src/emucore/StellaCart.cxx \
+$(CORE_A2600)/stella/src/emucore/Cart0840.cxx \
+$(CORE_A2600)/stella/src/emucore/Cart2K.cxx \
+$(CORE_A2600)/stella/src/emucore/Cart3E.cxx \
+$(CORE_A2600)/stella/src/emucore/Cart3F.cxx \
+$(CORE_A2600)/stella/src/emucore/Cart4A50.cxx \
+$(CORE_A2600)/stella/src/emucore/Cart4K.cxx \
+$(CORE_A2600)/stella/src/emucore/Cart4KSC.cxx \
+$(CORE_A2600)/stella/src/emucore/CartAR.cxx \
+$(CORE_A2600)/stella/src/emucore/CartBF.cxx \
+$(CORE_A2600)/stella/src/emucore/CartBFSC.cxx \
+$(CORE_A2600)/stella/src/emucore/CartCM.cxx \
+$(CORE_A2600)/stella/src/emucore/CartCTY.cxx \
+$(CORE_A2600)/stella/src/emucore/CartCV.cxx \
+$(CORE_A2600)/stella/src/emucore/CartDF.cxx \
+$(CORE_A2600)/stella/src/emucore/CartDFSC.cxx \
+$(CORE_A2600)/stella/src/emucore/CartDPC.cxx \
+$(CORE_A2600)/stella/src/emucore/CartDPCPlus.cxx \
+$(CORE_A2600)/stella/src/emucore/CartE0.cxx \
+$(CORE_A2600)/stella/src/emucore/CartE7.cxx \
+$(CORE_A2600)/stella/src/emucore/CartEF.cxx \
+$(CORE_A2600)/stella/src/emucore/CartEFSC.cxx \
+$(CORE_A2600)/stella/src/emucore/CartF0.cxx \
+$(CORE_A2600)/stella/src/emucore/CartF4.cxx \
+$(CORE_A2600)/stella/src/emucore/CartF4SC.cxx \
+$(CORE_A2600)/stella/src/emucore/CartF6.cxx \
+$(CORE_A2600)/stella/src/emucore/CartF6SC.cxx \
+$(CORE_A2600)/stella/src/emucore/CartF8.cxx \
+$(CORE_A2600)/stella/src/emucore/CartF8SC.cxx \
+$(CORE_A2600)/stella/src/emucore/CartFA.cxx \
+$(CORE_A2600)/stella/src/emucore/CartFA2.cxx \
+$(CORE_A2600)/stella/src/emucore/CartFE.cxx \
+$(CORE_A2600)/stella/src/emucore/CartMC.cxx \
+$(CORE_A2600)/stella/src/emucore/CartSB.cxx \
+$(CORE_A2600)/stella/src/emucore/CartUA.cxx \
+$(CORE_A2600)/stella/src/emucore/CartX07.cxx \
+$(CORE_A2600)/stella/src/emucore/StellaConsole.cxx \
+$(CORE_A2600)/stella/src/emucore/StellaControl.cxx \
+$(CORE_A2600)/stella/src/emucore/StellaJoystick.cxx \
+$(CORE_A2600)/stella/src/emucore/StellaM6502.cxx \
+$(CORE_A2600)/stella/src/emucore/StellaM6532.cxx \
+$(CORE_A2600)/stella/src/emucore/NullDev.cxx \
+$(CORE_A2600)/stella/src/emucore/Random.cxx \
+$(CORE_A2600)/stella/src/emucore/Serializer.cxx \
+$(CORE_A2600)/stella/src/emucore/StateManager.cxx \
+$(CORE_A2600)/stella/src/emucore/StellaSettings.cxx \
+$(CORE_A2600)/stella/src/emucore/StellaSwitches.cxx \
+$(CORE_A2600)/stella/src/emucore/StellaSystem.cxx \
+$(CORE_A2600)/stella/src/emucore/StellaTIA.cxx \
+$(CORE_A2600)/stella/src/emucore/TIATables.cxx \
+$(CORE_A2600)/stella/src/emucore/TIASnd.cxx \
+$(CORE_A2600)/stella/src/emucore/Driving.cxx \
+$(CORE_A2600)/stella/src/emucore/MindLink.cxx \
+$(CORE_A2600)/stella/src/emucore/Paddles.cxx \
+$(CORE_A2600)/stella/src/emucore/TrackBall.cxx \
+$(CORE_A2600)/stella/src/emucore/StellaGenesis.cxx \
+$(CORE_A2600)/stella/src/emucore/StellaKeyboard.cxx
+endif
+
 A7800_C_SOURCES = 
 
 ifneq ($(strip $(ROMS_A7800)),)
@@ -909,6 +978,19 @@ WSV_C_INCLUDES += \
 -I$(CORE_WSV)/common \
 -I./
 
+A2600_C_INCLUDES += \
+-ICore/Inc \
+-ICore/Src/porting/lib \
+-ICore/Src/porting/lib/lzma \
+-I$(CORE_A2600)/stella \
+-I$(CORE_A2600)/stella/src \
+-I$(CORE_A2600)/stella/stubs \
+-I$(CORE_A2600)/stella/src/emucore \
+-I$(CORE_A2600)/stella/src/common \
+-I$(CORE_A2600)/stella/src/gui \
+-I$(CORE_A2600)/libretro-common/include \
+-I./
+
 A7800_C_INCLUDES += \
 -ICore/Inc \
 -ICore/Src/porting/lib \
@@ -972,7 +1054,7 @@ include Makefile.common
 
 $(BUILD_DIR)/$(TARGET)_extflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)
-	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_tgb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 -j .overlay_smw -j .overlay_videopac -j .overlay_celeste -j .overlay_tama $< $(BUILD_DIR)/$(TARGET)_extflash.bin
+	$(V)$(BIN) -j ._itcram_hot -j ._ram_exec -j ._extflash -j .overlay_nes -j .overlay_nes_fceu -j .overlay_gb -j .overlay_tgb -j .overlay_sms -j .overlay_col -j .overlay_pce -j .overlay_msx -j .overlay_gw -j .overlay_wsv -j .overlay_md -j .overlay_a2600 -j .overlay_a7800 -j .overlay_amstrad -j .overlay_zelda3 -j .overlay_smw -j .overlay_videopac -j .overlay_celeste -j .overlay_tama $< $(BUILD_DIR)/$(TARGET)_extflash.bin
 
 $(BUILD_DIR)/$(TARGET)_intflash.bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	$(V)$(ECHO) [ BIN ] $(notdir $@)

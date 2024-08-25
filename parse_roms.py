@@ -96,6 +96,7 @@ MAX_COMPRESSED_NES_SIZE = 0x00080010 #512kB + 16 bytes header
 MAX_COMPRESSED_PCE_SIZE = 0x00049000
 MAX_COMPRESSED_WSV_SIZE = 0x00080000
 MAX_COMPRESSED_SG_COL_SIZE = 60 * 1024
+MAX_COMPRESSED_A2600_SIZE = 131200
 MAX_COMPRESSED_A7800_SIZE = 131200
 MAX_COMPRESSED_MSX_SIZE = 136*1024
 MAX_COMPRESSED_VIDEOPAC_SIZE = 136*1024
@@ -528,6 +529,89 @@ class ROM:
         if self.system_name == "Nintendo Entertainment System":
             mapper = int(subprocess.check_output([sys.executable, "./external/fceumm-go/nesmapper.py", "mapper", str(self.path).replace('.lzma','')]))
             return [mapper]
+        if self.system_name == "Atari 2600":
+            result = subprocess.check_output([sys.executable, "./external/stella2014-go/a2600rominfo.py", "mapper", str(self.path).replace('.lzma','')])
+            mapper_a2600 = result.decode('utf-8').strip()
+            if mapper_a2600 == "":
+                mapper = 0 # AUTO
+            elif mapper_a2600 == "2IN1":
+                mapper = 1
+            elif mapper_a2600 == "CM":
+                mapper = 2
+            elif mapper_a2600 == "4IN1":
+                mapper = 3
+            elif mapper_a2600 == "32IN1":
+                mapper = 4
+            elif mapper_a2600 == "FE":
+                mapper = 5
+            elif mapper_a2600 == "F6SC":
+                mapper = 6
+            elif mapper_a2600 == "4K":
+                mapper = 7
+            elif mapper_a2600 == "8IN1":
+                mapper = 8
+            elif mapper_a2600 == "2K":
+                mapper = 9
+            elif mapper_a2600 == "16IN1":
+                mapper = 10
+
+            y_offset = 0
+            y_offset_str = subprocess.check_output([sys.executable, "./external/stella2014-go/a2600rominfo.py", "yoffset", str(self.path).replace('.lzma','')]).strip()
+            if len(y_offset_str) != 0 :
+                y_offset = int(y_offset_str)
+
+            # height value is 214 to 280, we remove 213 to make it fit to 8bits
+            # and to be able to differenciate 0 value with others values
+            height = 0
+            height_str = subprocess.check_output([sys.executable, "./external/stella2014-go/a2600rominfo.py", "height", str(self.path).replace('.lzma','')]).strip()
+            if len(height_str) != 0 :
+                height = int(height_str) - 213
+
+            control = 0
+            control_str = subprocess.check_output([sys.executable, "./external/stella2014-go/a2600rominfo.py", "control", str(self.path).replace('.lzma','')]).decode('utf-8').strip()
+            if control_str == "" :
+                control = 0 # joystick
+            elif control_str == "KEYBOARD" :
+                control = 1
+            elif control_str == "PADDLES" :
+                control = 2
+            elif control_str == "GENESIS" :
+                control = 3
+            elif control_str == "DRIVING" :
+                control = 4
+            elif control_str == "BOOSTERGRIP" :
+                control = 5
+            elif control_str == "AMIGAMOUSE" :
+                control = 6
+            elif control_str == "PADDLES_IAXDR" :
+                control = 7
+            elif control_str == "COMPUMATE" :
+                control = 8
+            elif control_str == "PADDLES_IAXIS" :
+                control = 9
+            elif control_str == "TRACKBALL22" :
+                control = 10
+            elif control_str == "TRACKBALL80" :
+                control = 11
+            elif control_str == "MINDLINK" :
+                control = 12
+
+            control_swap = 0
+            if control_str == "PADDLES" or control_str == "PADDLES_IAXDR" or control_str == "PADDLES_IAXIS" :
+                control_swap_str = subprocess.check_output([sys.executable, "./external/stella2014-go/a2600rominfo.py", "paddle_swap", str(self.path).replace('.lzma','')]).decode('utf-8').strip()
+            else :
+                control_swap_str = subprocess.check_output([sys.executable, "./external/stella2014-go/a2600rominfo.py", "control_swap", str(self.path).replace('.lzma','')]).decode('utf-8').strip()
+            if control_swap_str == "YES" :
+                control_swap = 1
+
+            difficulty = 0
+            difficulty_str = subprocess.check_output([sys.executable, "./external/stella2014-go/a2600rominfo.py", "difficulty", str(self.path).replace('.lzma','')]).decode('utf-8').strip()
+            if difficulty_str == "B" :
+                difficulty = 1
+
+            return [mapper, y_offset, height, control, control_swap, difficulty]
+        return []
+
         return []
 
     @property
@@ -541,6 +625,20 @@ class ROM:
     @property
     def region(self):
         region = ""
+        if self.system_name == "Atari 2600":
+            region_a2600 = subprocess.check_output([sys.executable, "./external/stella2014-go/a2600rominfo.py", "region", str(self.path).replace('.lzma','')]).decode('utf-8').strip()
+            if region_a2600 == "":
+                region = "REGION_AUTO"
+            elif region_a2600 == "SECAM":
+                region = "REGION_SECAM"
+            elif region_a2600 == "PAL":
+                region = "REGION_PAL"
+            elif region_a2600 == "NTSC":
+                region = "REGION_NTSC"
+            elif region_a2600 == "NTSC50":
+                region = "REGION_NTSC50"
+            elif region_a2600 == "PAL60":
+                region = "REGION_PAL60"
 
         if region == "" :
             is_pal = any(
@@ -794,6 +892,14 @@ class ROMParser:
             output_file.write_bytes(compressed_data)
         elif "wsv_system" in variable_name:  # WSV
             if rom.path.stat().st_size > MAX_COMPRESSED_WSV_SIZE:
+                print(
+                    f"INFO: {rom.name} is too large to compress, skipping compression!"
+                )
+                return
+            compressed_data = compress(data)
+            output_file.write_bytes(compressed_data)
+        elif "a2600_system" in variable_name:  # Atari 2600
+            if rom.path.stat().st_size > MAX_COMPRESSED_A2600_SIZE:
                 print(
                     f"INFO: {rom.name} is too large to compress, skipping compression!"
                 )
@@ -1124,6 +1230,7 @@ class ROMParser:
         romdef.setdefault('msx', {})
         romdef.setdefault('msx_bios', {})
         romdef.setdefault('wsv', {})
+        romdef.setdefault('a2600', {})
         romdef.setdefault('a7800', {})
         romdef.setdefault('amstrad', {})
         romdef.setdefault('zelda3', {
@@ -1408,6 +1515,23 @@ class ROMParser:
         total_save_size += save_size
         total_rom_size += rom_size
         build_config += "#define ENABLE_EMULATOR_WSV\n" if rom_size > 0 else ""
+        if system_save_size > larger_save_size : larger_save_size = system_save_size
+
+        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+            "Core/Src/retro-go/a2600_roms.c",
+            "Atari 2600",
+            "a2600_system",
+            "a2600",
+            ["a26","bin"],
+            "SAVE_A2600_",
+            romdef["a2600"],
+            None,
+            current_id,
+            args.compress
+        )
+        total_save_size += save_size
+        total_rom_size += rom_size
+        build_config += "#define ENABLE_EMULATOR_A2600\n" if rom_size > 0 else ""
         if system_save_size > larger_save_size : larger_save_size = system_save_size
 
         system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(

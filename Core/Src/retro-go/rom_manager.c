@@ -23,6 +23,7 @@ retro_emulator_file_t *ACTIVE_FILE = NULL;
 #include "msx_bios.c"
 #include "wsv_roms.c"
 #include "md_roms.c"
+#include "a2600_roms.c"
 #include "a7800_roms.c"
 #include "amstrad_roms.c"
 #include "zelda3_roms.c"
@@ -45,6 +46,7 @@ const rom_system_t *systems[] = {
     &msx_bios,
     &wsv_system,
     &md_system,
+    &a2600_system,
     &a7800_system,
     &amstrad_system,
     &zelda3_system,

@@ -101,6 +101,11 @@ extern void * _OVERLAY_TAMA_LOAD_START[];
 extern uint8_t _OVERLAY_TAMA_SIZE;
 extern void * _OVERLAY_TAMA_BSS_START[];
 extern uint8_t _OVERLAY_TAMA_BSS_SIZE;
+extern void * _OVERLAY_A2600_LOAD_START[];
+extern uint8_t _OVERLAY_A2600_SIZE;
+extern void * _OVERLAY_A2600_BSS_START[];
+extern void * _OVERLAY_A2600_BSS_END[];
+extern uint8_t _OVERLAY_A2600_BSS_SIZE;
 
 extern uint8_t *_NES_ROM_UNPACK_BUFFER;
 extern uint8_t _NES_ROM_UNPACK_BUFFER_SIZE;
