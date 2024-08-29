@@ -2,9 +2,9 @@
 #include "gw_linker.h"
 #include "gw_lcd.h"
 #include <string.h>
+#include <time.h>
 #include "filesystem.h"
 #include "porting/lib/littlefs/lfs.h"
-#include "rg_rtc.h"
 #include "tamp/compressor.h"
 #include "tamp/decompressor.h"
 #include "stm32h7xx.h"
@@ -340,7 +340,7 @@ fs_file_t *fs_open(const char *path, bool write_mode, bool use_compression){
     fs_file_handle->config.attr_count = LFS_NUM_ATTRS;
 
     // Add time attribute; may be useful for deleting oldest savestates to make room for new ones.
-    fs_file_handle->open_time = GW_GetUnixTime();
+    fs_file_handle->open_time = time(NULL);
     fs_file_handle->file_attrs[0].type = 't';  // 't' for "time"
     fs_file_handle->file_attrs[0].buffer = &fs_file_handle->open_time;
     fs_file_handle->file_attrs[0].size = sizeof(fs_file_handle->open_time);

@@ -207,24 +207,6 @@ void abort(void)
   BSOD(BSOD_ABORT, 0, 0);
 }
 
-#if 1
-int _write(int file, char *ptr, int len)
-{
-  uint32_t idx = log_idx;
-  if (idx + len + 1 > sizeof(logbuf)) {
-    idx = 0;
-  }
-
-  memcpy(&logbuf[idx], ptr, len);
-  idx += len;
-  logbuf[idx] = '\0';
-
-  log_idx = idx;
-
-  return len;
-}
-#endif
-
 void store_erase(const uint8_t *flash_ptr, uint32_t size)
 {
   // Disable clear data when save address is zero

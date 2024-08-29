@@ -22,7 +22,6 @@ extern "C" {
 #include <odroid_system.h>
 #include "common.h"
 #include "gw_lcd.h"
-#include "rg_rtc.h"
 #include "main_gb_tgbdual.h"
 }
 
@@ -56,7 +55,7 @@ word gw_renderer::map_color(word gb_col)
 void gw_renderer::refresh() {
    this->snd_render->render(stream, SAMPLES_PER_FRAME);
    gb_pcm_submit(stream, SAMPLES_PER_FRAME);
-   fixed_time = GW_GetUnixTime();
+   fixed_time = time(NULL);
 }
 
 int gw_renderer::check_pad()
