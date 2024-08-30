@@ -71,7 +71,7 @@ char a2600_display_mode[10];
 uint8_t a2600_difficulty;
 bool a2600_fastscbios = false;
 
-#define ROM_BUFF_LENGTH 131200 // 128kB + header
+#define ROM_BUFF_LENGTH 131072 // 128kB
 // Memory to handle compressed roms
 static uint8_t rom_memory[ROM_BUFF_LENGTH];
 

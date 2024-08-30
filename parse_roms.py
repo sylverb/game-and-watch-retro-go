@@ -75,28 +75,12 @@ const rom_system_t {name} EMU_DATA = {{
 }};
 """
 
-SAVE_SIZES = {
-    "nes": 0,  # 24 * 1024,
-    "sms": 0,  # 60 * 1024,
-    "gg": 0,  # 60 * 1024,
-    "col": 0,  # 60 * 1024,
-    "sg": 0,  # 60 * 1024,
-    "pce": 0,  # 76 * 1024,
-    "msx": 0,  # 272 * 1024,
-    "gw": 0,  # 4 * 1024,
-    "wsv": 0,  # 28 * 1024,
-    "md": 0,  # 144 * 1024,
-    "a7800": 0,  # 36 * 1024,
-    "amstrad": 0,  # 132 * 1024,
-}
-
-
 # TODO: Find a better way to find this before building
 MAX_COMPRESSED_NES_SIZE = 0x00080010 #512kB + 16 bytes header
 MAX_COMPRESSED_PCE_SIZE = 0x00049000
 MAX_COMPRESSED_WSV_SIZE = 0x00080000
 MAX_COMPRESSED_SG_COL_SIZE = 60 * 1024
-MAX_COMPRESSED_A2600_SIZE = 131200
+MAX_COMPRESSED_A2600_SIZE = 131072
 MAX_COMPRESSED_A7800_SIZE = 131200
 MAX_COMPRESSED_MSX_SIZE = 136*1024
 MAX_COMPRESSED_VIDEOPAC_SIZE = 136*1024
@@ -1111,8 +1095,6 @@ class ROMParser:
             rom.rom_id = current_id
             current_id += 1
 
-        system_save_size = 0
-        total_save_size = 0
         total_rom_size = 0
         total_img_size = 0
         pubcount = 0
@@ -1122,7 +1104,6 @@ class ROMParser:
             else:
                pubcount += 1
 
-        save_size = SAVE_SIZES.get(folder, 0)
         romdefs.setdefault("_cover_width", 128)
         romdefs.setdefault("_cover_height", 96)
         cover_width = romdefs["_cover_width"]
@@ -1184,7 +1165,7 @@ class ROMParser:
         for r in roms_uncompressed:
             if r.ext in ["gg","sms","md","gen","bin"]:
                 if larger_rom_size < r.size: larger_rom_size = r.size
-        return system_save_size, total_save_size, total_rom_size, total_img_size, current_id, larger_rom_size
+        return total_rom_size, total_img_size, current_id, larger_rom_size
 
     def write_if_changed(self, path: str, data: str):
         path = Path(path)
@@ -1195,8 +1176,6 @@ class ROMParser:
             path.write_text(data)
 
     def parse(self, args):
-        larger_save_size = 0
-        total_save_size = 0
         total_rom_size = 0
         sega_larger_rom_size = 0
         total_img_size = 0
@@ -1250,7 +1229,7 @@ class ROMParser:
         romdef.setdefault('homebrew', {'celeste': {'embed': '0'}})
         romdef.setdefault('tama', {})
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/gb_roms.c",
             "Nintendo Gameboy",
             "gb_system",
@@ -1263,11 +1242,9 @@ class ROMParser:
             args.compress,
             args.compress_gb_speed,
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_GB\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size: larger_save_size = system_save_size
 
         # Delete NES bios/mappers.h file to recreate it
         mappers_file = "build/mappers.h"
@@ -1277,7 +1254,7 @@ class ROMParser:
         mappers = open(mappers_file, 'w')
         mappers.close
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/nes_roms.c",
             "Nintendo Entertainment System",
             "nes_system",
@@ -1289,15 +1266,13 @@ class ROMParser:
             current_id,
             args.compress,
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_NES\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
         # NES FDS bios (only parse if there are some NES games)
         if rom_size > 0:
-            system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+            rom_size, img_size, current_id, larger_rom_size = self.generate_system(
                 "Core/Src/retro-go/nes_bios.c",
                 "NES_BIOS",
                 "nes_bios",
@@ -1308,11 +1283,10 @@ class ROMParser:
                 None,
                 current_id
             )
-            total_save_size += save_size
             total_rom_size += rom_size
             total_img_size += img_size
         else:
-            system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+            rom_size, img_size, current_id, larger_rom_size = self.generate_system(
                 "Core/Src/retro-go/nes_bios.c",
                 "NES_BIOS",
                 "nes_bios",
@@ -1324,7 +1298,7 @@ class ROMParser:
                 current_id
             )
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/sms_roms.c",
             "Sega Master System",
             "sms_system",
@@ -1337,13 +1311,11 @@ class ROMParser:
         )
         if sega_larger_rom_size < larger_rom_size : sega_larger_rom_size = larger_rom_size
 
-        total_save_size += save_size
         total_rom_size += rom_size
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_SMS\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/gg_roms.c",
             "Sega Game Gear",
             "gg_system",
@@ -1355,13 +1327,11 @@ class ROMParser:
             current_id,
         )
         if sega_larger_rom_size < larger_rom_size : sega_larger_rom_size = larger_rom_size
-        total_save_size += save_size
         total_rom_size += rom_size
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_GG\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/md_roms.c",
             "Sega Genesis",
             "md_system",
@@ -1373,13 +1343,11 @@ class ROMParser:
             current_id,
         )
         if sega_larger_rom_size < larger_rom_size : sega_larger_rom_size = larger_rom_size
-        total_save_size += save_size
         total_rom_size += rom_size
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_MD\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/col_roms.c",
             "Colecovision",
             "col_system",
@@ -1390,13 +1358,11 @@ class ROMParser:
             None,
             current_id,
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_COL\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/sg1000_roms.c",
             "Sega SG-1000",
             "sg1000_system",
@@ -1407,13 +1373,11 @@ class ROMParser:
             None,
             current_id,
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_SG1000\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/pce_roms.c",
             "PC Engine",
             "pce_system",
@@ -1426,13 +1390,11 @@ class ROMParser:
             args.compress,
         )
 
-        total_save_size += save_size
         total_rom_size += rom_size
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_PCE\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/gw_roms.c",
             "Game & Watch",
             "gw_system",
@@ -1443,13 +1405,11 @@ class ROMParser:
             None,
             current_id,
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_GW\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/msx_roms.c",
             "MSX",
             "msx_system",
@@ -1461,17 +1421,15 @@ class ROMParser:
             current_id,
             args.compress
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         total_img_size += img_size
         build_config += "#define ENABLE_EMULATOR_MSX\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
         #MSX bios (only parse if there are some MSX games)
         if rom_size > 0:
             #Check that required bios files are here and patch files if needed
             if parse_msx_bios_files():
-                system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+                rom_size, img_size, current_id, larger_rom_size = self.generate_system(
                     "Core/Src/retro-go/msx_bios.c",
                     "MSX_BIOS",
                     "msx_bios",
@@ -1482,13 +1440,12 @@ class ROMParser:
                     None,
                     current_id
                 )
-                total_save_size += save_size
                 total_rom_size += rom_size
                 total_img_size += img_size
             else:
                 exit(-1)
         else:
-            system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+            rom_size, img_size, current_id, larger_rom_size = self.generate_system(
                 "Core/Src/retro-go/msx_bios.c",
                 "MSX_BIOS",
                 "msx_bios",
@@ -1500,7 +1457,7 @@ class ROMParser:
                 current_id
             )
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/wsv_roms.c",
             "Watara Supervision",
             "wsv_system",
@@ -1512,12 +1469,10 @@ class ROMParser:
             current_id,
             args.compress
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         build_config += "#define ENABLE_EMULATOR_WSV\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/a2600_roms.c",
             "Atari 2600",
             "a2600_system",
@@ -1529,12 +1484,10 @@ class ROMParser:
             current_id,
             args.compress
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         build_config += "#define ENABLE_EMULATOR_A2600\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/a7800_roms.c",
             "Atari 7800",
             "a7800_system",
@@ -1546,12 +1499,10 @@ class ROMParser:
             current_id,
             args.compress
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         build_config += "#define ENABLE_EMULATOR_A7800\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/amstrad_roms.c",
             "Amstrad CPC",
             "amstrad_system",
@@ -1563,12 +1514,10 @@ class ROMParser:
             current_id,
             args.compress
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         build_config += "#define ENABLE_EMULATOR_AMSTRAD\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/zelda3_roms.c",
             "Zelda3",
             "zelda3_system",
@@ -1579,10 +1528,9 @@ class ROMParser:
             None,
             current_id
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         build_config += "#define ENABLE_HOMEBREW_ZELDA3\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
+
         if rom_size > 0:
             self.write_if_changed(
                 "build/zelda3_extflash.ld",
@@ -1608,7 +1556,7 @@ class ROMParser:
                 "build/zelda3_extflash.ld",""
             )
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/smw_roms.c",
             "SMW",
             "smw_system",
@@ -1619,10 +1567,9 @@ class ROMParser:
             None,
             current_id
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         build_config += "#define ENABLE_HOMEBREW_SMW\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
+
         if rom_size > 0:
             self.write_if_changed(
                 "build/smw_extflash.ld",
@@ -1649,7 +1596,7 @@ class ROMParser:
                 "build/smw_extflash.ld",""
             )
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/videopac_roms.c",
             "Philips Vectrex",
             "videopac_system",
@@ -1661,13 +1608,11 @@ class ROMParser:
             current_id,
             args.compress
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         build_config += "#define ENABLE_EMULATOR_VIDEOPAC\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
         # TODO : improve this to handle different homebrew in future
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/homebrew_roms.c",
             "Homebrew",
             "homebrew_system",
@@ -1678,12 +1623,10 @@ class ROMParser:
             None,
             current_id
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         build_config += "#define ENABLE_HOMEBREW\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
-        system_save_size, save_size, rom_size, img_size, current_id, larger_rom_size = self.generate_system(
+        rom_size, img_size, current_id, larger_rom_size = self.generate_system(
             "Core/Src/retro-go/tama_roms.c",
             "Tamagotchi",
             "tama_system",
@@ -1695,12 +1638,10 @@ class ROMParser:
             current_id,
             args.compress
         )
-        total_save_size += save_size
         total_rom_size += rom_size
         build_config += "#define ENABLE_EMULATOR_TAMA\n" if rom_size > 0 else ""
-        if system_save_size > larger_save_size : larger_save_size = system_save_size
 
-        total_size = total_save_size + total_rom_size + total_img_size
+        total_size = total_rom_size + total_img_size
         #total_size +=sega_larger_rom_size
         sega_larger_rom_size = 0
 
@@ -1712,7 +1653,7 @@ class ROMParser:
 
         if args.verbose:
             print(
-                f"Save data:\t{total_save_size} bytes\nROM data:\t{total_rom_size} bytes\nROMs Cache:\t{sega_larger_rom_size} bytes\n"
+                f"ROM data:\t{total_rom_size} bytes\nROMs Cache:\t{sega_larger_rom_size} bytes\n"
                 f"Cover images:\t{total_img_size} bytes\n"
                 f"Total:\t\t{total_size} / {args.flash_size} bytes (plus some metadata)."
             )
