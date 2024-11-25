@@ -329,7 +329,7 @@ static void blit_5to6(bitmap_t *bmp, uint16_t *framebuffer) {
 
 static void blit(bitmap_t *bmp)
 {
-    uint16_t *framebuffer = lcd_get_active_buffer()
+    uint16_t *framebuffer = lcd_get_active_buffer();
     odroid_display_scaling_t scaling = odroid_display_get_scaling_mode();
     odroid_display_filter_t filtering = odroid_display_get_filter_mode();
 
