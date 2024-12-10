@@ -775,3 +775,19 @@ void draw_border_smw(pixel_t * fb){
         }
     }
 }
+
+void snes_upscale(pixel_t * fb) {
+  const int x_ratio = 52428; // Precomputed (256 << 16) / 320
+  const int y_ratio = 61166; // Precomputed (224 << 16) / 240
+
+  for (int y = 240 - 1; y >= 0; --y) {
+    int src_y = (y * y_ratio) >> 16; // Compute source row
+    uint16_t* dest_row = fb + y * 320; // Destination row pointer
+    const uint16_t* src_row = fb + src_y * 320; // Source row pointer
+
+    for (int x = 320 - 1; x >= 0; --x) {
+      int src_x = (x * x_ratio) >> 16; // Compute source column
+      dest_row[x] = src_row[src_x];
+    }
+  }
+}

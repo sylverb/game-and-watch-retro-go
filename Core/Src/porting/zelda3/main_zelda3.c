@@ -137,8 +137,8 @@ static void DrawPpuFrame(uint16_t* framebuffer) {
         break;
       case ODROID_DISPLAY_SCALING_FULL: // full screen 320x240
       default:
-        g_ppu_render_flags = kPpuRenderFlags_NewRenderer | kPpuRenderFlags_Height240;
-        g_zenv.ppu->extraLeftRight = UintMin(32, kPpuExtraLeftRight);
+        g_ppu_render_flags = kPpuRenderFlags_NewRenderer;
+        g_zenv.ppu->extraLeftRight = 0;
         break;
     }
   }
@@ -158,6 +158,7 @@ static void DrawPpuFrame(uint16_t* framebuffer) {
     default:
       pixel_buffer = (uint8_t *)framebuffer;
       ZeldaDrawPpuFrame(pixel_buffer, pitch, g_ppu_render_flags);
+      snes_upscale(framebuffer);
       break;
   }
 }
