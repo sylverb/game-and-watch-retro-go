@@ -88,3 +88,8 @@ void draw_border_zelda3(pixel_t * fb);
  * Draw border screen for Super Mario World.
  */
 void draw_border_smw(pixel_t * fb);
+
+/**
+ * In-place nearest neighbor upscaling for smw and zelda3.
+ */
+void snes_upscale(pixel_t * fb);

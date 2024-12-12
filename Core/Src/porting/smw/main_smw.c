@@ -129,14 +129,24 @@ void RtlDrawPpuFrame(uint8 *pixel_buffer, size_t pitch, uint32 render_flags) {
 
 static void DrawPpuFrame(uint16_t* framebuffer) {
   wdog_refresh();
-  uint8 *pixel_buffer = (uint8 *)(framebuffer + 320*8 + 32);    // Start 8 rows from the top, 32 pixels from left
   int pitch = 320 * 2;
+  uint8 *pixel_buffer;
+  odroid_display_scaling_t scaling = odroid_display_get_scaling_mode();
+
+  if (scaling == ODROID_DISPLAY_SCALING_FULL)
+    pixel_buffer = (uint8 *)(framebuffer);
+  else
+    pixel_buffer = (uint8 *)(framebuffer + 320*8 + 32);    // Start 8 rows from the top, 32 pixels from left
 
   PpuBeginDrawing(g_my_ppu, pixel_buffer, pitch, g_ppu_render_flags);
   RtlDrawPpuFrame(pixel_buffer, pitch, g_ppu_render_flags);
 
-  // Draw borders
-  draw_border_smw(framebuffer);
+  if (scaling == ODROID_DISPLAY_SCALING_FULL)
+    // Nearest neighbour upscale
+    snes_upscale(framebuffer);
+  else
+    // Draw borders
+    draw_border_smw(framebuffer);
 }
 
 
