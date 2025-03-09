@@ -1116,6 +1116,7 @@ int main(int argc, char *argv[])
 
     odroid_system_init(APP_ID, AUDIO_MSX_SAMPLE_RATE);
     odroid_system_emu_init(&msx_system_LoadState, &msx_system_SaveState, NULL);
+    odroid_settings_turbo_buttons_set_max(2);
 
     /* Init controls */
     memset(&previous_joystick_state,0, sizeof(odroid_gamepad_state_t));

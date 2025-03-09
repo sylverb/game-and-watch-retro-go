@@ -512,7 +512,8 @@ rg_app_desc_t * init(uint8_t load_state, uint8_t save_slot)
 {
     odroid_system_init(APPID_GB, AUDIO_SAMPLE_RATE);
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
-
+    odroid_settings_turbo_buttons_set_max(2);
+    
     // bzhxx : fix LCD glitch at the start by cleaning up the buffer emulator
     memset(gb_framebuffer, 0x0, sizeof(gb_framebuffer));
 

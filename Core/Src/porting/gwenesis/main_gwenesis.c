@@ -184,9 +184,10 @@ extern unsigned short button_state[3];
 
 const char ODROID_INPUT_DEF_C = ODROID_INPUT_X;
 static int ABCkeys_value = 5;
-static int PAD_A_def = ODROID_INPUT_A;
+static int PAD_A_def = ODROID_INPUT_DEF_C;
 static int PAD_B_def = ODROID_INPUT_B;
-static int PAD_C_def = ODROID_INPUT_DEF_C;
+static int PAD_C_def = ODROID_INPUT_A;
+
 static const char ABCkeys_combo_str[NB_OF_COMBO][10] = {"B-A-START", "A-B-START","B-START-A","A-START-B","START-A-B","START-B-A"};
 static char ABCkeys_str[10]="START-B-A";
 
@@ -194,9 +195,9 @@ static char ABCkeys_str[10]="START-B-A";
 
 const char ODROID_INPUT_DEF_C = ODROID_INPUT_VOLUME;
 static int ABCkeys_value = 5;
-static int PAD_A_def = ODROID_INPUT_A;
+static int PAD_A_def = ODROID_INPUT_DEF_C;
 static int PAD_B_def = ODROID_INPUT_B;
-static int PAD_C_def = ODROID_INPUT_DEF_C;
+static int PAD_C_def = ODROID_INPUT_A;
 static const char ABCkeys_combo_str[NB_OF_COMBO][10] = { "B-A-PAUSE", "A-B-PAUSE","B-PAUSE-A","A-PAUSE-B","PAUSE-A-B","PAUSE-B-A"};
 static char ABCkeys_str[10]="PAUSE-B-A";
 
@@ -215,6 +216,7 @@ void gwenesis_io_get_buttons()
   odroid_gamepad_state_t host_joystick;
 
   odroid_input_read_gamepad(&host_joystick);
+  common_emu_input_loop_handle_turbo(&host_joystick);
 
   /* shortcut is active ignore keys for the emulator */
   #if GNW_TARGET_ZELDA != 0
@@ -542,6 +544,7 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
     printf("Genesis start\n");
     odroid_system_init(APPID_MD, GWENESIS_AUDIO_FREQ_NTSC);
     odroid_system_emu_init(&gwenesis_system_LoadState, &gwenesis_system_SaveState, NULL);
+    odroid_settings_turbo_buttons_set_max(3);
    // rg_app_desc_t *app = odroid_system_get_app();
 
     common_emu_state.frame_time_10us = (uint16_t)(100000 / 60.0 + 0.5f);

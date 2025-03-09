@@ -257,7 +257,11 @@ const lang_t lang_zh_tw LANG_DATA = {
     .s_Turbo_None = "關閉",
     .s_Turbo_A = "Ａ",
     .s_Turbo_B = "Ｂ",
+    .s_Turbo_C = "Ｃ",
     .s_Turbo_AB = "Ａ和Ｂ",    
+    .s_Turbo_AC = "Ａ和Ｃ",
+    .s_Turbo_BC = "Ｂ和Ｃ",
+    .s_Turbo_ABC = "Ａ和Ｂ和Ｃ",
 
     .s_Title_Date_Format = "%02d-%02d 周%s %02d:%02d:%02d",
     .s_Date_Format = "20%02d年%02d月%02d日 周%s",

@@ -1089,6 +1089,7 @@ void app_main_amstrad(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
 
     odroid_system_init(APPID_AMSTRAD, AMSTRAD_SAMPLE_RATE);
     odroid_system_emu_init(&amstrad_system_loadState, &amstrad_system_saveState, NULL);
+    odroid_settings_turbo_buttons_set_max(2);
 
     // Init Sound
     audio_start_playing(AUDIO_BUFFER_LENGTH_AM);

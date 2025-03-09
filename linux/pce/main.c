@@ -447,6 +447,7 @@ void init(void)
     printf("init()\n");
     odroid_system_init(APP_ID, AUDIO_SAMPLE_RATE);
     odroid_system_emu_init(&LoadStateStm, &SaveStateStm, &netplay_callback);
+    odroid_settings_turbo_buttons_set_max(2);
 
     // Hack: Use the same buffer twice
     update1.buffer = fb_data;

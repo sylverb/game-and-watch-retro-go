@@ -369,6 +369,7 @@ int app_main_gw(uint8_t load_state, uint8_t save_slot)
 
     odroid_system_init(ODROID_APPID_GW, GW_AUDIO_FREQ);
     odroid_system_emu_init(&gw_system_LoadState, &gw_system_SaveState, NULL);
+    odroid_settings_turbo_buttons_set_max(2);
     //rg_app_desc_t *app = odroid_system_get_app();
     static unsigned previous_m_halt = 2;
 

@@ -507,6 +507,7 @@ int app_main_nes(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
     lcd_clear_buffers();
     odroid_system_init(APPID_NES, AUDIO_SAMPLE_RATE);
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
+    odroid_settings_turbo_buttons_set_max(2);
 
     if (start_paused) {
         common_emu_state.pause_after_frames = 4;

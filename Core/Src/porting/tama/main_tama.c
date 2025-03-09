@@ -386,6 +386,7 @@ static void main_tama(uint8_t start_paused) {
         odroid_system_initialized = true;
     }
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
+    odroid_settings_turbo_buttons_set_max(2);
 
     /* Initialize LCD */
     lcd_clear_buffers();
