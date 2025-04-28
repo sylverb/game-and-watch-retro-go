@@ -380,6 +380,14 @@ void gb_blit(uint16_t *buffer) {
     common_ingame_overlay();
 }
 
+static bool reset_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    if (event == ODROID_DIALOG_ENTER) {
+        g_gb->reset();
+    }
+    return event == ODROID_DIALOG_ENTER;
+}
+
 static bool palette_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
     int max = g_gb->get_lcd()->get_palette_count() - 1;
@@ -506,6 +514,7 @@ void app_main_gb_tgbdual_cpp(uint8_t load_state, uint8_t start_paused, int8_t sa
 
     odroid_dialog_choice_t options[] = {
         {300, curr_lang->s_Palette, (char *)palette_values, (g_gb->get_rom()->get_info()->gb_type!=3)?1:-1, &palette_update_cb},
+        {300, curr_lang->s_Reset, NULL, 1, &reset_cb},
         ODROID_DIALOG_CHOICE_LAST
     };
 

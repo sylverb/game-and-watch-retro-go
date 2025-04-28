@@ -400,6 +400,13 @@ static bool LoadState(char *savePathName, char *sramPathName, int slot)
     return true;
 }
 
+static bool reset_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
+{
+    if (event == ODROID_DIALOG_ENTER) {
+        emu_reset();
+    }
+    return event == ODROID_DIALOG_ENTER;
+}
 
 static bool palette_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
@@ -586,6 +593,7 @@ void app_main_gb(uint8_t load_state, uint8_t start_paused, int8_t save_slot)
         snprintf(palette_values, sizeof(palette_values), "%s", "7/7");
         odroid_dialog_choice_t options[] = {
             {300, curr_lang->s_Palette, (char *)palette_values, hw.cgb ? -1 : 1, &palette_update_cb},
+            {300, curr_lang->s_Reset, NULL, 1, &reset_cb},
             // {301, "More...", "", 1, &advanced_settings_cb},
             ODROID_DIALOG_CHOICE_LAST
         };
