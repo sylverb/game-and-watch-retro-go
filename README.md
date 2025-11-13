@@ -51,7 +51,7 @@ other : Wait your support to translate
 
 ### Other features
 Here some other features you can edit the rom define file to custom by youself.
-Before you run `make flash`, please run `make romdef` then you can get some romdef file in `roms` folder as `gb.json` `nes.json` ..etc. Edit this files then you can custom the follow feature.
+Before you run `make flash_gnwmanager` or `make flash`, please run `make romdef` then you can get some romdef file in `roms` folder as `gb.json` `nes.json` ..etc. Edit this files then you can custom the follow feature.
 
 Use `make ROMINFOCODE=[ascii|?]` to set charset of rominfo sourcecode to enabled local language support.
 
@@ -206,7 +206,9 @@ python3 -m pip install -r requirements.txt
 #       flash size and theme set. If you want to stick with the red theme you can set
 #       EXTFLASH_SIZE_MB=4 on your Zelda model.
 
-make -j8 flash
+make -j8 flash_gnwmanager # Recommended : no need for patched openocd, uses gnwmanager to flash
+# or
+make -j8 flash # Not recommended, needs patched openocd, slower
 ```
 
 ### Information for developers
@@ -220,9 +222,9 @@ If you need to change the project settings and generate c-code from stm32cubemx,
     If you are familiar with Docker and prefer a solution where you don't have to manually install toolchains and so on, expand this section and read on.
   </summary>
 
-  To reduce the number of potential pitfalls in installation of various software, a Dockerfile is provided containing everything needed to compile and flash retro-go to your Nintendo® Game & Watch™: Super Mario Bros. system. This Dockerfile is written tageting an x86-64 machine running Linux.
+  To reduce the number of potential pitfalls in installation of various software, a Dockerfile is provided containing everything needed to compile and flash retro-go to your Nintendo® Game & Watch™ (Mario/Zelda) system. This Dockerfile is written targeting x86-64 and arm64 machines running Linux or macOS.
 
-  Steps to build and flash from a docker container (running on Linux, e.g. Archlinux or Ubuntu):
+  Steps to build and flash from a docker container (running on Linux/macOS, e.g. Archlinux, Ubuntu or macOS):
 
   ```bash
   # Clone this repo
@@ -233,7 +235,11 @@ If you need to change the project settings and generate c-code from stm32cubemx,
 
   # Place roms in the appropriate directory inside ./roms/
 
-  # Build the docker image (takes a while)
+  # Optional : Build the docker image (takes a while)
+  # You can generate the docker image locally but it's
+  # not needed as generated image is available on
+  # https://hub.docker.com/repository/docker/sylverb/retro-go-builder
+  # for x86-64 and arm64 architectures.
   make docker_build
 
   # Run the container.
@@ -243,7 +249,9 @@ If you need to change the project settings and generate c-code from stm32cubemx,
   make docker
 
   # Build and flash from inside the container:
-  docker@76f83f2fc562:/opt/workdir$ make ADAPTER=stlink EXTFLASH_SIZE_MB=1 -j$(nproc) flash
+  docker@76f83f2fc562:/opt/workdir$ make GNW_TARGET=mario ADAPTER=stlink EXTFLASH_SIZE_MB=1 -j$(nproc) flash_gnwmanager
+  # Or
+  docker@76f83f2fc562:/opt/workdir$ make GNW_TARGET=mario ADAPTER=stlink EXTFLASH_SIZE_MB=1 -j$(nproc) flash
   ```
 
 </details>
@@ -366,7 +374,10 @@ In this example, we'll be compiling retro-go to be used with a 64MB (512Mb) `MX2
 
 ```bash
 make clean
-make -j8 EXTFLASH_SIZE_MB=64 INTFLASH_BANK=2 flash
+make -j8 EXTFLASH_SIZE_MB=64 INTFLASH_BANK=2 flash_gnwmanager
+#or
+make -j8 EXTFLASH_SIZE_MB=64 INTFLASH_BANK=2 flash # if not using gnwmanager
+
 ```
 
 To flash the custom firmware, [follow the CFW README](https://github.com/BrianPugh/game-and-watch-patch#retro-go). But basically, after you install the dependencies and place the correct files in the directory, run:

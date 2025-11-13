@@ -106,6 +106,8 @@ INTFLASH_BANK = 1
 endif
 endif
 
+GNWMANAGER = gnwmanager
+
 # Configure external flash size in MB (Megabytes)
 EXTFLASH_SIZE_MB ?= 1
 BIG_BANK ?= 1
@@ -912,21 +914,43 @@ openocd:
 	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; halt"
 .PHONY: openocd
 
+reset_gnwmanager:
+	@$(GNWMANAGER) start bank1
+.PHONY: reset_gnwmanager
+
 reset:
 	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; reset; exit"
 .PHONY: reset
+
+erase_intflash_1_gnwmanager:
+	@$(GNWMANAGER) erase bank1
+.PHONY: erase_intflash_1_gnwmanager
 
 erase_intflash_1:
 	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; halt; flash erase_address 0x08000000 131072; resume; exit"
 .PHONY: erase_intflash_1
 
+erase_intflash_2_gnwmanager:
+	@$(GNWMANAGER) erase bank2
+.PHONY: erase_intflash_2_gnwmanager
+
 erase_intflash_2:
 	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "init; halt; flash erase_address 0x08100000 131072; resume; exit"
 .PHONY: erase_intflash_2
 
+erase_extflash_gnwmanager:
+	@echo "Erasing External Flash..."
+	@$(GNWMANAGER) erase ext
+	@echo "Erasing Complete!"
+.PHONY: erase_extflash_gnwmanager
+
 erase_extflash: flash_intflash
 	$(V)./scripts/extflash_erase.sh $(EXTFLASH_SIZE)
 .PHONY: erase_extflash
+
+start_bank_1_gnwmanager:
+	$(GNWMANAGER) start bank1
+.PHONY: start_bank_1_gnwmanager
 
 start_bank_1:
 	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg \
@@ -940,6 +964,10 @@ start_bank_1:
 		-c 'resume;exit'
 .PHONY: start_bank_1
 
+start_bank_2_gnwmanager:
+	$(GNWMANAGER) start bank2
+.PHONY: start_bank_2_gnwmanager
+
 start_bank_2:
 	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg \
 		-c 'init; reset halt' \
@@ -951,6 +979,10 @@ start_bank_2:
 		-c 'reg pc $$PC' \
 		-c 'resume;exit'
 .PHONY: start_bank_2
+
+start_gnwmanager:  # Start code located at INTFLASH_ADDRESS
+	$(GNWMANAGER) start $(INTFLASH_ADDRESS)
+.PHONY: start_gnwmanager
 
 start:  # Start code located at INTFLASH_ADDRESS
 	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg \
@@ -965,6 +997,10 @@ start:  # Start code located at INTFLASH_ADDRESS
 .PHONY: start
 
 
+flash_intflash_gnwmanager: $(BUILD_DIR)/$(TARGET)_intflash.bin
+	$(GNWMANAGER) flash $(INTFLASH_ADDRESS) $< -- start $(INTFLASH_ADDRESS)
+.PHONY: flash_intflash_gnwmanager
+
 # Programs the internal flash using a new OpenOCD instance
 flash_intflash: $(BUILD_DIR)/$(TARGET)_intflash.bin
 	$(OPENOCD) -f scripts/interface_$(ADAPTER).cfg -c "program $< $(INTFLASH_ADDRESS) verify reset exit"
@@ -975,6 +1011,10 @@ flash_intflash_nc: $(BUILD_DIR)/$(TARGET)_intflash.bin
 	echo "program $< $(INTFLASH_ADDRESS) verify reset" | nc -c localhost 4444
 .PHONY: flash_intflash_nc
 
+flash_extflash_gnwmanager: $(BUILD_DIR)/$(TARGET)_extflash.bin
+	@$(GNWMANAGER) flash ext $< --offset=$(EXTFLASH_OFFSET) -- start $(INTFLASH_ADDRESS)
+.PHONY: flash_extflash_gnwmanager
+
 flash_extflash: $(BUILD_DIR)/$(TARGET)_extflash.bin
 	$(FLASH_MULTI) $(BUILD_DIR)/$(TARGET)_extflash.bin $(EXTFLASH_OFFSET)
 .PHONY: flash_extflash
@@ -984,11 +1024,22 @@ flash_test: flash_intflash
 .PHONY: flash_test
 
 # Programs both the external and internal flash.
+flash_gnwmanager: CheckTools CheckDirtySubmodules $(BUILD_DIR)/$(TARGET)_intflash.bin $(BUILD_DIR)/$(TARGET)_extflash.bin
+	@$(GNWMANAGER) flash $(INTFLASH_ADDRESS) $(BUILD_DIR)/$(TARGET)_intflash.bin \
+		-- flash ext $(BUILD_DIR)/$(TARGET)_extflash.bin --offset=$(EXTFLASH_OFFSET) \
+		-- start $(INTFLASH_ADDRESS) \
+		$(RESET_DBGMCU_CMD)
+.PHONY: flash_gnwmanager
+
 flash: CheckTools CheckDirtySubmodules
 	$(V)$(MAKE) flash_intflash
 	$(V)$(MAKE) flash_extflash
 	$(V)$(RESET_DBGMCU_CMD)
 .PHONY: flash
+
+monitor_gnwmanager:
+	@$(GNWMANAGER) monitor
+.PHONY: monitor_gnwmanager
 
 monitor:
 	$(V)$(PYTHON3) tools/logpoll.py
@@ -1034,6 +1085,10 @@ gdb: $(BUILD_DIR)/$(TARGET).elf
 .PHONY: gdb
 
 # Flashes intflash *only* and launches gdb afterwards
+gdb_intflash: $(BUILD_DIR)/$(TARGET)_intflash.bin
+	$(GNWMANAGER) flash $(INTFLASH_ADDRESS) $< -- start $(INTFLASH_ADDRESS) --halt -- gdb
+.PHONY: gdb_intflash
+
 gdb_intflash: flash_intflash_nc gdb
 .PHONY: gdb_intflash
 
