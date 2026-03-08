@@ -1,5 +1,9 @@
 ![](assets/gnw.gif)
 
+If you are looking for the SD Card mod, check https://github.com/sylverb/game-and-watch-retro-go-sd
+
+If you are looking for the most up to date flash only mod, check [filesystem_wip](https://github.com/sylverb/game-and-watch-retro-go/tree/filesystem_wip) branch
+
 # Support
 You can support my (sylverb) work and get beta versions of new emulators on https://www.patreon.com/sylverb
 
