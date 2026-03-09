@@ -1314,7 +1314,7 @@ int __builtin_popcount (unsigned int x);
 
 /* MPU Configuration */
 
-void MPU_Config(void)
+__attribute__((optimize("-O0"))) static void MPU_Config(void)
 {
   MPU_Region_InitTypeDef MPU_InitStruct = {0};
 

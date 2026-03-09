@@ -806,8 +806,8 @@ void gui_draw_coverflow_h(tab_t *tab) //------------
 {
     retro_emulator_t *emu = (retro_emulator_t *)tab->arg;
     int font_height = i18n_get_text_height();
-    int cover_height = emu->cover_height;
-    int cover_width = emu->cover_width;
+    uint32_t cover_height = emu->cover_height;
+    uint32_t cover_width = emu->cover_width;
     int r_width1 = cover_width * 5 / 8;
     int r_width2 = cover_width * 7 / 8;
     uint32_t jpeg_cover_width = cover_width;
@@ -1008,8 +1008,8 @@ void gui_draw_coverflow_v(tab_t *tab, int start_posx) // ||||||||
 {
     retro_emulator_t *emu = (retro_emulator_t *)tab->arg;
     int font_height = i18n_get_text_height();
-    int cover_height = emu->cover_height;
-    int cover_width = emu->cover_width;
+    uint32_t cover_height = emu->cover_height;
+    uint32_t cover_width = emu->cover_width;
     int space_height = 40;
     uint32_t jpeg_cover_width = cover_width;
     uint32_t jpeg_cover_height = cover_height;
