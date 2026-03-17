@@ -36,16 +36,16 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_LangName = "S_Chinese",
     
     // Core\Src\porting\nes-fceu\main_nes_fceu.c ===========================
-    .s_Crop_Vertical_Overscan = "Crop Vertical Overscan",
-    .s_Crop_Horizontal_Overscan = "Crop Horizontal Overscan",
-    .s_Disable_Sprite_Limit = "Disable sprite limit",
-    .s_Reset = "Reset",
-    .s_NES_CPU_OC = "NES CPU Overclocking",
-    .s_NES_Eject_Insert_FDS = "Eject/Insert Disk",
-    .s_NES_Eject_FDS = "Eject Disk",
-    .s_NES_Insert_FDS = "Insert Disk",
-    .s_NES_Swap_Side_FDS = "Swap FDisk side",
-    .s_NES_FDS_Side_Format = "Disk %d Side %s",
+    .s_Crop_Vertical_Overscan = "裁剪垂直过扫描",
+    .s_Crop_Horizontal_Overscan = "裁剪水平过扫描",
+    .s_Disable_Sprite_Limit = "禁用精灵限制",
+    .s_Reset = "复位",
+    .s_NES_CPU_OC = "NES CPU 超频",
+    .s_NES_Eject_Insert_FDS = "弹出/插入磁盘",
+    .s_NES_Eject_FDS = "弹出磁盘",
+    .s_NES_Insert_FDS = "插入磁盘",
+    .s_NES_Swap_Side_FDS = "交换磁盘面",
+    .s_NES_FDS_Side_Format = "磁盘 %d 面 %s",
     //=====================================================================
 
     // Core\Src\porting\gb\main_gb.c =======================================
@@ -264,7 +264,12 @@ const lang_t lang_zh_cn LANG_DATA = {
     .s_Turbo_None = "无",
     .s_Turbo_A = "Ａ",
     .s_Turbo_B = "Ｂ",
-    .s_Turbo_AB = "Ａ和Ｂ",    
+    .s_Turbo_C = "Ｃ",
+    .s_Turbo_AB = "Ａ和Ｂ",
+    .s_Turbo_AC = "Ａ和Ｃ",
+    .s_Turbo_BC = "Ｂ和Ｃ",
+    .s_Turbo_ABC = "Ａ和Ｂ和Ｃ",
+    //=====================================================================    
 
     .s_Date_Format = "20%02d年%02d月%02d日 周%s",
     .s_Title_Date_Format = "%02d-%02d 周%s %02d:%02d:%02d",

@@ -331,11 +331,14 @@ void common_emu_input_loop_handle_turbo(odroid_gamepad_state_t *joystick) {
     uint8_t turbo_buttons = odroid_settings_turbo_buttons_get();
     bool turbo_a = (joystick->values[ODROID_INPUT_A] && (turbo_buttons & 1));
     bool turbo_b = (joystick->values[ODROID_INPUT_B] && (turbo_buttons & 2));
+    bool turbo_x = (joystick->values[ODROID_INPUT_X] && (turbo_buttons & 4));
     bool turbo_button = odroid_button_turbos();
     if (turbo_a)
         joystick->values[ODROID_INPUT_A] = turbo_button;
     if (turbo_b)
         joystick->values[ODROID_INPUT_B] = !turbo_button;
+    if (turbo_x)
+        joystick->values[ODROID_INPUT_X] = turbo_button;
 }
 
 __attribute__((optimize("unroll-loops"))) static void draw_multisync_status() {

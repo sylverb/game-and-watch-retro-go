@@ -269,7 +269,11 @@ const lang_t lang_ja_jp LANG_DATA = {
     .s_Turbo_None = "–³‚µ",
     .s_Turbo_A = "A",
     .s_Turbo_B = "B",
+    .s_Turbo_C = "C",
     .s_Turbo_AB = "A & B",
+    .s_Turbo_AC = "A & C",
+    .s_Turbo_BC = "B & C",
+    .s_Turbo_ABC = "A & B & C",
     
     .s_Title_Date_Format = "%02d-%02d %s %02d:%02d:%02d",
     .s_Date_Format = "%02d.%02d.20%02d %s",

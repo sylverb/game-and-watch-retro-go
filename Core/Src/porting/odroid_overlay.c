@@ -1005,8 +1005,15 @@ bool speedup_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t eve
 
 static bool turbo_buttons_update_cb(odroid_dialog_choice_t *option, odroid_dialog_event_t event, uint32_t repeat)
 {
-    const char *GW_Turbo_Buttons[] = {curr_lang->s_Turbo_None, curr_lang->s_Turbo_A, curr_lang->s_Turbo_B, curr_lang->s_Turbo_AB};
+    const char *GW_Turbo_Buttons[] = {curr_lang->s_Turbo_None, curr_lang->s_Turbo_A, curr_lang->s_Turbo_B, curr_lang->s_Turbo_AB, 
+        curr_lang->s_Turbo_C, curr_lang->s_Turbo_AC, curr_lang->s_Turbo_BC, curr_lang->s_Turbo_ABC};
     int8_t turbo_buttons = odroid_settings_turbo_buttons_get();
+
+    int8_t max_buttons = odroid_settings_turbo_buttons_get_max();
+
+    int8_t all_buttons = 0;
+    for (int i = 0; i < max_buttons; i++)
+        all_buttons |= 1 << i;
 
     if (event == ODROID_DIALOG_PREV)
     {
@@ -1014,13 +1021,13 @@ static bool turbo_buttons_update_cb(odroid_dialog_choice_t *option, odroid_dialo
             odroid_settings_turbo_buttons_set(--turbo_buttons);
         else
         {
-            turbo_buttons = 4 - 1;
-            odroid_settings_turbo_buttons_set(4 - 1);
+            turbo_buttons = all_buttons;
+            odroid_settings_turbo_buttons_set(all_buttons);
         }
     }
     else if (event == ODROID_DIALOG_NEXT)
     {
-        if (turbo_buttons < 4 - 1)
+        if (turbo_buttons < all_buttons)
             odroid_settings_turbo_buttons_set(++turbo_buttons);
         else
         {

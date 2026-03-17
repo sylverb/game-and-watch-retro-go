@@ -15,6 +15,7 @@
 #include "gw_lcd.h"
 #include "gw_linker.h"
 #include "main.h"
+#include "rg_i18n.h"
 #include "rg_emulators.h"
 
 #include "utils.h"
@@ -527,6 +528,7 @@ void flashapp_main(void)
 
     odroid_system_init(0, 32000);
     lcd_set_buffers(framebuffer1, framebuffer1);
+    odroid_settings_turbo_buttons_set_max(2);
 
     while (true) {
         if (program_chunk_count == 1) {

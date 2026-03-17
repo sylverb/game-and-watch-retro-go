@@ -225,6 +225,10 @@ typedef struct
     const char *s_Turbo_A;
     const char *s_Turbo_B;
     const char *s_Turbo_AB;
+    const char *s_Turbo_C;
+    const char *s_Turbo_AC;
+    const char *s_Turbo_BC;
+    const char *s_Turbo_ABC;
 
     const int (*fmt_Title_Date_Format)(char *outstr, const char *datefmt, uint16_t day, uint16_t month, const char *weekday, uint16_t hour, uint16_t minutes, uint16_t seconds);
     // const char *fmt_Title_Date_Format(outstr,datefmt,day,month,weekday,hour,minutes,seconds) sprintf(outstr,datefmt,day,month,weekday,hour,minutes,seconds)

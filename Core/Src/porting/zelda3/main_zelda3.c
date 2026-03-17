@@ -307,6 +307,7 @@ int app_main_zelda3(uint8_t load_state, uint8_t start_paused, uint8_t save_slot)
   printf("Zelda3 start\n");
   odroid_system_init(APPID_ZELDA3, ZELDA3_AUDIO_SAMPLE_RATE);
   odroid_system_emu_init(&zelda3_system_LoadState, &zelda3_system_SaveState, NULL);
+  odroid_settings_turbo_buttons_set_max(2);
   
   if (start_paused) {
       common_emu_state.pause_after_frames = 2;

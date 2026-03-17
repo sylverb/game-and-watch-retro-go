@@ -515,6 +515,7 @@ int main(int argc, char *argv[])
 
     odroid_system_init(APP_ID, AUDIO_SAMPLE_RATE);
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
+    odroid_settings_turbo_buttons_set_max(2);
 
     FCEUI_Initialize();
 

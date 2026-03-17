@@ -1066,6 +1066,7 @@ int app_main_nes_fceu(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
 
     odroid_system_init(APPID_NES, sndsamplerate);
     odroid_system_emu_init(&LoadState, &SaveState, NULL);
+    odroid_settings_turbo_buttons_set_max(2);
 
     if (FSettings.PAL) {
         lcd_set_refresh_rate(50);
