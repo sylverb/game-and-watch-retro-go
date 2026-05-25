@@ -48,6 +48,12 @@ endif
 # Disable system logos splash screen at startup
 DISABLE_SPLASH_SCREEN ?= 0
 
+# Extra buttons required simultaneously with PAUSE/SET to open the in-game menu.
+# Expressed as a bitmask over ODROID_INPUT_* values (see odroid_input.h).
+# Default 0 = single PAUSE/SET press opens the menu (original behaviour).
+# Example: MENU_EXTRA_COMBO=$(shell echo "$$((1<<5|1<<3))")  → GAME + LEFT arrow
+MENU_EXTRA_COMBO ?= 0
+
 # Default NES emulator is fceumm
 FORCE_NOFRENDO ?= 0 
 NOFRENDO_PARAM := --nofrendo=$(FORCE_NOFRENDO)
@@ -454,6 +460,7 @@ C_DEFS +=  \
 -DCHEAT_CODES=$(CHEAT_CODES) \
 -DFORCE_NOFRENDO=$(FORCE_NOFRENDO) \
 -DDISABLE_SPLASH_SCREEN=$(DISABLE_SPLASH_SCREEN) \
+-DMENU_EXTRA_COMBO=$(MENU_EXTRA_COMBO) \
 -DTARGET_GNW \
 -DNO_EMBEDDED_SAMPLES \
 -D__LIBRETRO__ \
@@ -1146,6 +1153,9 @@ help:
 	@echo "  SHARED_HIBERNATE_SAVESTATE - Set to 1 to enable a separate savestate for off/on (default=0)"
 	@echo "  DISABLE_SPLASH_SCREEN - Set to 1 to disable the slash screen animation at startup (default=0)"
 	@echo "  FORCE_NOFRENDO      - Set to 1 to force use of previous nofrendo-go emulator instead of fceumm (default=0)"
+	@echo "  MENU_EXTRA_COMBO    - Bitmask of extra ODROID_INPUT_* buttons that must be held with PAUSE/SET"
+	@echo "                        to open the in-game menu (default=0, i.e. PAUSE/SET alone)."
+	@echo "                        Example: MENU_EXTRA_COMBO=40  (GAME=1<<5=32, LEFT=1<<3=8 → 40)"
 	@echo ""
 	@echo "Current configuration:"
 	@echo "  EXTFLASH_FORCE_SPI=$(EXTFLASH_FORCE_SPI)"

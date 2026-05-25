@@ -150,6 +150,7 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
     static int8_t last_key = -1;
     static bool pause_pressed = false;
     static bool macro_activated = false;
+    static bool menu_pending = false;
     static uint8_t clear_frames = 0;
 
     void _repaint() {
@@ -158,8 +159,33 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
     }
 
     if(joystick->values[ODROID_INPUT_VOLUME]){  // PAUSE/SET button
-        // PAUSE/SET has been pressed, checking additional inputs for macros
+#if MENU_EXTRA_COMBO != 0
+        // First frame: decide between combo-menu path and normal macro path.
+        // The combo check only runs once per PAUSE/SET press (when neither flag is set yet).
+        if (!pause_pressed && !menu_pending) {
+            bool combo_ok = true;
+            for (int i = 0; i < ODROID_INPUT_MAX; i++) {
+                if ((MENU_EXTRA_COMBO & (1 << i)) && !joystick->values[i]) {
+                    combo_ok = false;
+                    break;
+                }
+            }
+            if (combo_ok) {
+                menu_pending = true;
+            } else {
+                pause_pressed = true;
+            }
+        }
+        if (menu_pending) {
+            // Combo satisfied: suppress all inputs until PAUSE/SET is released.
+            memset(joystick, '\x00', sizeof(odroid_gamepad_state_t));
+            common_emu_state.last_overlay_time = get_elapsed_time();
+            return;
+        }
+#else
         pause_pressed = true;
+#endif
+        // Normal macro handling (pause_pressed is true here)
         if(last_key < 0) {
             if (joystick->values[ODROID_INPUT_POWER]){
                 // Do NOT save-state and then poweroff
@@ -280,19 +306,30 @@ void common_emu_input_loop(odroid_gamepad_state_t *joystick, odroid_dialog_choic
         // PAUSE/SET has been released.
         common_emu_state.last_overlay_time = get_elapsed_time();
     }
-    else if (pause_pressed && !joystick->values[ODROID_INPUT_VOLUME] && !macro_activated){
-        // PAUSE/SET has been released without performing any macro. Launch menu
-        pause_pressed = false;
-
+    else if (menu_pending) {
+        // PAUSE/SET released after the extra-combo was satisfied: open menu.
+        menu_pending = false;
         odroid_overlay_game_menu(game_options, _repaint);
         clear_frames = 2;
-
         common_emu_state.startup_frames = 0;
         cpumon_stats.last_busy = 0;
+    }
+    else if (pause_pressed && !joystick->values[ODROID_INPUT_VOLUME] && !macro_activated){
+        // PAUSE/SET has been released without performing any macro.
+        pause_pressed = false;
+#if MENU_EXTRA_COMBO == 0
+        // Default behaviour: single PAUSE/SET press opens the menu.
+        odroid_overlay_game_menu(game_options, _repaint);
+        clear_frames = 2;
+        common_emu_state.startup_frames = 0;
+        cpumon_stats.last_busy = 0;
+#endif
+        // In combo mode: PAUSE/SET alone does not open the menu.
     }
     else if (!joystick->values[ODROID_INPUT_VOLUME]){
         pause_pressed = false;
         macro_activated = false;
+        menu_pending = false;
         last_key = -1;
     }
 
