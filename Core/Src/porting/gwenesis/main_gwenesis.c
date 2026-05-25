@@ -192,6 +192,8 @@ static char ABCkeys_str[10]="START-B-A";
 
 #else
 
+/* On Mario G&W: PAUSE/SET (ODROID_INPUT_VOLUME) is button C.
+ * TIME (ODROID_INPUT_SELECT) is the menu trigger and acts as game shortcut. */
 const char ODROID_INPUT_DEF_C = ODROID_INPUT_VOLUME;
 static int ABCkeys_value = 5;
 static int PAD_A_def = ODROID_INPUT_A;
@@ -603,12 +605,8 @@ int app_main_gwenesis(uint8_t load_state, uint8_t start_paused, uint8_t save_slo
       /* hardware keys */
       odroid_input_read_gamepad(&joystick);
 
-      /* SWAP TIME & PAUSE/SET for MARIO G&W device */
-      #if GNW_TARGET_MARIO != 0
-      unsigned int key_state = joystick.values[ODROID_INPUT_VOLUME];
-      joystick.values[ODROID_INPUT_VOLUME] = joystick.values[ODROID_INPUT_SELECT];
-      joystick.values[ODROID_INPUT_SELECT] = key_state;
-      #endif
+      /* No key swap needed: ODROID_INPUT_VOLUME always maps to physical PAUSE/SET.
+       * gwenesis_io_get_buttons uses its own fresh read with a MARIO-specific shortcut. */
 
     odroid_dialog_choice_t options[] = {
         {301, curr_lang->s_md_keydefine, ABCkeys_str, 1, &gwenesis_submenu_setABC},
